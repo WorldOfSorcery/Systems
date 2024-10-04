@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ public class DataManager {
 
     private final NamespacedKey undroppableKey;
     private final CitemCommand cmd;
+    private final NamespacedKey idKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "id");
 
     public DataManager(CitemCommand cmd) {
         undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
@@ -36,85 +38,117 @@ public class DataManager {
     }
 
     public void saveItemToFile(ItemStack item, File file, String id) {
-        NamespacedKey idKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), id); // Use dynamic ID as key
         ItemMeta meta = item.getItemMeta();
         JSONObject itemData = new JSONObject();
 
-        // Save the item id in persistent data
-        PersistentDataContainer data = meta.getPersistentDataContainer();
-        data.set(idKey, PersistentDataType.STRING, id); // Store the ID as a string in the persistent data
-
-        // Save existing item metadata (name, lore, attributes, etc.)
-        if (meta.hasDisplayName()) {
-            itemData.put("name", meta.getDisplayName());
-        }
-        if (meta.hasLore()) {
-            itemData.put("lore", meta.getLore());
-        }
-        itemData.put("id", id); // Store the actual ID in the file
-
-        Map<String, Object> attributes = new HashMap<>();
-        attributes.put("unbreakable", meta.isUnbreakable());
-        itemData.put("attributes", attributes);
-
-        Map<String, Boolean> customFlags = new HashMap<>();
-        customFlags.put("undroppable", data.has(undroppableKey, PersistentDataType.BYTE) && data.get(undroppableKey, PersistentDataType.BYTE) == 1);
-        itemData.put("custom_flags", customFlags);
-
+        // Save the item material and other properties
         itemData.put("material", item.getType().toString());
 
-        if (meta.hasEnchants()) {
-            Map<String, Integer> enchantments = new HashMap<>();
-            meta.getEnchants().forEach((enchantment, level) -> {
-                enchantments.put(enchantment.getKey().getKey(), level);
-            });
-            itemData.put("enchantments", enchantments);
+        // Check if item has meta data
+        if (meta != null) {
+            // Set the ID in the PersistentDataContainer
+
+            PersistentDataContainer data = meta.getPersistentDataContainer();
+
+            // Save the ID
+            data.set(idKey, PersistentDataType.STRING, id);
+
+            // Debug: Confirm the ID is being set
+            String testId = data.get(idKey, PersistentDataType.STRING);
+            System.out.println("Saved ID in PersistentDataContainer: " + testId); // Debug output
+
+            // Setting additional meta data
+            meta.getDisplayName(); // Example name, replace with actual logic
+            item.setItemMeta(meta); // Don't forget to update the item with new meta
+
+            // Save the ID to JSON
+            itemData.put("id", id);
+            if (meta.hasDisplayName()) {
+                itemData.put("name", meta.getDisplayName());
+            }
+            if (meta.hasLore()) {
+                itemData.put("lore", meta.getLore());
+            }
+            itemData.put("attributes", Collections.singletonMap("unbreakable", meta.isUnbreakable()));
+
+            Map<String, Boolean> customFlags = new HashMap<>();
+            customFlags.put("undroppable", meta.getPersistentDataContainer().has(undroppableKey, PersistentDataType.BYTE) &&
+                    meta.getPersistentDataContainer().get(undroppableKey, PersistentDataType.BYTE) == 1);
+            itemData.put("custom_flags", customFlags);
+
+            if (meta.hasEnchants()) {
+                Map<String, Integer> enchantments = new HashMap<>();
+                meta.getEnchants().forEach((enchantment, level) -> {
+                    enchantments.put(enchantment.getKey().getKey(), level);
+                });
+                itemData.put("enchantments", enchantments);
+            }
         }
 
-        // Save changes to item meta
-        item.setItemMeta(meta);
-
-        // Write item data to the JSON file
+        // Write to file
         try (FileWriter writer = new FileWriter(file)) {
             writer.write(itemData.toJSONString());
             writer.flush();
+            System.out.println("Saved item to file: " + file.getAbsolutePath()); // Debug output
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+
+
+
 
     public void updateItemInFile(ItemStack item, File file) {
-        ItemMeta meta = item.getItemMeta();
+        // Create a new JSON object to hold the item data
         JSONObject itemData = new JSONObject();
 
-        if (meta.hasDisplayName()) {
-            itemData.put("name", meta.getDisplayName());
+        // Load existing item data from the file to preserve the ID
+        try (FileReader reader = new FileReader(file)) {
+            JsonObject existingData = JsonParser.parseReader(reader).getAsJsonObject();
+
+            // Preserve existing ID and material
+            if (existingData.has("id")) {
+                itemData.put("id", existingData.get("id").getAsString());
+            }
+
+            if (existingData.has("material")) {
+                itemData.put("material", existingData.get("material").getAsString());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        if (meta.hasLore()) {
-            itemData.put("lore", meta.getLore());
+        // Now add or update the new item properties
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            if (meta.hasDisplayName()) {
+                itemData.put("name", meta.getDisplayName());
+            }
+
+            if (meta.hasLore()) {
+                itemData.put("lore", meta.getLore());
+            }
+
+            Map<String, Object> attributes = new HashMap<>();
+            attributes.put("unbreakable", meta.isUnbreakable());
+            itemData.put("attributes", attributes);
+
+            Map<String, Boolean> customFlags = new HashMap<>();
+            PersistentDataContainer data = meta.getPersistentDataContainer();
+            customFlags.put("undroppable", data.has(undroppableKey, PersistentDataType.BYTE) && data.get(undroppableKey, PersistentDataType.BYTE) == 1);
+            itemData.put("custom_flags", customFlags);
+
+            if (meta.hasEnchants()) {
+                Map<String, Integer> enchantments = new HashMap<>();
+                meta.getEnchants().forEach((enchantment, level) -> {
+                    enchantments.put(enchantment.getKey().getKey(), level);
+                });
+                itemData.put("enchantments", enchantments);
+            }
         }
 
-        Map<String, Object> attributes = new HashMap<>();
-        attributes.put("unbreakable", meta.isUnbreakable());
-        itemData.put("attributes", attributes);
-
-        Map<String, Boolean> customFlags = new HashMap<>();
-        PersistentDataContainer data = meta.getPersistentDataContainer();
-        customFlags.put("undroppable", data.has(undroppableKey, PersistentDataType.BYTE) && data.get(undroppableKey, PersistentDataType.BYTE) == 1);
-        itemData.put("custom_flags", customFlags);
-
-        itemData.put("material", item.getType().toString());
-
-        if (meta.hasEnchants()) {
-            Map<String, Integer> enchantments = new HashMap<>();
-            meta.getEnchants().forEach((enchantment, level) -> {
-                enchantments.put(enchantment.getKey().getKey(), level);
-            });
-            itemData.put("enchantments", enchantments);
-        }
-
-        // Write updated item data to the file
+        // Write the updated item data to the file
         try (FileWriter writer = new FileWriter(file)) {
             writer.write(itemData.toJSONString());
             writer.flush();
@@ -122,6 +156,7 @@ public class DataManager {
             e.printStackTrace();
         }
     }
+
 
     public ItemStack loadItemFromFile(File file) {
         Gson gson = new Gson();
@@ -140,10 +175,16 @@ public class DataManager {
             ItemMeta meta = itemStack.getItemMeta();
 
             if (meta != null) {
-
                 if (jsonObject.has("name")) {
                     String name = jsonObject.get("name").getAsString();
                     meta.setDisplayName(name);
+                }
+
+                if (jsonObject.has("id")) {
+                    String loadedId = jsonObject.get("id").getAsString();
+                    PersistentDataContainer data = meta.getPersistentDataContainer();
+                    data.set(idKey, PersistentDataType.STRING, loadedId);
+                    System.out.println("Loaded ID into PersistentDataContainer: " + loadedId); // Debugging ID
                 }
 
                 if (jsonObject.has("lore")) {
@@ -192,11 +233,15 @@ public class DataManager {
         if (item == null || !item.hasItemMeta()) return;
 
         ItemMeta meta = item.getItemMeta();
-        PersistentDataContainer data = meta.getPersistentDataContainer();
-        NamespacedKey idKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "id"); // Use "id" as key for retrieval
-        String itemId = data.get(idKey, PersistentDataType.STRING);  // Retrieve the actual item ID
+        if (meta == null) return;
 
-        Bukkit.getLogger().info(itemId);
+        // Attempt to retrieve the item's ID from persistent data
+        NamespacedKey idKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "id");
+        PersistentDataContainer data = meta.getPersistentDataContainer();
+        String itemId = data.get(idKey, PersistentDataType.STRING);
+
+        System.out.println("Attempting to retrieve ID for item: " + item);
+        System.out.println("Retrieved item ID: " + itemId);
 
         if (itemId == null) {
             p.sendMessage("This item doesn't have a valid ID.");
@@ -205,7 +250,9 @@ public class DataManager {
 
         // Construct the file path based on the ID
         File file = new File(cmd.citemsFolder, itemId + ".json");
+        System.out.println("Looking for file: " + file.getAbsolutePath()); // Debug output
 
+        // Check if the file exists
         if (!file.exists()) {
             p.sendMessage("No data file found for this item.");
             return;
@@ -222,4 +269,10 @@ public class DataManager {
             p.sendMessage("Your item is already up to date.");
         }
     }
+
+
+
+
+
+
 }
