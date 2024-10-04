@@ -26,6 +26,10 @@ public class CgiveCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if (command.getName().equalsIgnoreCase("cgive")) {
+            if(!sender.hasPermission("citem.give")) {
+                sender.sendMessage(ChatColor.RED + "You don't have permission to use this command!");
+            }
+
             if (args.length < 2) {
                 sender.sendMessage(ChatColor.RED + "Usage: /cremove <NAME> <ID> <amount>");
             }

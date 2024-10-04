@@ -23,6 +23,10 @@ public class CremoveCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if(command.getName().equalsIgnoreCase("cremove")) {
+            if(!sender.hasPermission("citem.remove")) {
+                sender.sendMessage(ChatColor.RED + "You don't have permission to use this command!");
+            }
+
             if (args.length < 2) {
                 sender.sendMessage(ChatColor.RED + "Usage: /cremove <NAME> <ID> <amount>");
             }

@@ -34,6 +34,10 @@ public class FlagCommand extends SubCommand {
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
         ItemMeta meta = itemInHand.getItemMeta();
 
+        if(!sender.hasPermission("citem.flag")) {
+            sender.sendMessage(ChatColor.RED + "You don't have permission to use this command!");
+        }
+
         if (args.length < 2) {
             p.sendMessage(ChatColor.RED + "Usage: /citem flag <add|remove> <FLAG>");
             return;

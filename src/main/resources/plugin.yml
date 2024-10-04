@@ -40,3 +40,20 @@ permissions:
       permission: interaction.view
     help:
       permission: interaction.help
+  citem:
+    flag:
+      permission: citem.flag
+    lore:
+      permission: citem.lore
+    name:
+      permission: citem.name
+    save:
+      permission: citem.save
+    update:
+      permission: citem.update
+    delete:
+      permission: citem.delete
+  cgive:
+    permission: citem.give
+  cremove:
+    permission: citem.remove

@@ -38,6 +38,10 @@ public class SaveCommand extends SubCommand {
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
         ItemMeta meta = itemInHand.getItemMeta();
 
+        if(!sender.hasPermission("citem.save")) {
+            sender.sendMessage(ChatColor.RED + "You don't have permission to use this command!");
+        }
+
         if (args.length != 1) {
             p.sendMessage(ChatColor.RED + "Usage: /citem save [id]");
             return;

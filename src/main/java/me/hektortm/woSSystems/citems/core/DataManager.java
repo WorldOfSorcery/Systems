@@ -244,14 +244,12 @@ public class DataManager {
         if (itemId != null) {
             // Construct the file path based on the ID
             File file = new File(cmd.citemsFolder, itemId + ".json");
-            System.out.println("Looking for file: " + file.getAbsolutePath()); // Debug output
 
             // Check if the file exists
             if (!file.exists()) {
                 // Remove the item from the player's inventory
                 p.getInventory().remove(item);
                 p.sendMessage("Your item has been removed because its data file is missing.");
-                System.out.println("Removed item with ID " + itemId + " from inventory."); // Debug output
                 return; // Exit the method early since the item was removed
             }
 

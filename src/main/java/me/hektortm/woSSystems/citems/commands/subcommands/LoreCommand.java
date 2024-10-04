@@ -27,6 +27,10 @@ public class LoreCommand extends SubCommand {
 
         Player p = (Player) sender;
 
+        if(!sender.hasPermission("citem.lore")) {
+            sender.sendMessage(ChatColor.RED + "You don't have permission to use this command!");
+        }
+
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
         if (itemInHand == null || itemInHand.getType() == Material.AIR) {
             p.sendMessage(ChatColor.RED + "You must be holding an item to use this command.");

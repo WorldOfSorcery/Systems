@@ -5,6 +5,7 @@ import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.citems.commands.subcommands.*;
 import me.hektortm.woSSystems.citems.core.DataManager;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -30,6 +31,7 @@ public class CitemCommand implements CommandExecutor {
         subCommands.put("update", new UpdateCommand(this, data));
         subCommands.put("lore", new LoreCommand());
         subCommands.put("flag", new FlagCommand(data));
+        subCommands.put("delete", new DeleteCommand(this));
     }
 
     @Override
