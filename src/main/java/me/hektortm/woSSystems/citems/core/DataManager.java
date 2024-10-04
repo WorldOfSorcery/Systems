@@ -238,37 +238,38 @@ public class DataManager {
         // Attempt to retrieve the item's ID from persistent data
         NamespacedKey idKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "id");
         PersistentDataContainer data = meta.getPersistentDataContainer();
-        String itemId = data.get(idKey, PersistentDataType.STRING);
+        String itemId = data.get(idKey, PersistentDataType.STRING); // Retrieve the actual item ID
 
-        System.out.println("Attempting to retrieve ID for item: " + item);
-        System.out.println("Retrieved item ID: " + itemId);
+        // Check if item has a valid ID
+        if (itemId != null) {
+            // Construct the file path based on the ID
+            File file = new File(cmd.citemsFolder, itemId + ".json");
+            System.out.println("Looking for file: " + file.getAbsolutePath()); // Debug output
 
-        if (itemId == null) {
-            p.sendMessage("This item doesn't have a valid ID.");
-            return;
-        }
+            // Check if the file exists
+            if (!file.exists()) {
+                // Remove the item from the player's inventory
+                p.getInventory().remove(item);
+                p.sendMessage("Your item has been removed because its data file is missing.");
+                System.out.println("Removed item with ID " + itemId + " from inventory."); // Debug output
+                return; // Exit the method early since the item was removed
+            }
 
-        // Construct the file path based on the ID
-        File file = new File(cmd.citemsFolder, itemId + ".json");
-        System.out.println("Looking for file: " + file.getAbsolutePath()); // Debug output
+            // Load the item data from the file
+            ItemStack savedItem = loadItemFromFile(file);
 
-        // Check if the file exists
-        if (!file.exists()) {
-            p.sendMessage("No data file found for this item.");
-            return;
-        }
-
-        // Load the item data from the file
-        ItemStack savedItem = loadItemFromFile(file);
-
-        if (savedItem != null && !item.isSimilar(savedItem)) {
-            // Update the player's item to match the saved data if there are differences
-            item.setItemMeta(savedItem.getItemMeta());
-            p.sendMessage("Your item has been updated to match the saved data.");
+            if (savedItem != null && !item.isSimilar(savedItem)) {
+                // Update the player's item to match the saved data if there are differences
+                item.setItemMeta(savedItem.getItemMeta());
+                p.sendMessage("Your item has been updated to match the saved data.");
+            } else {
+                p.sendMessage("Your item is already up to date.");
+            }
         } else {
-            p.sendMessage("Your item is already up to date.");
+            p.sendMessage("This item doesn't have a valid ID.");
         }
     }
+
 
 
 
