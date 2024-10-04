@@ -19,7 +19,7 @@ public class CitemCommand implements CommandExecutor {
     private final Map<String, SubCommand> subCommands = new HashMap<>();
     private final WoSSystems plugin;
     private final DataManager data;
-    public File citemsFolder = new File(Bukkit.getServer().getPluginManager().getPlugin("WoSCitems").getDataFolder(), "citems");
+    public File citemsFolder = new File(Bukkit.getServer().getPluginManager().getPlugin("WoSSystems").getDataFolder(), "citems");
 
     public CitemCommand(WoSSystems plugin, DataManager data) {
         this.plugin = plugin;

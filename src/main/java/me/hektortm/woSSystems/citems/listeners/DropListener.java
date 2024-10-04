@@ -15,7 +15,7 @@ public class DropListener implements Listener {
     private final NamespacedKey undroppableKey;
 
     public DropListener() {
-        undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSCitems"), "undroppable");
+        undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
     }
 
     @EventHandler

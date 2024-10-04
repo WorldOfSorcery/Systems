@@ -31,7 +31,7 @@ public class DataManager {
     private final CitemCommand cmd;
 
     public DataManager(CitemCommand cmd) {
-        undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSCitems"), "undroppable");
+        undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
         this.cmd = cmd;
     }
 
@@ -193,7 +193,7 @@ public class DataManager {
 
         ItemMeta meta = item.getItemMeta();
         PersistentDataContainer data = meta.getPersistentDataContainer();
-        NamespacedKey idKey = new NamespacedKey(WoSCitems.getPlugin(WoSCitems.class), "id"); // Use "id" as key for retrieval
+        NamespacedKey idKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "id"); // Use "id" as key for retrieval
         String itemId = data.get(idKey, PersistentDataType.STRING);  // Retrieve the actual item ID
 
         Bukkit.getLogger().info(itemId);

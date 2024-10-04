@@ -34,7 +34,7 @@ public class CremoveCommand implements CommandExecutor {
                 amount = Integer.parseInt(args[2]);
             }
 
-            File dir = new File(Bukkit.getServer().getPluginManager().getPlugin("WoSCitems").getDataFolder(), "citems");
+            File dir = new File(Bukkit.getServer().getPluginManager().getPlugin("WoSSystems").getDataFolder(), "citems");
             if (!dir.exists()) {
                 sender.sendMessage(ChatColor.RED + "No custom items found.");
                 return true;

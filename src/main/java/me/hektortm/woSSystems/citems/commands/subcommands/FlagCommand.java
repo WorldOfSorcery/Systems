@@ -18,7 +18,7 @@ public class FlagCommand extends SubCommand {
 
     private final NamespacedKey undroppableKey;
     public FlagCommand(DataManager data) {
-        undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSCitems"), "undroppable");
+        undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
     }
 
 
