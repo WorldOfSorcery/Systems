@@ -1,0 +1,17 @@
+error:
+  holding-item: "You must be holding an Item."
+  not-found: "No Citem found with this ID."
+  usage:
+    flag: "Usage: /citem flag <add|remove> <FLAG>"
+
+delete:
+  confirm: "§7Confirm deletion with: /citem delete %id% confirm"
+  success: "§aYou have deleted the Citem with the ID: §e%id%"
+
+flag:
+  add:
+    undroppable: "§aUndroppable flag added."
+    unbreakable: "§aUnbreakable flag added."
+  remove:
+    undroppable: "§cUndroppable flag removed."
+    unbreakable: "§cUnbreakable flag removed."

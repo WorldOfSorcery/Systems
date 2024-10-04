@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.citems.commands.subcommands;
 
 import me.hektortm.woSSystems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.citems.commands.SubCommand;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -39,7 +40,7 @@ public class DeleteCommand extends SubCommand implements Listener {
         }
 
         if (!sender.hasPermission("citem.delete")) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission to use this command");
+            Utils.error(sender, "general", "error.perms");
         }
 
         Player p = (Player) sender;
@@ -47,16 +48,16 @@ public class DeleteCommand extends SubCommand implements Listener {
 
         File itemFile = new File(citem.citemsFolder, id + ".json");
         if (!itemFile.exists()) {
-            p.sendMessage(ChatColor.RED + "No custom item found with this ID.");
+            Utils.error(p, "citems", "error.not-found");
             return;
         }
         if (args.length == 1) {
-            p.sendMessage("Confirm deletion with: /citem delete <ID> confirm");
+            Utils.successMsg1Value(p, "citems", "delete.confirm", "%id%", id);
         }
 
         if(args.length == 2 && args[1].equals("confirm")) {
             deleteCitem(id);
-            p.sendMessage("You have deleted the Citem with the ID: " + id);
+            Utils.successMsg1Value(p, "citems", "delete.success", "%id%", id);
         }
     }
     private void deleteCitem(String id) {

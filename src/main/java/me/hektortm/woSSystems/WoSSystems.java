@@ -19,6 +19,8 @@ import me.hektortm.woSSystems.interactions.listeners.InterBlockListener;
 import me.hektortm.woSSystems.interactions.listeners.InventoryClickListener;
 import me.hektortm.woSSystems.interactions.listeners.InventoryCloseListener;
 import me.hektortm.woSSystems.interactions.particles.ParticleHandler;
+import me.hektortm.wosCore.LangManager;
+import me.hektortm.wosCore.WoSCore;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -27,6 +29,8 @@ import java.util.Map;
 
 public final class WoSSystems extends JavaPlugin {
 
+    private static LangManager lang;
+    WoSCore core = JavaPlugin.getPlugin(WoSCore.class);
     private InteractionManager interactionManager;
     private GUIManager guiManager;
     private BindManager bindManager;
@@ -35,17 +39,22 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onEnable() {
+
         YAMLLoader yamlLoader = new YAMLLoader(this);
         ActionHandler actionHandler = new ActionHandler(this);
         guiManager = new GUIManager(this, actionHandler);
         particleHandler = new ParticleHandler();
         interactionManager = new InteractionManager(yamlLoader, this, guiManager, particleHandler);
         bindManager = new BindManager(this);
-
+        lang = new LangManager(core);
         data = new DataManager(new me.hektortm.woSSystems.citems.commands.CitemCommand(this, data));
-
         Map<String, InteractionConfig> interactionConfigs = yamlLoader.loadInteractions();
 
+        if (core != null) {
+            lang.loadLangFileExternal(this, "citems", core);
+        } else {
+            getLogger().severe("WoSCore not found. Disabling WoSSystems");
+        }
 
         // Interaction Commands
         cmdReg("opengui", new GUIcommand(guiManager, interactionManager));
@@ -78,10 +87,6 @@ public final class WoSSystems extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
-    }
-
-    public InteractionManager getInteractionManager() {
-        return interactionManager;
     }
 
     private void eventReg(Listener l) {

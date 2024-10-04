@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.citems.commands.subcommands;
 
 import me.hektortm.woSSystems.citems.commands.SubCommand;
 import me.hektortm.woSSystems.citems.core.DataManager;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -35,16 +36,16 @@ public class FlagCommand extends SubCommand {
         ItemMeta meta = itemInHand.getItemMeta();
 
         if(!sender.hasPermission("citem.flag")) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission to use this command!");
+            Utils.error(sender, "general", "error.perms");
         }
 
         if (args.length < 2) {
-            p.sendMessage(ChatColor.RED + "Usage: /citem flag <add|remove> <FLAG>");
+            Utils.error(p, "citems", "error.usage.flag");
             return;
         }
 
         if (itemInHand == null || itemInHand.getType() == Material.AIR) {
-            p.sendMessage(ChatColor.RED + "You must be holding an item to use this command.");
+            Utils.error(p, "citems", "error.holding-item");
             return;
         }
         if (meta == null) {

@@ -52,6 +52,10 @@
 
     <repositories>
         <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/hektortm/woscore</url>
+        </repository>
+        <repository>
             <id>papermc-repo</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
@@ -67,6 +71,11 @@
             <artifactId>paper-api</artifactId>
             <version>1.21.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.hektortm</groupId>
+            <artifactId>woscore</artifactId>
+            <version>1.5.1</version>
         </dependency>
     </dependencies>
 </project>
