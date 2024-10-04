@@ -1,0 +1,42 @@
+name: WoSSystems
+version: '1.0'
+main: me.hektortm.woSSystems.WoSSystems
+api-version: '1.21'
+author: HektorTM
+commands:
+  # Interaction Commands
+  interaction:
+    description: interaction command
+    usage: /<command> <reload|list|view|trigger>
+    aliases: [ inter ]
+  opengui:
+    description: opengui
+    usage: /<command> <player> <id>
+  # Citem Commands
+  citem:
+    description: citem
+    usage: /citem <save|lore|name|flag> [arguments]
+  cgive:
+    description: give a citem
+    usage: /cgive <player> <ID> <amount>
+  cremove:
+    description:
+    usage: /cremove <player> <ID> <amount>
+
+
+permissions:
+  interaction:
+    bind:
+      permission: interaction.bind
+    unbind:
+      permission: interaction.unbind
+    reload:
+      permissions:
+        - interaction.reload.single
+        - interaction.reload.all
+    trigger:
+      permission: interaction.trigger
+    view:
+      permission: interaction.view
+    help:
+      permission: interaction.help
