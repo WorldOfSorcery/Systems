@@ -34,6 +34,7 @@ public class ReloadCommand extends SubCommand {
         } else {
             if (!sender.hasPermission("interactions.reload.all")) {
                 sender.sendMessage("You do not have permission to use this command!");
+                return;
             }
 
             manager.reloadAllInteractions();

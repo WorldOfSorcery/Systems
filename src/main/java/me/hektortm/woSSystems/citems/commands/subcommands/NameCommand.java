@@ -20,14 +20,19 @@ public class NameCommand extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            Utils.error(sender, "general", "error.notplayer");
+            return;
+        }
+        if(!sender.hasPermission("citem.rename")) {
+            Utils.error(sender, "general", "error.perms");
+            return;
+        }
+
         Player p = (Player) sender;
 
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
         ItemMeta meta = itemInHand.getItemMeta();
-
-        if(!sender.hasPermission("citem.rename")) {
-            Utils.error(sender, "general", "error.perms");
-        }
 
         if (args.length < 1) {
             Utils.error(p, "citems", "error.usage.rename");

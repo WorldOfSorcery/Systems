@@ -36,11 +36,13 @@ public class DeleteCommand extends SubCommand implements Listener {
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("not a player");
+            Utils.error(sender, "general", "error.notplayer");
+            return;
         }
 
         if (!sender.hasPermission("citem.delete")) {
             Utils.error(sender, "general", "error.perms");
+            return;
         }
 
         Player p = (Player) sender;
@@ -53,6 +55,7 @@ public class DeleteCommand extends SubCommand implements Listener {
         }
         if (args.length == 1) {
             Utils.successMsg1Value(p, "citems", "delete.confirm", "%id%", id);
+            return;
         }
 
         if(args.length == 2 && args[1].equals("confirm")) {

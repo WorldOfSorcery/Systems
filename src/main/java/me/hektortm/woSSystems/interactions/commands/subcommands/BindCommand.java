@@ -23,23 +23,20 @@ public class BindCommand extends SubCommand {
     public void execute(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage("You are not a player.");
+            return;
         }
 
-        Player p = (Player) sender;
-
-        if (!p.hasPermission("interactions.bind")) {
+        if (!sender.hasPermission("interactions.bind")) {
             sender.sendMessage("You do not have permission to use this command!");
             return;
         }
 
+        Player p = (Player) sender;
+
         if (args.length == 1) {
             String interactionId = args[0];
-
             Location loc = manager.getTargetBlockLocation(p);
-
             manager.bindInteractionToBlock(interactionId, loc);
-
-
         } else {
             sender.sendMessage("/interaction bind <id>");
         }

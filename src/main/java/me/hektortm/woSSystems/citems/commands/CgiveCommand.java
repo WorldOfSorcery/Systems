@@ -43,6 +43,7 @@ public class CgiveCommand implements CommandExecutor {
             Player t = Bukkit.getPlayer(args[0]);
             String id = args[1];
             Integer amount = 1;
+
             if(args.length == 3) {
                 try {
                     amount = Integer.parseInt(args[2]);
@@ -52,7 +53,6 @@ public class CgiveCommand implements CommandExecutor {
                 }
 
             }
-
 
             File dir = new File(Bukkit.getServer().getPluginManager().getPlugin("WoSSystems").getDataFolder(), "citems");
             if (!dir.exists()) {

@@ -34,16 +34,15 @@ public class SaveCommand extends SubCommand {
             Utils.error(sender, "general", "error.notplayer");
             return;
         }
+        if(!sender.hasPermission("citem.save")) {
+            Utils.error(sender, "general", "error.perms");
+            return;
+        }
 
         Player p = (Player) sender;
 
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
         ItemMeta meta = itemInHand.getItemMeta();
-
-        if(!sender.hasPermission("citem.save")) {
-            Utils.error(sender, "general", "error.perms");
-            return;
-        }
 
         if (args.length != 1) {
             Utils.error(p, "citems", "error.usage.save");

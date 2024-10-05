@@ -24,13 +24,12 @@ public class UnbindCommand extends SubCommand {
         if (!(sender instanceof Player)) {
             sender.sendMessage("You are not a player.");
         }
-
-        Player p = (Player) sender;
-
         if (!sender.hasPermission("interactions.unbind")) {
             sender.sendMessage("You do not have permission to use this command!");
             return;
         }
+
+        Player p = (Player) sender;
 
         if (args.length == 1) {
             String interactionId = args[0];

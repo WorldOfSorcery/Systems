@@ -52,6 +52,7 @@ public class InteractionCommand implements CommandExecutor {
     }
 
     public void sendHelp(CommandSender sender) {
+        if(sender.hasPermission("interactions.help"))
         if(sender instanceof Player p) {
             String cmd = "/interaction";
 

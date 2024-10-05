@@ -25,12 +25,12 @@ public class LoreCommand extends SubCommand {
             Utils.error(sender, "general", "error.notplayer");
             return;
         }
-
-        Player p = (Player) sender;
-
         if(!sender.hasPermission("citem.lore")) {
             Utils.error(sender, "general", "error.perms");
+            return;
         }
+
+        Player p = (Player) sender;
 
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
         if (itemInHand == null || itemInHand.getType() == Material.AIR) {

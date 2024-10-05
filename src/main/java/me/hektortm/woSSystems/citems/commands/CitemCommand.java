@@ -46,7 +46,7 @@ public class CitemCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if (args.length == 0) {
             Utils.error(sender, "citems", "error.usage.citem");
-            return false;
+            return true;
         }
 
         String subCommandName = args[0].toLowerCase();
