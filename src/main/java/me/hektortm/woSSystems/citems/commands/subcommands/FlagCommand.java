@@ -18,8 +18,11 @@ import org.bukkit.persistence.PersistentDataType;
 public class FlagCommand extends SubCommand {
 
     private final NamespacedKey undroppableKey;
+    private final NamespacedKey unusableKey;
+
     public FlagCommand(DataManager data) {
         undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
+        unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
     }
 
 
@@ -58,12 +61,17 @@ public class FlagCommand extends SubCommand {
             case "add":
                 if (flag.equals("undroppable")) {
                     PersistentDataContainer data = meta.getPersistentDataContainer();
-                    data.set(undroppableKey, PersistentDataType.BYTE, (byte) 1);
+                    data.set(undroppableKey, PersistentDataType.BOOLEAN, true);
                     Utils.successMsg(p, "citems", "flag.add.undroppable");
                 }
                 if (flag.equals("unbreakable")) {
                     meta.setUnbreakable(true);
                     Utils.successMsg(p, "citems", "flag.add.unbreakable");
+                }
+                if (flag.equals("unusable")) {
+                    PersistentDataContainer data = meta.getPersistentDataContainer();
+                    data.set(unusableKey, PersistentDataType.BOOLEAN, true);
+                    Utils.successMsg(p, "citems", "flag.add.unusable");
                 }
                 break;
 
@@ -76,6 +84,11 @@ public class FlagCommand extends SubCommand {
                 if (flag.equals("unbreakable")) {
                     meta.setUnbreakable(false);
                     Utils.successMsg(p, "citems", "flag.remove.unbreakable");
+                }
+                if (flag.equals("unusable")) {
+                    PersistentDataContainer data = meta.getPersistentDataContainer();
+                    data.remove(unusableKey);
+                    Utils.successMsg(p, "citems", "flag.remove.unusable");
                 }
                 break;
 

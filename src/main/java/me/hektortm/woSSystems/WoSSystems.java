@@ -6,6 +6,7 @@ import me.hektortm.woSSystems.citems.commands.CremoveCommand;
 import me.hektortm.woSSystems.citems.core.DataManager;
 import me.hektortm.woSSystems.citems.listeners.DropListener;
 import me.hektortm.woSSystems.citems.listeners.HoverListener;
+import me.hektortm.woSSystems.citems.listeners.UseListener;
 import me.hektortm.woSSystems.interactions.actions.InventoryInteraction;
 import me.hektortm.woSSystems.interactions.commands.GUIcommand;
 import me.hektortm.woSSystems.interactions.commands.InteractionCommand;
@@ -47,7 +48,7 @@ public final class WoSSystems extends JavaPlugin {
         interactionManager = new InteractionManager(yamlLoader, this, guiManager, particleHandler);
         bindManager = new BindManager(this);
         lang = new LangManager(core);
-        data = new DataManager(new me.hektortm.woSSystems.citems.commands.CitemCommand(this, data));
+        data = new DataManager(new me.hektortm.woSSystems.citems.commands.CitemCommand(this, data, interactionManager, lang), interactionManager);
         Map<String, InteractionConfig> interactionConfigs = yamlLoader.loadInteractions();
 
         if (core != null) {
@@ -60,7 +61,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("opengui", new GUIcommand(guiManager, interactionManager));
         cmdReg("interaction", new InteractionCommand(interactionManager, bindManager));
         // Citems Commands
-        cmdReg("citem", new CitemCommand(this, data));
+        cmdReg("citem", new CitemCommand(this, data, interactionManager, lang));
         cmdReg("cgive", new CgiveCommand(data, lang));
         cmdReg("cremove", new CremoveCommand(data, lang));
 
@@ -70,6 +71,7 @@ public final class WoSSystems extends JavaPlugin {
         // Citem Events
         eventReg(new DropListener());
         eventReg(new HoverListener(data));
+        eventReg(new UseListener(data));
 
         // Register inventory click listener
         InventoryInteraction inventoryInteraction = new InventoryInteraction(this, actionHandler);

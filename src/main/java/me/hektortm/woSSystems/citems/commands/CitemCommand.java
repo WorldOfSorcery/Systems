@@ -4,6 +4,8 @@ package me.hektortm.woSSystems.citems.commands;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.citems.commands.subcommands.*;
 import me.hektortm.woSSystems.citems.core.DataManager;
+import me.hektortm.woSSystems.interactions.core.InteractionManager;
+import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -21,11 +23,15 @@ public class CitemCommand implements CommandExecutor {
     private final Map<String, SubCommand> subCommands = new HashMap<>();
     private final WoSSystems plugin;
     private final DataManager data;
+    private final InteractionManager interactionManager;
+    private final LangManager lang;
     public File citemsFolder = new File(Bukkit.getServer().getPluginManager().getPlugin("WoSSystems").getDataFolder(), "citems");
 
-    public CitemCommand(WoSSystems plugin, DataManager data) {
+    public CitemCommand(WoSSystems plugin, DataManager data, InteractionManager interactionManager, LangManager lang) {
         this.plugin = plugin;
         this.data = data;
+        this.interactionManager = interactionManager;
+        this.lang = lang;
 
         subCommands.put("save", new SaveCommand(this, data));
         subCommands.put("rename", new NameCommand());
@@ -33,6 +39,7 @@ public class CitemCommand implements CommandExecutor {
         subCommands.put("lore", new LoreCommand());
         subCommands.put("flag", new FlagCommand(data));
         subCommands.put("delete", new DeleteCommand(this));
+        subCommands.put("action", new ActionCommand(interactionManager, lang));
     }
 
     @Override

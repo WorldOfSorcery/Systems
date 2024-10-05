@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.citems.commands.CitemCommand;
+import me.hektortm.woSSystems.interactions.core.InteractionConfig;
+import me.hektortm.woSSystems.interactions.core.InteractionManager;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -18,6 +20,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.json.simple.JSONObject;
 
+import javax.xml.stream.events.Namespace;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -30,12 +33,22 @@ import java.util.Map;
 public class DataManager {
 
     private final NamespacedKey undroppableKey;
-    private final CitemCommand cmd;
+    private final NamespacedKey unusableKey;
     private final NamespacedKey idKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "id");
+    private final NamespacedKey leftActionKey;
+    private final NamespacedKey rightActionKey;
 
-    public DataManager(CitemCommand cmd) {
+    private final InteractionManager interactionManager;
+    private final CitemCommand cmd;
+
+
+    public DataManager(CitemCommand cmd, InteractionManager interactionManager) {
         undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
+        unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
+        leftActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-left");
+        rightActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-right");
         this.cmd = cmd;
+        this.interactionManager = interactionManager;
     }
 
     public void saveItemToFile(ItemStack item, File file, String id) {
@@ -70,8 +83,19 @@ public class DataManager {
 
             Map<String, Boolean> customFlags = new HashMap<>();
             customFlags.put("undroppable", meta.getPersistentDataContainer().has(undroppableKey, PersistentDataType.BYTE) &&
-                    meta.getPersistentDataContainer().get(undroppableKey, PersistentDataType.BYTE) == 1);
+                    meta.getPersistentDataContainer().get(undroppableKey, PersistentDataType.BOOLEAN) == true);
+            customFlags.put("unusable", meta.getPersistentDataContainer().has(unusableKey, PersistentDataType.BYTE) &&
+                    meta.getPersistentDataContainer().get(unusableKey,PersistentDataType.BOOLEAN) == true);
+
             itemData.put("custom_flags", customFlags);
+
+            if (data.has(leftActionKey, PersistentDataType.STRING)) {
+                itemData.put("action-left", data.get(leftActionKey, PersistentDataType.STRING));
+            }
+
+            if (data.has(rightActionKey, PersistentDataType.STRING)) {
+                itemData.put("action-right", data.get(rightActionKey, PersistentDataType.STRING));
+            }
 
             if (meta.hasEnchants()) {
                 Map<String, Integer> enchantments = new HashMap<>();
@@ -134,6 +158,14 @@ public class DataManager {
             PersistentDataContainer data = meta.getPersistentDataContainer();
             customFlags.put("undroppable", data.has(undroppableKey, PersistentDataType.BYTE) && data.get(undroppableKey, PersistentDataType.BYTE) == 1);
             itemData.put("custom_flags", customFlags);
+
+            if (data.has(leftActionKey, PersistentDataType.STRING)) {
+                itemData.put("action-left", data.get(leftActionKey, PersistentDataType.STRING));
+            }
+
+            if (data.has(rightActionKey, PersistentDataType.STRING)) {
+                itemData.put("action-right", data.get(rightActionKey, PersistentDataType.STRING));
+            }
 
             if (meta.hasEnchants()) {
                 Map<String, Integer> enchantments = new HashMap<>();
@@ -202,6 +234,18 @@ public class DataManager {
                     }
                 }
 
+                if (jsonObject.has("action-left")) {
+                    String leftActionId = jsonObject.get("action-left").getAsString();
+                    PersistentDataContainer data = meta.getPersistentDataContainer();
+                    data.set(leftActionKey, PersistentDataType.STRING, leftActionId);
+                }
+
+                if (jsonObject.has("action-right")) {
+                    String rightActionId = jsonObject.get("action-right").getAsString();
+                    PersistentDataContainer data = meta.getPersistentDataContainer();
+                    data.set(rightActionKey, PersistentDataType.STRING, rightActionId);
+                }
+
                 if (jsonObject.has("enchantments")) {
                     JsonObject enchantments = jsonObject.get("enchantments").getAsJsonObject();
                     for (Map.Entry<String, JsonElement> entry : enchantments.entrySet()) {
@@ -262,7 +306,35 @@ public class DataManager {
         }
     }
 
+    public void leftClickAction(Player p) {
+        ItemStack item = p.getItemInHand();
+        if (item == null || !item.hasItemMeta()) return;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
 
+        NamespacedKey leftActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-left");
+        PersistentDataContainer data = meta.getPersistentDataContainer();
+        String actionId = data.get(leftActionKey, PersistentDataType.STRING);
+        if (actionId != null) {
+            InteractionConfig interaction = interactionManager.getInteractionById(actionId);
+            interactionManager.triggerInteraction(interaction, p);
+        }
+    }
+
+    public void rightClickAction(Player p) {
+        ItemStack item = p.getItemInHand();
+        if (item == null || !item.hasItemMeta()) return;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        NamespacedKey rightActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-right");
+        PersistentDataContainer data = meta.getPersistentDataContainer();
+        String actionId = data.get(rightActionKey, PersistentDataType.STRING);
+        if (actionId != null) {
+            InteractionConfig interaction = interactionManager.getInteractionById(actionId);
+            interactionManager.triggerInteraction(interaction, p);
+        }
+    }
 
 
 

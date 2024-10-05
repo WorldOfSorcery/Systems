@@ -1,16 +1,36 @@
 package me.hektortm.woSSystems.citems.commands.subcommands;
 
 
+import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.citems.commands.SubCommand;
+import me.hektortm.woSSystems.interactions.core.InteractionConfig;
+import me.hektortm.woSSystems.interactions.core.InteractionManager;
+import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 
 public class ActionCommand extends SubCommand {
+
+    private final NamespacedKey leftActionKey;
+    private final NamespacedKey rightActionKey;
+    private final InteractionManager interactionManager;
+    private final LangManager lang;
+
+    public ActionCommand(InteractionManager interactionManager, LangManager lang) {
+        leftActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-left");
+        rightActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-right");
+        this.interactionManager = interactionManager;
+        this.lang = lang;
+    }
+
     @Override
     public String getName() {
         return "action";
@@ -18,16 +38,54 @@ public class ActionCommand extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        Player p = (Player) sender;
+        if(!(sender instanceof Player)) {
+            Utils.error(sender, "general", "error.notplayer");
+            return;
+        }
 
+        if(!sender.hasPermission("citem.action")) {
+            Utils.error(sender, "general", "error.perms");
+            return;
+        }
+
+        Player p = (Player) sender;
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
-        ItemMeta meta = itemInHand.getItemMeta();
 
         if (itemInHand == null || itemInHand.getType() == Material.AIR) {
             Utils.error(p, "citems", "error.holding-item");
             return;
         }
-        p.sendMessage("TODO: Interactions");
-        //TODO add when interactions are done
+
+        String action = args[0].toLowerCase();
+        String actionID = args[1].toLowerCase();
+
+        InteractionConfig interaction = interactionManager.getInteractionById(actionID);
+        if (interaction == null) {
+            String message = lang.getMessage("citems", "error.inter-not-found").replace("%id%", actionID);
+            sender.sendMessage(lang.getMessage("general", "prefix.error")+message);
+
+            return;
+        }
+
+        ItemMeta meta = itemInHand.getItemMeta();
+
+        if (meta == null) return;
+
+        PersistentDataContainer data = meta.getPersistentDataContainer();
+
+        switch (action) {
+            case "left":
+                data.set(leftActionKey, PersistentDataType.STRING, actionID);
+                Utils.successMsg1Value(p, "citems", "action.set.left", "%action%", actionID);
+                break;
+            case "right":
+                data.set(rightActionKey, PersistentDataType.STRING, actionID);
+                Utils.successMsg1Value(p, "citems", "action.set.right", "%action%", actionID);
+                break;
+            default:
+                Utils.error(p, "citems", "error.wrong-action");
+                return;
+        }
+        itemInHand.setItemMeta(meta);
     }
 }

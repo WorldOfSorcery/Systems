@@ -4,6 +4,8 @@ error:
   no-items: "No saved Citems found."
   no-meta: "This item has no metadata."
   exists: "An item with this ID already exists."
+  wrong-action: "Unrecognized Action. Use 'left' or 'right'."
+  inter-not-found: "Interaction not found: %id%"
   lore:
     invalid-row: "Invalid row number."
     out-of-bounds: "Lore row out of bounds."
@@ -28,14 +30,21 @@ flag:
   add:
     undroppable: "§aUndroppable flag added."
     unbreakable: "§aUnbreakable flag added."
+    unusable: "§aUnusable flag added."
   remove:
     undroppable: "§cUndroppable flag removed."
     unbreakable: "§cUnbreakable flag removed."
+    unusable: "§cUnusable flag removed."
 
 lore:
   added: "§aLore added."
   edited: "§aLore edited."
   removed: "§aLore removed."
+
+action:
+  set:
+    left: "§aLeftclick action set to §e%action%§a Interaction."
+    right: "§aRightclick action set to §e%action%§a Interaction."
 
 renamed: "§aItem name set to: %name%"
 saved: "§aItem saved successfully as §e%id%.json"
