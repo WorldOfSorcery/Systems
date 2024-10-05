@@ -2,6 +2,8 @@ package me.hektortm.woSSystems.citems.commands;
 
 
 import me.hektortm.woSSystems.citems.core.DataManager;
+import me.hektortm.wosCore.LangManager;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -16,19 +18,21 @@ import java.io.File;
 public class CremoveCommand implements CommandExecutor {
 
     private final DataManager data;
-    public CremoveCommand(DataManager data) {
+    private final LangManager lang;
+    public CremoveCommand(DataManager data, LangManager lang) {
         this.data = data;
+        this.lang = lang;
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if(command.getName().equalsIgnoreCase("cremove")) {
             if(!sender.hasPermission("citem.remove")) {
-                sender.sendMessage(ChatColor.RED + "You don't have permission to use this command!");
+                Utils.error(sender, "general", "error.perms");
             }
 
             if (args.length < 2) {
-                sender.sendMessage(ChatColor.RED + "Usage: /cremove <NAME> <ID> <amount>");
+                Utils.error(sender, "citems", "error.usage.cremove");
             }
 
             Player t = Bukkit.getPlayer(args[0]);
@@ -40,13 +44,13 @@ public class CremoveCommand implements CommandExecutor {
 
             File dir = new File(Bukkit.getServer().getPluginManager().getPlugin("WoSSystems").getDataFolder(), "citems");
             if (!dir.exists()) {
-                sender.sendMessage(ChatColor.RED + "No custom items found.");
+                Utils.error(sender, "citems", "error.no-items");
                 return true;
             }
 
             File itemFile = new File(dir, id + ".json");
             if (!itemFile.exists()) {
-                sender.sendMessage(ChatColor.RED + "No custom items found.");
+                Utils.error(sender, "citems", "error.no-items");
                 return true;
             }
             ItemStack savedItem = data.loadItemFromFile(itemFile);
@@ -54,11 +58,12 @@ public class CremoveCommand implements CommandExecutor {
 
             item.setAmount(amount);
             if (savedItem == null) {
-                sender.sendMessage(ChatColor.RED + "No custom items found.");
+                Utils.error(sender, "citems", "error.not-found");
                 return true;
             }
             t.getInventory().removeItem(item);
-            sender.sendMessage(ChatColor.GREEN + amount.toString() + " Custom item(s) removed.");
+            String message = lang.getMessage("citems", "removed").replace("%amount%", String.valueOf(amount)).replace("%id%", id).replace("%player%", t.getName());
+            sender.sendMessage(message);
 
         }
         return true;

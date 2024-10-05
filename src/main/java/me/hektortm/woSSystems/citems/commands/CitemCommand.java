@@ -4,6 +4,7 @@ package me.hektortm.woSSystems.citems.commands;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.citems.commands.subcommands.*;
 import me.hektortm.woSSystems.citems.core.DataManager;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -27,7 +28,7 @@ public class CitemCommand implements CommandExecutor {
         this.data = data;
 
         subCommands.put("save", new SaveCommand(this, data));
-        subCommands.put("name", new NameCommand());
+        subCommands.put("rename", new NameCommand());
         subCommands.put("update", new UpdateCommand(this, data));
         subCommands.put("lore", new LoreCommand());
         subCommands.put("flag", new FlagCommand(data));
@@ -37,7 +38,7 @@ public class CitemCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if (args.length == 0) {
-            sender.sendMessage("Usage: /citem <save|name|lore|update|flag>");
+            Utils.error(sender, "citems", "error.usage.citem");
             return false;
         }
 
@@ -47,7 +48,7 @@ public class CitemCommand implements CommandExecutor {
         if (subCommand != null) {
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));
         } else {
-            sender.sendMessage("Unknown subcommand. Usage: Usage: /citem <save|name|lore|update|flag>");
+            Utils.error(sender, "citems", "error.usage.citem");
         }
 
         return true;

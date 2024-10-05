@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.citems.commands.subcommands;
 
 
 import me.hektortm.woSSystems.citems.commands.SubCommand;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
@@ -14,7 +15,7 @@ public class NameCommand extends SubCommand {
 
     @Override
     public String getName() {
-        return "name";
+        return "rename";
     }
 
     @Override
@@ -24,21 +25,21 @@ public class NameCommand extends SubCommand {
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
         ItemMeta meta = itemInHand.getItemMeta();
 
-        if(!sender.hasPermission("citem.name")) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission to use this command!");
+        if(!sender.hasPermission("citem.rename")) {
+            Utils.error(sender, "general", "error.perms");
         }
 
         if (args.length < 1) {
-            p.sendMessage(ChatColor.RED + "Usage: /citem name <NAME>");
+            Utils.error(p, "citems", "error.usage.rename");
             return;
         }
 
         if (itemInHand == null || itemInHand.getType() == Material.AIR) {
-            p.sendMessage(ChatColor.RED + "You must be holding an item to use this command.");
+            Utils.error(p, "citems", "error.holding-item");
             return;
         }
         if (meta == null) {
-            p.sendMessage(ChatColor.RED + "This item has no metadata.");
+            Utils.error(p, "citems", "error.no-meta");
             return;
         }
         // Concatenate all arguments from index 1 to the end to form the name
@@ -52,6 +53,6 @@ public class NameCommand extends SubCommand {
         String name = ChatColor.translateAlternateColorCodes('&', nameBuilder.toString());
         meta.setDisplayName(name);
         itemInHand.setItemMeta(meta);
-        p.sendMessage(ChatColor.GREEN + "Item name set to: " + name);
+        Utils.successMsg1Value(p, "citems", "renamed", "%name%", name);
     }
 }

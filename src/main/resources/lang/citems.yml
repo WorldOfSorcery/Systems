@@ -1,8 +1,24 @@
 error:
   holding-item: "You must be holding an Item."
   not-found: "No Citem found with this ID."
+  no-items: "No saved Citems found."
+  no-meta: "This item has no metadata."
+  exists: "An item with this ID already exists."
+  lore:
+    invalid-row: "Invalid row number."
+    out-of-bounds: "Lore row out of bounds."
   usage:
+    citem: "Usage: /citem <save|name|lore|flag|update>"
     flag: "Usage: /citem flag <add|remove> <FLAG>"
+    lore: "Usage: /citem lore <add|edit|remove> <arguments>"
+    lore-add: "Usage: /citem lore add <text>"
+    lore-edit: "Usage: /citem lore edit <row> <text>"
+    lore-remove: "Usage: /citem lore remove <row>"
+    rename: "Usage: /citem rename <name>"
+    save: "Usage: /citem save <id>"
+    update: "Usage: /citem update <id>"
+    cgive: "Usage: /cgive <player> <id> [amount]"
+    cremove: "Usage: /cremove <player> <id> [amount]"
 
 delete:
   confirm: "§7Confirm deletion with: /citem delete %id% confirm"
@@ -15,3 +31,18 @@ flag:
   remove:
     undroppable: "§cUndroppable flag removed."
     unbreakable: "§cUnbreakable flag removed."
+
+lore:
+  added: "§aLore added."
+  edited: "§aLore edited."
+  removed: "§aLore removed."
+
+renamed: "§aItem name set to: %name%"
+saved: "§aItem saved successfully as §e%id%.json"
+updated: "§aItem updated successfully."
+given: "§aGiven §e%amount% %id% §ato §e%player%§a."
+removed: "§aRemoved §e%amount% %id% §afrom §e%player%§a."
+
+update:
+  removed: "§7Your Item(%item%§7) has been removed as it is outdated."
+  updated: "§7Your Item(%item%§7) has been updated."

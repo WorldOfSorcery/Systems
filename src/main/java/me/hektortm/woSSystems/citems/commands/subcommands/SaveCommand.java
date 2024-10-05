@@ -4,6 +4,7 @@ package me.hektortm.woSSystems.citems.commands.subcommands;
 import me.hektortm.woSSystems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.citems.commands.SubCommand;
 import me.hektortm.woSSystems.citems.core.DataManager;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
@@ -30,7 +31,8 @@ public class SaveCommand extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "You must be a player to use this command!");
+            Utils.error(sender, "general", "error.notplayer");
+            return;
         }
 
         Player p = (Player) sender;
@@ -39,21 +41,22 @@ public class SaveCommand extends SubCommand {
         ItemMeta meta = itemInHand.getItemMeta();
 
         if(!sender.hasPermission("citem.save")) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission to use this command!");
+            Utils.error(sender, "general", "error.perms");
+            return;
         }
 
         if (args.length != 1) {
-            p.sendMessage(ChatColor.RED + "Usage: /citem save [id]");
+            Utils.error(p, "citems", "error.usage.save");
             return;
         }
 
         if (itemInHand == null || itemInHand.getType() == Material.AIR) {
-            p.sendMessage(ChatColor.RED + "You must be holding an item to use this command.");
+            Utils.error(p, "citems", "error.holding-item");
             return;
         }
 
         if (meta == null) {
-            p.sendMessage(ChatColor.RED + "This item has no metadata.");
+            Utils.error(p, "citems", "error.no-meta");
             return;
         }
 
@@ -64,10 +67,10 @@ public class SaveCommand extends SubCommand {
         }
         File itemFile = new File(cmd.citemsFolder, id + ".json");
         if (itemFile.exists()) {
-            p.sendMessage(ChatColor.RED + "An item with this ID already exists.");
+            Utils.error(p, "citems", "error.exists");
             return;
         }
         data.saveItemToFile(itemInHand, itemFile, id);
-        p.sendMessage(ChatColor.GREEN + "Item saved successfully as " + id + ".json");
+        Utils.successMsg1Value(p, "citems", "saved", "%id%", id);
     }
 }

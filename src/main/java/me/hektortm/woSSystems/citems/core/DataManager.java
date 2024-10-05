@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.citems.commands.CitemCommand;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -53,13 +54,9 @@ public class DataManager {
             // Save the ID
             data.set(idKey, PersistentDataType.STRING, id);
 
-            // Debug: Confirm the ID is being set
-            String testId = data.get(idKey, PersistentDataType.STRING);
-            System.out.println("Saved ID in PersistentDataContainer: " + testId); // Debug output
 
-            // Setting additional meta data
-            meta.getDisplayName(); // Example name, replace with actual logic
-            item.setItemMeta(meta); // Don't forget to update the item with new meta
+            meta.getDisplayName();
+            item.setItemMeta(meta);
 
             // Save the ID to JSON
             itemData.put("id", id);
@@ -89,7 +86,6 @@ public class DataManager {
         try (FileWriter writer = new FileWriter(file)) {
             writer.write(itemData.toJSONString());
             writer.flush();
-            System.out.println("Saved item to file: " + file.getAbsolutePath()); // Debug output
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -184,7 +180,6 @@ public class DataManager {
                     String loadedId = jsonObject.get("id").getAsString();
                     PersistentDataContainer data = meta.getPersistentDataContainer();
                     data.set(idKey, PersistentDataType.STRING, loadedId);
-                    System.out.println("Loaded ID into PersistentDataContainer: " + loadedId); // Debugging ID
                 }
 
                 if (jsonObject.has("lore")) {
@@ -249,7 +244,7 @@ public class DataManager {
             if (!file.exists()) {
                 // Remove the item from the player's inventory
                 p.getInventory().remove(item);
-                p.sendMessage("Your item has been removed because its data file is missing.");
+                Utils.successMsg1Value(p, "citems", "update.removed", "%item%", item.getItemMeta().getDisplayName());
                 return; // Exit the method early since the item was removed
             }
 
@@ -259,12 +254,11 @@ public class DataManager {
             if (savedItem != null && !item.isSimilar(savedItem)) {
                 // Update the player's item to match the saved data if there are differences
                 item.setItemMeta(savedItem.getItemMeta());
-                p.sendMessage("Your item has been updated to match the saved data.");
-            } else {
-                p.sendMessage("Your item is already up to date.");
+                Utils.successMsg1Value(p, "citems", "update.updated", "%item%", item.getItemMeta().getDisplayName());
             }
         } else {
-            p.sendMessage("This item doesn't have a valid ID.");
+            Bukkit.getLogger().severe(p.getName() +": The item "+item.getItemMeta().getDisplayName()+" doesn't have a valid ID");
+            // TODO: Discord message
         }
     }
 

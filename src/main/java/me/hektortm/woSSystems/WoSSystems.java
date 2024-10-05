@@ -61,8 +61,8 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("interaction", new InteractionCommand(interactionManager, bindManager));
         // Citems Commands
         cmdReg("citem", new CitemCommand(this, data));
-        cmdReg("cgive", new CgiveCommand(data));
-        cmdReg("cremove", new CremoveCommand(data));
+        cmdReg("cgive", new CgiveCommand(data, lang));
+        cmdReg("cremove", new CremoveCommand(data, lang));
 
         // Interaction Events
         eventReg(new InventoryCloseListener(guiManager));

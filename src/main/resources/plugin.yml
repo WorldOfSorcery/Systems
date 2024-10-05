@@ -45,8 +45,8 @@ permissions:
       permission: citem.flag
     lore:
       permission: citem.lore
-    name:
-      permission: citem.name
+    rename:
+      permission: citem.rename
     save:
       permission: citem.save
     update:

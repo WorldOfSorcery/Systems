@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.citems.commands.subcommands;
 
 
 import me.hektortm.woSSystems.citems.commands.SubCommand;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
@@ -21,30 +22,30 @@ public class LoreCommand extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "This command can only be used by a player.");
+            Utils.error(sender, "general", "error.notplayer");
             return;
         }
 
         Player p = (Player) sender;
 
         if(!sender.hasPermission("citem.lore")) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission to use this command!");
+            Utils.error(sender, "general", "error.perms");
         }
 
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
         if (itemInHand == null || itemInHand.getType() == Material.AIR) {
-            p.sendMessage(ChatColor.RED + "You must be holding an item to use this command.");
+            Utils.error(sender, "citems", "error.holding-item");
             return;
         }
 
         ItemMeta meta = itemInHand.getItemMeta();
         if (meta == null) {
-            p.sendMessage(ChatColor.RED + "This item has no metadata.");
+            Utils.error(sender, "citems", "error.no-meta");
             return;
         }
 
         if (args.length < 1) {
-            p.sendMessage(ChatColor.RED + "Usage: /citem lore <add|edit|remove> [arguments]");
+            Utils.error(sender, "citems", "error.usage.lore");
             return;
         }
 
@@ -54,7 +55,7 @@ public class LoreCommand extends SubCommand {
         switch (loreCmd.toLowerCase()) {
             case "add":
                 if (args.length < 2) {
-                    p.sendMessage(ChatColor.RED + "Usage: /citem lore add <TEXT>");
+                    Utils.error(sender, "citems", "error.usage.lore-add");
                     return;
                 }
 
@@ -69,12 +70,12 @@ public class LoreCommand extends SubCommand {
                 lore.add(ChatColor.translateAlternateColorCodes('&', addLoreText.toString()));
                 meta.setLore(lore);
                 itemInHand.setItemMeta(meta);
-                p.sendMessage(ChatColor.GREEN + "Lore added.");
+                Utils.successMsg(p, "citems", "lore.added");
                 break;
 
             case "edit":
                 if (args.length < 3) {
-                    p.sendMessage(ChatColor.RED + "Usage: /citem lore edit <ROW> <TEXT>");
+                    Utils.error(sender, "citems", "error.usage.lore-edit");
                     return;
                 }
 
@@ -82,12 +83,12 @@ public class LoreCommand extends SubCommand {
                 try {
                     row = Integer.parseInt(args[1]);
                 } catch (NumberFormatException e) {
-                    p.sendMessage(ChatColor.RED + "Invalid row number.");
+                    Utils.error(sender, "citems", "error.lore.invalid-row");
                     return;
                 }
 
                 if (row < 0 || row >= lore.size()) {
-                    p.sendMessage(ChatColor.RED + "Lore row out of bounds.");
+                    Utils.error(sender, "citems", "error.lore.out-of-bounds");
                     return;
                 }
 
@@ -102,35 +103,35 @@ public class LoreCommand extends SubCommand {
                 lore.set(row, ChatColor.translateAlternateColorCodes('&', editLoreText.toString()));
                 meta.setLore(lore);
                 itemInHand.setItemMeta(meta);
-                p.sendMessage(ChatColor.GREEN + "Lore edited.");
+                Utils.successMsg(p, "citems", "lore.edited");
                 break;
 
             case "remove":
                 if (args.length < 2) {
-                    p.sendMessage(ChatColor.RED + "Usage: /citem lore remove <ROW>");
+                    Utils.error(sender, "citems", "error.usage.lore-remove");
                     return;
                 }
 
                 try {
                     row = Integer.parseInt(args[1]);
                 } catch (NumberFormatException e) {
-                    p.sendMessage(ChatColor.RED + "Invalid row number.");
+                    Utils.error(sender, "citems", "error.lore.invalid-row");
                     return;
                 }
 
                 if (row < 0 || row >= lore.size()) {
-                    p.sendMessage(ChatColor.RED + "Lore row out of bounds.");
+                    Utils.error(sender, "citems", "error.lore.out-of-bounds");
                     return;
                 }
 
                 lore.remove(row);
                 meta.setLore(lore);
                 itemInHand.setItemMeta(meta);
-                p.sendMessage(ChatColor.GREEN + "Lore removed.");
+                Utils.successMsg(p, "citems", "lore.removed");
                 break;
 
             default:
-                p.sendMessage(ChatColor.RED + "Invalid command. Usage: /citem lore <add|edit|remove> [arguments]");
+                Utils.successMsg(p, "citems", "error.usage.lore");
                 break;
         }
     }

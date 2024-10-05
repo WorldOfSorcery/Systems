@@ -49,7 +49,7 @@ public class FlagCommand extends SubCommand {
             return;
         }
         if (meta == null) {
-            p.sendMessage(ChatColor.RED + "This item has no metadata.");
+            Utils.error(p, "citems", "error.no-meta");
             return;
         }
         String flagCmd = args[0];
@@ -59,7 +59,11 @@ public class FlagCommand extends SubCommand {
                 if (flag.equals("undroppable")) {
                     PersistentDataContainer data = meta.getPersistentDataContainer();
                     data.set(undroppableKey, PersistentDataType.BYTE, (byte) 1);
-                    p.sendMessage(ChatColor.GREEN + "Undroppable flag added.");
+                    Utils.successMsg(p, "citems", "flag.add.undroppable");
+                }
+                if (flag.equals("unbreakable")) {
+                    meta.setUnbreakable(true);
+                    Utils.successMsg(p, "citems", "flag.add.unbreakable");
                 }
                 break;
 
@@ -67,12 +71,16 @@ public class FlagCommand extends SubCommand {
                 if (flag.equals("undroppable")) {
                     PersistentDataContainer data = meta.getPersistentDataContainer();
                     data.remove(undroppableKey);
-                    p.sendMessage(ChatColor.GREEN + "Undroppable flag removed.");
+                    Utils.successMsg(p, "citems", "flag.remove.undroppable");
+                }
+                if (flag.equals("unbreakable")) {
+                    meta.setUnbreakable(false);
+                    Utils.successMsg(p, "citems", "flag.remove.unbreakable");
                 }
                 break;
 
             default:
-                p.sendMessage(ChatColor.RED + "Usage: /citem flag <add|remove> <FLAG>");
+                Utils.error(p, "citems", "error.usage.flag");
                 return;
         }
         itemInHand.setItemMeta(meta);
