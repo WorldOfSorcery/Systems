@@ -32,17 +32,25 @@ public class CgiveCommand implements CommandExecutor {
         if (command.getName().equalsIgnoreCase("cgive")) {
             if(!sender.hasPermission("citem.give")) {
                 Utils.error(sender, "general", "error.perms");
+                return true;
             }
 
-            if (args.length < 2) {
+            if (args.length < 2 || args.length > 3) {
                 Utils.error(sender, "citems", "error.usage.cgive");
+                return true;
             }
 
             Player t = Bukkit.getPlayer(args[0]);
             String id = args[1];
             Integer amount = 1;
             if(args.length == 3) {
-                amount = Integer.parseInt(args[2]);
+                try {
+                    amount = Integer.parseInt(args[2]);
+                } catch (NumberFormatException e) {
+                    Utils.error(sender, "citems", "error.usage.cgive");
+                    return true;
+                }
+
             }
 
 

@@ -10,7 +10,7 @@ error:
     invalid-row: "Invalid row number."
     out-of-bounds: "Lore row out of bounds."
   usage:
-    citem: "Usage: /citem <save|name|lore|flag|update>"
+    citem: "Usage: /citem <save|rename|lore|flag|update>"
     flag: "Usage: /citem flag <add|remove> <FLAG>"
     lore: "Usage: /citem lore <add|edit|remove> <arguments>"
     lore-add: "Usage: /citem lore add <text>"
@@ -53,5 +53,5 @@ given: "§aGiven §e%amount% %id% §ato §e%player%§a."
 removed: "§aRemoved §e%amount% %id% §afrom §e%player%§a."
 
 update:
-  removed: "§7Your Item(%item%§7) has been removed as it is outdated."
-  updated: "§7Your Item(%item%§7) has been updated."
+  removed: "§7Your Item (%item%§7) has been removed as it is outdated."
+  updated: "§7Your Item (%item%§7) has been updated."
