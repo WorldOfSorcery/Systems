@@ -30,6 +30,9 @@ public class PlaceholderResolver {
                     text = text.replace(maxPlaceholder, String.valueOf(statMax));
                 }
             }
+
+
+
         }
         return text;
     }

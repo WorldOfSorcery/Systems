@@ -207,10 +207,6 @@ public class InteractionManager {
             player.sendMessage(ChatColor.RED + "Interaction not found.");
             return;
         }
-
-        // Check if the interaction has an open-inv section
-
-
         actionHandler.triggerActions(interaction.getActions(), player);
     }
 

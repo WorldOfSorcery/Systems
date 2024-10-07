@@ -32,6 +32,10 @@ public class InventoryInteraction {
             return;
         }
 
+        if (event.isCancelled()) {
+            return;  // If event is already canceled, do nothing
+        }
+
         // Determine the action to perform based on the click type
         String actionToPerform = null;
         switch (event.getClick()) {

@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.interactions.core;
 
+import me.hektortm.woSSystems.interactions.gui.GUIManager;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -35,15 +36,21 @@ public class ActionHandler {
             if (parts.length > 1) {
                 String sound = parts[1];
                 player.playSound(player.getLocation(), sound, 1.0F, 1.0F);
+                return;
             }
-        } else if (action.startsWith("send_message")) {
+        } if (action.startsWith("close_gui")) {
+            player.closeInventory();
+        }
+        else if (action.startsWith("send_message")) {
             String message = action.replace("send_message", "");
             String finalMessage = resolver.resolvePlaceholders(message, player);
             player.sendMessage(finalMessage.replace("&", "§"));
+            return;
         }
         else {
             // Run any other command
             plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), action);
+            return;
         }
     }
 }

@@ -29,6 +29,9 @@ public class InterBlockListener implements Listener {
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_BLOCK) {
             Block block = event.getClickedBlock();
+            if (event.isCancelled()) {
+                return;  // If event is already canceled, do nothing
+            }
             if (block != null) {
                 String locString = block.getWorld().getName() + "," + block.getX() + "," + block.getY() + "," + block.getZ();
 

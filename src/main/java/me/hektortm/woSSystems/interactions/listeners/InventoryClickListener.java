@@ -43,5 +43,6 @@ public class InventoryClickListener implements Listener {
 
         // Handle the click in the custom inventory
         inventoryInteraction.handleInventoryClick(event, clickable, leftClickAction, rightClickAction, shiftClickAction);
+        return;
     }
 }

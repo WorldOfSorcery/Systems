@@ -43,6 +43,12 @@ public final class WoSSystems extends JavaPlugin {
     private PlaceholderResolver resolver;
     private static DataManager data;
 
+    // TODO:
+    //  - Interactions
+    //      - Conditions
+    //   - Stats
+    //      -
+
     @Override
     public void onEnable() {
 
