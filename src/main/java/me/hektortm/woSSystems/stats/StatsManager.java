@@ -3,14 +3,12 @@ package me.hektortm.woSSystems.stats;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.stats.utils.Operation;
 import me.hektortm.woSSystems.stats.utils.Stat;
-import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
@@ -109,6 +107,30 @@ public class StatsManager {
         core.savePlayerData(playerData, playerFile);
     }
 
+    public void reloadAllStats() {
+        stats.clear(); // Clear current stats
+        loadStats();   // Reload all stats from files
+        Bukkit.getLogger().info("All stats reloaded.");
+    }
+
+    // Reload a single stat
+    public void reloadStat(String id) {
+        File file = new File(statsFolder, id.toLowerCase() + ".yml");
+        if (!file.exists()) {
+            Bukkit.getLogger().severe("Stat file for " + id + " does not exist.");
+            return;
+        }
+
+        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+        String statId = config.getString("id");
+        long max = config.getInt("max");
+        boolean capped = config.getBoolean("capped");
+
+        Stat stat = new Stat(statId, max, capped);
+        stats.put(statId.toLowerCase(), stat); // Update or insert stat in the map
+        Bukkit.getLogger().info("Stat " + id + " reloaded.");
+    }
+
     public void loadStats() {
         if(!statsFolder.exists()) {
             statsFolder.mkdir();
@@ -128,6 +150,8 @@ public class StatsManager {
             }
         }
     }
+
+
 
     public Map<String, Stat> getStats() {
         return stats;

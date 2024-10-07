@@ -27,7 +27,7 @@ public class StatsCommand implements CommandExecutor {
         subCommands.put("take", new TakeCommand(manager));
         subCommands.put("set", new SetCommand(manager));
         //subCommands.put("help", new HelpCommand());
-        //subCommands.put("reload", new ReloadCommand());
+        subCommands.put("reload", new ReloadCommand(manager));
         subCommands.put("create", new CreateCommand(manager));
         subCommands.put("delete", new DeleteCommand(manager));
         //subCommands.put("view", new ViewCommand());

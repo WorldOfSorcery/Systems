@@ -12,3 +12,7 @@ create: "§aSuccessfully created stat §e'%stat%'§a with a maximum of §e%max%�
 delete:
   confirm: "§7Confirm deletion with: /stats delete %id% confirm"
   success: "§aYou have deleted the Stat with the ID: §e%id%"
+
+reload:
+  single: "§aReloaded Stat: §e%id%"
+  all: "§aReloaded all Stats."
