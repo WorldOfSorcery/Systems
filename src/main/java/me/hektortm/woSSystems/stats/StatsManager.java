@@ -6,6 +6,7 @@ import me.hektortm.woSSystems.stats.utils.Stat;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -63,7 +64,7 @@ public class StatsManager {
 
 
     public void modifyStat(UUID uuid, String id, int amount, Operation operation) {
-        Player p = Bukkit.getPlayer(uuid);
+        OfflinePlayer p = Bukkit.getOfflinePlayer(uuid);
         FileConfiguration playerData = core.getPlayerData(uuid, p.getName());
         File playerFile = new File(core.getDataFolder(), "playerdata" + File.separator + uuid + ".yml");
 

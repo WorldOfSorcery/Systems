@@ -4,6 +4,7 @@ import me.hektortm.woSSystems.stats.StatsManager;
 import me.hektortm.woSSystems.stats.commands.StatsSubCommand;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -33,7 +34,7 @@ public class SetCommand extends StatsSubCommand {
             return;
         }
 
-        Player p = Bukkit.getPlayer(args[0]);
+        OfflinePlayer p = Bukkit.getOfflinePlayer(args[0]);
         String id = args[1].toLowerCase();
         int amount = 0;
 
