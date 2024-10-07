@@ -1,11 +1,10 @@
 package me.hektortm.woSSystems.citems.commands.subcommands;
 
 
-import me.hektortm.woSSystems.citems.commands.SubCommand;
-import me.hektortm.woSSystems.citems.core.DataManager;
+import me.hektortm.woSSystems.citems.commands.CitemSubCommand;
+import me.hektortm.woSSystems.citems.DataManager;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
@@ -15,7 +14,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
-public class FlagCommand extends SubCommand {
+public class FlagCommand extends CitemSubCommand {
 
     private final NamespacedKey undroppableKey;
     private final NamespacedKey unusableKey;

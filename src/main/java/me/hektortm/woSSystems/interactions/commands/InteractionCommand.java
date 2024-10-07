@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class InteractionCommand implements CommandExecutor {
 
-    private final Map<String, SubCommand> subCommands = new HashMap<>();
+    private final Map<String, InterSubCommand> subCommands = new HashMap<>();
     private final InteractionManager interManager;
     private final BindManager bindManager;
 
@@ -40,7 +40,7 @@ public class InteractionCommand implements CommandExecutor {
         }
 
         String subCommandName = args[0].toLowerCase();
-        SubCommand subCommand = subCommands.get(subCommandName);
+        InterSubCommand subCommand = subCommands.get(subCommandName);
 
         if (subCommand != null) {
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));

@@ -2,7 +2,7 @@ package me.hektortm.woSSystems.interactions.commands;
 
 import org.bukkit.command.CommandSender;
 
-public abstract class SubCommand {
+public abstract class InterSubCommand {
 
     public abstract String getName();
 

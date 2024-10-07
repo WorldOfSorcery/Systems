@@ -1,13 +1,13 @@
 package me.hektortm.woSSystems.interactions.commands.subcommands;
 
 
-import me.hektortm.woSSystems.interactions.commands.SubCommand;
+import me.hektortm.woSSystems.interactions.commands.InterSubCommand;
 import me.hektortm.woSSystems.interactions.core.BindManager;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class BindCommand extends SubCommand {
+public class BindCommand extends InterSubCommand {
 
     private final BindManager manager;
     public BindCommand(BindManager manager) {

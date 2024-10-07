@@ -1,11 +1,11 @@
 package me.hektortm.woSSystems.interactions.commands.subcommands;
 
 
-import me.hektortm.woSSystems.interactions.commands.SubCommand;
+import me.hektortm.woSSystems.interactions.commands.InterSubCommand;
 import me.hektortm.woSSystems.interactions.core.InteractionManager;
 import org.bukkit.command.CommandSender;
 
-public class ReloadCommand extends SubCommand {
+public class ReloadCommand extends InterSubCommand {
 
     private final InteractionManager manager;
 

@@ -1,8 +1,8 @@
-package me.hektortm.woSSystems.citems.commands;
+package me.hektortm.woSSystems.stats.commands;
 
 import org.bukkit.command.CommandSender;
 
-public abstract class SubCommand {
+public abstract class StatsSubCommand {
 
     public abstract String getName();
 

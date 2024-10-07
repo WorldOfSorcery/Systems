@@ -1,13 +1,13 @@
 package me.hektortm.woSSystems.interactions.commands.subcommands;
 
-import me.hektortm.woSSystems.interactions.commands.SubCommand;
+import me.hektortm.woSSystems.interactions.commands.InterSubCommand;
 import me.hektortm.woSSystems.interactions.core.InteractionConfig;
 import me.hektortm.woSSystems.interactions.core.InteractionManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class TriggerCommand extends SubCommand {
+public class TriggerCommand extends InterSubCommand {
 
     private final InteractionManager interactionManager;
 

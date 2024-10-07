@@ -22,7 +22,8 @@ commands:
   cremove:
     description:
     usage: /cremove <player> <ID> <amount>
-
+  # Stat Commands
+  stats:
 
 permissions:
   interaction:

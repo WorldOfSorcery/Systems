@@ -3,7 +3,7 @@ package me.hektortm.woSSystems;
 import me.hektortm.woSSystems.citems.commands.CgiveCommand;
 import me.hektortm.woSSystems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.citems.commands.CremoveCommand;
-import me.hektortm.woSSystems.citems.core.DataManager;
+import me.hektortm.woSSystems.citems.DataManager;
 import me.hektortm.woSSystems.citems.listeners.DropListener;
 import me.hektortm.woSSystems.citems.listeners.HoverListener;
 import me.hektortm.woSSystems.citems.listeners.UseListener;
@@ -20,6 +20,8 @@ import me.hektortm.woSSystems.interactions.listeners.InterBlockListener;
 import me.hektortm.woSSystems.interactions.listeners.InventoryClickListener;
 import me.hektortm.woSSystems.interactions.listeners.InventoryCloseListener;
 import me.hektortm.woSSystems.interactions.particles.ParticleHandler;
+import me.hektortm.woSSystems.stats.StatsManager;
+import me.hektortm.woSSystems.stats.commands.StatsCommand;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.WoSCore;
 import org.bukkit.command.CommandExecutor;
@@ -36,6 +38,7 @@ public final class WoSSystems extends JavaPlugin {
     private GUIManager guiManager;
     private BindManager bindManager;
     private ParticleHandler particleHandler;
+    private StatsManager statsManager;
     private static DataManager data;
 
     @Override
@@ -47,12 +50,14 @@ public final class WoSSystems extends JavaPlugin {
         particleHandler = new ParticleHandler();
         interactionManager = new InteractionManager(yamlLoader, this, guiManager, particleHandler);
         bindManager = new BindManager(this);
+        statsManager = new StatsManager(core);
         lang = new LangManager(core);
         data = new DataManager(new me.hektortm.woSSystems.citems.commands.CitemCommand(this, data, interactionManager, lang), interactionManager);
         Map<String, InteractionConfig> interactionConfigs = yamlLoader.loadInteractions();
 
         if (core != null) {
             lang.loadLangFileExternal(this, "citems", core);
+            lang.loadLangFileExternal(this, "stats", core);
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }
@@ -64,6 +69,8 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("citem", new CitemCommand(this, data, interactionManager, lang));
         cmdReg("cgive", new CgiveCommand(data, lang));
         cmdReg("cremove", new CremoveCommand(data, lang));
+        // Stats Commands
+        cmdReg("stats", new StatsCommand(this, statsManager));
 
         // Interaction Events
         eventReg(new InventoryCloseListener(guiManager));

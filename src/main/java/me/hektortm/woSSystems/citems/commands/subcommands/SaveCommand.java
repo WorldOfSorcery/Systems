@@ -2,10 +2,9 @@ package me.hektortm.woSSystems.citems.commands.subcommands;
 
 
 import me.hektortm.woSSystems.citems.commands.CitemCommand;
-import me.hektortm.woSSystems.citems.commands.SubCommand;
-import me.hektortm.woSSystems.citems.core.DataManager;
+import me.hektortm.woSSystems.citems.commands.CitemSubCommand;
+import me.hektortm.woSSystems.citems.DataManager;
 import me.hektortm.wosCore.Utils;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -14,7 +13,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
 
-public class SaveCommand extends SubCommand {
+public class SaveCommand extends CitemSubCommand {
 
     private final CitemCommand cmd;
     private final DataManager data;

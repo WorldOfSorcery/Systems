@@ -1,10 +1,9 @@
 package me.hektortm.woSSystems.citems.listeners;
 
-import me.hektortm.woSSystems.citems.core.DataManager;
+import me.hektortm.woSSystems.citems.DataManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 
 public class HoverListener implements Listener {

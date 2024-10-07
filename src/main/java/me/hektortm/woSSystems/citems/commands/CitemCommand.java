@@ -3,12 +3,11 @@ package me.hektortm.woSSystems.citems.commands;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.citems.commands.subcommands.*;
-import me.hektortm.woSSystems.citems.core.DataManager;
+import me.hektortm.woSSystems.citems.DataManager;
 import me.hektortm.woSSystems.interactions.core.InteractionManager;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -20,7 +19,7 @@ import java.util.Map;
 
 public class CitemCommand implements CommandExecutor {
 
-    private final Map<String, SubCommand> subCommands = new HashMap<>();
+    private final Map<String, CitemSubCommand> subCommands = new HashMap<>();
     private final WoSSystems plugin;
     private final DataManager data;
     private final InteractionManager interactionManager;
@@ -50,7 +49,7 @@ public class CitemCommand implements CommandExecutor {
         }
 
         String subCommandName = args[0].toLowerCase();
-        SubCommand subCommand = subCommands.get(subCommandName);
+        CitemSubCommand subCommand = subCommands.get(subCommandName);
 
         if (subCommand != null) {
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));

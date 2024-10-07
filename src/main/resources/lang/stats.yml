@@ -1,0 +1,11 @@
+error:
+  invalid-amount: "Invalid amount. Please provide a number."
+  not-found: "Stat not found."
+  usage:
+    stats: "Usage: /stats <create|delete|give|take|set|view|reload|help>"
+    give: "Usage: /stats give <player> <id> <amount>"
+
+give: "§aYou have given §e%amount% §aof stat §e'%stat%'§a to §e%player%§a."
+take: "§aYou have taken §e%amount% §aof stat §e'%stat%'§a from §e%player%§a."
+set: "§aYou have set the stat §e'%stat%'§a of §e%player%§a to §e%amount%§a."
+create: "§aSuccessfully created stat §e'%stat%'§a with a maximum of §e%max%§a."

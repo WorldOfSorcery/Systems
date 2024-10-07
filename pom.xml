@@ -75,7 +75,7 @@
         <dependency>
             <groupId>me.hektortm</groupId>
             <artifactId>woscore</artifactId>
-            <version>1.5.1</version>
+            <version>1.5.2</version>
         </dependency>
     </dependencies>
 </project>

@@ -1,12 +1,12 @@
 package me.hektortm.woSSystems.interactions.commands.subcommands;
 
 
-import me.hektortm.woSSystems.interactions.commands.SubCommand;
+import me.hektortm.woSSystems.interactions.commands.InterSubCommand;
 import me.hektortm.woSSystems.interactions.core.InteractionConfig;
 import me.hektortm.woSSystems.interactions.core.InteractionManager;
 import org.bukkit.command.CommandSender;
 
-public class ViewCommand extends SubCommand {
+public class ViewCommand extends InterSubCommand {
 
     private final InteractionManager manager;
     public ViewCommand(InteractionManager manager) {

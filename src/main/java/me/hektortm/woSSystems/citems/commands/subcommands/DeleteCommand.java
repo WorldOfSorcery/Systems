@@ -1,25 +1,16 @@
 package me.hektortm.woSSystems.citems.commands.subcommands;
 
 import me.hektortm.woSSystems.citems.commands.CitemCommand;
-import me.hektortm.woSSystems.citems.commands.SubCommand;
+import me.hektortm.woSSystems.citems.commands.CitemSubCommand;
 import me.hektortm.wosCore.Utils;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
-import java.util.Arrays;
 
-public class DeleteCommand extends SubCommand implements Listener {
+public class DeleteCommand extends CitemSubCommand implements Listener {
 
     static Inventory inventory;
     private final CitemCommand citem;

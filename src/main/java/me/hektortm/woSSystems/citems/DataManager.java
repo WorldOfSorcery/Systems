@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.citems.core;
+package me.hektortm.woSSystems.citems;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -20,7 +20,6 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.json.simple.JSONObject;
 
-import javax.xml.stream.events.Namespace;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;

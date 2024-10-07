@@ -2,10 +2,10 @@ package me.hektortm.woSSystems.interactions.commands.subcommands;
 
 
 import me.hektortm.woSSystems.interactions.commands.InteractionCommand;
-import me.hektortm.woSSystems.interactions.commands.SubCommand;
+import me.hektortm.woSSystems.interactions.commands.InterSubCommand;
 import org.bukkit.command.CommandSender;
 
-public class HelpCommand extends SubCommand {
+public class HelpCommand extends InterSubCommand {
 
     private final InteractionCommand command;
 

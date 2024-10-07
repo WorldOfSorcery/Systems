@@ -1,14 +1,12 @@
 package me.hektortm.woSSystems.citems.listeners;
 
-import me.hektortm.woSSystems.citems.core.DataManager;
-import net.kyori.adventure.text.event.ClickEvent;
+import me.hektortm.woSSystems.citems.DataManager;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;

@@ -2,12 +2,11 @@ package me.hektortm.woSSystems.citems.commands.subcommands;
 
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.citems.commands.SubCommand;
+import me.hektortm.woSSystems.citems.commands.CitemSubCommand;
 import me.hektortm.woSSystems.interactions.core.InteractionConfig;
 import me.hektortm.woSSystems.interactions.core.InteractionManager;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
@@ -17,7 +16,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
-public class ActionCommand extends SubCommand {
+public class ActionCommand extends CitemSubCommand {
 
     private final NamespacedKey leftActionKey;
     private final NamespacedKey rightActionKey;
