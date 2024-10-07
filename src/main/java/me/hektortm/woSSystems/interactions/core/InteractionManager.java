@@ -6,6 +6,7 @@ import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.interactions.config.YAMLLoader;
 import me.hektortm.woSSystems.interactions.gui.GUIManager;
 import me.hektortm.woSSystems.interactions.particles.ParticleHandler;
+import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -27,13 +28,15 @@ public class InteractionManager {
     private final GUIManager guiManager;
     private final WoSSystems plugin;
     private final ParticleHandler particleHandler;
+    private final PlaceholderResolver resolver;
 
-    public InteractionManager(YAMLLoader yamlLoader, WoSSystems plugin, GUIManager guiManager, ParticleHandler particleHandler) {
+    public InteractionManager(YAMLLoader yamlLoader, WoSSystems plugin, GUIManager guiManager, ParticleHandler particleHandler, PlaceholderResolver resolver) {
         this.yamlLoader = yamlLoader;
         this.plugin = plugin;
         this.guiManager = guiManager;
         this.particleHandler = particleHandler;
-        this.actionHandler = new ActionHandler(plugin);
+        this.resolver = resolver;
+        this.actionHandler = new ActionHandler(plugin, resolver);
     }
 
 

@@ -8,6 +8,8 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.io.File;
+
 import static me.hektortm.woSSystems.stats.utils.Operation.GIVE;
 import static me.hektortm.woSSystems.stats.utils.Operation.TAKE;
 
@@ -37,6 +39,12 @@ public class TakeCommand extends StatsSubCommand {
         OfflinePlayer p = Bukkit.getOfflinePlayer(args[0]);
         String id = args[1].toLowerCase();
         long amount = 0;
+
+        File statFile = new File(manager.statsFolder, id + ".yml");
+        if (!statFile.exists()) {
+            Utils.error(sender, "stats", "error.not-found");
+            return;
+        }
 
         try {
             amount = Long.parseLong(args[2]);

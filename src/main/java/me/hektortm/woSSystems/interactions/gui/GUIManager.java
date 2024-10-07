@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.interactions.gui;
 
 import me.hektortm.woSSystems.interactions.core.ActionHandler;
 import me.hektortm.woSSystems.interactions.core.InteractionConfig;
+import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -21,14 +22,16 @@ import java.util.Map;
 
 public class GUIManager implements Listener {
 
-    private Plugin plugin;
-    private ActionHandler actionHandler;
+    private final Plugin plugin;
+    private final ActionHandler actionHandler;
+    private final PlaceholderResolver resolver;
     private Map<String, InteractionConfig> guiInteractions = new HashMap<>();
     private Map<Player, InteractionConfig> openGUIs = new HashMap<>();
 
-    public GUIManager(Plugin plugin, ActionHandler actionHandler) {
+    public GUIManager(Plugin plugin, ActionHandler actionHandler, PlaceholderResolver resolver) {
         this.plugin = plugin;
         this.actionHandler = actionHandler;
+        this.resolver = resolver;
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
@@ -47,7 +50,7 @@ public class GUIManager implements Listener {
         Map<Integer, Map<String, Object>> slots = interactionConfig.getSlots();
         for (Map.Entry<Integer, Map<String, Object>> entry : slots.entrySet()) {
             int slot = entry.getKey();
-            inventory.setItem(slot, createItemFromConfig(entry.getValue()));
+            inventory.setItem(slot, createItemFromConfig(entry.getValue(), player));
         }
 
         // Track that this player has this custom GUI open
@@ -58,7 +61,7 @@ public class GUIManager implements Listener {
     }
 
     // Create an item based on YAML configuration
-    private ItemStack createItemFromConfig(Map<String, Object> slotConfig) {
+    private ItemStack createItemFromConfig(Map<String, Object> slotConfig, Player player) {
         Material material = Material.getMaterial((String) slotConfig.get("item"));
         if (material == null) material = Material.STONE;  // Fallback to stone if item is invalid
         ItemStack item = new ItemStack(material, (int) slotConfig.getOrDefault("amount", 1));
@@ -68,6 +71,7 @@ public class GUIManager implements Listener {
             // Set custom name
             String name = (String) slotConfig.get("meta.name");
             if (name != null) {
+                name = resolver.resolvePlaceholders(name, player);
                 meta.setDisplayName(name.replace("&", "§"));
             }
 
@@ -75,7 +79,7 @@ public class GUIManager implements Listener {
             List<String> lore = (List<String>) slotConfig.get("meta.lore");
             if (lore != null) {
                 for (int i = 0; i < lore.size(); i++) {
-                    lore.set(i, lore.get(i).replace("&", "§")); // Replace & with § in lore
+                    lore.set(i, resolver.resolvePlaceholders(lore.get(i), player).replace("&", "§")); // Replace & with § in lore
                 }
                 meta.setLore(lore);
             }

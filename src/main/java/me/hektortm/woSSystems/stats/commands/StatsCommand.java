@@ -2,10 +2,7 @@ package me.hektortm.woSSystems.stats.commands;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.stats.StatsManager;
-import me.hektortm.woSSystems.stats.commands.subcommands.CreateCommand;
-import me.hektortm.woSSystems.stats.commands.subcommands.GiveCommand;
-import me.hektortm.woSSystems.stats.commands.subcommands.SetCommand;
-import me.hektortm.woSSystems.stats.commands.subcommands.TakeCommand;
+import me.hektortm.woSSystems.stats.commands.subcommands.*;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -32,7 +29,7 @@ public class StatsCommand implements CommandExecutor {
         //subCommands.put("help", new HelpCommand());
         //subCommands.put("reload", new ReloadCommand());
         subCommands.put("create", new CreateCommand(manager));
-        //subCommands.put("delete", new DeleteCommand());
+        subCommands.put("delete", new DeleteCommand(manager));
         //subCommands.put("view", new ViewCommand());
 
     }

@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.citems.listeners;
 
 import me.hektortm.woSSystems.citems.DataManager;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -28,6 +29,10 @@ public class UseListener implements Listener {
         ItemStack item = e.getItem();
         Action action = e.getAction();
         Player p = e.getPlayer();
+
+        if (item == null || !item.hasItemMeta()) {
+            return;
+        }
 
         switch (action) {
             case RIGHT_CLICK_AIR:

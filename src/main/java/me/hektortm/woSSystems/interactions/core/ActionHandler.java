@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.interactions.core;
 
+import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -8,9 +9,11 @@ import java.util.List;
 public class ActionHandler {
 
     private Plugin plugin;
+    private final PlaceholderResolver resolver;
 
-    public ActionHandler(Plugin plugin) {
+    public ActionHandler(Plugin plugin, PlaceholderResolver resolver) {
         this.plugin = plugin;
+        this.resolver = resolver;
     }
 
     // Processes and triggers a list of actions
@@ -35,7 +38,8 @@ public class ActionHandler {
             }
         } else if (action.startsWith("send_message")) {
             String message = action.replace("send_message", "");
-            player.sendMessage(message.replace("&", "§"));
+            String finalMessage = resolver.resolvePlaceholders(message, player);
+            player.sendMessage(finalMessage.replace("&", "§"));
         }
         else {
             // Run any other command

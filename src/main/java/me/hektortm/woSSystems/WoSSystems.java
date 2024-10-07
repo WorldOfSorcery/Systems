@@ -22,6 +22,7 @@ import me.hektortm.woSSystems.interactions.listeners.InventoryCloseListener;
 import me.hektortm.woSSystems.interactions.particles.ParticleHandler;
 import me.hektortm.woSSystems.stats.StatsManager;
 import me.hektortm.woSSystems.stats.commands.StatsCommand;
+import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.WoSCore;
 import org.bukkit.command.CommandExecutor;
@@ -39,18 +40,25 @@ public final class WoSSystems extends JavaPlugin {
     private BindManager bindManager;
     private ParticleHandler particleHandler;
     private StatsManager statsManager;
+    private PlaceholderResolver resolver;
     private static DataManager data;
 
     @Override
     public void onEnable() {
 
         YAMLLoader yamlLoader = new YAMLLoader(this);
-        ActionHandler actionHandler = new ActionHandler(this);
-        guiManager = new GUIManager(this, actionHandler);
+
+
         particleHandler = new ParticleHandler();
-        interactionManager = new InteractionManager(yamlLoader, this, guiManager, particleHandler);
         bindManager = new BindManager(this);
         statsManager = new StatsManager(core);
+
+        resolver = new PlaceholderResolver(statsManager);
+
+        ActionHandler actionHandler = new ActionHandler(this, resolver);
+        guiManager = new GUIManager(this, actionHandler, resolver);
+        interactionManager = new InteractionManager(yamlLoader, this, guiManager, particleHandler, resolver);
+
         lang = new LangManager(core);
         data = new DataManager(new me.hektortm.woSSystems.citems.commands.CitemCommand(this, data, interactionManager, lang), interactionManager);
         Map<String, InteractionConfig> interactionConfigs = yamlLoader.loadInteractions();

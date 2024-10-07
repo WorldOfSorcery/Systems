@@ -9,3 +9,6 @@ give: "§aYou have given §e%amount% §aof stat §e'%stat%'§a to §e%player%§a
 take: "§aYou have taken §e%amount% §aof stat §e'%stat%'§a from §e%player%§a."
 set: "§aYou have set the stat §e'%stat%'§a of §e%player%§a to §e%amount%§a."
 create: "§aSuccessfully created stat §e'%stat%'§a with a maximum of §e%max%§a."
+delete:
+  confirm: "§7Confirm deletion with: /stats delete %id% confirm"
+  success: "§aYou have deleted the Stat with the ID: §e%id%"

@@ -31,8 +31,6 @@ public class StatsManager {
         loadStats();
     }
 
-//TODO: uncapped stat fix
-
     public void createStat(Stat stat) {
         File file = new File(statsFolder, stat.getId().toLowerCase() + ".yml");
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
@@ -51,6 +49,7 @@ public class StatsManager {
     public void addStat(CommandSender sender, String id, long max, boolean capped) {
         if (stats.containsKey(id)) {
             sender.sendMessage("Already exists");
+            return;
         }
 
         Stat stat = new Stat(id, max, capped);
@@ -75,6 +74,8 @@ public class StatsManager {
         long max = stat.getMax();
         int statAmount = playerData.getInt(path, 0);
         boolean capped = stat.getCapped();
+
+
 
         switch (operation) {
             case GIVE:
@@ -149,6 +150,19 @@ public class StatsManager {
         long finalAmount = pStatValue + amount;
         return finalAmount > max;
 
+    }
+
+    public long getPlayerStat(UUID playerUUID, String statId) {
+        File playerFile = new File(core.getDataFolder(), "playerdata" + File.separator + playerUUID.toString() + ".yml");
+        FileConfiguration playerData = YamlConfiguration.loadConfiguration(playerFile);
+
+        String path = "stats." + statId.toLowerCase();
+        return playerData.getLong(path, 0);
+    }
+
+    public long getStatMax(String statId) {
+        Stat stat = stats.get(statId.toLowerCase());
+        return stat != null ? stat.getMax() : 0;
     }
 
 
