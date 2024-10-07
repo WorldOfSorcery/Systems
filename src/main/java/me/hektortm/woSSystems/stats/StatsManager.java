@@ -31,13 +31,14 @@ public class StatsManager {
         loadStats();
     }
 
-//TODO: offline players, uncapped stat fix
+//TODO: uncapped stat fix
 
     public void createStat(Stat stat) {
         File file = new File(statsFolder, stat.getId().toLowerCase() + ".yml");
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
 
         config.set("id", stat.getId());
+        config.set("capped", stat.getCapped());
         config.set("max", stat.getMax());
 
         try {
@@ -47,12 +48,12 @@ public class StatsManager {
         }
     }
 
-    public void addStat(CommandSender sender, String id, int max) {
+    public void addStat(CommandSender sender, String id, long max, boolean capped) {
         if (stats.containsKey(id)) {
             sender.sendMessage("Already exists");
         }
 
-        Stat stat = new Stat(id, max);
+        Stat stat = new Stat(id, max, capped);
         stats.put(id, stat);
 
         createStat(stat);
@@ -63,7 +64,7 @@ public class StatsManager {
     }
 
 
-    public void modifyStat(UUID uuid, String id, int amount, Operation operation) {
+    public void modifyStat(UUID uuid, String id, long amount, Operation operation) {
         OfflinePlayer p = Bukkit.getOfflinePlayer(uuid);
         FileConfiguration playerData = core.getPlayerData(uuid, p.getName());
         File playerFile = new File(core.getDataFolder(), "playerdata" + File.separator + uuid + ".yml");
@@ -71,8 +72,9 @@ public class StatsManager {
         String path = "stats." + id;
 
         Stat stat = stats.get(id);
-        int max = stat.getMax();
+        long max = stat.getMax();
         int statAmount = playerData.getInt(path, 0);
+        boolean capped = stat.getCapped();
 
         switch (operation) {
             case GIVE:
@@ -90,10 +92,13 @@ public class StatsManager {
                 playerData.set(path, statAmount - amount);
                 break;
             case SET:
-                if (amount > max) {
-                    playerData.set(path, max);
-                    break;
+                if (capped) {
+                    if (amount > max) {
+                        playerData.set(path, max);
+                        break;
+                    }
                 }
+
                 playerData.set(path, amount);
                 break;
             case RESET:
@@ -114,9 +119,10 @@ public class StatsManager {
                 FileConfiguration config = YamlConfiguration.loadConfiguration(file);
 
                 String id = config.getString("id");
-                int max = config.getInt("max");
+                long max = config.getInt("max");
+                boolean capped = config.getBoolean("capped");
 
-                Stat stat = new Stat(id, max);
+                Stat stat = new Stat(id, max, capped);
                 stats.put(id.toLowerCase(), stat);
             }
         }
@@ -126,16 +132,21 @@ public class StatsManager {
         return stats;
     }
 
-    public boolean isLimit(UUID uuid, String id, int amount) {
+    public boolean isLimit(UUID uuid, String id, long amount) {
         Stat stat = stats.get(id.toLowerCase());
         File playerFile = new File(core.getDataFolder(), "playerdata" + File.separator + uuid.toString() + ".yml");
         FileConfiguration playerData = YamlConfiguration.loadConfiguration(playerFile);
 
-        int max = stat.getMax();
+        long max = stat.getMax();
+        boolean capped = stat.getCapped();
         String path = "stats." + id;
-        int pStatValue = playerData.getInt(path, 0);
+        long pStatValue = playerData.getLong(path, 0);
 
-        int finalAmount = pStatValue + amount;
+        if (!capped) {
+            return false;
+        }
+
+        long finalAmount = pStatValue + amount;
         return finalAmount > max;
 
     }

@@ -36,10 +36,10 @@ public class TakeCommand extends StatsSubCommand {
 
         OfflinePlayer p = Bukkit.getOfflinePlayer(args[0]);
         String id = args[1].toLowerCase();
-        int amount = 0;
+        long amount = 0;
 
         try {
-            amount = Integer.parseInt(args[2]);
+            amount = Long.parseLong(args[2]);
         } catch (NumberFormatException e) {
             Utils.error(sender, "stats", "error.invalid-amount");
             return;

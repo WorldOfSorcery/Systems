@@ -38,9 +38,17 @@ public class CreateCommand extends StatsSubCommand {
 
         Player p = (Player) sender;
         String id = args[0].toLowerCase();
-        int max = Integer.parseInt(args[1]);
+        boolean capped = Boolean.parseBoolean(args[1]);
+        long max = 0L;
+        try {
+            max = Long.parseLong(args[2]);
+        } catch (NumberFormatException e) {
+            Utils.error(sender, "general", "error.invalidnumber");
+        }
 
-        manager.addStat(p, id, max);
+
+
+        manager.addStat(p, id, max, capped);
         Utils.successMsg2Values(sender, "stats", "create", "%stat%", id, "%max%", String.valueOf(max));
 
     }
