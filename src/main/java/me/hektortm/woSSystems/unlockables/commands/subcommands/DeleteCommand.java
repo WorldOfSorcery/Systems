@@ -9,17 +9,17 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class GiveCommand extends UnlockableSubCommand {
+public class DeleteCommand extends UnlockableSubCommand {
 
     private final UnlockableManager manager;
 
-    public GiveCommand(UnlockableManager manager) {
+    public DeleteCommand(UnlockableManager manager) {
         this.manager = manager;
     }
 
     @Override
     public String getName() {
-        return "give";
+        return "delete";
     }
 
     @Override
@@ -36,10 +36,9 @@ public class GiveCommand extends UnlockableSubCommand {
             Utils.error(sender, "unlockables", "error.exists");
         }
 
-        manager.modifyUnlockable(p.getUniqueId(), id, Action.GIVE);
+        manager.deleteUnlockable(id);
         if (sender instanceof Player P) {
             Utils.successMsg2Values(P, "unlockables", "give.perm", "%id%", id, "%player%", p.getName());
         }
-
     }
 }

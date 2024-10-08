@@ -26,8 +26,8 @@ public class UnlockableManager {
     public File unlockableFolder = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "unlockables");
     public File unlockableFile = new File(unlockableFolder, "unlockables.yml");
     public File tempUnlockableFile = new File(unlockableFolder, "Unlockables_temp.yml");
-    private final Map<String, Unlockable> unlockables = new HashMap<>();
-    private final Map<String, TempUnlockable> tempUnlockables = new HashMap<>();
+    public final Map<String, Unlockable> unlockables = new HashMap<>();
+    public final Map<String, TempUnlockable> tempUnlockables = new HashMap<>();
 
     private final WoSCore core;
 

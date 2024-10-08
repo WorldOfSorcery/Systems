@@ -44,7 +44,7 @@ public final class WoSSystems extends JavaPlugin {
     private StatsManager statsManager;
     private UnlockableManager unlockableManager;
     private PlaceholderResolver resolver;
-    private static DataManager data;
+    private static DataManager dataManager;
 
     // TODO:
     //  - Interactions
@@ -58,21 +58,20 @@ public final class WoSSystems extends JavaPlugin {
 
         YAMLLoader yamlLoader = new YAMLLoader(this);
 
-
         particleHandler = new ParticleHandler();
         bindManager = new BindManager(this);
         statsManager = new StatsManager(core);
         unlockableManager = new UnlockableManager(core);
 
 
-        resolver = new PlaceholderResolver(statsManager);
+        resolver = new PlaceholderResolver(statsManager, dataManager);
 
         ActionHandler actionHandler = new ActionHandler(this, resolver);
         guiManager = new GUIManager(this, actionHandler, resolver);
         interactionManager = new InteractionManager(yamlLoader, this, guiManager, particleHandler, resolver);
 
         lang = new LangManager(core);
-        data = new DataManager(new me.hektortm.woSSystems.citems.commands.CitemCommand(data, interactionManager, lang), interactionManager);
+        dataManager = new DataManager(new me.hektortm.woSSystems.citems.commands.CitemCommand(dataManager, interactionManager, lang), interactionManager);
         Map<String, InteractionConfig> interactionConfigs = yamlLoader.loadInteractions();
 
         if (core != null) {
@@ -87,9 +86,9 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("opengui", new GUIcommand(guiManager, interactionManager));
         cmdReg("interaction", new InteractionCommand(interactionManager, bindManager));
         // Citems Commands
-        cmdReg("citem", new CitemCommand(data, interactionManager, lang));
-        cmdReg("cgive", new CgiveCommand(data, lang));
-        cmdReg("cremove", new CremoveCommand(data, lang));
+        cmdReg("citem", new CitemCommand(dataManager, interactionManager, lang));
+        cmdReg("cgive", new CgiveCommand(dataManager, lang));
+        cmdReg("cremove", new CremoveCommand(dataManager, lang));
         // Stats Commands
         cmdReg("stats", new StatsCommand(statsManager));
         // Unlockable Commands
@@ -100,8 +99,8 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new InterBlockListener(this, interactionManager));
         // Citem Events
         eventReg(new DropListener());
-        eventReg(new HoverListener(data));
-        eventReg(new UseListener(data));
+        eventReg(new HoverListener(dataManager));
+        eventReg(new UseListener(dataManager));
 
         // Register inventory click listener
         InventoryInteraction inventoryInteraction = new InventoryInteraction(this, actionHandler);

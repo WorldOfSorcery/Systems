@@ -9,22 +9,22 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class GiveCommand extends UnlockableSubCommand {
+public class TakeTempCommand extends UnlockableSubCommand {
 
     private final UnlockableManager manager;
 
-    public GiveCommand(UnlockableManager manager) {
+    public TakeTempCommand(UnlockableManager manager) {
         this.manager = manager;
     }
 
     @Override
     public String getName() {
-        return "give";
+        return "taketemp";
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        if(!sender.hasPermission("unlockables.give")) {
+        if(!sender.hasPermission("unlockables.taketemp")) {
             Utils.error(sender, "general", "error.perms");
             return;
         }
@@ -32,14 +32,13 @@ public class GiveCommand extends UnlockableSubCommand {
         OfflinePlayer p = Bukkit.getOfflinePlayer(args[0]);
         String id = args[1];
 
-        if(manager.unlockables.containsKey(id)) {
+        if(manager.tempUnlockables.containsKey(id)) {
             Utils.error(sender, "unlockables", "error.exists");
         }
 
-        manager.modifyUnlockable(p.getUniqueId(), id, Action.GIVE);
+        manager.modifyTempUnlockable(p.getUniqueId(), id, Action.TAKE);
         if (sender instanceof Player P) {
-            Utils.successMsg2Values(P, "unlockables", "give.perm", "%id%", id, "%player%", p.getName());
+            Utils.successMsg2Values(P, "unlockables", "take.temp", "%id%", id, "%player%", p.getName());
         }
-
     }
 }

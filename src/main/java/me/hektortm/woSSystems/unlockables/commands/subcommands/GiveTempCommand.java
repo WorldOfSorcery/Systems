@@ -31,6 +31,10 @@ public class GiveTempCommand extends UnlockableSubCommand {
         OfflinePlayer p = Bukkit.getOfflinePlayer(args[0]);
         String id = args[1];
 
+        if(manager.tempUnlockables.containsKey(id)) {
+            Utils.error(sender, "unlockables", "error.exists");
+        }
+
         manager.modifyTempUnlockable(p.getUniqueId(), id, Action.GIVE);
         if (sender instanceof Player P) {
             Utils.successMsg2Values(P, "unlockables", "give.tempp", "%id%", id, "%player%", p.getName());
