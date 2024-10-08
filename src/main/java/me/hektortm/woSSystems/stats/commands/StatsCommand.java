@@ -16,21 +16,20 @@ import java.util.Map;
 public class StatsCommand implements CommandExecutor {
 
     private final Map<String, StatsSubCommand> subCommands = new HashMap<>();
-    private final WoSSystems plugin;
     private final StatsManager manager;
 
-    public StatsCommand(WoSSystems plugin, StatsManager manager) {
-        this.plugin = plugin;
+    public StatsCommand(StatsManager manager) {
         this.manager = manager;
 
         subCommands.put("give", new GiveCommand(manager));
         subCommands.put("take", new TakeCommand(manager));
         subCommands.put("set", new SetCommand(manager));
         //subCommands.put("help", new HelpCommand());
+        //subCommands.put("reset", new ResetCommand(manager));
         subCommands.put("reload", new ReloadCommand(manager));
         subCommands.put("create", new CreateCommand(manager));
         subCommands.put("delete", new DeleteCommand(manager));
-        //subCommands.put("view", new ViewCommand());
+        subCommands.put("view", new ViewCommand(manager));
 
     }
 

@@ -20,14 +20,12 @@ import java.util.Map;
 public class CitemCommand implements CommandExecutor {
 
     private final Map<String, CitemSubCommand> subCommands = new HashMap<>();
-    private final WoSSystems plugin;
     private final DataManager data;
     private final InteractionManager interactionManager;
     private final LangManager lang;
     public File citemsFolder = new File(Bukkit.getServer().getPluginManager().getPlugin("WoSSystems").getDataFolder(), "citems");
 
-    public CitemCommand(WoSSystems plugin, DataManager data, InteractionManager interactionManager, LangManager lang) {
-        this.plugin = plugin;
+    public CitemCommand(DataManager data, InteractionManager interactionManager, LangManager lang) {
         this.data = data;
         this.interactionManager = interactionManager;
         this.lang = lang;
