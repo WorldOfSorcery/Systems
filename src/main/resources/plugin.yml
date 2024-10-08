@@ -20,41 +20,14 @@ commands:
     description: give a citem
     usage: /cgive <player> <ID> <amount>
   cremove:
-    description:
+    description: remove a citem
     usage: /cremove <player> <ID> <amount>
   # Stat Commands
   stats:
+    description: Stats Command
+    usage: /<command> <create|delete|give|take|set|reset|view|reload|>
+  unlockable:
+    description: Unlockable Command
+    usage: /<command> <create|createtemp|give|givetemp|>
 
-permissions:
-  interaction:
-    bind:
-      permission: interaction.bind
-    unbind:
-      permission: interaction.unbind
-    reload:
-      permissions:
-        - interaction.reload.single
-        - interaction.reload.all
-    trigger:
-      permission: interaction.trigger
-    view:
-      permission: interaction.view
-    help:
-      permission: interaction.help
-  citem:
-    flag:
-      permission: citem.flag
-    lore:
-      permission: citem.lore
-    rename:
-      permission: citem.rename
-    save:
-      permission: citem.save
-    update:
-      permission: citem.update
-    delete:
-      permission: citem.delete
-  cgive:
-    permission: citem.give
-  cremove:
-    permission: citem.remove
+

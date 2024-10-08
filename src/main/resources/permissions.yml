@@ -1,0 +1,41 @@
+interaction:
+  bind:
+    permission: interaction.bind
+  unbind:
+    permission: interaction.unbind
+  reload:
+    permissions:
+      - interaction.reload.single
+      - interaction.reload.all
+  trigger:
+    permission: interaction.trigger
+  view:
+    permission: interaction.view
+  help:
+    permission: interaction.help
+
+
+citem:
+  flag:
+    permission: citem.flag
+  lore:
+    permission: citem.lore
+  rename:
+    permission: citem.rename
+  save:
+    permission: citem.save
+  update:
+    permission: citem.update
+  delete:
+    permission: citem.delete
+cgive:
+  permission: citem.give
+cremove:
+  permission: citem.remove
+
+
+stats:
+  creaate:
+    permission: stats.create
+  delete:
+    permission: stats.delete

@@ -22,6 +22,8 @@ import me.hektortm.woSSystems.interactions.listeners.InventoryCloseListener;
 import me.hektortm.woSSystems.interactions.particles.ParticleHandler;
 import me.hektortm.woSSystems.stats.StatsManager;
 import me.hektortm.woSSystems.stats.commands.StatsCommand;
+import me.hektortm.woSSystems.unlockables.UnlockableManager;
+import me.hektortm.woSSystems.unlockables.commands.UnlockableCommand;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.WoSCore;
@@ -40,6 +42,7 @@ public final class WoSSystems extends JavaPlugin {
     private BindManager bindManager;
     private ParticleHandler particleHandler;
     private StatsManager statsManager;
+    private UnlockableManager unlockableManager;
     private PlaceholderResolver resolver;
     private static DataManager data;
 
@@ -47,7 +50,8 @@ public final class WoSSystems extends JavaPlugin {
     //  - Interactions
     //      - Conditions
     //   - Stats
-    //      -
+    //      - Global stats
+
 
     @Override
     public void onEnable() {
@@ -58,6 +62,8 @@ public final class WoSSystems extends JavaPlugin {
         particleHandler = new ParticleHandler();
         bindManager = new BindManager(this);
         statsManager = new StatsManager(core);
+        unlockableManager = new UnlockableManager(core);
+
 
         resolver = new PlaceholderResolver(statsManager);
 
@@ -66,12 +72,13 @@ public final class WoSSystems extends JavaPlugin {
         interactionManager = new InteractionManager(yamlLoader, this, guiManager, particleHandler, resolver);
 
         lang = new LangManager(core);
-        data = new DataManager(new me.hektortm.woSSystems.citems.commands.CitemCommand(this, data, interactionManager, lang), interactionManager);
+        data = new DataManager(new me.hektortm.woSSystems.citems.commands.CitemCommand(data, interactionManager, lang), interactionManager);
         Map<String, InteractionConfig> interactionConfigs = yamlLoader.loadInteractions();
 
         if (core != null) {
             lang.loadLangFileExternal(this, "citems", core);
             lang.loadLangFileExternal(this, "stats", core);
+            lang.loadLangFileExternal(this, "unlockables", core);
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }
@@ -80,11 +87,13 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("opengui", new GUIcommand(guiManager, interactionManager));
         cmdReg("interaction", new InteractionCommand(interactionManager, bindManager));
         // Citems Commands
-        cmdReg("citem", new CitemCommand(this, data, interactionManager, lang));
+        cmdReg("citem", new CitemCommand(data, interactionManager, lang));
         cmdReg("cgive", new CgiveCommand(data, lang));
         cmdReg("cremove", new CremoveCommand(data, lang));
         // Stats Commands
-        cmdReg("stats", new StatsCommand(this, statsManager));
+        cmdReg("stats", new StatsCommand(statsManager));
+        // Unlockable Commands
+        cmdReg("unlockable", new UnlockableCommand(unlockableManager));
 
         // Interaction Events
         eventReg(new InventoryCloseListener(guiManager));
