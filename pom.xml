@@ -76,6 +76,7 @@
             <groupId>me.hektortm</groupId>
             <artifactId>woscore</artifactId>
             <version>1.5.2</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

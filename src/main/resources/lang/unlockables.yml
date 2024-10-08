@@ -1,0 +1,11 @@
+error:
+  exists: "This Unlockable already exists."
+
+
+create:
+  perm: "§aSuccessfully created Unlockable §e'%id%'"
+  temp: "§aSuccessfully create temporary Unlockable §e'%id%'"
+
+give:
+  perm: "§aYou have given §e%player%§a the §e%id% §aUnlockable."
+  temp: "§aYou have given §e%player%§a the §e%id% §atemporary Unlockable."
