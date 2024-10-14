@@ -35,6 +35,37 @@ public class UnlockableManager {
         this.core = core;
     }
 
+
+    public void deleteUnlockable(String id, boolean isTemp) {
+        FileConfiguration config;
+        File fileToUse;
+
+        // Check if we're deleting a regular unlockable or a temp unlockable
+        if (isTemp) {
+            config = YamlConfiguration.loadConfiguration(tempUnlockableFile);
+            fileToUse = tempUnlockableFile;
+        } else {
+            config = YamlConfiguration.loadConfiguration(unlockableFile);
+            fileToUse = unlockableFile;
+        }
+
+        // Remove the unlockable from the YAML configuration
+        if (config.contains(isTemp ? "tempunlockables." + id : "unlockables." + id)) {
+            config.set(isTemp ? "tempunlockables." + id : "unlockables." + id, null);
+
+            try {
+                // Save the updated YAML file
+                config.save(fileToUse);
+                Bukkit.getLogger().info("Successfully deleted unlockable: " + id);
+            } catch (IOException e) {
+                Bukkit.getLogger().severe("Could not save after deleting unlockable: " + fileToUse);
+            }
+        } else {
+            Bukkit.getLogger().warning("Unlockable with ID " + id + " not found.");
+        }
+    }
+
+
     public void createUnlockable(Unlockable unlockable) {
         FileConfiguration config = YamlConfiguration.loadConfiguration(unlockableFile);
 

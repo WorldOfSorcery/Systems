@@ -1,6 +1,5 @@
 package me.hektortm.woSSystems.unlockables.commands;
 
-import me.hektortm.woSSystems.stats.commands.StatsSubCommand;
 import me.hektortm.woSSystems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.unlockables.commands.subcommands.*;
 import org.bukkit.command.Command;
@@ -21,11 +20,8 @@ public class UnlockableCommand implements CommandExecutor {
         this.manager = manager;
 
         subCommands.put("create", new CreateCommand(manager));
-        subCommands.put("creaatetemp", new CreateTempCommand(manager));
         subCommands.put("give", new GiveCommand(manager));
-        subCommands.put("givetemp", new GiveTempCommand(manager));
         subCommands.put("take", new TakeCommand(manager));
-        subCommands.put("taketemp", new TakeTempCommand(manager));
         subCommands.put("delete", new DeleteCommand(manager));
 
     }

@@ -1,6 +1,9 @@
 package me.hektortm.woSSystems.unlockables.commands;
 
 import me.hektortm.woSSystems.unlockables.UnlockableManager;
+import me.hektortm.woSSystems.unlockables.commands.subcommands.TempCreateCommand;
+import me.hektortm.woSSystems.unlockables.commands.subcommands.TempGiveCommand;
+import me.hektortm.woSSystems.unlockables.commands.subcommands.TempTakeCommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -17,6 +20,10 @@ public class TempUnlockableCommand implements CommandExecutor {
     public TempUnlockableCommand(final UnlockableManager manager) {
         this.manager = manager;
 
+
+        subCommands.put("create", new TempCreateCommand(manager));
+        subCommands.put("give", new TempGiveCommand(manager));
+        subCommands.put("take", new TempTakeCommand(manager));
 
     }
 

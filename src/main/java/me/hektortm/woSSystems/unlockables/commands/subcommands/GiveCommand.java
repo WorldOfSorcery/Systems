@@ -32,7 +32,7 @@ public class GiveCommand extends UnlockableSubCommand {
         OfflinePlayer p = Bukkit.getOfflinePlayer(args[0]);
         String id = args[1];
 
-        if(manager.unlockables.containsKey(id)) {
+        if(!manager.unlockables.containsKey(id)) {
             Utils.error(sender, "unlockables", "error.exists");
         }
 

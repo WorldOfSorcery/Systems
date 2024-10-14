@@ -6,17 +6,17 @@ import me.hektortm.wosCore.Utils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class CreateTempCommand extends UnlockableSubCommand {
+public class TempCreateCommand extends UnlockableSubCommand {
 
     private final UnlockableManager manager;
 
-    public CreateTempCommand(UnlockableManager manager) {
+    public TempCreateCommand(UnlockableManager manager) {
         this.manager = manager;
     }
 
     @Override
     public String getName() {
-        return "createtemp";
+        return "create";
     }
 
     @Override
@@ -25,13 +25,13 @@ public class CreateTempCommand extends UnlockableSubCommand {
             Utils.error(sender, "general", "error.notplayer");
             return;
         }
-        if (!sender.hasPermission("unlockables.create")) {
+        if (!sender.hasPermission("tempunlockables.create")) {
             Utils.error(sender, "general", "error.perms");
             return;
         }
 
         String id = args[0];
 
-        manager.addUnlockable(sender, id);
+        manager.addTempUnlockable(sender, id);
     }
 }

@@ -23,7 +23,9 @@ import me.hektortm.woSSystems.interactions.particles.ParticleHandler;
 import me.hektortm.woSSystems.stats.StatsManager;
 import me.hektortm.woSSystems.stats.commands.StatsCommand;
 import me.hektortm.woSSystems.unlockables.UnlockableManager;
+import me.hektortm.woSSystems.unlockables.commands.TempUnlockableCommand;
 import me.hektortm.woSSystems.unlockables.commands.UnlockableCommand;
+import me.hektortm.woSSystems.unlockables.listeners.CleanUpListener;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.WoSCore;
@@ -93,6 +95,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("stats", new StatsCommand(statsManager));
         // Unlockable Commands
         cmdReg("unlockable", new UnlockableCommand(unlockableManager));
+        cmdReg("tempunlockable", new TempUnlockableCommand(unlockableManager));
 
         // Interaction Events
         eventReg(new InventoryCloseListener(guiManager));
@@ -101,6 +104,8 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new DropListener());
         eventReg(new HoverListener(dataManager));
         eventReg(new UseListener(dataManager));
+        // Unlockable Events
+        eventReg(new CleanUpListener(core, unlockableManager));
 
         // Register inventory click listener
         InventoryInteraction inventoryInteraction = new InventoryInteraction(this, actionHandler);
