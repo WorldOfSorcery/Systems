@@ -33,6 +33,9 @@ public class PlaceholderResolver {
                     text = text.replace(maxPlaceholder, String.valueOf(statMax));
                 }
             }
+        if (text.contains("{global_stats.")) {
+            // TODO
+        }
         if(text.contains("{citems.")) {
             // TODO
             for (String citemId : statsManager.getStats().keySet()) {
