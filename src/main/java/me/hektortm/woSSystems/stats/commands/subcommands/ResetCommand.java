@@ -12,48 +12,38 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 
-import static me.hektortm.woSSystems.stats.utils.Operation.TAKE;
+import static me.hektortm.woSSystems.stats.utils.Operation.RESET;
+import static me.hektortm.woSSystems.stats.utils.Operation.SET;
 
-public class GlobalTakeCommand extends StatsSubCommand {
+public class ResetCommand extends StatsSubCommand {
 
     private final StatsManager manager;
-    public GlobalTakeCommand(StatsManager manager) {
+    public ResetCommand(StatsManager manager) {
         this.manager = manager;
     }
 
     @Override
     public String getName() {
-        return "take";
+        return "reset";
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        if (!PermissionUtil.hasPermission(sender, Permissions.STATS_GLOBAL_TAKE)) return;
+        if (!PermissionUtil.hasPermission(sender, Permissions.STATS_RESET)) return;
 
-        if (args.length < 2 || args.length > 3) {
-            Utils.error(sender, "stats", "error.usage.take");
+        if (args.length < 1 || args.length > 2) {
+            Utils.error(sender, "stats", "error.usage.reset");
             return;
         }
 
+
+
         OfflinePlayer p = Bukkit.getOfflinePlayer(args[0]);
         String id = args[1].toLowerCase();
-        long amount = 0;
 
         File statFile = new File(manager.statsFolder, id + ".yml");
         if (!statFile.exists()) {
             Utils.error(sender, "stats", "error.not-found");
-            return;
-        }
-
-        try {
-            amount = Long.parseLong(args[2]);
-        } catch (NumberFormatException e) {
-            Utils.error(sender, "stats", "error.invalid-amount");
-            return;
-        }
-
-        if (amount < 0) {
-            Utils.error(sender, "stats", "error.invalid-amount");
             return;
         }
 
@@ -62,10 +52,9 @@ public class GlobalTakeCommand extends StatsSubCommand {
             return;
         }
 
-        manager.modifyGlobalStat(id, amount, TAKE);
+        manager.modifyStat(p.getUniqueId(), id, 0, RESET);
         if (sender instanceof Player) {
-            Utils.successMsg3Values(sender, "stats", "take", "%player%", p.getName(),"%stat%", id, "%amount%", String.valueOf(amount));
+            Utils.successMsg2Values(sender, "stats", "reset", "%player%", p.getName(),"%stat%", id);
         }
-
     }
 }
