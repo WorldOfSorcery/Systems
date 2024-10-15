@@ -3,6 +3,8 @@ package me.hektortm.woSSystems.interactions.commands.subcommands;
 import me.hektortm.woSSystems.interactions.commands.InterSubCommand;
 import me.hektortm.woSSystems.interactions.core.InteractionConfig;
 import me.hektortm.woSSystems.interactions.core.InteractionManager;
+import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.Permissions;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -22,10 +24,7 @@ public class TriggerCommand extends InterSubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("interactions.trigger")) {
-            sender.sendMessage("You do not have permission to use this command!");
-            return;
-        }
+        if (!PermissionUtil.hasPermission(sender, Permissions.INTER_TRIGGER)) return;
 
         if (args.length == 2) {
             String playerName = args[0];

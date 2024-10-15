@@ -2,6 +2,8 @@ package me.hektortm.woSSystems.interactions.commands.subcommands;
 
 import me.hektortm.woSSystems.interactions.commands.InterSubCommand;
 import me.hektortm.woSSystems.interactions.core.BindManager;
+import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.Permissions;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -24,10 +26,7 @@ public class UnbindCommand extends InterSubCommand {
         if (!(sender instanceof Player)) {
             sender.sendMessage("You are not a player.");
         }
-        if (!sender.hasPermission("interactions.unbind")) {
-            sender.sendMessage("You do not have permission to use this command!");
-            return;
-        }
+        if (!PermissionUtil.hasPermission(sender, Permissions.INTER_UNBIND)) return;
 
         Player p = (Player) sender;
 

@@ -3,6 +3,8 @@ package me.hektortm.woSSystems.interactions.commands.subcommands;
 
 import me.hektortm.woSSystems.interactions.commands.InterSubCommand;
 import me.hektortm.woSSystems.interactions.core.InteractionManager;
+import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.Permissions;
 import org.bukkit.command.CommandSender;
 
 public class ReloadCommand extends InterSubCommand {
@@ -23,19 +25,13 @@ public class ReloadCommand extends InterSubCommand {
 
 
         if (args.length == 1) {
-            if (!sender.hasPermission("interactions.reload.single")) {
-                sender.sendMessage("You do not have permission to use this command!");
-                return;
-            }
+            if (!PermissionUtil.hasPermission(sender, Permissions.INTER_RELOAD_SINGLE)) return;
 
             String interactionId = args[0].toLowerCase();
             manager.reloadInteraction(interactionId);
             sender.sendMessage("Reloaded interaction: " + interactionId);
         } else {
-            if (!sender.hasPermission("interactions.reload.all")) {
-                sender.sendMessage("You do not have permission to use this command!");
-                return;
-            }
+            if (!PermissionUtil.hasPermission(sender, Permissions.INTER_RELOAD_ALL)) return;
 
             manager.reloadAllInteractions();
             sender.sendMessage("Reloaded all interactions.");
