@@ -21,7 +21,9 @@ import me.hektortm.woSSystems.interactions.listeners.InventoryClickListener;
 import me.hektortm.woSSystems.interactions.listeners.InventoryCloseListener;
 import me.hektortm.woSSystems.interactions.particles.ParticleHandler;
 import me.hektortm.woSSystems.stats.StatsManager;
+import me.hektortm.woSSystems.stats.commands.GlobalStatCommand;
 import me.hektortm.woSSystems.stats.commands.StatsCommand;
+import me.hektortm.woSSystems.stats.utils.GlobalStat;
 import me.hektortm.woSSystems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.unlockables.commands.TempUnlockableCommand;
 import me.hektortm.woSSystems.unlockables.commands.UnlockableCommand;
@@ -93,6 +95,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("cremove", new CremoveCommand(dataManager, lang));
         // Stats Commands
         cmdReg("stats", new StatsCommand(statsManager));
+        cmdReg("globalstats", new GlobalStatCommand(statsManager));
         // Unlockable Commands
         cmdReg("unlockable", new UnlockableCommand(unlockableManager));
         cmdReg("tempunlockable", new TempUnlockableCommand(unlockableManager));
@@ -118,6 +121,8 @@ public final class WoSSystems extends JavaPlugin {
 
         interactionManager.loadAllInteractions();
         interactionManager.startParticleTask();
+        unlockableManager.loadUnlockables();
+        unlockableManager.loadTempUnlockables();
     }
 
     @Override

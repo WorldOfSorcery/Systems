@@ -26,6 +26,12 @@ commands:
   stats:
     description: Stats Command
     usage: /<command> <create|delete|give|take|set|reset|view|reload|>
+  globalstats:
+    description: global stats command
+    usage: /<command>
+  tempunlockable:
+    description: temp unlockable
+    usage: /<command>
   unlockable:
     description: Unlockable Command
     usage: /<command> <create|createtemp|give|givetemp|>

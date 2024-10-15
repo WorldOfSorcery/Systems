@@ -11,6 +11,7 @@ import me.hektortm.wosCore.WoSCore;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -24,8 +25,8 @@ import java.util.UUID;
 public class UnlockableManager {
 
     public File unlockableFolder = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "unlockables");
-    public File unlockableFile = new File(unlockableFolder, "unlockables.yml");
-    public File tempUnlockableFile = new File(unlockableFolder, "Unlockables_temp.yml");
+    public File unlockableFile = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "unlockables.yml");
+    public File tempUnlockableFile = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "Unlockables_temp.yml");
     public final Map<String, Unlockable> unlockables = new HashMap<>();
     public final Map<String, TempUnlockable> tempUnlockables = new HashMap<>();
 
@@ -69,28 +70,46 @@ public class UnlockableManager {
     public void createUnlockable(Unlockable unlockable) {
         FileConfiguration config = YamlConfiguration.loadConfiguration(unlockableFile);
 
-        config.set("unlockables.", unlockable);
+        // Retrieve the existing unlockables list or create a new one
+        List<String> unlockableList = config.getStringList("unlockables");
+
+        // Add the new unlockable ID if it's not already in the list
+        if (!unlockableList.contains(unlockable.getId())) {
+            unlockableList.add(unlockable.getId());
+        }
+
+        // Save the updated unlockables list back to the configuration
+        config.set("unlockables", unlockableList);
 
         try {
             config.save(unlockableFile);
         } catch (IOException e) {
             Bukkit.getLogger().severe("Could not save Unlockable file: " + unlockableFile);
-
-
         }
     }
+
 
     public void createTempUnlockable(TempUnlockable unlockable) {
         FileConfiguration config = YamlConfiguration.loadConfiguration(tempUnlockableFile);
 
-        config.set("tempunlockables.", unlockable);
+        // Retrieve the existing temp unlockables list or create a new one
+        List<String> tempUnlockableList = config.getStringList("tempunlockables");
+
+        // Add the new temp unlockable ID if it's not already in the list
+        if (!tempUnlockableList.contains(unlockable.getId())) {
+            tempUnlockableList.add(unlockable.getId());
+        }
+
+        // Save the updated temp unlockables list back to the configuration
+        config.set("tempunlockables", tempUnlockableList);
 
         try {
             config.save(tempUnlockableFile);
         } catch (IOException e) {
-            Bukkit.getLogger().severe("Could not save TempUnlockable file: " + tempUnlockableFile);
+            Bukkit.getLogger().severe("Could not save Temp Unlockable file: " + tempUnlockableFile);
         }
     }
+
 
     public void addUnlockable(CommandSender sender, String id) {
         if (unlockables.containsKey(id)) {
@@ -201,5 +220,38 @@ public class UnlockableManager {
 
         return tempUnlockableList;
     }
+
+    public void loadUnlockables() {
+        FileConfiguration config = YamlConfiguration.loadConfiguration(unlockableFile);
+
+        List<String> unlockableIds = config.getStringList("unlockables");
+
+        // Ensure the unlockables map is populated correctly
+        for (String id : unlockableIds) {
+            Unlockable unlockable = new Unlockable(id);
+            unlockables.put(id, unlockable);
+        }
+
+        Bukkit.getLogger().info("Loaded unlockables: " + unlockableIds);
+    }
+
+
+
+    public void loadTempUnlockables() {
+        FileConfiguration config = YamlConfiguration.loadConfiguration(tempUnlockableFile);
+
+        List<String> tempUnlockableIds = config.getStringList("tempunlockables");
+
+        // Ensure the tempUnlockables map is populated correctly
+        for (String id : tempUnlockableIds) {
+            TempUnlockable tempUnlockable = new TempUnlockable(id);
+            tempUnlockables.put(id, tempUnlockable);
+        }
+
+        Bukkit.getLogger().info("Loaded temp unlockables: " + tempUnlockableIds);
+    }
+
+
+
 
 }

@@ -57,7 +57,7 @@ public class GlobalGiveCommand extends StatsSubCommand {
             return;
         }
 
-        if (!manager.getStats().containsKey(id)) {
+        if (!manager.getGlobalStats().containsKey(id)) {
             Utils.error(sender, "stats", "error.not-found");
             return;
         }

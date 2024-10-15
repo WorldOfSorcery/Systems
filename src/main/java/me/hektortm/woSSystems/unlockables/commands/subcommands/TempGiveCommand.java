@@ -32,6 +32,7 @@ public class TempGiveCommand extends UnlockableSubCommand {
 
         if(!manager.tempUnlockables.containsKey(id)) {
             Utils.error(sender, "unlockables", "error.exists");
+            return;
         }
 
         manager.modifyTempUnlockable(p.getUniqueId(), id, Action.GIVE);

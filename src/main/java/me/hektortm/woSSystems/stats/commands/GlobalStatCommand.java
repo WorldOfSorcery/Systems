@@ -2,6 +2,9 @@ package me.hektortm.woSSystems.stats.commands;
 
 import me.hektortm.woSSystems.stats.StatsManager;
 import me.hektortm.woSSystems.stats.commands.subcommands.GlobalCreateCommand;
+import me.hektortm.woSSystems.stats.commands.subcommands.GlobalDeleteCommand;
+import me.hektortm.woSSystems.stats.commands.subcommands.GlobalGiveCommand;
+import me.hektortm.woSSystems.stats.commands.subcommands.GlobalTakeCommand;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -20,6 +23,9 @@ public class GlobalStatCommand implements CommandExecutor {
         this.manager = manager;
 
         subCommands.put("create", new GlobalCreateCommand(manager));
+        subCommands.put("give", new GlobalGiveCommand(manager));
+        subCommands.put("delete", new GlobalDeleteCommand(manager));
+        subCommands.put("take", new GlobalTakeCommand(manager));
     }
     // TODO: GlobalStats Messages
     @Override

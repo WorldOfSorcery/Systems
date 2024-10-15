@@ -29,16 +29,24 @@ public class CleanUpListener implements Listener {
     public void leaveEvent(PlayerQuitEvent event) {
         Player p = event.getPlayer();
 
-        File playerFile = new File(core.getDataFolder() + "playerdata" + File.separator + p.getUniqueId()+".yml");
+        File playerFile = new File(core.getDataFolder() + File.separator + "playerdata" + File.separator + p.getUniqueId() + ".yml");
         FileConfiguration playerData = YamlConfiguration.loadConfiguration(playerFile);
 
+        // Get the temp unlockables list and clear it
         List<String> tempUnlockables = playerData.getStringList("tempunlockables");
         tempUnlockables.clear();
+
+        // Set the cleared list back to the player data
+        playerData.set("tempunlockables", tempUnlockables);
+
         try {
+            // Save the updated player data file
             playerData.save(playerFile);
+            Bukkit.getLogger().info("Cleared temp unlockables for player: " + p.getUniqueId());
         } catch (IOException e) {
-            Bukkit.getLogger().severe("Could not save playerfile: "+ p.getUniqueId() + ".yml");
+            Bukkit.getLogger().severe("Could not save player file: " + p.getUniqueId() + ".yml");
         }
     }
+
 
 }
