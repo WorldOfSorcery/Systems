@@ -15,6 +15,8 @@ public class PlaceholderResolver {
         this.citemsManager = citemsManager;
     }
 
+    // TODO UPDATE WHEN INVENTORY IS OPENED AGAIN
+
     public String resolvePlaceholders(String text, Player player) {
         UUID playerUUID = player.getUniqueId();
 
@@ -33,8 +35,21 @@ public class PlaceholderResolver {
                     text = text.replace(maxPlaceholder, String.valueOf(statMax));
                 }
             }
+        }
         if (text.contains("{global_stats.")) {
-            // TODO
+            for (String statId : statsManager.getGlobalStats().keySet()) {
+                String amountPlaceholder = "{global_stats." + statId + "_amount}";
+                String maxPlaceholder = "{global_stats." + statId + "_max}";
+
+                if (text.contains(amountPlaceholder)) {
+                    long statAmount = statsManager.getGlobalStat(statId);
+                    text = text.replace(amountPlaceholder, String.valueOf(statAmount));
+                }
+                if (text.contains(maxPlaceholder)) {
+                    long statMax = statsManager.getGlobalStatMax(statId);
+                    text = text.replace(maxPlaceholder, String.valueOf(statMax));
+                }
+            }
         }
         if(text.contains("{citems.")) {
             // TODO
@@ -52,9 +67,6 @@ public class PlaceholderResolver {
                 }
 
             }
-        }
-
-
         }
         return text;
     }

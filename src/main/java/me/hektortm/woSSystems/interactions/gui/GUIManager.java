@@ -22,11 +22,13 @@ import java.util.Map;
 
 public class GUIManager implements Listener {
 
+
+
     private final Plugin plugin;
     private final ActionHandler actionHandler;
     private final PlaceholderResolver resolver;
     private Map<String, InteractionConfig> guiInteractions = new HashMap<>();
-    private Map<Player, InteractionConfig> openGUIs = new HashMap<>();
+    public Map<Player, InteractionConfig> openGUIs = new HashMap<>();
 
     public GUIManager(Plugin plugin, ActionHandler actionHandler, PlaceholderResolver resolver) {
         this.plugin = plugin;
@@ -46,12 +48,8 @@ public class GUIManager implements Listener {
         int rows = interactionConfig.getInventoryRows();
         Inventory inventory = Bukkit.createInventory(null, rows * 9, title);
 
-        // Setup inventory slots based on the configuration (this part remains unchanged)
-        Map<Integer, Map<String, Object>> slots = interactionConfig.getSlots();
-        for (Map.Entry<Integer, Map<String, Object>> entry : slots.entrySet()) {
-            int slot = entry.getKey();
-            inventory.setItem(slot, createItemFromConfig(entry.getValue(), player));
-        }
+        // Update the inventory items based on the current player stats
+        updateInventory(inventory, interactionConfig, player);
 
         // Track that this player has this custom GUI open
         openGUIs.put(player, interactionConfig);
@@ -59,6 +57,23 @@ public class GUIManager implements Listener {
         // Open the inventory for the player
         player.openInventory(inventory);
     }
+
+    private void updateInventory(Inventory inventory, InteractionConfig interactionConfig, Player player) {
+        // Clear the inventory to prepare for new items
+        inventory.clear();
+
+        // Setup inventory slots based on the configuration
+        Map<Integer, Map<String, Object>> slots = interactionConfig.getSlots();
+        for (Map.Entry<Integer, Map<String, Object>> entry : slots.entrySet()) {
+            int slot = entry.getKey();
+            // Create items based on the current stats instead of a static config
+            inventory.setItem(slot, createItemFromConfig(entry.getValue(), player));
+        }
+
+        // The inventory is now populated with the latest items
+    }
+
+
 
     // Create an item based on YAML configuration
     private ItemStack createItemFromConfig(Map<String, Object> slotConfig, Player player) {
@@ -71,15 +86,16 @@ public class GUIManager implements Listener {
             // Set custom name
             String name = (String) slotConfig.get("meta.name");
             if (name != null) {
-                name = resolver.resolvePlaceholders(name, player);
+                name = resolver.resolvePlaceholders(name, player);  // Ensure this accesses the current player's state
                 meta.setDisplayName(name.replace("&", "§"));
             }
 
-            // Set lore
+            // Set lore dynamically based on current player stats
             List<String> lore = (List<String>) slotConfig.get("meta.lore");
             if (lore != null) {
                 for (int i = 0; i < lore.size(); i++) {
-                    lore.set(i, resolver.resolvePlaceholders(lore.get(i), player).replace("&", "§")); // Replace & with § in lore
+                    // Resolve lore with current player stats
+                    lore.set(i, resolver.resolvePlaceholders(lore.get(i), player).replace("&", "§"));
                 }
                 meta.setLore(lore);
             }
@@ -94,10 +110,6 @@ public class GUIManager implements Listener {
         return item;
     }
 
-    @EventHandler
-    public void onInventoryClose(InventoryCloseEvent event) {
-        // Handle any clean-up or additional logic when the inventory is closed
-    }
 
     public boolean hasCustomGUIOpen(Player player) {
         return openGUIs.containsKey(player);

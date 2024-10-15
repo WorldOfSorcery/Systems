@@ -21,5 +21,6 @@ public class InventoryCloseListener implements Listener {
 
         // Remove the player from the open GUI map when they close the custom GUI
         guiManager.closeGUI(player);
+        guiManager.openGUIs.remove(player);
     }
 }

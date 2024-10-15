@@ -334,6 +334,11 @@ public class StatsManager {
         return stat != null ? stat.getMax() : 0;
     }
 
+    public long getGlobalStatMax(String id) {
+        GlobalStat stat = globalStats.get(id.toLowerCase());
+        return stat != null ? stat.getMax() : 0;
+    }
+
 
 
 }
