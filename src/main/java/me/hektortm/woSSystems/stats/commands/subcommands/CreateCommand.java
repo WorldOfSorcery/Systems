@@ -3,6 +3,8 @@ package me.hektortm.woSSystems.stats.commands.subcommands;
 import me.hektortm.woSSystems.stats.StatsManager;
 import me.hektortm.woSSystems.stats.commands.StatsCommand;
 import me.hektortm.woSSystems.stats.commands.StatsSubCommand;
+import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -29,10 +31,7 @@ public class CreateCommand extends StatsSubCommand {
             return;
         }
 
-        if(!sender.hasPermission("stats.create")) {
-            Utils.error(sender, "general", "error.perms");
-            return;
-        }
+        if (!PermissionUtil.hasPermission(sender, Permissions.STATS_CREATE)) return;
 
         // /stats create <ID> <Max>
 
@@ -48,7 +47,7 @@ public class CreateCommand extends StatsSubCommand {
 
 
 
-        manager.addStat(p, id, max, capped);
+        manager.addStat(p, id, max, capped, false);
         Utils.successMsg2Values(sender, "stats", "create", "%stat%", id, "%max%", String.valueOf(max));
 
     }

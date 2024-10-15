@@ -2,6 +2,8 @@ package me.hektortm.woSSystems.stats.commands.subcommands;
 
 import me.hektortm.woSSystems.stats.StatsManager;
 import me.hektortm.woSSystems.stats.commands.StatsSubCommand;
+import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -27,10 +29,7 @@ public class DeleteCommand extends StatsSubCommand {
             return;
         }
 
-        if(!sender.hasPermission("stats.delete")) {
-            Utils.error(sender, "general", "error.perms");
-            return;
-        }
+        if (!PermissionUtil.hasPermission(sender, Permissions.STATS_DELETE)) return;
 
         Player p = (Player) sender;
         String id = args[0].toLowerCase();
@@ -46,16 +45,11 @@ public class DeleteCommand extends StatsSubCommand {
         }
 
         if(args.length == 2 && args[1].equals("confirm")) {
-            deleteStat(id);
+            manager.deleteStat(p, id, false);
             Utils.successMsg1Value(p, "stats", "delete.success", "%id%", id);
         }
 
     }
 
-    private void deleteStat(String id) {
-        File itemFile = new File(manager.statsFolder, id + ".yml");
-        itemFile.delete();
-
-    }
 
 }

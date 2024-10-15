@@ -2,6 +2,8 @@ package me.hektortm.woSSystems.stats.commands.subcommands;
 
 import me.hektortm.woSSystems.stats.StatsManager;
 import me.hektortm.woSSystems.stats.commands.StatsSubCommand;
+import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -27,10 +29,9 @@ public class GiveCommand extends StatsSubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("stats.give")) {
-            Utils.error(sender, "general", "error.perms");
-            return;
-        }
+        if (!PermissionUtil.hasPermission(sender, Permissions.STATS_GIVE)) return;
+
+
         if (args.length < 2 || args.length > 3) {
             Utils.error(sender, "stats", "error.usage.give");
             return;
