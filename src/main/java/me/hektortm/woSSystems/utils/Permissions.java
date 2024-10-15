@@ -14,7 +14,8 @@ public enum Permissions {
 
     INTER_BIND("interaction.bind"),
     INTER_UNBIND("interaction.unbind"),
-    INTER_RELOAD("interaction.reload"),
+    INTER_RELOAD_SINGLE("interaction.reload.single"),
+    INTER_RELOAD_ALL("interaction.reload.all"),
     INTER_TRIGGER("interaction.trigger"),
 
     STATS_CREATE("stats.create"),
