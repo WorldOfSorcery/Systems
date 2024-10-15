@@ -2,6 +2,8 @@ package me.hektortm.woSSystems.citems.commands.subcommands;
 
 
 import me.hektortm.woSSystems.citems.commands.CitemSubCommand;
+import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -25,10 +27,7 @@ public class LoreCommand extends CitemSubCommand {
             Utils.error(sender, "general", "error.notplayer");
             return;
         }
-        if(!sender.hasPermission("citem.lore")) {
-            Utils.error(sender, "general", "error.perms");
-            return;
-        }
+        if (!PermissionUtil.hasPermission(sender, Permissions.CITEM_LORE)) return;
 
         Player p = (Player) sender;
 

@@ -3,6 +3,8 @@ package me.hektortm.woSSystems.citems.commands.subcommands;
 
 import me.hektortm.woSSystems.citems.commands.CitemSubCommand;
 import me.hektortm.woSSystems.citems.DataManager;
+import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -37,10 +39,7 @@ public class FlagCommand extends CitemSubCommand {
             return;
         }
 
-        if (!sender.hasPermission("citem.flag")) {
-            Utils.error(sender, "general", "error.perms");
-            return;
-        }
+        if (!PermissionUtil.hasPermission(sender, Permissions.CITEM_FLAGS)) return;
 
         Player p = (Player) sender;
 

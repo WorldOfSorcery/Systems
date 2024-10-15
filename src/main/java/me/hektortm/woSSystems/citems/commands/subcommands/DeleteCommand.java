@@ -2,6 +2,8 @@ package me.hektortm.woSSystems.citems.commands.subcommands;
 
 import me.hektortm.woSSystems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.citems.commands.CitemSubCommand;
+import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -31,10 +33,7 @@ public class DeleteCommand extends CitemSubCommand implements Listener {
             return;
         }
 
-        if (!sender.hasPermission("citem.delete")) {
-            Utils.error(sender, "general", "error.perms");
-            return;
-        }
+        if (!PermissionUtil.hasPermission(sender, Permissions.CITEM_DELETE)) return;
 
         Player p = (Player) sender;
         String id = args[0];

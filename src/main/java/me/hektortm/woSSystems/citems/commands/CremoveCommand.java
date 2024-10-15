@@ -2,6 +2,8 @@ package me.hektortm.woSSystems.citems.commands;
 
 
 import me.hektortm.woSSystems.citems.DataManager;
+import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
@@ -26,10 +28,7 @@ public class CremoveCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if(command.getName().equalsIgnoreCase("cremove")) {
-            if(!sender.hasPermission("citem.remove")) {
-                Utils.error(sender, "general", "error.perms");
-                return true;
-            }
+            if (!PermissionUtil.hasPermission(sender, Permissions.CITEM_REMOVE)) return true;
 
             if (args.length < 2 || args.length > 3) {
                 Utils.error(sender, "citems", "error.usage.cremove");

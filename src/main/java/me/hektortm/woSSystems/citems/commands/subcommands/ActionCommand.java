@@ -5,6 +5,8 @@ import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.citems.commands.CitemSubCommand;
 import me.hektortm.woSSystems.interactions.core.InteractionConfig;
 import me.hektortm.woSSystems.interactions.core.InteractionManager;
+import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Material;
@@ -42,10 +44,7 @@ public class ActionCommand extends CitemSubCommand {
             return;
         }
 
-        if(!sender.hasPermission("citem.action")) {
-            Utils.error(sender, "general", "error.perms");
-            return;
-        }
+        if (!PermissionUtil.hasPermission(sender, Permissions.CITEM_ACTIONS)) return;
 
         Player p = (Player) sender;
         ItemStack itemInHand = p.getInventory().getItemInMainHand();

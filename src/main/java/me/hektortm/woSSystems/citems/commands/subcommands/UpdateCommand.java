@@ -4,6 +4,8 @@ package me.hektortm.woSSystems.citems.commands.subcommands;
 import me.hektortm.woSSystems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.citems.commands.CitemSubCommand;
 import me.hektortm.woSSystems.citems.DataManager;
+import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
@@ -33,10 +35,7 @@ public class UpdateCommand extends CitemSubCommand {
             Utils.error(sender, "general", "error.notplayer");
             return;
         }
-        if(!sender.hasPermission("citem.update")) {
-            Utils.error(sender, "general", "error.perms");
-            return;
-        }
+        if (!PermissionUtil.hasPermission(sender, Permissions.CITEM_UPDATE)) return;
 
         Player p = (Player) sender;
 
