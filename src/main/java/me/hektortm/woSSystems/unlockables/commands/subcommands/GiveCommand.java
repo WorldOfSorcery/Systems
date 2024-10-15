@@ -3,6 +3,8 @@ package me.hektortm.woSSystems.unlockables.commands.subcommands;
 import me.hektortm.woSSystems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.unlockables.commands.UnlockableSubCommand;
 import me.hektortm.woSSystems.unlockables.utils.Action;
+import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -24,10 +26,7 @@ public class GiveCommand extends UnlockableSubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        if(!sender.hasPermission("unlockables.give")) {
-            Utils.error(sender, "general", "error.perms");
-            return;
-        }
+        if (!PermissionUtil.hasPermission(sender, Permissions.UNLOCKABLE_GIVE)) return;
 
         OfflinePlayer p = Bukkit.getOfflinePlayer(args[0]);
         String id = args[1];
