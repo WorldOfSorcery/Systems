@@ -1,33 +1,34 @@
 package me.hektortm.woSSystems;
 
-import me.hektortm.woSSystems.citems.commands.CgiveCommand;
-import me.hektortm.woSSystems.citems.commands.CitemCommand;
-import me.hektortm.woSSystems.citems.commands.CremoveCommand;
-import me.hektortm.woSSystems.citems.DataManager;
-import me.hektortm.woSSystems.citems.listeners.DropListener;
-import me.hektortm.woSSystems.citems.listeners.HoverListener;
-import me.hektortm.woSSystems.citems.listeners.UseListener;
-import me.hektortm.woSSystems.interactions.actions.InventoryInteraction;
-import me.hektortm.woSSystems.interactions.commands.GUIcommand;
-import me.hektortm.woSSystems.interactions.commands.InteractionCommand;
-import me.hektortm.woSSystems.interactions.config.YAMLLoader;
-import me.hektortm.woSSystems.interactions.core.ActionHandler;
-import me.hektortm.woSSystems.interactions.core.BindManager;
-import me.hektortm.woSSystems.interactions.core.InteractionConfig;
-import me.hektortm.woSSystems.interactions.core.InteractionManager;
-import me.hektortm.woSSystems.interactions.gui.GUIManager;
-import me.hektortm.woSSystems.interactions.listeners.InterBlockListener;
-import me.hektortm.woSSystems.interactions.listeners.InventoryClickListener;
-import me.hektortm.woSSystems.interactions.listeners.InventoryCloseListener;
-import me.hektortm.woSSystems.interactions.particles.ParticleHandler;
-import me.hektortm.woSSystems.stats.StatsManager;
-import me.hektortm.woSSystems.stats.commands.GlobalStatCommand;
-import me.hektortm.woSSystems.stats.commands.StatsCommand;
-import me.hektortm.woSSystems.stats.utils.GlobalStat;
-import me.hektortm.woSSystems.unlockables.UnlockableManager;
-import me.hektortm.woSSystems.unlockables.commands.TempUnlockableCommand;
-import me.hektortm.woSSystems.unlockables.commands.UnlockableCommand;
-import me.hektortm.woSSystems.unlockables.listeners.CleanUpListener;
+import me.hektortm.woSSystems.professions.fishing.FishingManager;
+import me.hektortm.woSSystems.professions.fishing.listeners.FishingListener;
+import me.hektortm.woSSystems.systems.citems.commands.CgiveCommand;
+import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
+import me.hektortm.woSSystems.systems.citems.commands.CremoveCommand;
+import me.hektortm.woSSystems.systems.citems.DataManager;
+import me.hektortm.woSSystems.systems.citems.listeners.DropListener;
+import me.hektortm.woSSystems.systems.citems.listeners.HoverListener;
+import me.hektortm.woSSystems.systems.citems.listeners.UseListener;
+import me.hektortm.woSSystems.systems.interactions.actions.InventoryInteraction;
+import me.hektortm.woSSystems.systems.interactions.commands.GUIcommand;
+import me.hektortm.woSSystems.systems.interactions.commands.InteractionCommand;
+import me.hektortm.woSSystems.systems.interactions.config.YAMLLoader;
+import me.hektortm.woSSystems.systems.interactions.core.ActionHandler;
+import me.hektortm.woSSystems.systems.interactions.core.BindManager;
+import me.hektortm.woSSystems.systems.interactions.core.InteractionConfig;
+import me.hektortm.woSSystems.systems.interactions.core.InteractionManager;
+import me.hektortm.woSSystems.systems.interactions.gui.GUIManager;
+import me.hektortm.woSSystems.systems.interactions.listeners.InterBlockListener;
+import me.hektortm.woSSystems.systems.interactions.listeners.InventoryClickListener;
+import me.hektortm.woSSystems.systems.interactions.listeners.InventoryCloseListener;
+import me.hektortm.woSSystems.systems.interactions.particles.ParticleHandler;
+import me.hektortm.woSSystems.systems.stats.StatsManager;
+import me.hektortm.woSSystems.systems.stats.commands.GlobalStatCommand;
+import me.hektortm.woSSystems.systems.stats.commands.StatsCommand;
+import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
+import me.hektortm.woSSystems.systems.unlockables.commands.TempUnlockableCommand;
+import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableCommand;
+import me.hektortm.woSSystems.systems.unlockables.listeners.CleanUpListener;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.WoSCore;
@@ -35,6 +36,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.util.Map;
 
 public final class WoSSystems extends JavaPlugin {
@@ -47,6 +49,7 @@ public final class WoSSystems extends JavaPlugin {
     private ParticleHandler particleHandler;
     private StatsManager statsManager;
     private UnlockableManager unlockableManager;
+    private FishingManager fishingManager;
     private PlaceholderResolver resolver;
     private static DataManager dataManager;
 
@@ -59,6 +62,8 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        File fishingItemsFolder = new File(getDataFolder(), "professions/fishing/items");
+        fishingManager = new FishingManager(fishingItemsFolder);
 
         YAMLLoader yamlLoader = new YAMLLoader(this);
 
@@ -75,7 +80,7 @@ public final class WoSSystems extends JavaPlugin {
         interactionManager = new InteractionManager(yamlLoader, this, guiManager, particleHandler, resolver);
 
         lang = new LangManager(core);
-        dataManager = new DataManager(new me.hektortm.woSSystems.citems.commands.CitemCommand(dataManager, interactionManager, lang), interactionManager);
+        dataManager = new DataManager(new me.hektortm.woSSystems.systems.citems.commands.CitemCommand(dataManager, interactionManager, lang), interactionManager);
         Map<String, InteractionConfig> interactionConfigs = yamlLoader.loadInteractions();
 
         if (core != null) {
@@ -97,8 +102,8 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("stats", new StatsCommand(statsManager));
         cmdReg("globalstats", new GlobalStatCommand(statsManager));
         // Unlockable Commands
-        cmdReg("unlockable", new UnlockableCommand(unlockableManager));
-        cmdReg("tempunlockable", new TempUnlockableCommand(unlockableManager));
+        cmdReg("unlockable", new UnlockableCommand(unlockableManager, lang));
+        cmdReg("tempunlockable", new TempUnlockableCommand(unlockableManager, lang));
 
         // Interaction Events
         eventReg(new InventoryCloseListener(guiManager));
@@ -109,6 +114,8 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new UseListener(dataManager));
         // Unlockable Events
         eventReg(new CleanUpListener(core, unlockableManager));
+
+        eventReg(new FishingListener(fishingManager, dataManager, interactionManager));
 
         // Register inventory click listener
         InventoryInteraction inventoryInteraction = new InventoryInteraction(this, actionHandler);

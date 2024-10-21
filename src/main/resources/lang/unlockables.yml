@@ -1,6 +1,21 @@
 error:
   exists: "This Unlockable already exists."
+  not-found: "Unlockable not found."
+  usage:
+    temp:
+      create: "Usage: /tempunlockable create <ID>"
+      delete: "Usage: /tempunlockable delete <ID>"
+      give: "Usage: /tempunlockable give <Player> <ID>"
+      take: "Usage: /tempunlockable take <Player> <ID>"
+    perm:
+      create: "Usage: /unlockable create <ID>"
+      delete: "Usage: /unlockable delete <ID>"
+      give: "Usage: /unlockable give <Player> <ID>"
+      take: "Usage: /unlockable take <Player> <ID>"
 
+delete:
+  perm: "§aSuccessfully deleted Unlockable §e'%id%'"
+  temp: "§aSuccessfully deleted temporary Unlockable §e'%id%'"
 
 create:
   perm: "§aSuccessfully created Unlockable §e'%id%'"
@@ -9,3 +24,20 @@ create:
 give:
   perm: "§aYou have given §e%player%§a the §e%id% §aUnlockable."
   temp: "§aYou have given §e%player%§a the §e%id% §atemporary Unlockable."
+
+help:
+  perm:
+    header: "§7Unlockable Commands:"
+    create: "§e/unlockable create <ID> §7- Create an Unlockable."
+    delete: "§e/unlockable delete <ID> §7- Delete an Unlockable."
+    give: "§e/unlockable give <Player> <ID> §7- Give a Player an Unlockable."
+    take: "§e/unlockable take <Player> <ID> §7- Take an Unlockable from a Player."
+    help: "§e/unlockable help §7- Display this help message."
+
+  temp:
+    header: "§7Temporary Unlockable Commands:"
+    create: "§e/tempunlockable create <ID> §7- Create a temp Unlockable."
+    delete: "§e/tempunlockable delete <ID> §7- Delete a temp Unlockable."
+    give: "§e/tempunlockable give <Player> <ID> §7- Give a Player a temp Unlockable."
+    take: "§e/tempunlockable take <Player> <ID> §7- Take a temp Unlockable from a Player."
+    help: "§e/tempunlockable help §7- Display this help message."

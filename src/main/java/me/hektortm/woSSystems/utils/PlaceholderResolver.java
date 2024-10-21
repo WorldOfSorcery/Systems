@@ -1,7 +1,7 @@
 package me.hektortm.woSSystems.utils;
 
-import me.hektortm.woSSystems.citems.DataManager;
-import me.hektortm.woSSystems.stats.StatsManager;
+import me.hektortm.woSSystems.systems.citems.DataManager;
+import me.hektortm.woSSystems.systems.stats.StatsManager;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
