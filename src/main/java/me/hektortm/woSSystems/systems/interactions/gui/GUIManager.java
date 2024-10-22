@@ -90,6 +90,15 @@ public class GUIManager implements Listener {
             if (item != null) {
                 meta = item.getItemMeta();  // Use the metadata from the custom item directly
             }
+
+            List<String> lore = (List<String>) slotConfig.get("citem.lore");
+            if (lore != null) {
+                for (int i = 0; i < lore.size(); i++) {
+                    lore.set(i, lore.get(i).replace("&", "§"));
+                }
+                meta.setLore(lore);
+            }
+
         }
 
         // If no citem or it failed to load, fallback to a regular item
