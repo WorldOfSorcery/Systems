@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.systems.interactions.gui;
 
 
+import me.hektortm.woSSystems.systems.citems.DataManager;
 import me.hektortm.woSSystems.systems.interactions.core.ActionHandler;
 import me.hektortm.woSSystems.systems.interactions.core.InteractionConfig;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
@@ -11,8 +12,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,11 +27,13 @@ public class GUIManager implements Listener {
     private final Plugin plugin;
     private final ActionHandler actionHandler;
     private final PlaceholderResolver resolver;
+    private final DataManager citemManager;
     private Map<String, InteractionConfig> guiInteractions = new HashMap<>();
     public Map<Player, InteractionConfig> openGUIs = new HashMap<>();
 
-    public GUIManager(Plugin plugin, ActionHandler actionHandler, PlaceholderResolver resolver) {
+    public GUIManager(Plugin plugin, ActionHandler actionHandler, PlaceholderResolver resolver, DataManager citemManager) {
         this.plugin = plugin;
+        this.citemManager = citemManager;
         this.actionHandler = actionHandler;
         this.resolver = resolver;
         Bukkit.getPluginManager().registerEvents(this, plugin);
@@ -64,13 +69,69 @@ public class GUIManager implements Listener {
         for (Map.Entry<Integer, Map<String, Object>> entry : slots.entrySet()) {
             int slot = entry.getKey();
             // Create items based on the current stats instead of a static config
-            inventory.setItem(slot, createItemFromConfig(entry.getValue(), player));
+            inventory.setItem(slot, createItemFromConfig2(entry.getValue(), player));
         }
 
         // The inventory is now populated with the latest items
     }
 
+    private ItemStack createItemFromConfig2(Map<String, Object> slotConfig, Player player) {
+        ItemStack item = null;
+        ItemMeta meta = null;
 
+        // Check if it's a citem
+        if (slotConfig.containsKey("citem")) {
+            String citemId = (String) slotConfig.get("citem");
+
+            // Load the citem from the custom item system (replace with your actual loading mechanism)
+            File citemFile = new File(plugin.getDataFolder()+ "citems/", citemId + ".json");  // Adjust the path as needed
+            item = citemManager.loadItemFromFile(citemFile);  // Assuming this method returns an ItemStack
+
+            if (item != null) {
+                meta = item.getItemMeta();  // Use the metadata from the custom item directly
+            }
+        }
+
+        // If no citem or it failed to load, fallback to a regular item
+        if (item == null && slotConfig.containsKey("item")) {
+            Material material = Material.getMaterial((String) slotConfig.get("item"));
+            if (material == null) material = Material.STONE;  // Fallback to stone if item is invalid
+            item = new ItemStack(material, (int) slotConfig.getOrDefault("amount", 1));
+            meta = item.getItemMeta();  // Use the regular item meta
+        }
+
+        // If no valid item was found, fallback to STONE
+        if (item == null) {
+            item = new ItemStack(Material.STONE);  // Default to stone
+            meta = item.getItemMeta();
+        }
+
+        // Apply metadata from slotConfig only if it's a regular item (not citem)
+        if (meta != null && !slotConfig.containsKey("citem")) {
+            // Set custom name from slotConfig
+            String name = (String) slotConfig.get("meta.name");
+            if (name != null) {
+                meta.setDisplayName(name.replace("&", "§"));
+            }
+
+            // Set lore dynamically based on the config
+            List<String> lore = (List<String>) slotConfig.get("meta.lore");
+            if (lore != null) {
+                for (int i = 0; i < lore.size(); i++) {
+                    lore.set(i, lore.get(i).replace("&", "§"));
+                }
+                meta.setLore(lore);
+            }
+
+            // Set unbreakable
+            Boolean unbreakable = (Boolean) slotConfig.get("meta.unbreakable");
+            if (unbreakable != null) meta.setUnbreakable(unbreakable);
+
+            item.setItemMeta(meta);
+        }
+
+        return item;
+    }
 
     // Create an item based on YAML configuration
     private ItemStack createItemFromConfig(Map<String, Object> slotConfig, Player player) {

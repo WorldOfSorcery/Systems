@@ -58,6 +58,8 @@ public class PlaceholderResolver {
                 String lorePlaceholder = "{citems."+citemId+"_lore}";
 
                 if (text.contains(namePlaceholder)) {
+
+
                     String name = "PLACEHOLDER";
                     text = text.replace(namePlaceholder, name);
                 }

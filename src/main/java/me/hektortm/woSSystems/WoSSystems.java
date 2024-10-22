@@ -76,11 +76,11 @@ public final class WoSSystems extends JavaPlugin {
         resolver = new PlaceholderResolver(statsManager, dataManager);
 
         ActionHandler actionHandler = new ActionHandler(this, resolver);
-        guiManager = new GUIManager(this, actionHandler, resolver);
+        dataManager = new DataManager(new me.hektortm.woSSystems.systems.citems.commands.CitemCommand(dataManager, interactionManager, lang), interactionManager);
+        guiManager = new GUIManager(this, actionHandler, resolver, dataManager);
         interactionManager = new InteractionManager(yamlLoader, this, guiManager, particleHandler, resolver);
 
         lang = new LangManager(core);
-        dataManager = new DataManager(new me.hektortm.woSSystems.systems.citems.commands.CitemCommand(dataManager, interactionManager, lang), interactionManager);
         Map<String, InteractionConfig> interactionConfigs = yamlLoader.loadInteractions();
 
         if (core != null) {

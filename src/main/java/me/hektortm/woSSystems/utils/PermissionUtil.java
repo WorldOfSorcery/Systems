@@ -26,10 +26,10 @@ public class PermissionUtil {
     public static boolean hasAnyPermission(CommandSender sender, Permissions... permissions) {
         for (Permissions perm : permissions) {
             if (sender.hasPermission(perm.getPermission())) {
-                return true;  // If the player has any one of the permissions, return true
+                return true;
             }
         }
-        return false;  // If none of the permissions match, return false
+        return false;
     }
 
 }

@@ -310,6 +310,7 @@ public class DataManager {
         }
     }
 
+
     public void leftClickAction(Player p) {
         ItemStack item = p.getItemInHand();
         if (item == null || !item.hasItemMeta()) return;
