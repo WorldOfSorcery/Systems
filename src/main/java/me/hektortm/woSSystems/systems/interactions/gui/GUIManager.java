@@ -39,11 +39,6 @@ public class GUIManager implements Listener {
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
-    // Load and store GUI interactions for later use
-    public void loadGUIInteraction(String id, InteractionConfig interactionConfig) {
-        guiInteractions.put(id, interactionConfig);
-    }
-
     // Open a GUI for the player
     public void openGUI(Player player, InteractionConfig interactionConfig) {
         String title = interactionConfig.getInventoryTitle();
