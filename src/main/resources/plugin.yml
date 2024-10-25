@@ -35,5 +35,65 @@ commands:
   unlockable:
     description: Unlockable Command
     usage: /<command> <create|createtemp|give|givetemp|>
+  # Economy Commands
+  economy:
+    aliases: [ eco ]
+    usage: /economy
+    description: Economy
+    permission: economy.modify.give
+  balance:
+    aliases: [ bal ]
+    description: Shows your or a players balance
+    usage: /balance
+    permission: economy.balance.self
+  pay:
+    description: pay some1 money
+    usage: /pay <player>
+    permission: economy.pay
 
+permissions:
+  economy.balance:
+    description: Grants access to all Economy commands
+    default: op
+    children:
+      economy.balance.self: true
+      economy.balance.others: true
+  economy.balance.self:
+    description: view your balance
+    default: true
+  economy.balance.others:
+    description: view someone elses balance
+    default: op
 
+  economy.modify:
+    description: Grants all access to modify commands
+    default: op
+    children:
+      economy.modify.give: true
+      economy.modify.take: true
+      economy.modify.set: true
+      economy.modify.reset: true
+      economy.modify.random: true
+      economy.modify.currencies: true
+  economy.modify.give:
+    description: give someone a currency
+    default: op
+  economy.modify.take:
+    description: take a currency from someone
+    default: op
+  economy.modify.set:
+    description: set someones currency
+    default: op
+  economy.modify.reset:
+    description: reset someones currency
+    default: op
+  economy.modify.random:
+    description: give someone a random amount of a currency
+    default: op
+  economy.modify.currencies:
+    description: view all currencies
+    default: op
+
+  economy.pay:
+    description: pay someone a currency
+    default: true

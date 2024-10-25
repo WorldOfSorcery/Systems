@@ -1,5 +1,9 @@
 package me.hektortm.woSSystems;
 
+import me.hektortm.woSSystems.economy.EcoManager;
+import me.hektortm.woSSystems.economy.commands.BalanceCommand;
+import me.hektortm.woSSystems.economy.commands.EcoCommand;
+import me.hektortm.woSSystems.economy.commands.PayCommand;
 import me.hektortm.woSSystems.professions.fishing.FishingManager;
 import me.hektortm.woSSystems.professions.fishing.listeners.FishingListener;
 import me.hektortm.woSSystems.systems.citems.commands.CgiveCommand;
@@ -31,8 +35,10 @@ import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableCommand;
 import me.hektortm.woSSystems.systems.unlockables.listeners.CleanUpListener;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.wosCore.LangManager;
+import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
 import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -51,6 +57,7 @@ public final class WoSSystems extends JavaPlugin {
     private UnlockableManager unlockableManager;
     private FishingManager fishingManager;
     private PlaceholderResolver resolver;
+    private static EcoManager ecoManager;
     private static DataManager dataManager;
 
     // TODO:
@@ -67,6 +74,7 @@ public final class WoSSystems extends JavaPlugin {
 
         YAMLLoader yamlLoader = new YAMLLoader(this);
 
+        ecoManager = new EcoManager(this);
         particleHandler = new ParticleHandler();
         bindManager = new BindManager(this);
         statsManager = new StatsManager(core);
@@ -87,6 +95,7 @@ public final class WoSSystems extends JavaPlugin {
             lang.loadLangFileExternal(this, "citems", core);
             lang.loadLangFileExternal(this, "stats", core);
             lang.loadLangFileExternal(this, "unlockables", core);
+            lang.loadLangFileExternal(this, "economy", core);
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }
@@ -104,6 +113,10 @@ public final class WoSSystems extends JavaPlugin {
         // Unlockable Commands
         cmdReg("unlockable", new UnlockableCommand(unlockableManager, lang));
         cmdReg("tempunlockable", new TempUnlockableCommand(unlockableManager, lang));
+        // Economy Commands
+        cmdReg("economy", new EcoCommand(ecoManager, lang));
+        cmdReg("balance", new BalanceCommand(ecoManager, core));
+        cmdReg("pay", new PayCommand(ecoManager, lang));
 
         // Interaction Events
         eventReg(new InventoryCloseListener(guiManager));
@@ -143,6 +156,25 @@ public final class WoSSystems extends JavaPlugin {
 
     private void cmdReg(String cmd, CommandExecutor e) {
         this.getCommand(cmd).setExecutor(e);
+    }
+
+    public static void ecoMsg(CommandSender sender, String file, String msg) {
+        sender.sendMessage(lang.getMessage("general","prefix.economy")+lang.getMessage(file, msg));
+    }
+    public static void ecoMsg1Value(CommandSender sender,String file, String msg, String oldChar, String value) {
+        String message = lang.getMessage(file, msg).replace(oldChar, value);
+        String newMessage = lang.getMessage("general","prefix.economy")+message;
+        sender.sendMessage(Utils.replaceColorPlaceholders(newMessage));
+    }
+    public static void ecoMsg2Values(CommandSender sender,String file, String msg, String oldChar1, String value1, String oldChar2, String value2) {
+        String message = lang.getMessage(file, msg).replace(oldChar1, value1).replace(oldChar2, value2);
+        String newMessage = lang.getMessage("general","prefix.economy")+message;
+        sender.sendMessage(Utils.replaceColorPlaceholders(newMessage));
+    }
+    public static void ecoMsg3Values(CommandSender sender,String file, String msg, String oldChar1, String value1, String oldChar2, String value2, String oldChar3, String value3) {
+        String message = lang.getMessage(file, msg).replace(oldChar1, value1).replace(oldChar2, value2).replace(oldChar3, value3);
+        String newMessage = lang.getMessage("general", "prefix.economy") + message;
+        sender.sendMessage(Utils.replaceColorPlaceholders(newMessage));
     }
 
 }

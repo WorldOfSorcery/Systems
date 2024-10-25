@@ -42,7 +42,19 @@ public enum Permissions {
     UNLOCKABLE_TEMP_CREATE("unlockable_temp.create"),
     UNLOCKABLE_TEMP_DELETE("unlockable_temp.delete"),
     UNLOCKABLE_TEMP_GIVE("unlockable_temp.give"),
-    UNLOCKABLE_TEMP_TAKE("unlockable_temp.take");
+    UNLOCKABLE_TEMP_TAKE("unlockable_temp.take"),
+
+    BALANCE_SELF("economy.balance.self"),
+    BALANCE_OTHERS("economy.balance.others"),
+
+    ECONOMY_GIVE("economy.modify.give"),
+    ECONOMY_TAKE("economy.modify.take"),
+    ECONOMY_SET("economy.modify.set"),
+    ECONOMY_RESET("economy.modify.reset"),
+    ECONOMY_RANDOM("economy.modify.random"),
+    ECONOMY_CURRENCIES("economy.modify.currencies"),
+
+    ECONOMY_PAY("economy.pay");
 
 
     private final String permission;

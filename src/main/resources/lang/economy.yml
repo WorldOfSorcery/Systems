@@ -1,0 +1,45 @@
+error:
+  player-notfound: "Player not found."
+  funds: "You do not have enough funds."
+  data: "Could not load player Data"
+  currencies: "No currencies have been set up"
+  give-usage: "Usage: /economy give <player> <currency> <amount>"
+  take-usage: "Usage: /economy take <player> <currency> <amount>"
+  set-usage: "Usage: /economy set <player> <currency> <amount>"
+  reset-usage: "Usage: /economy reset <player> <currency>"
+  random-usage: "Usage: /economy random <player> <currency> <min> <max>"
+  pay-usage: "Usage: /pay <player> <currency> <amount>"
+  invalid-amount: "Invalid amount. Please provide a number."
+  invalid-amount-positive: "Invalid amount. Please provide a positive number."
+
+balance: "§6%player%'s balance:"
+currency:
+  list-header: "§7Available Currencies:"
+  given: "§7You have given §e%amount% %currency%§7 to §a%player%§7."
+  taken: "§7You have taken §e%amount% %currency%§7 from §a%player%§7."
+  set: "§7You have set the %currency%§7 of §a%player%§7 to §e%amount%§7."
+  reset: "§7You have reset the %currency% of §c%player%§7."
+
+# %icon% // optional
+# %amount%
+# %name%
+# %color%
+actionbar:
+  given: "§a+ %color%%amount% %name%"
+  taken: "§c- %color%%amount% %name%"
+
+pay:
+  target: "§a%player%§7 has paid you %amount%%currency%§7."
+  player: "§7You have paid §a%target% %amount%%currency%§7."
+help:
+  header:
+  currencies: "§e/economy currencies §7- Show available currencies."
+  give: "§e/economy give <player> <currency> <amount> §7- Give a player a currency."
+  take: "§e/economy take <player> <currency> <amount> §7- take a players currency."
+  set: "§e/economy set <player> <currency> <amount> §7- Set a players currency."
+  reset: "§e/economy reset <player> <currency> <amount> §7- Reset a players currency."
+  random: "§e/economy random <player> <currency> <min> <max> §7- Give a player a random amount of a currency."
+  balance: "§e/balance §7- Show your balance."
+  balance.others: "§e/balance [player] §7- Show your or a players balance"
+  pay: "§e/pay <player> <currency> <amount> §7- Pay a player."
+  list: "§e/economy help §7- Display this help message."
