@@ -41,6 +41,7 @@ public class TriggerCommand extends InterSubCommand {
                 // Trigger the interaction on the player
                 interactionManager.triggerInteraction(interaction, targetPlayer);
                 sender.sendMessage("Triggered interaction " + interactionId + " for player " + playerName);
+
             } else {
                 sender.sendMessage("Interaction not found: " + interactionId);
             }

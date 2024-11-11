@@ -1,7 +1,7 @@
 package me.hektortm.woSSystems.systems.interactions.gui;
 
 
-import me.hektortm.woSSystems.systems.citems.DataManager;
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.interactions.core.ActionHandler;
 import me.hektortm.woSSystems.systems.interactions.core.InteractionConfig;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
@@ -12,7 +12,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
@@ -27,11 +26,11 @@ public class GUIManager implements Listener {
     private final Plugin plugin;
     private final ActionHandler actionHandler;
     private final PlaceholderResolver resolver;
-    private final DataManager citemManager;
+    private final CitemManager citemManager;
     private Map<String, InteractionConfig> guiInteractions = new HashMap<>();
     public Map<Player, InteractionConfig> openGUIs = new HashMap<>();
 
-    public GUIManager(Plugin plugin, ActionHandler actionHandler, PlaceholderResolver resolver, DataManager citemManager) {
+    public GUIManager(Plugin plugin, ActionHandler actionHandler, PlaceholderResolver resolver, CitemManager citemManager) {
         this.plugin = plugin;
         this.citemManager = citemManager;
         this.actionHandler = actionHandler;

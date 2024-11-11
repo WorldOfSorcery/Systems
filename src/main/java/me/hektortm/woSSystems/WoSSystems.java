@@ -9,7 +9,7 @@ import me.hektortm.woSSystems.professions.fishing.listeners.FishingListener;
 import me.hektortm.woSSystems.systems.citems.commands.CgiveCommand;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.systems.citems.commands.CremoveCommand;
-import me.hektortm.woSSystems.systems.citems.DataManager;
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.citems.listeners.DropListener;
 import me.hektortm.woSSystems.systems.citems.listeners.HoverListener;
 import me.hektortm.woSSystems.systems.citems.listeners.UseListener;
@@ -60,7 +60,7 @@ public final class WoSSystems extends JavaPlugin {
     private FishingManager fishingManager;
     private PlaceholderResolver resolver;
     private static EcoManager ecoManager;
-    private static DataManager dataManager;
+    private static CitemManager dataManager;
 
     // TODO:
     //  - Interactions
@@ -87,7 +87,7 @@ public final class WoSSystems extends JavaPlugin {
         resolver = new PlaceholderResolver(statsManager, dataManager);
 
         ActionHandler actionHandler = new ActionHandler(this, resolver);
-        dataManager = new DataManager(new me.hektortm.woSSystems.systems.citems.commands.CitemCommand(dataManager, interactionManager, lang), interactionManager);
+        dataManager = new CitemManager(new me.hektortm.woSSystems.systems.citems.commands.CitemCommand(dataManager, interactionManager, lang), interactionManager);
         guiManager = new GUIManager(this, actionHandler, resolver, dataManager);
         interactionManager = new InteractionManager(yamlLoader, this, guiManager, particleHandler, resolver);
 

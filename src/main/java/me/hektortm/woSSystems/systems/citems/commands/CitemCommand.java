@@ -2,7 +2,7 @@ package me.hektortm.woSSystems.systems.citems.commands;
 
 
 import me.hektortm.woSSystems.systems.citems.commands.subcommands.*;
-import me.hektortm.woSSystems.systems.citems.DataManager;
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.interactions.core.InteractionManager;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
@@ -10,25 +10,21 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class CitemCommand implements CommandExecutor {
 
     private final Map<String, CitemSubCommand> subCommands = new HashMap<>();
-    private final DataManager data;
+    private final CitemManager data;
     private final InteractionManager interactionManager;
     private final LangManager lang;
     public File citemsFolder = new File(Bukkit.getServer().getPluginManager().getPlugin("WoSSystems").getDataFolder(), "citems");
 
-    public CitemCommand(DataManager data, InteractionManager interactionManager, LangManager lang) {
+    public CitemCommand(CitemManager data, InteractionManager interactionManager, LangManager lang) {
         this.data = data;
         this.interactionManager = interactionManager;
         this.lang = lang;

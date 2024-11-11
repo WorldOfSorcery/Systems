@@ -3,7 +3,7 @@ package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.systems.citems.commands.CitemSubCommand;
-import me.hektortm.woSSystems.systems.citems.DataManager;
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.Utils;
@@ -18,8 +18,8 @@ import java.io.File;
 public class UpdateCommand extends CitemSubCommand {
 
     private final CitemCommand citem;
-    private final DataManager data;
-    public UpdateCommand(CitemCommand citem, DataManager data) {
+    private final CitemManager data;
+    public UpdateCommand(CitemCommand citem, CitemManager data) {
         this.citem = citem;
         this.data = data;
     }

@@ -1,15 +1,15 @@
 package me.hektortm.woSSystems.systems.citems.listeners;
 
-import me.hektortm.woSSystems.systems.citems.DataManager;
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 
 public class HoverListener implements Listener {
-    private final DataManager data;
+    private final CitemManager data;
 
-    public HoverListener(DataManager data) {
+    public HoverListener(CitemManager data) {
         this.data = data;
     }
 

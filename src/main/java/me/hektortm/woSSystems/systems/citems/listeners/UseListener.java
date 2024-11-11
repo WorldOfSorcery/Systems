@@ -1,6 +1,6 @@
 package me.hektortm.woSSystems.systems.citems.listeners;
 
-import me.hektortm.woSSystems.systems.citems.DataManager;
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -16,9 +16,9 @@ import org.bukkit.persistence.PersistentDataType;
 public class UseListener implements Listener {
 
     private final NamespacedKey unusableKey;
-    private final DataManager data;
+    private final CitemManager data;
 
-    public UseListener(DataManager data) {
+    public UseListener(CitemManager data) {
         unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
         this.data = data;
     }

@@ -3,7 +3,7 @@ package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.systems.citems.commands.CitemSubCommand;
-import me.hektortm.woSSystems.systems.citems.DataManager;
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.Utils;
@@ -18,9 +18,9 @@ import java.io.File;
 public class SaveCommand extends CitemSubCommand {
 
     private final CitemCommand cmd;
-    private final DataManager data;
+    private final CitemManager data;
 
-    public SaveCommand(CitemCommand cmd, DataManager data) {
+    public SaveCommand(CitemCommand cmd, CitemManager data) {
         this.cmd = cmd;
         this.data = data;
     }

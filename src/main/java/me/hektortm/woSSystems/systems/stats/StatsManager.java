@@ -6,6 +6,7 @@ import me.hektortm.woSSystems.systems.stats.utils.Operation;
 import me.hektortm.woSSystems.systems.stats.utils.Stat;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
+import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -27,9 +28,11 @@ public class StatsManager {
     private final Map<String, GlobalStat> globalStats = new HashMap<>();
 
     private final WoSCore core;
+    private final LogManager log;
 
-    public StatsManager(WoSCore core) {
+    public StatsManager(WoSCore core, LogManager log) {
         this.core = core;
+        this.log = log;
 
         loadStats();
         loadGlobalStats();
@@ -46,7 +49,7 @@ public class StatsManager {
         try {
             config.save(file);
         } catch (IOException e) {
-            Bukkit.getLogger().severe("Could not save stat file for " + stat.getId());
+            log.sendWarning("Could not save stat file for " + stat.getId());
         }
     }
 
@@ -62,6 +65,7 @@ public class StatsManager {
             config.save(file);
         } catch (IOException e) {
             Bukkit.getLogger().severe("Could not save global stat file for " + globalStat.getId());
+            log.sendWarning("Could not save global stat file for " + globalStat.getId());
         }
     }
 

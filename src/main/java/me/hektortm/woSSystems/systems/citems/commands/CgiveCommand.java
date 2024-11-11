@@ -1,7 +1,7 @@
 package me.hektortm.woSSystems.systems.citems.commands;
 
 
-import me.hektortm.woSSystems.systems.citems.DataManager;
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.LangManager;
@@ -19,10 +19,10 @@ import java.io.File;
 
 public class CgiveCommand implements CommandExecutor {
 
-    private final DataManager data;
+    private final CitemManager data;
     private final LangManager lang;
 
-    public CgiveCommand(DataManager data , LangManager lang) {
+    public CgiveCommand(CitemManager data , LangManager lang) {
         this.data = data;
         this.lang = lang;
     }

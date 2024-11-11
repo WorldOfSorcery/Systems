@@ -1,9 +1,8 @@
 package me.hektortm.woSSystems.professions.fishing.listeners;
 
-import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.professions.fishing.FishingManager;
 import me.hektortm.woSSystems.professions.utils.FishingItem;
-import me.hektortm.woSSystems.systems.citems.DataManager;
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.interactions.core.InteractionConfig;
 import me.hektortm.woSSystems.systems.interactions.core.InteractionManager;
 import org.bukkit.Bukkit;
@@ -21,10 +20,10 @@ import java.util.Random;
 public class FishingListener implements Listener {
 
     private final FishingManager fishingManager;
-    private final DataManager citemManager;
+    private final CitemManager citemManager;
     private final InteractionManager interactionManager;
 
-    public FishingListener(FishingManager fishingManager, DataManager citemManager, InteractionManager interactionManager) {
+    public FishingListener(FishingManager fishingManager, CitemManager citemManager, InteractionManager interactionManager) {
         this.fishingManager = fishingManager;
         this.citemManager = citemManager;
         this.interactionManager = interactionManager;

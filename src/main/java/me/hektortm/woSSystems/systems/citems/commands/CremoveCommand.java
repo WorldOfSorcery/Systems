@@ -1,7 +1,7 @@
 package me.hektortm.woSSystems.systems.citems.commands;
 
 
-import me.hektortm.woSSystems.systems.citems.DataManager;
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.LangManager;
@@ -18,9 +18,9 @@ import java.io.File;
 
 public class CremoveCommand implements CommandExecutor {
 
-    private final DataManager data;
+    private final CitemManager data;
     private final LangManager lang;
-    public CremoveCommand(DataManager data, LangManager lang) {
+    public CremoveCommand(CitemManager data, LangManager lang) {
         this.data = data;
         this.lang = lang;
     }

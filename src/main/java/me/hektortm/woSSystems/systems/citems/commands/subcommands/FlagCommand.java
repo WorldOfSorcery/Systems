@@ -2,7 +2,7 @@ package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 
 import me.hektortm.woSSystems.systems.citems.commands.CitemSubCommand;
-import me.hektortm.woSSystems.systems.citems.DataManager;
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.Utils;
@@ -21,7 +21,7 @@ public class FlagCommand extends CitemSubCommand {
     private final NamespacedKey undroppableKey;
     private final NamespacedKey unusableKey;
 
-    public FlagCommand(DataManager data) {
+    public FlagCommand(CitemManager data) {
         undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
         unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
     }

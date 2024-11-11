@@ -9,6 +9,7 @@ import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.systems.interactions.core.InteractionConfig;
 import me.hektortm.woSSystems.systems.interactions.core.InteractionManager;
 import me.hektortm.wosCore.Utils;
+import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -29,7 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DataManager {
+public class CitemManager {
 
     private final NamespacedKey undroppableKey;
     private final NamespacedKey unusableKey;
@@ -38,16 +39,18 @@ public class DataManager {
     private final NamespacedKey rightActionKey;
 
     private final InteractionManager interactionManager;
+    private final LogManager log;
     private final CitemCommand cmd;
 
 
-    public DataManager(CitemCommand cmd, InteractionManager interactionManager) {
+    public CitemManager(CitemCommand cmd, InteractionManager interactionManager, LogManager log) {
         undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
         unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
         leftActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-left");
         rightActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-right");
         this.cmd = cmd;
         this.interactionManager = interactionManager;
+        this.log = log;
     }
 
     public void saveItemToFile(ItemStack item, File file, String id) {
@@ -305,8 +308,7 @@ public class DataManager {
                 Utils.successMsg1Value(p, "citems", "update.updated", "%item%", item.getItemMeta().getDisplayName());
             }
         } else {
-            Bukkit.getLogger().severe(p.getName() +": The item "+item.getItemMeta().getDisplayName()+" doesn't have a valid ID");
-            // TODO: Discord message
+            log.sendWarning(p.getName() + ": Item \""+ item.getItemMeta().getDisplayName()+"\" -> no valid ID");
         }
     }
 

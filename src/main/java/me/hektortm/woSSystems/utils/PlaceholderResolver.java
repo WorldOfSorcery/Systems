@@ -1,6 +1,6 @@
 package me.hektortm.woSSystems.utils;
 
-import me.hektortm.woSSystems.systems.citems.DataManager;
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import org.bukkit.entity.Player;
 
@@ -8,9 +8,9 @@ import java.util.UUID;
 
 public class PlaceholderResolver {
     private final StatsManager statsManager;
-    private final DataManager citemsManager;
+    private final CitemManager citemsManager;
 
-    public PlaceholderResolver(StatsManager statsManager, DataManager citemsManager) {
+    public PlaceholderResolver(StatsManager statsManager, CitemManager citemsManager) {
         this.statsManager = statsManager;
         this.citemsManager = citemsManager;
     }
