@@ -8,6 +8,7 @@ import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
+import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -20,10 +21,12 @@ public class RandomCommand extends SubCommand {
 
     private final EcoManager ecoManager;
     private final LangManager lang;
+    private final LogManager log;
 
-    public RandomCommand(EcoManager ecoManager, LangManager lang) {
+    public RandomCommand(EcoManager ecoManager, LangManager lang, LogManager log) {
         this.ecoManager = ecoManager;
         this.lang = lang;
+        this.log = log;
     }
 
     @Override
@@ -68,6 +71,12 @@ public class RandomCommand extends SubCommand {
             Utils.error(sender, "general", "error.online");
             return;
         }
+
+        if (sender instanceof Player p && target.getName().equals(p.getName())) {
+            log.sendWarning(p.getName()+ "-> "+ target.getName() +": Random give "+randomNumber+" "+currencyName);
+            log.writeLog(p, "-> "+ target.getName() +": Random give "+randomNumber+" "+currencyName);
+        }
+
         ecoManager.modifyCurrency(target.getUniqueId(), currencyName, randomNumber, EcoManager.Operation.GIVE);
         WoSSystems.ecoMsg3Values(sender, "economy", "currency.given", "%amount%", String.valueOf(randomNumber), "%currency%", color+currencyName, "%player%", playerName);
         String actionbar = lang.getMessage("economy", "actionbar.given")

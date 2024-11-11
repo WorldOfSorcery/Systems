@@ -30,7 +30,7 @@ public class EcoCommand implements CommandExecutor {
 
         subCommands.put("give", new GiveCommand(manager, lang, log));
         subCommands.put("take", new TakeCommand(manager, lang, log));
-        subCommands.put("random", new RandomCommand(manager, lang));
+        subCommands.put("random", new RandomCommand(manager, lang, log));
         subCommands.put("set", new SetCommand(manager, log));
         subCommands.put("reset", new ResetCommand(manager, log));
         subCommands.put("currencies", new CurrenciesCommand(manager));
