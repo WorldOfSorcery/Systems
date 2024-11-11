@@ -8,6 +8,7 @@ import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
+import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -18,9 +19,12 @@ public class TakeCommand extends SubCommand {
 
     private final EcoManager ecoManager;
     private final LangManager lang;
-    public TakeCommand(EcoManager ecoManager, LangManager lang) {
+    private final LogManager log;
+
+    public TakeCommand(EcoManager ecoManager, LangManager lang, LogManager log) {
         this.ecoManager = ecoManager;
         this.lang = lang;
+        this.log = log;
     }
 
     @Override
@@ -64,6 +68,11 @@ public class TakeCommand extends SubCommand {
         if(!ecoManager.hasEnoughCurrency(target.getUniqueId(), currencyName, amount)) {
             error(sender, "economy", "error.funds");
             return;
+        }
+
+        if (sender instanceof Player p && target.getName().equals(p.getName())) {
+            log.sendWarning(p.getName()+ "-> "+ target.getName() +": Took "+amount+" "+currencyName);
+            log.writeLog(p, "-> "+ target.getName() +": Took "+amount+" "+currencyName);
         }
 
         ecoManager.modifyCurrency(target.getUniqueId(), currencyName, amount, EcoManager.Operation.TAKE);

@@ -7,6 +7,7 @@ import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.Utils;
+import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -16,8 +17,11 @@ import static me.hektortm.wosCore.Utils.error;
 public class ResetCommand extends SubCommand {
 
     private final EcoManager ecoManager;
-    public ResetCommand(EcoManager ecoManager) {
+    private final LogManager log;
+
+    public ResetCommand(EcoManager ecoManager, LogManager log) {
         this.ecoManager = ecoManager;
+        this.log = log;
     }
 
     @Override
@@ -44,6 +48,12 @@ public class ResetCommand extends SubCommand {
             Utils.error(sender, "general", "error.online");
             return;
         }
+
+        if (sender instanceof Player p && target.getName().equals(p.getName())) {
+            log.sendWarning(p.getName()+ "-> "+ target.getName() +": Reset "+currencyName);
+            log.writeLog(p, "-> "+ target.getName() +": Reset "+currencyName);
+        }
+
         ecoManager.modifyCurrency(target.getUniqueId(), currencyName, 0, EcoManager.Operation.RESET);
         WoSSystems.ecoMsg2Values(sender, "economy", "currency.reset",  "%currency%", color+currencyName, "%player%", playerName);
 

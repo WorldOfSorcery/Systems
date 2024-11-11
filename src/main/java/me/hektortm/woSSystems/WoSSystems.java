@@ -37,6 +37,7 @@ import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
+import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.Listener;
@@ -47,8 +48,9 @@ import java.util.Map;
 
 public final class WoSSystems extends JavaPlugin {
 
-    private static LangManager lang;
     WoSCore core = JavaPlugin.getPlugin(WoSCore.class);
+    private static LangManager lang;
+    private static LogManager log;
     private InteractionManager interactionManager;
     private GUIManager guiManager;
     private BindManager bindManager;
@@ -77,6 +79,7 @@ public final class WoSSystems extends JavaPlugin {
         ecoManager = new EcoManager(this);
         particleHandler = new ParticleHandler();
         bindManager = new BindManager(this);
+        log = new LogManager(lang, core);
         statsManager = new StatsManager(core);
         unlockableManager = new UnlockableManager(core);
 
@@ -114,7 +117,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("unlockable", new UnlockableCommand(unlockableManager, lang));
         cmdReg("tempunlockable", new TempUnlockableCommand(unlockableManager, lang));
         // Economy Commands
-        cmdReg("economy", new EcoCommand(ecoManager, lang));
+        cmdReg("economy", new EcoCommand(ecoManager, lang, log));
         cmdReg("balance", new BalanceCommand(ecoManager, core));
         cmdReg("pay", new PayCommand(ecoManager, lang));
 

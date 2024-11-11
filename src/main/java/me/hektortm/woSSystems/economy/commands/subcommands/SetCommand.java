@@ -7,6 +7,7 @@ import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.Utils;
+import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -15,9 +16,11 @@ import static me.hektortm.wosCore.Utils.error;
 
 public class SetCommand extends SubCommand {
     private final EcoManager ecoManager;
+    private final LogManager log;
 
-    public SetCommand(EcoManager ecoManager) {
+    public SetCommand(EcoManager ecoManager, LogManager log) {
         this.ecoManager = ecoManager;
+        this.log = log;
     }
 
     @Override
@@ -52,6 +55,12 @@ public class SetCommand extends SubCommand {
             Utils.error(sender, "general", "error.online");
             return;
         }
+
+        if (sender instanceof Player p && target.getName().equals(p.getName())) {
+            log.sendWarning(p.getName()+ "-> "+ target.getName() +": Set "+currencyName+" to "+amount);
+            log.writeLog(p, "-> "+ target.getName() +": Set "+currencyName+" to "+amount);
+        }
+
         ecoManager.modifyCurrency(target.getUniqueId(), currencyName, amount, EcoManager.Operation.SET);
         WoSSystems.ecoMsg3Values(sender, "economy", "currency.set", "%amount%", String.valueOf(amount), "%currency%", color+currencyName, "%player%", playerName);
 

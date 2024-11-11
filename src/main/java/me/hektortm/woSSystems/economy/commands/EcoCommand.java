@@ -6,6 +6,7 @@ import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
+import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -19,17 +20,19 @@ public class EcoCommand implements CommandExecutor {
     private final Map<String, SubCommand> subCommands = new HashMap<>();
     private final EcoManager manager;
     private final LangManager lang;
+    private final LogManager log;
 
 
-    public EcoCommand(EcoManager manager, LangManager lang) {
+    public EcoCommand(EcoManager manager, LangManager lang, LogManager log) {
         this.manager = manager;
         this.lang = lang;
+        this.log = log;
 
-        subCommands.put("give", new GiveCommand(manager, lang));
-        subCommands.put("take", new TakeCommand(manager, lang));
+        subCommands.put("give", new GiveCommand(manager, lang, log));
+        subCommands.put("take", new TakeCommand(manager, lang, log));
         subCommands.put("random", new RandomCommand(manager, lang));
-        subCommands.put("set", new SetCommand(manager));
-        subCommands.put("reset", new ResetCommand(manager));
+        subCommands.put("set", new SetCommand(manager, log));
+        subCommands.put("reset", new ResetCommand(manager, log));
         subCommands.put("currencies", new CurrenciesCommand(manager));
         subCommands.put("help", new HelpCommand(this));
 
