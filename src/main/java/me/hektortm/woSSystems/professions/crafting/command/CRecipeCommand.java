@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Objects;
 
 public class CRecipeCommand implements CommandExecutor {
 
@@ -42,9 +43,17 @@ public class CRecipeCommand implements CommandExecutor {
             return true;
         }
 
-        if ("create".equalsIgnoreCase(args[0]) && args.length == 2) {
-            String id = args[1];
-            if (createRecipeTemplate(id)) {
+        if ("create".equalsIgnoreCase(args[0]) && args.length == 3) {
+            //TODO: WIP
+            if (args[1] != "shaped" && args[1] != "unshaped") {
+                sender.sendMessage("ERROR: only shaped / unshaped allowed.");
+                return true;
+            }
+            String type = args[1].toLowerCase();
+            String id = args[2];
+
+
+            if (createRecipeTemplate(id, type)) {
                 sender.sendMessage("Recipe template for " + id + " created.");
             } else {
                 sender.sendMessage("Failed to create template for " + id);
@@ -61,7 +70,7 @@ public class CRecipeCommand implements CommandExecutor {
 
     }
 
-    private boolean createRecipeTemplate(String id) {
+    private boolean createRecipeTemplate(String id, String type) {
         File recipeFile = new File(recipesFolder, id + ".json");
 
         // Check if the file already exists
@@ -70,31 +79,43 @@ public class CRecipeCommand implements CommandExecutor {
         }
 
         // Create the template
-        try (FileWriter writer = new FileWriter(recipeFile)) {
-            writer.write("{\n");
-            writer.write("  \"id\": \"" + id + "\",\n");
-            writer.write("  \"type\": \"shaped\",  // or \"shapeless\"\n");
-            writer.write("  \"pattern\": [\n");
-            writer.write("    \"ABC\",\n");
-            writer.write("    \"DEF\",\n");
-            writer.write("    \"GHI\"\n");
-            writer.write("  ],\n");
-            writer.write("  \"ingredients\": {\n");
-            writer.write("    \"A\": \"DIAMOND\",\n");
-            writer.write("    \"B\": \"IRON_INGOT\",\n");
-            writer.write("    \"C\": \"GOLD_INGOT\",\n");
-            writer.write("    \"D\": \"OAK_PLANKS\",\n");
-            writer.write("    \"E\": \"STICK\",\n");
-            writer.write("    \"F\": \"GLOWSTONE\",\n");
-            writer.write("    \"G\": \"STONE\",\n");
-            writer.write("    \"H\": \"BEDROCK\"\n");
-            writer.write("  },\n");
-            writer.write("  \"result\": \"DIAMOND_SWORD\"\n");
-            writer.write("}\n");
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+        if (Objects.equals(type, "shaped")) {
+            try (FileWriter writer = new FileWriter(recipeFile)) {
+                writer.write("{\n");
+                writer.write("  \"type\": \"shaped\",\n");
+                writer.write("  \"result\": {\n");
+                writer.write("    \"id\": \"result_id\"\n");
+                writer.write("  },\n");
+                writer.write("  \"ingredients\": [\n");
+                writer.write("    [\"null\", \"null\", \"null\"],\n");
+                writer.write("    [\"null\", \"null\", \"null\"],\n");
+                writer.write("    [\"null\", \"null\", \"null\"]\n");
+                writer.write("  ]\n");
+                writer.write("}\n");
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
         }
+        if (Objects.equals(type, "unshaped")) {
+            try (FileWriter writer = new FileWriter(recipeFile)) {
+                writer.write("{\n");
+                writer.write("  \"type\": \"unshaped\",\n");
+                writer.write("  \"result\": {\n");
+                writer.write("    \"id\": \"result_id\"\n");
+                writer.write("  },\n");
+                writer.write("  \"ingredients\": [\n");
+                writer.write("    \"null\",\n");
+                writer.write("    \"null\",\n");
+                writer.write("    \"null\"\n");
+                writer.write("  ]\n");
+                writer.write("}\n");
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;  // Return false if there is an exception during file creation
+            }
+        }
+
 
         return true;
     }
