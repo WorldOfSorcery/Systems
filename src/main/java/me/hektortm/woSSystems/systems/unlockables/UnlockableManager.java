@@ -6,11 +6,13 @@ import me.hektortm.woSSystems.systems.unlockables.utils.TempUnlockable;
 import me.hektortm.woSSystems.systems.unlockables.utils.Unlockable;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
+import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,9 +30,12 @@ public class UnlockableManager {
     public final Map<String, TempUnlockable> tempUnlockables = new HashMap<>();
 
     private final WoSCore core;
+    private final LogManager logManager;
 
-    public UnlockableManager(WoSCore core) {
+
+    public UnlockableManager(WoSCore core, LogManager logManager) {
         this.core = core;
+        this.logManager = logManager;
     }
 
 
@@ -118,6 +123,7 @@ public class UnlockableManager {
         unlockables.put(id, unlockable);
 
         createUnlockable(unlockable);
+        logManager.writeLog((Player) sender, "Unlockable added: "+id);
         Utils.successMsg1Value(sender, "unlockables", "create.perm", "%id%", id);
     }
 

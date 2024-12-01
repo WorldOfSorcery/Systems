@@ -12,6 +12,9 @@ public enum Permissions {
     CITEM_GIVE("citem.give"),
     CITEM_REMOVE("citem.remove"),
 
+    CRECIPE_CREATE("crecipe.create"),
+    CRECIPE_DELETE("crecipe.delete"),
+
     INTER_BIND("interaction.bind"),
     INTER_UNBIND("interaction.unbind"),
     INTER_RELOAD_SINGLE("interaction.reload.single"),

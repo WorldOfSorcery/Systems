@@ -5,15 +5,18 @@ import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableSubCommand;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.Utils;
+import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class DeleteCommand extends UnlockableSubCommand {
 
     private final UnlockableManager manager;
+    private final LogManager logManager;
 
-    public DeleteCommand(UnlockableManager manager) {
+    public DeleteCommand(UnlockableManager manager, LogManager logManager) {
         this.manager = manager;
+        this.logManager = logManager;
     }
 
     @Override
@@ -44,5 +47,6 @@ public class DeleteCommand extends UnlockableSubCommand {
 
         manager.deleteUnlockable(id, false);
         Utils.successMsg1Value(sender, "unlockables", "delete.perm", "%id%", id);
+        logManager.sendWarning("Unlockable "+id+" deleted.");
     }
 }

@@ -6,6 +6,7 @@ import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
+import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -19,14 +20,16 @@ public class UnlockableCommand implements CommandExecutor {
     private final Map<String, UnlockableSubCommand> subCommands = new HashMap<>();
     private final UnlockableManager manager;
     private final LangManager lang;
+    private final LogManager logManager;
 
-    public UnlockableCommand(UnlockableManager manager, LangManager lang) {
+    public UnlockableCommand(UnlockableManager manager, LangManager lang, LogManager logManager) {
 
         this.manager = manager;
         this.lang = lang;
+        this.logManager = logManager;
 
         subCommands.put("create", new CreateCommand(manager));
-        subCommands.put("delete", new DeleteCommand(manager));
+        subCommands.put("delete", new DeleteCommand(manager, logManager));
         subCommands.put("give", new GiveCommand(manager));
         subCommands.put("take", new TakeCommand(manager));
         subCommands.put("help", new HelpCommand(this));

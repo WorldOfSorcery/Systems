@@ -6,6 +6,7 @@ import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.interactions.core.InteractionManager;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
+import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -22,19 +23,21 @@ public class CitemCommand implements CommandExecutor {
     private final CitemManager data;
     private final InteractionManager interactionManager;
     private final LangManager lang;
+    private final LogManager log;
     public File citemsFolder = new File(Bukkit.getServer().getPluginManager().getPlugin("WoSSystems").getDataFolder(), "citems");
 
-    public CitemCommand(CitemManager data, InteractionManager interactionManager, LangManager lang) {
+    public CitemCommand(CitemManager data, InteractionManager interactionManager, LangManager lang, LogManager log) {
         this.data = data;
         this.interactionManager = interactionManager;
         this.lang = lang;
+        this.log = log;
 
         subCommands.put("save", new SaveCommand(this, data));
         subCommands.put("rename", new NameCommand());
         subCommands.put("update", new UpdateCommand(this, data));
         subCommands.put("lore", new LoreCommand());
         subCommands.put("flag", new FlagCommand(data));
-        subCommands.put("delete", new DeleteCommand(this));
+        subCommands.put("delete", new DeleteCommand(this, log));
         subCommands.put("action", new ActionCommand(interactionManager, lang));
     }
 
