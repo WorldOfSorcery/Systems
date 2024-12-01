@@ -22,6 +22,10 @@ commands:
   cremove:
     description: remove a citem
     usage: /cremove <player> <ID> <amount>
+
+  crecipe:
+    description: crecipe
+    usage: /crecipe <create> <id>
   # Stat Commands
   stats:
     description: Stats Command
