@@ -1,13 +1,13 @@
 package me.hektortm.woSSystems.systems.unlockables.commands.subcommands;
 
 import me.hektortm.woSSystems.systems.unlockables.commands.TempUnlockableCommand;
-import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableSubCommand;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
+import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.command.CommandSender;
 
-public class TempHelpCommand extends UnlockableSubCommand {
+public class TempHelpCommand extends SubCommand {
 
     private final TempUnlockableCommand cmd;
     public TempHelpCommand(TempUnlockableCommand cmd) {

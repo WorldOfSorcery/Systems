@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.systems.stats.commands;
 
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.systems.stats.commands.subcommands.*;
+import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -13,7 +14,7 @@ import java.util.Map;
 
 public class StatsCommand implements CommandExecutor {
 
-    private final Map<String, StatsSubCommand> subCommands = new HashMap<>();
+    private final Map<String, SubCommand> subCommands = new HashMap<>();
     private final StatsManager manager;
 
     public StatsCommand(StatsManager manager) {
@@ -23,7 +24,7 @@ public class StatsCommand implements CommandExecutor {
         subCommands.put("take", new TakeCommand(manager));
         subCommands.put("set", new SetCommand(manager));
         //subCommands.put("help", new HelpCommand());
-        //subCommands.put("reset", new ResetCommand(manager));
+        subCommands.put("reset", new ResetCommand(manager));
         subCommands.put("reload", new ReloadCommand(manager));
         subCommands.put("create", new CreateCommand(manager));
         subCommands.put("delete", new DeleteCommand(manager));
@@ -39,7 +40,7 @@ public class StatsCommand implements CommandExecutor {
         }
 
         String subCommandName = args[0].toLowerCase();
-        StatsSubCommand subCommand = subCommands.get(subCommandName);
+        SubCommand subCommand = subCommands.get(subCommandName);
 
         if (subCommand != null) {
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));

@@ -1,9 +1,9 @@
 package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
-import me.hektortm.woSSystems.systems.citems.commands.CitemSubCommand;
+import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.command.CommandSender;
 
-public class HelpCommand extends CitemSubCommand {
+public class HelpCommand extends SubCommand {
     @Override
     public String getName() {
         return "help";

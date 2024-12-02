@@ -4,6 +4,7 @@ import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.systems.unlockables.commands.subcommands.*;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
+import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.command.Command;
@@ -18,7 +19,7 @@ public class TempUnlockableCommand implements CommandExecutor {
 
     private final UnlockableManager manager;
     private final LangManager lang;
-    private final Map<String, UnlockableSubCommand> subCommands = new HashMap<>();
+    private final Map<String, SubCommand> subCommands = new HashMap<>();
 
     public TempUnlockableCommand(UnlockableManager manager, LangManager lang) {
         this.manager = manager;
@@ -41,7 +42,7 @@ public class TempUnlockableCommand implements CommandExecutor {
         }
 
         String subCommandName = args[0].toLowerCase();
-        UnlockableSubCommand subCommand = subCommands.get(subCommandName);
+        SubCommand subCommand = subCommands.get(subCommandName);
 
         if (subCommand != null) {
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));

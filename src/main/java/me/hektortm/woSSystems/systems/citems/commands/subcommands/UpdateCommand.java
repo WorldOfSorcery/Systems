@@ -2,10 +2,10 @@ package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
-import me.hektortm.woSSystems.systems.citems.commands.CitemSubCommand;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
+import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
@@ -15,7 +15,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
 
-public class UpdateCommand extends CitemSubCommand {
+public class UpdateCommand extends SubCommand {
 
     private final CitemCommand citem;
     private final CitemManager data;

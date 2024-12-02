@@ -1,11 +1,11 @@
 package me.hektortm.woSSystems.economy.commands.subcommands;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.economy.commands.SubCommand;
 import me.hektortm.woSSystems.economy.Currency;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
+import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;

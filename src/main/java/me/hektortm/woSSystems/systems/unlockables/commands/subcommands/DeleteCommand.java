@@ -1,15 +1,15 @@
 package me.hektortm.woSSystems.systems.unlockables.commands.subcommands;
 
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
-import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableSubCommand;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
+import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class DeleteCommand extends UnlockableSubCommand {
+public class DeleteCommand extends SubCommand {
 
     private final UnlockableManager manager;
     private final LogManager logManager;

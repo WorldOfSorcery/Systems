@@ -1,9 +1,9 @@
 package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 
-import me.hektortm.woSSystems.systems.citems.commands.CitemSubCommand;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
+import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -12,7 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-public class NameCommand extends CitemSubCommand {
+public class NameCommand extends SubCommand {
 
 
     @Override

@@ -1,9 +1,9 @@
 package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
-import me.hektortm.woSSystems.systems.citems.commands.CitemSubCommand;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
+import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.command.CommandSender;
@@ -12,7 +12,7 @@ import org.bukkit.event.Listener;
 
 import java.io.File;
 
-public class DeleteCommand extends CitemSubCommand implements Listener {
+public class DeleteCommand extends SubCommand implements Listener {
 
     private final CitemCommand citem;
     private final LogManager log;

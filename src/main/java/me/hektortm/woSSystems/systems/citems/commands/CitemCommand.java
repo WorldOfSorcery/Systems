@@ -4,6 +4,7 @@ package me.hektortm.woSSystems.systems.citems.commands;
 import me.hektortm.woSSystems.systems.citems.commands.subcommands.*;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.interactions.core.InteractionManager;
+import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.logging.LogManager;
@@ -19,7 +20,7 @@ import java.util.Map;
 
 public class CitemCommand implements CommandExecutor {
 
-    private final Map<String, CitemSubCommand> subCommands = new HashMap<>();
+    private final Map<String, SubCommand> subCommands = new HashMap<>();
     private final CitemManager data;
     private final InteractionManager interactionManager;
     private final LangManager lang;
@@ -49,7 +50,7 @@ public class CitemCommand implements CommandExecutor {
         }
 
         String subCommandName = args[0].toLowerCase();
-        CitemSubCommand subCommand = subCommands.get(subCommandName);
+        SubCommand subCommand = subCommands.get(subCommandName);
 
         if (subCommand != null) {
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));

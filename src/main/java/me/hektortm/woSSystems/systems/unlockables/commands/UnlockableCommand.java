@@ -4,6 +4,7 @@ import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.systems.unlockables.commands.subcommands.*;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
+import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.logging.LogManager;
@@ -17,7 +18,7 @@ import java.util.Map;
 
 public class UnlockableCommand implements CommandExecutor {
 
-    private final Map<String, UnlockableSubCommand> subCommands = new HashMap<>();
+    private final Map<String, SubCommand> subCommands = new HashMap<>();
     private final UnlockableManager manager;
     private final LangManager lang;
     private final LogManager logManager;
@@ -44,7 +45,7 @@ public class UnlockableCommand implements CommandExecutor {
         }
 
         String subCommandName = args[0].toLowerCase();
-        UnlockableSubCommand subCommand = subCommands.get(subCommandName);
+        SubCommand subCommand = subCommands.get(subCommandName);
 
         if (subCommand != null) {
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));

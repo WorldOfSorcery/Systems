@@ -1,14 +1,14 @@
 package me.hektortm.woSSystems.systems.interactions.commands.subcommands;
 
-import me.hektortm.woSSystems.systems.interactions.commands.InterSubCommand;
 import me.hektortm.woSSystems.systems.interactions.core.BindManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
+import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class UnbindCommand extends InterSubCommand {
+public class UnbindCommand extends SubCommand {
 
     private final BindManager manager;
 

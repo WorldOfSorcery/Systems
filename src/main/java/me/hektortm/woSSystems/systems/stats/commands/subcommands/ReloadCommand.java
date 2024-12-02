@@ -1,11 +1,11 @@
 package me.hektortm.woSSystems.systems.stats.commands.subcommands;
 
 import me.hektortm.woSSystems.systems.stats.StatsManager;
-import me.hektortm.woSSystems.systems.stats.commands.StatsSubCommand;
+import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.command.CommandSender;
 
-public class ReloadCommand extends StatsSubCommand {
+public class ReloadCommand extends SubCommand {
 
     private final StatsManager manager;
 

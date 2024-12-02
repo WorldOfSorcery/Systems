@@ -19,9 +19,7 @@ public class CRecipeCommand implements CommandExecutor {
     private final WoSSystems plugin;
     private final CRecipeManager manager;
     private final File recipesFolder;
-
-
-    // TODO: WIP
+    private final Map<SubCommand>
 
     public CRecipeCommand(WoSSystems plugin, CRecipeManager manager) {
         this.plugin = plugin;
@@ -30,6 +28,9 @@ public class CRecipeCommand implements CommandExecutor {
         if (!recipesFolder.exists()) {
             recipesFolder.mkdirs();
         }
+
+
+
     }
 
     @Override

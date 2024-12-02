@@ -4,6 +4,7 @@ package me.hektortm.woSSystems.systems.interactions.commands;
 import me.hektortm.woSSystems.systems.interactions.commands.subcommands.*;
 import me.hektortm.woSSystems.systems.interactions.core.BindManager;
 import me.hektortm.woSSystems.systems.interactions.core.InteractionManager;
+import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -15,7 +16,7 @@ import java.util.Map;
 
 public class InteractionCommand implements CommandExecutor {
 
-    private final Map<String, InterSubCommand> subCommands = new HashMap<>();
+    private final Map<String, SubCommand> subCommands = new HashMap<>();
     private final InteractionManager interManager;
     private final BindManager bindManager;
 
@@ -40,7 +41,7 @@ public class InteractionCommand implements CommandExecutor {
         }
 
         String subCommandName = args[0].toLowerCase();
-        InterSubCommand subCommand = subCommands.get(subCommandName);
+        SubCommand subCommand = subCommands.get(subCommandName);
 
         if (subCommand != null) {
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));

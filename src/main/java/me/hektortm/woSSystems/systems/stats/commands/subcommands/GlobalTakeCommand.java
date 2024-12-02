@@ -1,9 +1,9 @@
 package me.hektortm.woSSystems.systems.stats.commands.subcommands;
 
 import me.hektortm.woSSystems.systems.stats.StatsManager;
-import me.hektortm.woSSystems.systems.stats.commands.StatsSubCommand;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
+import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -14,7 +14,7 @@ import java.io.File;
 
 import static me.hektortm.woSSystems.systems.stats.utils.Operation.TAKE;
 
-public class GlobalTakeCommand extends StatsSubCommand {
+public class GlobalTakeCommand extends SubCommand {
 
     private final StatsManager manager;
     public GlobalTakeCommand(StatsManager manager) {

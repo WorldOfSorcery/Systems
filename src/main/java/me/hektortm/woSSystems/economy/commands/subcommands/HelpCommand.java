@@ -1,7 +1,7 @@
 package me.hektortm.woSSystems.economy.commands.subcommands;
 
 import me.hektortm.woSSystems.economy.commands.EcoCommand;
-import me.hektortm.woSSystems.economy.commands.SubCommand;
+import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.command.CommandSender;
 
 public class HelpCommand extends SubCommand {
