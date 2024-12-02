@@ -1,7 +1,7 @@
 package me.hektortm.woSSystems.systems.interactions.commands.subcommands;
 
 
-import me.hektortm.woSSystems.systems.interactions.core.BindManager;
+import me.hektortm.woSSystems.systems.interactions.BindManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;

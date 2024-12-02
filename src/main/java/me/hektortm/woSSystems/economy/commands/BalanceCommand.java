@@ -1,7 +1,7 @@
 package me.hektortm.woSSystems.economy.commands;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.economy.Currency;
+import me.hektortm.woSSystems.utils.dataclasses.Currency;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
@@ -44,7 +44,7 @@ public class BalanceCommand implements CommandExecutor {
             if (!PermissionUtil.hasPermission(sender, Permissions.BALANCE_OTHERS)) return true;
             String targetName = args[0];
             Player target = Bukkit.getPlayer(targetName);
-            UUID targetUUID = null;
+            UUID targetUUID;
 
             if(target != null) {
                 targetUUID = target.getUniqueId();
@@ -84,10 +84,6 @@ public class BalanceCommand implements CommandExecutor {
 
     private void showBalance(CommandSender sender, UUID uuid, String playerName) {
         FileConfiguration playerData = core.getPlayerData(uuid, playerName);
-        if (playerData == null) {
-            error(sender, "economy", "error.data");
-            return;
-        }
 
         Map<String, Currency> currencies = ecoManager.getCurrencies();
         if(currencies.isEmpty()) {

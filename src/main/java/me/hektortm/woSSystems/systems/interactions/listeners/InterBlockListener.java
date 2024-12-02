@@ -2,8 +2,8 @@ package me.hektortm.woSSystems.systems.interactions.listeners;
 
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.systems.interactions.core.InteractionConfig;
-import me.hektortm.woSSystems.systems.interactions.core.InteractionManager;
+import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
+import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.EventHandler;

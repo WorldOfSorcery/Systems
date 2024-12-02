@@ -1,7 +1,7 @@
 package me.hektortm.woSSystems.economy.commands;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.economy.Currency;
+import me.hektortm.woSSystems.utils.dataclasses.Currency;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 import static me.hektortm.wosCore.Utils.error;
 
+@SuppressWarnings({"DuplicatedCode", "deprecation"})
 public class PayCommand implements CommandExecutor {
 
     private final EcoManager ecoManager;
@@ -27,7 +28,7 @@ public class PayCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
-            if (!(sender instanceof Player)) {
+            if (!(sender instanceof Player p)) {
                 Utils.error(sender, "general", "error.notplayer");
                 return true;
             }
@@ -39,7 +40,6 @@ public class PayCommand implements CommandExecutor {
             }
 
             String targetName = args[0];
-            Player p = (Player) sender;
             String currencyName = args[1].replace("_", " ");
 
             int amount;
@@ -85,13 +85,13 @@ public class PayCommand implements CommandExecutor {
                         .replace("%amount%", String.valueOf(amount))
                         .replace("%name%", currencyName)
                         .replace("%color%", color);
-                target.sendActionBar(actionbar);
+                target.sendActionBar(actionbar); /* Deprecated */
                 String actionbar2 = lang.getMessage("economy", "actionbar.taken")
                         .replace("%icon%", icon)
                         .replace("%amount%", String.valueOf(amount))
                         .replace("%name%", currencyName)
                         .replace("%color%", color);
-                p.sendActionBar(actionbar2);
+                p.sendActionBar(actionbar2); /* Deprecated */
             } else {
                 error(p, "economy", "error.funds");
                 return true;

@@ -2,8 +2,8 @@ package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.systems.interactions.core.InteractionConfig;
-import me.hektortm.woSSystems.systems.interactions.core.InteractionManager;
+import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
+import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
@@ -18,6 +18,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
+@SuppressWarnings("DuplicatedCode")
 public class ActionCommand extends SubCommand {
 
     private final NamespacedKey leftActionKey;
@@ -49,7 +50,7 @@ public class ActionCommand extends SubCommand {
         Player p = (Player) sender;
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
 
-        if (itemInHand == null || itemInHand.getType() == Material.AIR) {
+        if (itemInHand.getType() == Material.AIR) {
             Utils.error(p, "citems", "error.holding-item");
             return;
         }

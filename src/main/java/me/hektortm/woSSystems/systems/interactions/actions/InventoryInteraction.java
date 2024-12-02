@@ -1,6 +1,5 @@
 package me.hektortm.woSSystems.systems.interactions.actions;
 
-import me.hektortm.woSSystems.systems.interactions.core.ActionHandler;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;

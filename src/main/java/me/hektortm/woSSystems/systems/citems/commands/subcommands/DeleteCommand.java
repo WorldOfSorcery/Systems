@@ -8,7 +8,6 @@ import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
 
 import java.io.File;
 
@@ -56,6 +55,7 @@ public class DeleteCommand extends SubCommand {
             log.writeLog(p, "deleted Citem: "+id);
         }
     }
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private void deleteCitem(String id) {
         File itemFile = new File(citem.citemsFolder, id + ".json");
         itemFile.delete();

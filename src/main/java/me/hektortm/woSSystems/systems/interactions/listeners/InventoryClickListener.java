@@ -2,8 +2,8 @@ package me.hektortm.woSSystems.systems.interactions.listeners;
 
 
 import me.hektortm.woSSystems.systems.interactions.actions.InventoryInteraction;
-import me.hektortm.woSSystems.systems.interactions.core.InteractionConfig;
-import me.hektortm.woSSystems.systems.interactions.gui.GUIManager;
+import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
+import me.hektortm.woSSystems.systems.interactions.GUIManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

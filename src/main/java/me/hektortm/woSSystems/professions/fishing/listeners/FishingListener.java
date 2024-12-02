@@ -1,10 +1,10 @@
 package me.hektortm.woSSystems.professions.fishing.listeners;
 
 import me.hektortm.woSSystems.professions.fishing.FishingManager;
-import me.hektortm.woSSystems.professions.utils.FishingItem;
+import me.hektortm.woSSystems.utils.dataclasses.FishingItem;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
-import me.hektortm.woSSystems.systems.interactions.core.InteractionConfig;
-import me.hektortm.woSSystems.systems.interactions.core.InteractionManager;
+import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
+import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;

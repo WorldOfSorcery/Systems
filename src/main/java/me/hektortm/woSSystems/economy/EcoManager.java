@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.economy;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.utils.dataclasses.Currency;
 import me.hektortm.wosCore.WoSCore;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -13,14 +14,13 @@ public class EcoManager {
     private final WoSCore core;
     private final WoSSystems plugin;
     private final File currencyDirectory;
-    private final Map<String, Currency> currencies = new HashMap<>();
+    private final Map<String, me.hektortm.woSSystems.utils.dataclasses.Currency> currencies = new HashMap<>();
 
 
     public EcoManager(WoSSystems plugin) {
         this.plugin = plugin;
         this.currencyDirectory = new File(plugin.getDataFolder(), "currencies");
         this.core = (WoSCore) plugin.getServer().getPluginManager().getPlugin("WoSCore");
-
 
         loadCurrencies();
     }
@@ -29,8 +29,9 @@ public class EcoManager {
         Player player = plugin.getServer().getPlayer(uuid);
 
 
+        assert player != null;
         FileConfiguration playerData = core.getPlayerData(uuid, player.getName());
-        File playerFile = new File(core.getDataFolder() ,"playerdata" + File.separator + uuid.toString() + ".yml");
+        File playerFile = new File(core.getDataFolder() ,"playerdata" + File.separator + uuid + ".yml");
 
         String path = "economy." + currencyName;
         int currentAmount = playerData.getInt(path, 0);
@@ -59,10 +60,9 @@ public class EcoManager {
         GIVE, TAKE, SET, RESET
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void loadCurrencies() {
-        if (!currencyDirectory.exists()) {
-            currencyDirectory.mkdirs();
-        }
+        if (!currencyDirectory.exists()) currencyDirectory.mkdir();
 
         File[] files = currencyDirectory.listFiles((dir, name) -> name.endsWith(".yml"));
         if (files != null) {
@@ -74,7 +74,8 @@ public class EcoManager {
                 String icon = config.getString("icon");
                 String color = config.getString("color");
 
-                Currency currency = new Currency(name, shortName, icon, color);
+                me.hektortm.woSSystems.utils.dataclasses.Currency currency = new me.hektortm.woSSystems.utils.dataclasses.Currency(name, shortName, icon, color);
+                assert name != null;
                 currencies.put(name.toLowerCase(), currency);
             }
         }
@@ -82,10 +83,6 @@ public class EcoManager {
 
     public Map<String, Currency> getCurrencies() {
         return currencies;
-    }
-    public List<String> getAllCurrencyNames() {
-        // Assuming currencies is a Map<String, Currency> or similar structure that stores your currencies
-        return new ArrayList<>(currencies.keySet());
     }
 
     public int getCurrencyBalance(UUID uuid, String currencyName) {

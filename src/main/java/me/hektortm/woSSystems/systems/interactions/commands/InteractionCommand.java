@@ -2,8 +2,8 @@ package me.hektortm.woSSystems.systems.interactions.commands;
 
 
 import me.hektortm.woSSystems.systems.interactions.commands.subcommands.*;
-import me.hektortm.woSSystems.systems.interactions.core.BindManager;
-import me.hektortm.woSSystems.systems.interactions.core.InteractionManager;
+import me.hektortm.woSSystems.systems.interactions.BindManager;
+import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.command.Command;
@@ -43,9 +43,8 @@ public class InteractionCommand implements CommandExecutor {
         String subCommandName = args[0].toLowerCase();
         SubCommand subCommand = subCommands.get(subCommandName);
 
-        if(!(PermissionUtil.hasPermission(sender, subCommand.getPermission()))) return true;
-
         if (subCommand != null) {
+            if(!(PermissionUtil.hasPermission(sender, subCommand.getPermission()))) return true;
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));
         } else {
             sender.sendMessage("Unknown subcommand: " + subCommandName);
@@ -54,6 +53,7 @@ public class InteractionCommand implements CommandExecutor {
         return true;
     }
 
+    // TODO
     public void sendHelp(CommandSender sender) {
         if(sender.hasPermission("interactions.help"))
         if(sender instanceof Player p) {

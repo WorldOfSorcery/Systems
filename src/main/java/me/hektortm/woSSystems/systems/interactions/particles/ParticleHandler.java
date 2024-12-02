@@ -1,7 +1,7 @@
 package me.hektortm.woSSystems.systems.interactions.particles;
 
 
-import me.hektortm.woSSystems.systems.interactions.core.InteractionConfig;
+import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;

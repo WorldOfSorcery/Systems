@@ -1,6 +1,6 @@
 package me.hektortm.woSSystems.professions.fishing;
 
-import me.hektortm.woSSystems.professions.utils.FishingItem;
+import me.hektortm.woSSystems.utils.dataclasses.FishingItem;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 

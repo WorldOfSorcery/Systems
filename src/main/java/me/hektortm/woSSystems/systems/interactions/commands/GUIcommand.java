@@ -1,9 +1,9 @@
 package me.hektortm.woSSystems.systems.interactions.commands;
 
 
-import me.hektortm.woSSystems.systems.interactions.core.InteractionConfig;
-import me.hektortm.woSSystems.systems.interactions.core.InteractionManager;
-import me.hektortm.woSSystems.systems.interactions.gui.GUIManager;
+import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
+import me.hektortm.woSSystems.systems.interactions.InteractionManager;
+import me.hektortm.woSSystems.systems.interactions.GUIManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;

@@ -2,7 +2,6 @@ package me.hektortm.woSSystems.systems.interactions.config;
 
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.systems.interactions.core.InteractionConfig;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;

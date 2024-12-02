@@ -19,15 +19,11 @@ import java.util.Map;
 public class EcoCommand implements CommandExecutor {
 
     private final Map<String, SubCommand> subCommands = new HashMap<>();
-    private final EcoManager manager;
     private final LangManager lang;
-    private final LogManager log;
 
 
     public EcoCommand(EcoManager manager, LangManager lang, LogManager log) {
-        this.manager = manager;
         this.lang = lang;
-        this.log = log;
 
         subCommands.put("give", new GiveCommand(manager, lang, log));
         subCommands.put("take", new TakeCommand(manager, lang, log));
@@ -46,14 +42,11 @@ public class EcoCommand implements CommandExecutor {
             return true;
         }
 
-
         String subCommandName = args[0].toLowerCase();
         SubCommand subCommand = subCommands.get(subCommandName);
 
-
-        if(!PermissionUtil.hasPermission(sender, subCommand.getPermission())) return true;
-
         if (subCommand != null) {
+            if(!PermissionUtil.hasPermission(sender, subCommand.getPermission())) return true;
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));
         } else {
             ecoHelp(sender);

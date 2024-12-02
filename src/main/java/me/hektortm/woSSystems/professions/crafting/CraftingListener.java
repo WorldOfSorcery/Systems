@@ -33,19 +33,15 @@ public class CraftingListener implements Listener {
     }
 
     private boolean isCustomRecipe(Recipe recipe) {
-        if (recipe instanceof ShapedRecipe) {
-            ShapedRecipe shapedRecipe = (ShapedRecipe) recipe;
+        if (recipe instanceof ShapedRecipe shapedRecipe) {
             if (shapedRecipe.getKey().getNamespace().equals(plugin.getName().toLowerCase())) {
                 return true;
             }
         }
 
         // Check for ShapelessRecipe
-        if (recipe instanceof ShapelessRecipe) {
-            ShapelessRecipe shapelessRecipe = (ShapelessRecipe) recipe;
-            if (shapelessRecipe.getKey().getNamespace().equals(plugin.getName().toLowerCase())) {
-                return true;
-            }
+        if (recipe instanceof ShapelessRecipe shapelessRecipe) {
+            return shapelessRecipe.getKey().getNamespace().equals(plugin.getName().toLowerCase());
         }
 
         // Return false for default recipes

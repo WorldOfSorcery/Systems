@@ -1,9 +1,9 @@
 package me.hektortm.woSSystems.systems.stats;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.systems.stats.utils.GlobalStat;
+import me.hektortm.woSSystems.utils.dataclasses.GlobalStat;
 import me.hektortm.woSSystems.systems.stats.utils.Operation;
-import me.hektortm.woSSystems.systems.stats.utils.Stat;
+import me.hektortm.woSSystems.utils.dataclasses.Stat;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
 import me.hektortm.wosCore.logging.LogManager;

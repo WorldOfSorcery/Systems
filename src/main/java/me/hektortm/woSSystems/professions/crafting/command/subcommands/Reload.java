@@ -17,6 +17,6 @@ public class Reload extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-
+        //TODO
     }
 }

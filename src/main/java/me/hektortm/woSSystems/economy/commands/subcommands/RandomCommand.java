@@ -1,9 +1,8 @@
 package me.hektortm.woSSystems.economy.commands.subcommands;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.economy.Currency;
+import me.hektortm.woSSystems.utils.dataclasses.Currency;
 import me.hektortm.woSSystems.economy.EcoManager;
-import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.LangManager;
@@ -17,6 +16,7 @@ import java.util.Random;
 
 import static me.hektortm.wosCore.Utils.error;
 
+@SuppressWarnings({"DuplicatedCode", "deprecation"})
 public class RandomCommand extends SubCommand {
 
     private final EcoManager ecoManager;
@@ -88,6 +88,6 @@ public class RandomCommand extends SubCommand {
                 .replace("%amount%", String.valueOf(randomNumber))
                 .replace("%name%", currencyName)
                 .replace("%color%", color);
-        target.sendActionBar(actionbar);
+        target.sendActionBar(actionbar); /* Deprecated */
     }
 }

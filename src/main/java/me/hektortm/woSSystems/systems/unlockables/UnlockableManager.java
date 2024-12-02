@@ -2,8 +2,8 @@ package me.hektortm.woSSystems.systems.unlockables;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.unlockables.utils.Action;
-import me.hektortm.woSSystems.systems.unlockables.utils.TempUnlockable;
-import me.hektortm.woSSystems.systems.unlockables.utils.Unlockable;
+import me.hektortm.woSSystems.utils.dataclasses.TempUnlockable;
+import me.hektortm.woSSystems.utils.dataclasses.Unlockable;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
 import me.hektortm.wosCore.logging.LogManager;

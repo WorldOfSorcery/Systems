@@ -3,13 +3,14 @@ package me.hektortm.woSSystems.professions.crafting.command.subcommands;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Objects;
 
+@SuppressWarnings("UnstableApiUsage")
 public class Create extends SubCommand {
 
     private final CRecipeManager manager;
@@ -37,11 +38,11 @@ public class Create extends SubCommand {
         createRecipeTemplate(sender, id, type);
     }
 
-    private boolean createRecipeTemplate(CommandSender s, String id, Boolean type) {
+    private void createRecipeTemplate(CommandSender s, String id, Boolean type) {
         File recipeFile = new File(manager.recipesFolder, id + ".json");
 
         if (recipeFile.exists()) {
-            return false;
+            return;
         }
 
         // Boolean true = shaped
@@ -50,7 +51,7 @@ public class Create extends SubCommand {
             try (FileWriter writer = new FileWriter(recipeFile)) {
                 writer.write("{\n");
                 writer.write("  \"type\": \"shaped\",\n");
-                writer.write("  \"crafting_book\": \"false\",\n");
+                writer.write("  \"crafting_book\": false,\n");
                 writer.write("  \"result\": {\n");
                 writer.write("    \"id\": \"result_id\"\n");
                 writer.write("  },\n");
@@ -62,15 +63,14 @@ public class Create extends SubCommand {
                 writer.write("}\n");
                 s.sendMessage("Shaped Recipe template for " + id + " created.");
             } catch (IOException e) {
-                e.printStackTrace();
-                return false;
+                Bukkit.getLogger().severe("Failed to create recipe template.");
             }
         }
         else {
             try (FileWriter writer = new FileWriter(recipeFile)) {
                 writer.write("{\n");
                 writer.write("  \"type\": \"unshaped\",\n");
-                writer.write("  \"crafting_book\": \"false\",\n");
+                writer.write("  \"crafting_book\": false,\n");
                 writer.write("  \"result\": {\n");
                 writer.write("    \"id\": \"result_id\"\n");
                 writer.write("  },\n");
@@ -82,13 +82,11 @@ public class Create extends SubCommand {
                 writer.write("}\n");
                 s.sendMessage("Unshaped Recipe template for " + id + " created.");
             } catch (IOException e) {
-                e.printStackTrace();
-                return false;  // Return false if there is an exception during file creation
+                Bukkit.getLogger().severe("Failed to create recipe template.");
             }
         }
 
 
-        return true;
     }
 
 }

@@ -47,9 +47,10 @@ public class UnlockableCommand implements CommandExecutor {
         String subCommandName = args[0].toLowerCase();
         SubCommand subCommand = subCommands.get(subCommandName);
 
-        if(!(PermissionUtil.hasPermission(sender, subCommand.getPermission()))) return true;
+
 
         if (subCommand != null) {
+            if(!(PermissionUtil.hasPermission(sender, subCommand.getPermission()))) return true;
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));
         } else {
             unlockableHelp(sender);

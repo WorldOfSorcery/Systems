@@ -1,8 +1,7 @@
 package me.hektortm.woSSystems.systems.interactions.commands.subcommands;
 
-import me.hektortm.woSSystems.systems.interactions.core.InteractionConfig;
-import me.hektortm.woSSystems.systems.interactions.core.InteractionManager;
-import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
+import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.Bukkit;

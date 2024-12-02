@@ -13,24 +13,22 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.List;
 
+@SuppressWarnings({"UnstableApiUsage", "unchecked"})
 public class CRecipeManager {
 
     private final CitemManager citemManager;
     private final CitemCommand cmd;
     public final File recipesFolder;
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public CRecipeManager(CitemManager citemManager, CitemCommand cmd) {
         this.citemManager = citemManager;
         this.cmd = cmd;
         this.recipesFolder = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "CRecipes");
-        if(!recipesFolder.exists()) {
-            recipesFolder.mkdirs();
-        }
+        if(!recipesFolder.exists()) recipesFolder.mkdirs();
     }
 
 
