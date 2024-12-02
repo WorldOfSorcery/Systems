@@ -15,17 +15,17 @@ commands:
   # Citem Commands
   citem:
     description: citem
-    usage: /citem <save|lore|name|flag> [arguments]
+    usage: /<command> <save|lore|name|flag> [arguments]
   cgive:
     description: give a citem
-    usage: /cgive <player> <ID> <amount>
+    usage: /<command> <player> <ID> <amount>
   cremove:
     description: remove a citem
-    usage: /cremove <player> <ID> <amount>
-
+    usage: /<command> <player> <ID> <amount>
+  # CRecipe Commands
   crecipe:
     description: crecipe
-    usage: /crecipe <create> <id>
+    usage: /<command> <create> <id>
   # Stat Commands
   stats:
     description: Stats Command
@@ -42,13 +42,13 @@ commands:
   # Economy Commands
   economy:
     aliases: [ eco ]
-    usage: /economy
+    usage: /<command>
     description: Economy
     permission: economy.modify.give
   balance:
     aliases: [ bal ]
     description: Shows your or a players balance
-    usage: /balance
+    usage: /<command> [player]
     permission: economy.balance.self
   pay:
     description: pay some1 money

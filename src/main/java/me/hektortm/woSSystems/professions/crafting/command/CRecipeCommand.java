@@ -84,6 +84,7 @@ public class CRecipeCommand implements CommandExecutor {
             try (FileWriter writer = new FileWriter(recipeFile)) {
                 writer.write("{\n");
                 writer.write("  \"type\": \"shaped\",\n");
+                writer.write("  \"crafting_book\": \"false\",\n");
                 writer.write("  \"result\": {\n");
                 writer.write("    \"id\": \"result_id\"\n");
                 writer.write("  },\n");
@@ -102,6 +103,7 @@ public class CRecipeCommand implements CommandExecutor {
             try (FileWriter writer = new FileWriter(recipeFile)) {
                 writer.write("{\n");
                 writer.write("  \"type\": \"unshaped\",\n");
+                writer.write("  \"crafting_book\": \"false\",\n");
                 writer.write("  \"result\": {\n");
                 writer.write("    \"id\": \"result_id\"\n");
                 writer.write("  },\n");

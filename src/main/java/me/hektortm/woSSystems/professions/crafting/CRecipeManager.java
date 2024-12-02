@@ -50,6 +50,7 @@ public class CRecipeManager {
                 // Determine recipe type
                 String type = (String) json.getOrDefault("type", "shaped");
                 JSONObject resultJson = (JSONObject) json.get("result");
+                boolean craftingBook = (boolean) json.getOrDefault("crafting_book", false); // Read the parameter
 
                 ItemStack resultItem = citemManager.loadItemFromFile(new File(cmd.citemsFolder, resultJson.get("id") + ".json"));
 
@@ -57,9 +58,9 @@ public class CRecipeManager {
                     NamespacedKey key = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), recipeId);
 
                     if (type.equals("shaped")) {
-                        handleShapedRecipe(json, resultItem, key);
+                        handleShapedRecipe(json, resultItem, key, craftingBook);
                     } else if (type.equals("unshaped")) {
-                        handleUnshapedRecipe(json, resultItem, key);
+                        handleUnshapedRecipe(json, resultItem, key, craftingBook);
                     } else {
                         Bukkit.getLogger().warning("Unknown recipe type in " + file.getName() + ": " + type);
                     }
@@ -70,7 +71,8 @@ public class CRecipeManager {
         }
     }
 
-    private void handleShapedRecipe(JSONObject json, ItemStack resultItem, NamespacedKey key) {
+
+    private void handleShapedRecipe(JSONObject json, ItemStack resultItem, NamespacedKey key, boolean craftingBook) {
         ShapedRecipe recipe = new ShapedRecipe(key, resultItem);
 
         // Parse ingredients
@@ -92,10 +94,16 @@ public class CRecipeManager {
             }
         }
 
+        // Add to crafting book if specified
+        if (craftingBook) {
+            recipe.setGroup(key.getKey());
+        }
+
         Bukkit.addRecipe(recipe);
     }
 
-    private void handleUnshapedRecipe(JSONObject json, ItemStack resultItem, NamespacedKey key) {
+
+    private void handleUnshapedRecipe(JSONObject json, ItemStack resultItem, NamespacedKey key, boolean craftingBook) {
         ShapelessRecipe recipe = new ShapelessRecipe(key, resultItem);
 
         // Parse ingredients
@@ -110,8 +118,14 @@ public class CRecipeManager {
             }
         }
 
+        // Add to crafting book if specified
+        if (craftingBook) {
+            recipe.setGroup(key.getKey());
+        }
+
         Bukkit.addRecipe(recipe);
     }
+
 
 
 
