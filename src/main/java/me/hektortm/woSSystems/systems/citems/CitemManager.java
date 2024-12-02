@@ -308,7 +308,7 @@ public class CitemManager {
                 Utils.successMsg1Value(p, "citems", "update.updated", "%item%", item.getItemMeta().getDisplayName());
             }
         } else {
-            log.sendWarning(p.getName() + ": Item \""+ item.getItemMeta().getDisplayName()+"\" -> no valid ID");
+            log.sendWarning(p.getName() + ": Item \""+ item.getItemMeta().getDisplayName()+"%red_300%\" -> no valid ID");
         }
     }
 
