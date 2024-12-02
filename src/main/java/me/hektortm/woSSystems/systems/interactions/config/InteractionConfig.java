@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.systems.interactions.core;
+package me.hektortm.woSSystems.systems.interactions.config;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

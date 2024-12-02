@@ -1,12 +1,12 @@
-package me.hektortm.woSSystems.systems.stats.utils;
+package me.hektortm.woSSystems.utils.dataclasses;
 
-public class Stat {
+public class GlobalStat {
 
     private final String id;
     private final long max;
     private final boolean capped;
 
-    public Stat(String id, long max, boolean capped) {
+    public GlobalStat(String id, long max, boolean capped) {
         this.id = id;
         this.max = max;
         this.capped = capped;
@@ -23,5 +23,6 @@ public class Stat {
     public long getMax() {
         return max;
     }
+
 
 }

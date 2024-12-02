@@ -1,9 +1,9 @@
-package me.hektortm.woSSystems.systems.interactions.gui;
+package me.hektortm.woSSystems.systems.interactions;
 
 
 import me.hektortm.woSSystems.systems.citems.CitemManager;
-import me.hektortm.woSSystems.systems.interactions.core.ActionHandler;
-import me.hektortm.woSSystems.systems.interactions.core.InteractionConfig;
+import me.hektortm.woSSystems.systems.interactions.actions.ActionHandler;
+import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;

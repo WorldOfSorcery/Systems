@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.systems.interactions.core;
+package me.hektortm.woSSystems.systems.interactions;
 
 
 import me.hektortm.woSSystems.WoSSystems;

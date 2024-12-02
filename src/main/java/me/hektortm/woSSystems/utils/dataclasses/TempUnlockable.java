@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.systems.unlockables.utils;
+package me.hektortm.woSSystems.utils.dataclasses;
 
 public class TempUnlockable {
 

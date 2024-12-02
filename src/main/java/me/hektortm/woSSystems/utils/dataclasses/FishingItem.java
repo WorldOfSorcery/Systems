@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.professions.utils;
+package me.hektortm.woSSystems.utils.dataclasses;
 
 public class FishingItem {
 

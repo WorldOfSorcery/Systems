@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.systems.interactions.core;
+package me.hektortm.woSSystems.systems.interactions.actions;
 
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import org.bukkit.entity.Player;

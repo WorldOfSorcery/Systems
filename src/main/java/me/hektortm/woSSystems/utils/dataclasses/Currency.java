@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.economy;
+package me.hektortm.woSSystems.utils.dataclasses;
 
 public class Currency {
 
