@@ -20,6 +20,11 @@ public class TempHelpCommand extends SubCommand {
     }
 
     @Override
+    public Permissions getPermission() {
+        return null;
+    }
+
+    @Override
     public void execute(CommandSender sender, String[] args) {
         if (PermissionUtil.hasAnyPermission(sender, Permissions.UNLOCKABLE_TEMP_GIVE, Permissions.UNLOCKABLE_TEMP_TAKE, Permissions.UNLOCKABLE_TEMP_DELETE, Permissions.UNLOCKABLE_TEMP_CREATE)) {
             Utils.error(sender, "general", "error.perms");

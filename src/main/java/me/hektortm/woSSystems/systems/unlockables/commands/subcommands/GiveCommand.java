@@ -25,9 +25,12 @@ public class GiveCommand extends SubCommand {
     }
 
     @Override
-    public void execute(CommandSender sender, String[] args) {
-        if (!PermissionUtil.hasPermission(sender, Permissions.UNLOCKABLE_GIVE)) return;
+    public Permissions getPermission() {
+        return Permissions.UNLOCKABLE_GIVE;
+    }
 
+    @Override
+    public void execute(CommandSender sender, String[] args) {
         if (args.length == 0 || args.length > 2) {
             Utils.error(sender, "unlockables", "usage.perm.give");
             return;

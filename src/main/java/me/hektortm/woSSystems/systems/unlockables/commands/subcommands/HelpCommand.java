@@ -20,6 +20,11 @@ public class HelpCommand extends SubCommand {
     }
 
     @Override
+    public Permissions getPermission() {
+        return null;
+    }
+
+    @Override
     public void execute(CommandSender sender, String[] args) {
         if (!PermissionUtil.hasAnyPermission(sender, Permissions.UNLOCKABLE_GIVE, Permissions.UNLOCKABLE_TAKE, Permissions.UNLOCKABLE_DELETE, Permissions.UNLOCKABLE_CREATE)) {
             Utils.error(sender, "general", "error.perms");

@@ -25,7 +25,6 @@ public class TempUnlockableCommand implements CommandExecutor {
         this.manager = manager;
         this.lang = lang;
 
-
         subCommands.put("create", new TempCreateCommand(manager));
         subCommands.put("delete", new TempDeleteCommand(manager));
         subCommands.put("give", new TempGiveCommand(manager));
@@ -43,6 +42,8 @@ public class TempUnlockableCommand implements CommandExecutor {
 
         String subCommandName = args[0].toLowerCase();
         SubCommand subCommand = subCommands.get(subCommandName);
+
+        if(!(PermissionUtil.hasPermission(sender, subCommand.getPermission()))) return true;
 
         if (subCommand != null) {
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));

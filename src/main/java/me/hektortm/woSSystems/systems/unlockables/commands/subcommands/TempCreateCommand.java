@@ -22,12 +22,13 @@ public class TempCreateCommand extends SubCommand {
     }
 
     @Override
+    public Permissions getPermission() {
+        return Permissions.UNLOCKABLE_TEMP_CREATE;
+    }
+
+    @Override
     public void execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            Utils.error(sender, "general", "error.notplayer");
-            return;
-        }
-        if (!PermissionUtil.hasPermission(sender, Permissions.UNLOCKABLE_TEMP_CREATE)) return;
+        if(!PermissionUtil.isPlayer(sender)) return;
 
         if (args.length != 1) {
             Utils.error(sender, "unlockables", "usage.temp.create");

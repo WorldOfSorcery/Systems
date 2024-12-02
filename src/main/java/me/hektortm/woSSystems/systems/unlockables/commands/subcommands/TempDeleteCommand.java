@@ -21,9 +21,12 @@ public class TempDeleteCommand extends SubCommand {
     }
 
     @Override
-    public void execute(CommandSender sender, String[] args) {
-        if (!PermissionUtil.hasPermission(sender, Permissions.UNLOCKABLE_TEMP_DELETE)) return;
+    public Permissions getPermission() {
+        return Permissions.UNLOCKABLE_TEMP_DELETE;
+    }
 
+    @Override
+    public void execute(CommandSender sender, String[] args) {
         if (args.length != 1) {
             Utils.error(sender, "unlockables", "usage.temp.delete");
             return;
