@@ -23,13 +23,13 @@ public class DeleteCommand extends SubCommand {
     }
 
     @Override
-    public void execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            Utils.error(sender, "general", "error.notplayer");
-            return;
-        }
+    public Permissions getPermission() {
+        return Permissions.STATS_DELETE;
+    }
 
-        if (!PermissionUtil.hasPermission(sender, Permissions.STATS_DELETE)) return;
+    @Override
+    public void execute(CommandSender sender, String[] args) {
+        if(!PermissionUtil.isPlayer(sender)) return;
 
         Player p = (Player) sender;
         String id = args[0].toLowerCase();

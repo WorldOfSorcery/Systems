@@ -27,8 +27,12 @@ public class ResetCommand extends SubCommand {
     }
 
     @Override
+    public Permissions getPermission() {
+        return Permissions.STATS_RESET;
+    }
+
+    @Override
     public void execute(CommandSender sender, String[] args) {
-        if (!PermissionUtil.hasPermission(sender, Permissions.STATS_RESET)) return;
 
         if (args.length < 1 || args.length > 2) {
             Utils.error(sender, "stats", "error.usage.reset");

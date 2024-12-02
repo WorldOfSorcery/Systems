@@ -21,13 +21,13 @@ public class GlobalCreateCommand extends SubCommand {
     }
 
     @Override
-    public void execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            Utils.error(sender, "general", "error.notplayer");
-            return;
-        }
+    public Permissions getPermission() {
+        return Permissions.STATS_GLOBAL_CREATE;
+    }
 
-        if (!PermissionUtil.hasPermission(sender, Permissions.STATS_GLOBAL_CREATE)) return;
+    @Override
+    public void execute(CommandSender sender, String[] args) {
+        if(!PermissionUtil.isPlayer(sender)) return;
 
         // /stats create <ID> <Max>
 

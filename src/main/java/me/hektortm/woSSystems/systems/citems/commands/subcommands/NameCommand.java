@@ -21,12 +21,13 @@ public class NameCommand extends SubCommand {
     }
 
     @Override
+    public Permissions getPermission() {
+        return Permissions.CITEM_RENAME;
+    }
+
+    @Override
     public void execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            Utils.error(sender, "general", "error.notplayer");
-            return;
-        }
-        if (!PermissionUtil.hasPermission(sender, Permissions.CITEM_RENAME)) return;
+        if(!PermissionUtil.isPlayer(sender)) return;
 
         Player p = (Player) sender;
 

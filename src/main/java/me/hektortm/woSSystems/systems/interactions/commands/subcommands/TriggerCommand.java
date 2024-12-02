@@ -23,8 +23,12 @@ public class TriggerCommand extends SubCommand {
     }
 
     @Override
+    public Permissions getPermission() {
+        return Permissions.INTER_TRIGGER;
+    }
+
+    @Override
     public void execute(CommandSender sender, String[] args) {
-        if (!PermissionUtil.hasPermission(sender, Permissions.INTER_TRIGGER)) return;
 
         if (args.length == 2) {
             String playerName = args[0];

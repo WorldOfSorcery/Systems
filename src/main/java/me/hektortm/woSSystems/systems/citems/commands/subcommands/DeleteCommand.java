@@ -12,7 +12,7 @@ import org.bukkit.event.Listener;
 
 import java.io.File;
 
-public class DeleteCommand extends SubCommand implements Listener {
+public class DeleteCommand extends SubCommand {
 
     private final CitemCommand citem;
     private final LogManager log;
@@ -28,13 +28,13 @@ public class DeleteCommand extends SubCommand implements Listener {
     }
 
     @Override
-    public void execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            Utils.error(sender, "general", "error.notplayer");
-            return;
-        }
+    public Permissions getPermission() {
+        return Permissions.CITEM_DELETE;
+    }
 
-        if (!PermissionUtil.hasPermission(sender, Permissions.CITEM_DELETE)) return;
+    @Override
+    public void execute(CommandSender sender, String[] args) {
+        if(!PermissionUtil.isPlayer(sender)) return;
 
         Player p = (Player) sender;
         String id = args[0];

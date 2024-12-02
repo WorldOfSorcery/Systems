@@ -20,6 +20,7 @@ public class GUIcommand implements CommandExecutor {
         this.interactionManager = interactionManager;
     }
 
+    //TODO: Rework
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (cmd.getName().equalsIgnoreCase("openGUI")) {
             // Check if at least two arguments are provided

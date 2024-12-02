@@ -5,6 +5,8 @@ import me.hektortm.woSSystems.systems.stats.commands.subcommands.GlobalCreateCom
 import me.hektortm.woSSystems.systems.stats.commands.subcommands.GlobalDeleteCommand;
 import me.hektortm.woSSystems.systems.stats.commands.subcommands.GlobalGiveCommand;
 import me.hektortm.woSSystems.systems.stats.commands.subcommands.GlobalTakeCommand;
+import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -16,7 +18,7 @@ import java.util.Map;
 
 public class GlobalStatCommand implements CommandExecutor {
 
-    private final Map<String, StatsSubCommand> subCommands = new HashMap<>();
+    private final Map<String, SubCommand> subCommands = new HashMap<>();
     private final StatsManager manager;
 
     public GlobalStatCommand(StatsManager manager) {
@@ -36,7 +38,9 @@ public class GlobalStatCommand implements CommandExecutor {
         }
 
         String subCommandName = args[0].toLowerCase();
-        StatsSubCommand subCommand = subCommands.get(subCommandName);
+        SubCommand subCommand = subCommands.get(subCommandName);
+
+        if(!(PermissionUtil.hasPermission(sender, subCommand.getPermission()))) return true;
 
         if (subCommand != null) {
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));

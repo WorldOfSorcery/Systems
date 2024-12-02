@@ -27,9 +27,12 @@ public class GlobalTakeCommand extends SubCommand {
     }
 
     @Override
-    public void execute(CommandSender sender, String[] args) {
-        if (!PermissionUtil.hasPermission(sender, Permissions.STATS_GLOBAL_TAKE)) return;
+    public Permissions getPermission() {
+        return Permissions.STATS_GLOBAL_TAKE;
+    }
 
+    @Override
+    public void execute(CommandSender sender, String[] args) {
         if (args.length < 2 || args.length > 3) {
             Utils.error(sender, "stats", "error.usage.take");
             return;

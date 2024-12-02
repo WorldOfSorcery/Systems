@@ -21,6 +21,11 @@ public class ReloadCommand extends SubCommand {
     }
 
     @Override
+    public Permissions getPermission() {
+        return null;
+    }
+
+    @Override
     public void execute(CommandSender sender, String[] args) {
 
 

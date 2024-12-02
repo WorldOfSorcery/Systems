@@ -4,6 +4,7 @@ package me.hektortm.woSSystems.systems.interactions.commands;
 import me.hektortm.woSSystems.systems.interactions.commands.subcommands.*;
 import me.hektortm.woSSystems.systems.interactions.core.BindManager;
 import me.hektortm.woSSystems.systems.interactions.core.InteractionManager;
+import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -29,7 +30,6 @@ public class InteractionCommand implements CommandExecutor {
         subCommands.put("reload", new ReloadCommand(interManager));
         subCommands.put("bind", new BindCommand(bindManager));
         subCommands.put("unbind", new UnbindCommand(bindManager));
-        subCommands.put("view", new ViewCommand(interManager));
 
     }
 
@@ -42,6 +42,8 @@ public class InteractionCommand implements CommandExecutor {
 
         String subCommandName = args[0].toLowerCase();
         SubCommand subCommand = subCommands.get(subCommandName);
+
+        if(!(PermissionUtil.hasPermission(sender, subCommand.getPermission()))) return true;
 
         if (subCommand != null) {
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));

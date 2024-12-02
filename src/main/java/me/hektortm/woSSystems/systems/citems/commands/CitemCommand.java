@@ -4,6 +4,7 @@ package me.hektortm.woSSystems.systems.citems.commands;
 import me.hektortm.woSSystems.systems.citems.commands.subcommands.*;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.interactions.core.InteractionManager;
+import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
@@ -51,6 +52,8 @@ public class CitemCommand implements CommandExecutor {
 
         String subCommandName = args[0].toLowerCase();
         SubCommand subCommand = subCommands.get(subCommandName);
+
+        if(!(PermissionUtil.hasPermission(sender, subCommand.getPermission()))) return true;
 
         if (subCommand != null) {
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));

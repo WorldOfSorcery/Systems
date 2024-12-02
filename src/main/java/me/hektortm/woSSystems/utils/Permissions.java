@@ -28,7 +28,9 @@ public enum Permissions {
     STATS_TAKE("stats.take"),
     STATS_SET("stats.set"),
     STATS_RESET("stats.reset"),
-    STATS_RELOAD("stats.reload"),
+    STATS_RELOAD_SINGLE("stats.reload.single"),
+    STATS_VIEW("stats.view"),
+    STATS_RELOAD_ALL("stats.reload.all"),
 
     STATS_GLOBAL_CREATE("stats_global.create"),
     STATS_GLOBAL_DELETE("stats_global.delete"),

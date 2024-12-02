@@ -30,12 +30,13 @@ public class SaveCommand extends SubCommand {
     }
 
     @Override
+    public Permissions getPermission() {
+        return Permissions.CITEM_SAVE;
+    }
+
+    @Override
     public void execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            Utils.error(sender, "general", "error.notplayer");
-            return;
-        }
-        if (!PermissionUtil.hasPermission(sender, Permissions.CITEM_SAVE)) return;
+        if(!PermissionUtil.isPlayer(sender)) return;
 
         Player p = (Player) sender;
 

@@ -2,9 +2,18 @@ package me.hektortm.woSSystems.utils;
 
 import me.hektortm.wosCore.Utils;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 public class PermissionUtil {
 
+    public static boolean isPlayer(CommandSender sender) {
+        if(!(sender instanceof Player)) {
+            Utils.error(sender, "general", "error.notplayer");
+            return false;
+        } else {
+            return true;
+        }
+    }
 
     public static boolean hasPermission(CommandSender sender, Permissions permission) {
         if (sender.hasPermission(permission.getPermission())) {

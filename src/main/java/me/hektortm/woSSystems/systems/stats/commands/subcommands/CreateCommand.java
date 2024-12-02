@@ -22,12 +22,13 @@ public class CreateCommand extends SubCommand {
     }
 
     @Override
+    public Permissions getPermission() {
+        return Permissions.STATS_CREATE;
+    }
+
+    @Override
     public void execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            Utils.error(sender, "general", "error.notplayer");
-            return;
-        }
-        if (!PermissionUtil.hasPermission(sender, Permissions.STATS_CREATE)) return;
+        if(!PermissionUtil.isPlayer(sender)) return;
 
         if (args.length == 0) {
             Utils.error(sender, "stats", "usage");

@@ -22,13 +22,13 @@ public class BindCommand extends SubCommand {
     }
 
     @Override
-    public void execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage("You are not a player.");
-            return;
-        }
+    public Permissions getPermission() {
+        return Permissions.INTER_BIND;
+    }
 
-        if (!PermissionUtil.hasPermission(sender, Permissions.INTER_BIND)) return;
+    @Override
+    public void execute(CommandSender sender, String[] args) {
+        if(!PermissionUtil.isPlayer(sender)) return;
 
         Player p = (Player) sender;
 

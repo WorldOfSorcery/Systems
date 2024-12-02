@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.systems.stats.commands;
 
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.systems.stats.commands.subcommands.*;
+import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.command.Command;
@@ -41,6 +42,8 @@ public class StatsCommand implements CommandExecutor {
 
         String subCommandName = args[0].toLowerCase();
         SubCommand subCommand = subCommands.get(subCommandName);
+
+        if(!(PermissionUtil.hasPermission(sender, subCommand.getPermission()))) return true;
 
         if (subCommand != null) {
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));

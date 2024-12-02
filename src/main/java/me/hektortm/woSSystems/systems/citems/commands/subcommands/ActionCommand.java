@@ -38,13 +38,13 @@ public class ActionCommand extends SubCommand {
     }
 
     @Override
-    public void execute(CommandSender sender, String[] args) {
-        if(!(sender instanceof Player)) {
-            Utils.error(sender, "general", "error.notplayer");
-            return;
-        }
+    public Permissions getPermission() {
+        return Permissions.CITEM_ACTIONS;
+    }
 
-        if (!PermissionUtil.hasPermission(sender, Permissions.CITEM_ACTIONS)) return;
+    @Override
+    public void execute(CommandSender sender, String[] args) {
+        if(!PermissionUtil.isPlayer(sender)) return;
 
         Player p = (Player) sender;
         ItemStack itemInHand = p.getInventory().getItemInMainHand();

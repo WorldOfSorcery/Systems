@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.systems.stats.commands.subcommands;
 
 import me.hektortm.woSSystems.systems.stats.StatsManager;
+import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
@@ -23,11 +24,14 @@ public class ViewCommand extends SubCommand {
     }
 
     @Override
+    public Permissions getPermission() {
+        return Permissions.STATS_VIEW;
+    }
+
+
+    //TODO: WIP needed
+    @Override
     public void execute(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("stats.view")) {
-            Utils.error(sender, "general", "error.perms");
-            return;
-        }
         if (args.length < 2 || args.length > 3) {
             Utils.error(sender, "stats", "error.usage.take");
             return;

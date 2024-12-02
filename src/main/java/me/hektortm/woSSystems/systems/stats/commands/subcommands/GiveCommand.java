@@ -28,10 +28,12 @@ public class GiveCommand extends SubCommand {
     }
 
     @Override
+    public Permissions getPermission() {
+        return Permissions.STATS_GIVE;
+    }
+
+    @Override
     public void execute(CommandSender sender, String[] args) {
-        if (!PermissionUtil.hasPermission(sender, Permissions.STATS_GIVE)) return;
-
-
         if (args.length < 2 || args.length > 3) {
             Utils.error(sender, "stats", "error.usage.give");
             return;

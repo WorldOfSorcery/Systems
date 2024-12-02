@@ -22,11 +22,13 @@ public class UnbindCommand extends SubCommand {
     }
 
     @Override
+    public Permissions getPermission() {
+        return Permissions.INTER_UNBIND;
+    }
+
+    @Override
     public void execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage("You are not a player.");
-        }
-        if (!PermissionUtil.hasPermission(sender, Permissions.INTER_UNBIND)) return;
+        if(!PermissionUtil.isPlayer(sender)) return;
 
         Player p = (Player) sender;
 
