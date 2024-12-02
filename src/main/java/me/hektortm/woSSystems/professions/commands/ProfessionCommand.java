@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.professions.commands;
 
+import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;

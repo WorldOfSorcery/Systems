@@ -35,8 +35,12 @@ public class RandomCommand extends SubCommand {
     }
 
     @Override
+    public Permissions getPermission() {
+        return Permissions.ECONOMY_RANDOM;
+    }
+
+    @Override
     public void execute(CommandSender sender, String[] args) {
-        if(!PermissionUtil.hasPermission(sender, Permissions.ECONOMY_RANDOM)) return;
 
         if(args.length < 4) {
             error(sender, "economy", "error.random-usage");

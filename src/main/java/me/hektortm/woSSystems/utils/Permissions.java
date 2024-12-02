@@ -14,6 +14,7 @@ public enum Permissions {
 
     CRECIPE_CREATE("crecipe.create"),
     CRECIPE_DELETE("crecipe.delete"),
+    CRECIPE_RELOAD("crecipe.reload"),
 
     INTER_BIND("interaction.bind"),
     INTER_UNBIND("interaction.unbind"),

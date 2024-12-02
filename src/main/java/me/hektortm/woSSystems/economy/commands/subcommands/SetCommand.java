@@ -29,8 +29,12 @@ public class SetCommand extends SubCommand {
     }
 
     @Override
+    public Permissions getPermission() {
+        return Permissions.ECONOMY_SET;
+    }
+
+    @Override
     public void execute(CommandSender sender, String[] args) {
-        if (!PermissionUtil.hasAnyPermission(sender, Permissions.ECONOMY_SET)) return;
 
         if(args.length < 3) {
             error(sender, "economy", "error.set-usage");

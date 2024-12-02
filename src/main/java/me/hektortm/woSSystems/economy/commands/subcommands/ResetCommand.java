@@ -30,8 +30,12 @@ public class ResetCommand extends SubCommand {
     }
 
     @Override
+    public Permissions getPermission() {
+        return Permissions.ECONOMY_RESET;
+    }
+
+    @Override
     public void execute(CommandSender sender, String[] args) {
-        if(!PermissionUtil.hasAnyPermission(sender, Permissions.ECONOMY_RESET)) return;
 
         if(args.length < 3) {
             error(sender, "economy", "error.reset-usage");

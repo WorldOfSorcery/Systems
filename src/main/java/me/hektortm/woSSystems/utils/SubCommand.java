@@ -6,6 +6,8 @@ public abstract class SubCommand {
 
     public abstract String getName();
 
+    public abstract Permissions getPermission();
+
     public abstract void execute(CommandSender sender, String[] args);
 
 }

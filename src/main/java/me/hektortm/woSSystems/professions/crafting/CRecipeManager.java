@@ -22,7 +22,7 @@ public class CRecipeManager {
 
     private final CitemManager citemManager;
     private final CitemCommand cmd;
-    private final File recipesFolder;
+    public final File recipesFolder;
 
     public CRecipeManager(CitemManager citemManager, CitemCommand cmd) {
         this.citemManager = citemManager;

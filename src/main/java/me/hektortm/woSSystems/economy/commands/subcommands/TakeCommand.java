@@ -33,8 +33,12 @@ public class TakeCommand extends SubCommand {
     }
 
     @Override
+    public Permissions getPermission() {
+        return Permissions.ECONOMY_TAKE;
+    }
+
+    @Override
     public void execute(CommandSender sender, String[] args) {
-        if(!PermissionUtil.hasPermission(sender, Permissions.ECONOMY_TAKE)) return;
 
         if(args.length < 3) {
             error(sender, "economy", "error.take-usage");

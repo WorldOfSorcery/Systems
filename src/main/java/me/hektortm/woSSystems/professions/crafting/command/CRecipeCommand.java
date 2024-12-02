@@ -2,6 +2,10 @@ package me.hektortm.woSSystems.professions.crafting.command;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
+import me.hektortm.woSSystems.professions.crafting.command.subcommands.Create;
+import me.hektortm.woSSystems.professions.crafting.command.subcommands.Reload;
+import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -12,6 +16,8 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class CRecipeCommand implements CommandExecutor {
@@ -19,7 +25,7 @@ public class CRecipeCommand implements CommandExecutor {
     private final WoSSystems plugin;
     private final CRecipeManager manager;
     private final File recipesFolder;
-    private final Map<SubCommand>
+    private final Map<String, SubCommand> subCommands = new HashMap<>();
 
     public CRecipeCommand(WoSSystems plugin, CRecipeManager manager) {
         this.plugin = plugin;
@@ -29,6 +35,8 @@ public class CRecipeCommand implements CommandExecutor {
             recipesFolder.mkdirs();
         }
 
+        subCommands.put("create", new Create(manager));
+        subCommands.put("reload", new Reload());
 
 
     }
@@ -39,88 +47,23 @@ public class CRecipeCommand implements CommandExecutor {
             return false;
         }
 
-        if (!(sender instanceof Player)) {
-            Utils.error(sender, "general", "error.notplayer");
-            return true;
+
+        String subCommandName = args[0].toLowerCase();
+        SubCommand subCommand = subCommands.get(subCommandName);
+
+        if(!PermissionUtil.hasPermission(sender, subCommand.getPermission())) return true;
+
+        if (subCommand != null) {
+            subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));
+        } else {
+            crecipeHelp(sender);
         }
-
-        if ("create".equalsIgnoreCase(args[0]) && args.length == 3) {
-            //TODO: WIP
-            if (args[1] != "shaped" && args[1] != "unshaped") {
-                sender.sendMessage("ERROR: only shaped / unshaped allowed.");
-                return true;
-            }
-            String type = args[1].toLowerCase();
-            String id = args[2];
-
-
-            if (createRecipeTemplate(id, type)) {
-                sender.sendMessage("Recipe template for " + id + " created.");
-            } else {
-                sender.sendMessage("Failed to create template for " + id);
-            }
-            return true;
-        }
-
-        if ("reload".equalsIgnoreCase(args[0])) {
-            sender.sendMessage("Custom recipes reloaded. (WIP)");
-            return true;
-        }
-
-        return false;
-
+        return true;
     }
 
-    private boolean createRecipeTemplate(String id, String type) {
-        File recipeFile = new File(recipesFolder, id + ".json");
+    public void crecipeHelp(CommandSender sender) {
 
-        // Check if the file already exists
-        if (recipeFile.exists()) {
-            return false;
-        }
-
-        // Create the template
-        if (Objects.equals(type, "shaped")) {
-            try (FileWriter writer = new FileWriter(recipeFile)) {
-                writer.write("{\n");
-                writer.write("  \"type\": \"shaped\",\n");
-                writer.write("  \"crafting_book\": \"false\",\n");
-                writer.write("  \"result\": {\n");
-                writer.write("    \"id\": \"result_id\"\n");
-                writer.write("  },\n");
-                writer.write("  \"ingredients\": [\n");
-                writer.write("    [\"null\", \"null\", \"null\"],\n");
-                writer.write("    [\"null\", \"null\", \"null\"],\n");
-                writer.write("    [\"null\", \"null\", \"null\"]\n");
-                writer.write("  ]\n");
-                writer.write("}\n");
-            } catch (IOException e) {
-                e.printStackTrace();
-                return false;
-            }
-        }
-        if (Objects.equals(type, "unshaped")) {
-            try (FileWriter writer = new FileWriter(recipeFile)) {
-                writer.write("{\n");
-                writer.write("  \"type\": \"unshaped\",\n");
-                writer.write("  \"crafting_book\": \"false\",\n");
-                writer.write("  \"result\": {\n");
-                writer.write("    \"id\": \"result_id\"\n");
-                writer.write("  },\n");
-                writer.write("  \"ingredients\": [\n");
-                writer.write("    \"null\",\n");
-                writer.write("    \"null\",\n");
-                writer.write("    \"null\"\n");
-                writer.write("  ]\n");
-                writer.write("}\n");
-            } catch (IOException e) {
-                e.printStackTrace();
-                return false;  // Return false if there is an exception during file creation
-            }
-        }
-
-
-        return true;
+        return;
     }
 
 }

@@ -21,8 +21,12 @@ public class CurrenciesCommand extends SubCommand {
     }
 
     @Override
+    public Permissions getPermission() {
+        return Permissions.ECONOMY_CURRENCIES;
+    }
+
+    @Override
     public void execute(CommandSender sender, String[] args) {
-        if(!PermissionUtil.hasPermission(sender, Permissions.ECONOMY_CURRENCIES)) return;
 
         if (ecoManager.getCurrencies().isEmpty()) {
             WoSSystems.ecoMsg(sender, "economy", "currency.notfound");
