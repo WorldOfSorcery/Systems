@@ -2,6 +2,7 @@ package me.hektortm.woSSystems;
 
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.BalanceCommand;
+import me.hektortm.woSSystems.economy.commands.Coinflip;
 import me.hektortm.woSSystems.economy.commands.EcoCommand;
 import me.hektortm.woSSystems.economy.commands.PayCommand;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
@@ -132,6 +133,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("economy", new EcoCommand(ecoManager, lang, log));
         cmdReg("balance", new BalanceCommand(ecoManager, core));
         cmdReg("pay", new PayCommand(ecoManager, lang));
+        cmdReg("coinflip", new Coinflip(ecoManager, this));
         cmdReg("crecipe", new CRecipeCommand(this, recipeManager));
 
         // Register events

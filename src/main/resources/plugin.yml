@@ -61,6 +61,9 @@ commands:
     description: pay some1 money
     usage: /pay <player>
     permission: economy.pay
+  coinflip:
+    description: GAMBLING
+    usage: /coinflip <amount> <heads|tails>
 
 permissions:
   # Interaction Permissions
