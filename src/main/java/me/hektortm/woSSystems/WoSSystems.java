@@ -5,6 +5,7 @@ import me.hektortm.woSSystems.economy.commands.BalanceCommand;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
 import me.hektortm.woSSystems.economy.commands.EcoCommand;
 import me.hektortm.woSSystems.economy.commands.PayCommand;
+import me.hektortm.woSSystems.economy.listeners.CoinflipInventoryListener;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
 import me.hektortm.woSSystems.professions.crafting.CraftingListener;
 import me.hektortm.woSSystems.professions.crafting.command.CRecipeCommand;
@@ -137,6 +138,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("crecipe", new CRecipeCommand(this, recipeManager));
 
         // Register events
+        eventReg(new CoinflipInventoryListener(new Coinflip(ecoManager, this).challengeQueue, ecoManager, new Coinflip(ecoManager, this)));
         eventReg(new InventoryCloseListener(guiManager));
         eventReg(new InterBlockListener(this, interactionManager));
         eventReg(new DropListener());

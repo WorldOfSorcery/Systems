@@ -12,6 +12,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -23,13 +24,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class Coinflip implements CommandExecutor {
+public class Coinflip implements CommandExecutor, Listener {
 
     private final EcoManager ecoManager;
     private final WoSSystems plugin;
 
     // Map to store active challenges
-    private final Map<UUID, Challenge> challengeQueue = new HashMap<>();
+    public final Map<UUID, Challenge> challengeQueue = new HashMap<>();
 
     public Coinflip(EcoManager ecoManager, WoSSystems plugin) {
         this.ecoManager = ecoManager;
