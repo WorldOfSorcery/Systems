@@ -33,30 +33,45 @@ public class CoinflipInventoryListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
         if (event.getView().getTitle().equalsIgnoreCase("Coinflip Challenges")) {
-            event.setCancelled(true); // Prevent players from taking items
+            event.setCancelled(true);
+
+            // Log current challengeQueue contents for debugging
+            Bukkit.getLogger().info("Current challengeQueue: " + challengeQueue);
 
             ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem == null || clickedItem.getType() != Material.PLAYER_HEAD) return;
 
             SkullMeta meta = (SkullMeta) clickedItem.getItemMeta();
-            if (meta == null || meta.getOwningPlayer() == null) return;
-
-            Player challenger = meta.getOwningPlayer().getPlayer();
-            if (challenger == null || !challengeQueue.containsKey(challenger.getUniqueId())) {
+            if (meta == null || meta.getOwningPlayer() == null) {
                 Utils.error(player, "economy", "error.challenge-not-found");
                 return;
             }
 
-            Challenge challenge = challengeQueue.get(challenger.getUniqueId());
+            UUID challengerUUID = meta.getOwningPlayer().getUniqueId();
+            Bukkit.getLogger().info("Challenger UUID: " + challengerUUID);
+
+            if (!challengeQueue.containsKey(challengerUUID)) {
+                Utils.error(player, "economy", "error.challenge-not-found");
+                return;
+            }
+
+            Player challenger = Bukkit.getPlayer(challengerUUID);
+            if (challenger == null) {
+                Utils.error(player, "economy", "error.challenger-offline");
+                return;
+            }
+
+            Bukkit.getLogger().info("Found challenger: " + challenger.getName());
+            Challenge challenge = challengeQueue.get(challengerUUID);
 
             if (!ecoManager.hasEnoughCurrency(player.getUniqueId(), "gold", challenge.getAmount())) {
                 Utils.error(player, "economy", "error.funds");
                 return;
             }
 
-            // Start the coinflip
             player.closeInventory();
             coinflipCommand.acceptChallenge(player, challenger);
         }
     }
+
 }

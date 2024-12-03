@@ -30,11 +30,12 @@ public class Coinflip implements CommandExecutor, Listener {
     private final WoSSystems plugin;
 
     // Map to store active challenges
-    public final Map<UUID, Challenge> challengeQueue = new HashMap<>();
+    public Map<UUID, Challenge> challengeQueue = new HashMap<>();
 
-    public Coinflip(EcoManager ecoManager, WoSSystems plugin) {
+    public Coinflip(EcoManager ecoManager, WoSSystems plugin, Map<UUID, Challenge> challengeQueue) {
         this.ecoManager = ecoManager;
         this.plugin = plugin;
+        this.challengeQueue = challengeQueue;
     }
 
     @Override

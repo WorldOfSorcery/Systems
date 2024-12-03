@@ -32,6 +32,7 @@ actionbar:
   taken: "§c- %color%%amount% %name%"
 
 coinflip:
+  flipping: "§eFlipping coin..."
   created: "§aYou have created a coinflip(§6%amount% Gold§a) betting on: §e%choice%"
   win: "§e%result%! You win and received §6%amount% Gold§e."
   loss: "§e%result%! You lose..."

@@ -322,4 +322,4 @@ permissions:
     default: true
   economy.coinflip:
     description: Coinflip
-    default: false
+    default: true

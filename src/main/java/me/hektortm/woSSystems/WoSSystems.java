@@ -39,6 +39,7 @@ import me.hektortm.woSSystems.systems.unlockables.commands.TempUnlockableCommand
 import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableCommand;
 import me.hektortm.woSSystems.systems.unlockables.listeners.CleanUpListener;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
+import me.hektortm.woSSystems.utils.dataclasses.Challenge;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
@@ -50,7 +51,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public final class WoSSystems extends JavaPlugin {
 
@@ -91,6 +94,7 @@ public final class WoSSystems extends JavaPlugin {
         YAMLLoader yamlLoader = new YAMLLoader(this);
 
         ecoManager = new EcoManager(this);
+        HashMap<UUID, Challenge> challengeQueue = new HashMap<>();
         particleHandler = new ParticleHandler();
         bindManager = new BindManager(this);
         statsManager = new StatsManager(core, log);
@@ -120,6 +124,7 @@ public final class WoSSystems extends JavaPlugin {
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }
+        Coinflip coinflipCommand = new Coinflip(ecoManager, this, challengeQueue);
 
         // Register commands
         cmdReg("opengui", new GUIcommand(guiManager, interactionManager));
@@ -134,11 +139,10 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("economy", new EcoCommand(ecoManager, lang, log));
         cmdReg("balance", new BalanceCommand(ecoManager, core));
         cmdReg("pay", new PayCommand(ecoManager, lang));
-        cmdReg("coinflip", new Coinflip(ecoManager, this));
+        cmdReg("coinflip", coinflipCommand);
         cmdReg("crecipe", new CRecipeCommand(this, recipeManager));
 
         // Register events
-        eventReg(new CoinflipInventoryListener(new Coinflip(ecoManager, this).challengeQueue, ecoManager, new Coinflip(ecoManager, this)));
         eventReg(new InventoryCloseListener(guiManager));
         eventReg(new InterBlockListener(this, interactionManager));
         eventReg(new DropListener());
@@ -147,6 +151,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new CleanUpListener(core, unlockableManager));
         eventReg(new FishingListener(fishingManager, citemManager, interactionManager));
 
+        getServer().getPluginManager().registerEvents(new CoinflipInventoryListener(challengeQueue, ecoManager, coinflipCommand), this);
         // Register Inventory Interaction events
         InventoryInteraction inventoryInteraction = new InventoryInteraction(this, actionHandler);
         for (Map.Entry<String, InteractionConfig> entry : interactionConfigs.entrySet()) {
