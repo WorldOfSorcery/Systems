@@ -124,7 +124,7 @@ public final class WoSSystems extends JavaPlugin {
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }
-        Coinflip coinflipCommand = new Coinflip(ecoManager, this, challengeQueue);
+        Coinflip coinflipCommand = new Coinflip(ecoManager, this, challengeQueue, lang);
 
         // Register commands
         cmdReg("opengui", new GUIcommand(guiManager, interactionManager));
@@ -151,7 +151,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new CleanUpListener(core, unlockableManager));
         eventReg(new FishingListener(fishingManager, citemManager, interactionManager));
 
-        getServer().getPluginManager().registerEvents(new CoinflipInventoryListener(challengeQueue, ecoManager, coinflipCommand), this);
+        getServer().getPluginManager().registerEvents(new CoinflipInventoryListener(challengeQueue, ecoManager, coinflipCommand, lang), this);
         // Register Inventory Interaction events
         InventoryInteraction inventoryInteraction = new InventoryInteraction(this, actionHandler);
         for (Map.Entry<String, InteractionConfig> entry : interactionConfigs.entrySet()) {

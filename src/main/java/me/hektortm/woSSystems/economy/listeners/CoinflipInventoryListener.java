@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.economy.listeners;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
 import me.hektortm.woSSystems.utils.dataclasses.Challenge;
+import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -21,22 +22,21 @@ public class CoinflipInventoryListener implements Listener {
     private final Map<UUID, Challenge> challengeQueue;
     private final EcoManager ecoManager;
     private final Coinflip coinflipCommand;
+    private final LangManager lang;
 
-    public CoinflipInventoryListener(Map<UUID, Challenge> challengeQueue, EcoManager ecoManager, Coinflip coinflipCommand) {
+    public CoinflipInventoryListener(Map<UUID, Challenge> challengeQueue, EcoManager ecoManager, Coinflip coinflipCommand, LangManager lang) {
         this.challengeQueue = challengeQueue;
         this.ecoManager = ecoManager;
         this.coinflipCommand = coinflipCommand;
+        this.lang = lang;
     }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
-        if (event.getView().getTitle().equalsIgnoreCase("Coinflip Challenges")) {
+        if (event.getView().getTitle().equalsIgnoreCase(lang.getMessage("economy", "coinflip.gui.title"))) {
             event.setCancelled(true);
-
-            // Log current challengeQueue contents for debugging
-            Bukkit.getLogger().info("Current challengeQueue: " + challengeQueue);
 
             ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem == null || clickedItem.getType() != Material.PLAYER_HEAD) return;
@@ -48,7 +48,6 @@ public class CoinflipInventoryListener implements Listener {
             }
 
             UUID challengerUUID = meta.getOwningPlayer().getUniqueId();
-            Bukkit.getLogger().info("Challenger UUID: " + challengerUUID);
 
             if (!challengeQueue.containsKey(challengerUUID)) {
                 Utils.error(player, "economy", "error.challenge-not-found");
@@ -60,8 +59,6 @@ public class CoinflipInventoryListener implements Listener {
                 Utils.error(player, "economy", "error.challenger-offline");
                 return;
             }
-
-            Bukkit.getLogger().info("Found challenger: " + challenger.getName());
             Challenge challenge = challengeQueue.get(challengerUUID);
 
             if (!ecoManager.hasEnoughCurrency(player.getUniqueId(), "gold", challenge.getAmount())) {

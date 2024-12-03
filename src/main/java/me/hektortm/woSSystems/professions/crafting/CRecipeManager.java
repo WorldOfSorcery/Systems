@@ -50,6 +50,7 @@ public class CRecipeManager {
                 JSONObject resultJson = (JSONObject) json.get("result");
                 boolean craftingBook = (boolean) json.getOrDefault("crafting_book", false); // Read the parameter
 
+
                 ItemStack resultItem = citemManager.loadItemFromFile(new File(cmd.citemsFolder, resultJson.get("id") + ".json"));
 
                 if (resultItem != null) {

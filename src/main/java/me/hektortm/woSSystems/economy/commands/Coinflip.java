@@ -5,6 +5,7 @@ import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.dataclasses.Challenge;
+import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -28,14 +29,16 @@ public class Coinflip implements CommandExecutor, Listener {
 
     private final EcoManager ecoManager;
     private final WoSSystems plugin;
+    private final LangManager lang;
 
     // Map to store active challenges
     public Map<UUID, Challenge> challengeQueue = new HashMap<>();
 
-    public Coinflip(EcoManager ecoManager, WoSSystems plugin, Map<UUID, Challenge> challengeQueue) {
+    public Coinflip(EcoManager ecoManager, WoSSystems plugin, Map<UUID, Challenge> challengeQueue, LangManager lang) {
         this.ecoManager = ecoManager;
         this.plugin = plugin;
         this.challengeQueue = challengeQueue;
+        this.lang = lang;
     }
 
     @Override
@@ -94,7 +97,7 @@ public class Coinflip implements CommandExecutor, Listener {
             return;
         }
 
-        Inventory menu = Bukkit.createInventory(null, 27, "Coinflip Challenges");
+        Inventory menu = Bukkit.createInventory(null, 27, lang.getMessage("economy", "coinflip.gui.title"));
         challengeQueue.forEach((uuid, challenge) -> {
             Player challenger = Bukkit.getPlayer(uuid);
             if (challenger == null) return;
@@ -104,10 +107,10 @@ public class Coinflip implements CommandExecutor, Listener {
             assert meta != null;
 
             meta.setOwningPlayer(challenger); // Use the Bukkit API to set the player
-            meta.setDisplayName(challenger.getName());
+            meta.setDisplayName(lang.getMessage("economy", "coinflip.gui.name").replace("%player%", challenger.getName()));
             meta.setLore(List.of(
-                    "Bet: " + challenge.getAmount() + " gold",
-                    "Choice: " + challenge.getChoice()
+                    lang.getMessage("economy", "coinflip.gui.bet").replace("%amount%", String.valueOf(challenge.getAmount())),
+                    lang.getMessage("economy", "coinflip.gui.choice").replace("%choice%", challenge.getChoice())
             ));
             head.setItemMeta(meta);
 
@@ -122,8 +125,17 @@ public class Coinflip implements CommandExecutor, Listener {
             return;
         }
 
+
+
         Challenge challenge = challengeQueue.get(challenger.getUniqueId());
         int amount = challenge.getAmount();
+
+        if (!ecoManager.hasEnoughCurrency(challenger.getUniqueId(), "gold", amount)) {
+            Utils.error(challenger, "economy", "error.coinflip-funds-challenger");
+            Utils.error(acceptor, "economy", "error.coinflip-funds-acceptor");
+            challengeQueue.remove(challenger.getUniqueId());
+            return;
+        }
 
         if (!ecoManager.hasEnoughCurrency(acceptor.getUniqueId(), "gold", amount)) {
             Utils.error(acceptor, "economy", "error.funds");
