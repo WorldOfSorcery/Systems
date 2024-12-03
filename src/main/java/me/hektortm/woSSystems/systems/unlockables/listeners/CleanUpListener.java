@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.systems.unlockables.listeners;
 
+import me.hektortm.woSSystems.economy.commands.Coinflip;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.wosCore.WoSCore;
 import org.bukkit.Bukkit;
@@ -18,15 +19,22 @@ public class CleanUpListener implements Listener {
 
     private final UnlockableManager manager;
     private final WoSCore core;
-    public CleanUpListener(WoSCore core, UnlockableManager manager) {
+    private final Coinflip coinflip;
+
+    public CleanUpListener(WoSCore core, UnlockableManager manager, Coinflip coinflip) {
         this.core = core;
         this.manager = manager;
+        this.coinflip = coinflip;
     }
 
 
     @EventHandler
     public void leaveEvent(PlayerQuitEvent event) {
         Player p = event.getPlayer();
+
+        if (coinflip.challengeQueue.containsKey(p.getUniqueId())) {
+            coinflip.challengeQueue.remove(p.getUniqueId());
+        }
 
         File playerFile = new File(core.getDataFolder() + File.separator + "playerdata" + File.separator + p.getUniqueId() + ".yml");
         FileConfiguration playerData = YamlConfiguration.loadConfiguration(playerFile);
