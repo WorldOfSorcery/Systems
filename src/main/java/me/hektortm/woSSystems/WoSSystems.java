@@ -37,7 +37,7 @@ import me.hektortm.woSSystems.systems.stats.commands.StatsCommand;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.systems.unlockables.commands.TempUnlockableCommand;
 import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableCommand;
-import me.hektortm.woSSystems.systems.unlockables.listeners.CleanUpListener;
+import me.hektortm.woSSystems.listeners.CleanUpListener;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.woSSystems.utils.dataclasses.Challenge;
 import me.hektortm.wosCore.LangManager;

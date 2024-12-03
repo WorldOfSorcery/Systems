@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.systems.unlockables.listeners;
+package me.hektortm.woSSystems.listeners;
 
 import me.hektortm.woSSystems.economy.commands.Coinflip;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
