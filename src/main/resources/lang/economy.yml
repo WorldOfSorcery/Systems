@@ -12,6 +12,8 @@ error:
   pay-usage: "Usage: /pay <player> <currency> <amount>"
   invalid-amount: "Invalid amount. Please provide a number."
   invalid-amount-positive: "Invalid amount. Please provide a positive number."
+  no-challenges: "There are no challengers available."
+  challenge-not-found: "This Challenge was not found."
 
 balance: "§6%player%'s balance:"
 currency:
@@ -30,7 +32,7 @@ actionbar:
   taken: "§c- %color%%amount% %name%"
 
 coinflip:
-  flipping: "§eFlipping Coin..."
+  created: "§aYou have created a coinflip(§6%amount% Gold§a) betting on: §e%choice%"
   win: "§e%result%! You win and received §6%amount% Gold§e."
   loss: "§e%result%! You lose..."
 
