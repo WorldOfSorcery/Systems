@@ -61,6 +61,7 @@ public enum Permissions {
     ECONOMY_RESET("economy.modify.reset"),
     ECONOMY_RANDOM("economy.modify.random"),
     ECONOMY_CURRENCIES("economy.modify.currencies"),
+    ECONOMY_COINFLIP("economy.coinflip"),
 
     ECONOMY_PAY("economy.pay");
 

@@ -2,6 +2,9 @@ package me.hektortm.woSSystems.economy.commands;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.economy.EcoManager;
+import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.Permissions;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -22,13 +25,14 @@ public class Coinflip implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
 
-        if (!(sender instanceof Player p)) {
-            sender.sendMessage("You must be a player to use this command!");
-            return true;
-        }
+        if (!PermissionUtil.isPlayer(sender)) return true;
+
+        if(!PermissionUtil.hasPermission(sender, Permissions.ECONOMY_COINFLIP)) return true;
+
+        Player p = (Player) sender;
 
         if (args.length < 2) {
-            p.sendMessage("Usage: /coinflip <amount> <heads|tails>");
+            Utils.error(p, "economy", "error.coinflip-usage");
             return true;
         }
 
@@ -36,27 +40,27 @@ public class Coinflip implements CommandExecutor {
         try {
             amount = Integer.parseInt(args[0]);
         } catch (NumberFormatException e) {
-            p.sendMessage("Invalid number.");
+            Utils.error(p, "economy", "error.invalid-amount");
             return true;
         }
 
         if (amount <= 0) {
-            p.sendMessage("The amount must be a positive number.");
+            Utils.error(p, "economy", "error.invalid-amount-positive");
             return true;
         }
 
         if (!ecoManager.hasEnoughCurrency(p.getUniqueId(), "gold", amount)) {
-            p.sendMessage("You do not have enough gold.");
+            Utils.error(p, "economy", "error.funds");
             return true;
         }
 
         String choice = args[1].toLowerCase();
         if (!choice.equals("heads") && !choice.equals("tails")) {
-            p.sendMessage("Invalid argument. Use heads/tails.");
+            Utils.error(p, "economy", "error.coinflip-usage");
             return true;
         }
 
-        p.sendMessage("Flipping Coin...");
+        Utils.successMsg(p, "economy", "coinflip.flipping");
         Bukkit.getScheduler().runTaskLater(plugin, () -> calculateResult(choice, amount, p), 20L);
 
         return true;
@@ -69,10 +73,10 @@ public class Coinflip implements CommandExecutor {
 
         if (choice.equals(result)) {
             int winnings = amount * 2;
-            p.sendMessage(result.substring(0, 1).toUpperCase() + result.substring(1) + "! You win and received " + winnings + " gold!");
+            Utils.successMsg2Values(p, "economy", "coinflip.win", "%result%", result.substring(0, 1).toUpperCase() + result.substring(1), "%amount%", String.valueOf(winnings));
             ecoManager.modifyCurrency(p.getUniqueId(), "gold", winnings, EcoManager.Operation.GIVE);
         } else {
-            p.sendMessage(result.substring(0, 1).toUpperCase() + result.substring(1) + "! You lose...");
+            Utils.successMsg1Value(p, "economy", "coinflip.loss", "%result%", result.substring(0, 1).toUpperCase() + result.substring(1));
         }
     }
 

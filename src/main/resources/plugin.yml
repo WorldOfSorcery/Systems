@@ -64,6 +64,7 @@ commands:
   coinflip:
     description: GAMBLING
     usage: /coinflip <amount> <heads|tails>
+    permission: economy.coinflip
 
 permissions:
   # Interaction Permissions
@@ -319,3 +320,6 @@ permissions:
   economy.pay:
     description: pay someone a currency
     default: true
+  economy.coinflip:
+    description: Coinflip
+    default: false

@@ -6,6 +6,7 @@ error:
   give-usage: "Usage: /economy give <player> <currency> <amount>"
   take-usage: "Usage: /economy take <player> <currency> <amount>"
   set-usage: "Usage: /economy set <player> <currency> <amount>"
+  coinflip-usage: "Usage: /coinflip <amount> <heads|tails>"
   reset-usage: "Usage: /economy reset <player> <currency>"
   random-usage: "Usage: /economy random <player> <currency> <min> <max>"
   pay-usage: "Usage: /pay <player> <currency> <amount>"
@@ -27,6 +28,11 @@ currency:
 actionbar:
   given: "§a+ %color%%amount% %name%"
   taken: "§c- %color%%amount% %name%"
+
+coinflip:
+  flipping: "§eFlipping Coin..."
+  win: "§e%result%! You win and received §6%amount% Gold§e."
+  loss: "§e%result%! You lose..."
 
 pay:
   target: "§a%player%§7 has paid you %amount%%currency%§7."
