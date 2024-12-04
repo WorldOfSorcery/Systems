@@ -25,7 +25,7 @@ public class EcoManager {
         loadCurrencies();
     }
 
-    public void modifyCurrency(UUID uuid, String currencyName, int amount, Operation operation) {
+    public void modifyCurrency(UUID uuid, String currencyName, long amount, Operation operation) {
         Player player = plugin.getServer().getPlayer(uuid);
 
 
@@ -34,7 +34,7 @@ public class EcoManager {
         File playerFile = new File(core.getDataFolder() ,"playerdata" + File.separator + uuid + ".yml");
 
         String path = "economy." + currencyName;
-        int currentAmount = playerData.getInt(path, 0);
+        long currentAmount = playerData.getLong(path, 0);
 
         switch (operation) {
             case GIVE:
@@ -85,17 +85,17 @@ public class EcoManager {
         return currencies;
     }
 
-    public int getCurrencyBalance(UUID uuid, String currencyName) {
+    public long getCurrencyBalance(UUID uuid, String currencyName) {
         File playerFile = new File(core.getDataFolder(), "playerdata" + File.separator + uuid.toString() + ".yml");
         FileConfiguration playerData = YamlConfiguration.loadConfiguration(playerFile);
 
         String path = "economy."+currencyName;
 
-        return playerData.getInt(path, 0);
+        return playerData.getLong(path, 0);
     }
 
-    public boolean hasEnoughCurrency(UUID uuid, String currencyName, int amount) {
-        int currentBalance = getCurrencyBalance(uuid, currencyName);
+    public boolean hasEnoughCurrency(UUID uuid, String currencyName, long amount) {
+        long currentBalance = getCurrencyBalance(uuid, currencyName);
         return currentBalance >= amount;
     }
 

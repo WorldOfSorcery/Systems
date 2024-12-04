@@ -1,5 +1,6 @@
-package me.hektortm.woSSystems.professions.crafting;
+package me.hektortm.woSSystems.utils;
 
+import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import org.bukkit.entity.Player;
@@ -9,10 +10,12 @@ public class ConditionHandler {
 
     private final UnlockableManager unlockableManager;
     private final StatsManager statsManager;
+    private final EcoManager ecoManager;
 
-    public ConditionHandler(UnlockableManager unlockableManager, StatsManager statsManager) {
+    public ConditionHandler(UnlockableManager unlockableManager, StatsManager statsManager, EcoManager ecoManager) {
         this.unlockableManager = unlockableManager;
         this.statsManager = statsManager;
+        this.ecoManager = ecoManager;
     }
 
     public boolean validateConditions(Player player, JSONObject conditions) {
@@ -36,6 +39,21 @@ public class ConditionHandler {
                         return false;
                     }
                     break;
+                case "permission":
+                    if(!validatePermission(player, specificConditions)) {
+                        return false;
+                    }
+                    break;
+                case "citem":
+                    if(!validateCitem(player, specificConditions)) {
+                        return false;
+                    }
+                    break;
+                case "currency":
+                    if (!validateCurrency(player, specificConditions)) {
+                        return false;
+                    }
+                    break;
 
                 default:
                     throw new IllegalArgumentException("Unknown condition type: " + type);
@@ -44,6 +62,8 @@ public class ConditionHandler {
 
         return true;
     }
+
+
 
     private boolean validateUnlockable(Player player, JSONObject unlockables) {
         for (Object key : unlockables.keySet()) {
@@ -58,6 +78,46 @@ public class ConditionHandler {
             }
         }
 
+        return true;
+    }
+
+    private boolean validateCurrency(Player player, JSONObject currency) {
+        for (Object key : currency.keySet()) {
+            String currencyId = key.toString();
+            long requiredAmount = (long) currency.get(currencyId);
+            long playerAmount = ecoManager.getCurrencyBalance(player.getUniqueId(), currencyId);
+
+            if (playerAmount < requiredAmount) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean validatePermission(Player player, JSONObject permission) {
+        for (Object key : permission.keySet()) {
+            String permissionId = key.toString();
+            boolean requiredState = (boolean) permission.get(key);
+
+            boolean playerHasPermission = hasPerms(player, permissionId);
+            if (playerHasPermission != requiredState) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean hasPerms(Player player, String permission) {
+        return player.hasPermission(permission);
+    }
+
+    private boolean validateCitem(Player player, JSONObject citem) {
+        for (Object key : citem.keySet()) {
+            String citemId = key.toString();
+            int requiredAmount = (int) citem.get(citemId);
+
+            // Method to check if a player has X amount of Citem Y in their inv
+        }
         return true;
     }
 
