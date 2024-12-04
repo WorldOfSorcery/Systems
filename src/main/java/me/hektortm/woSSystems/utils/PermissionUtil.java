@@ -16,6 +16,10 @@ public class PermissionUtil {
     }
 
     public static boolean hasPermission(CommandSender sender, Permissions permission) {
+        if (permission == null) {
+            return true;
+        }
+
         if (sender.hasPermission(permission.getPermission())) {
             return true;
         } else {

@@ -1,21 +1,29 @@
 package me.hektortm.woSSystems.utils.dataclasses;
 
+import org.bukkit.inventory.Recipe;
 import org.json.simple.JSONObject;
 
 public class RecipeData {
-    private final org.bukkit.inventory.Recipe recipe;
+    private final Recipe recipe;
     private final JSONObject conditions;
+    private final String successId;
 
-    public RecipeData(org.bukkit.inventory.Recipe recipe, JSONObject conditions) {
+    public RecipeData(Recipe recipe, JSONObject conditions, String successId) {
         this.recipe = recipe;
         this.conditions = conditions;
+        this.successId = successId;
     }
 
-    public org.bukkit.inventory.Recipe getRecipe() {
+    public Recipe getRecipe() {
         return recipe;
     }
 
     public JSONObject getConditions() {
         return conditions;
     }
+
+    public String getSuccessId() {
+        return successId;
+    }
 }
+

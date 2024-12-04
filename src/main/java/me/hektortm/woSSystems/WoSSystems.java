@@ -110,7 +110,7 @@ public final class WoSSystems extends JavaPlugin {
         citemManager = new CitemManager(new CitemCommand(citemManager, interactionManager, lang, log), interactionManager, log);
         recipeManager = new CRecipeManager(citemManager, new CitemCommand(citemManager, interactionManager, lang, log));
         guiManager = new GUIManager(this, actionHandler, resolver, citemManager);
-        new CraftingListener(this, recipeManager ,new ConditionHandler(unlockableManager, statsManager));
+        new CraftingListener(this, recipeManager ,new ConditionHandler(unlockableManager, statsManager), interactionManager);
 
         lang = new LangManager(core);
         Map<String, InteractionConfig> interactionConfigs = yamlLoader.loadInteractions();

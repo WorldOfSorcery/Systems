@@ -57,6 +57,9 @@ public class CRecipeManager {
                 boolean craftingBook = (boolean) json.getOrDefault("crafting_book", false);
                 JSONObject condition = (JSONObject) json.get("condition");
 
+                // Load the success ID
+                String successId = (String) resultJson.get("success");
+
                 ItemStack resultItem = citemManager.loadItemFromFile(new File(cmd.citemsFolder, resultJson.get("id") + ".json"));
                 if (resultItem == null) {
                     Bukkit.getLogger().warning("Failed to load result item for recipe: " + recipeId);
@@ -76,8 +79,8 @@ public class CRecipeManager {
                     continue;
                 }
 
-                // Store recipe and conditions
-                recipeMap.put(key, new RecipeData(recipe, condition));
+                // Store recipe, success ID, and conditions
+                recipeMap.put(key, new RecipeData(recipe, condition, successId));
 
                 // Add the recipe to Bukkit
                 Bukkit.addRecipe(recipe);
@@ -86,6 +89,12 @@ public class CRecipeManager {
             }
         }
     }
+
+    public String getSuccessId(NamespacedKey key) {
+        RecipeData recipeData = recipeMap.get(key);
+        return recipeData != null ? recipeData.getSuccessId() : null;
+    }
+
 
     private ShapedRecipe createShapedRecipe(JSONObject json, ItemStack resultItem, NamespacedKey key, boolean craftingBook) {
         ShapedRecipe recipe = new ShapedRecipe(key, resultItem);
