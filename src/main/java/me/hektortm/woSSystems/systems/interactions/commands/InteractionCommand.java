@@ -50,6 +50,7 @@ public class InteractionCommand implements CommandExecutor {
             sender.sendMessage("Unknown subcommand: " + subCommandName);
         }
 
+
         return true;
     }
 

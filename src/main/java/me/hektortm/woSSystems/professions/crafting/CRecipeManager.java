@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.professions.crafting;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
+import me.hektortm.woSSystems.utils.dataclasses.RecipeData;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
@@ -14,7 +15,9 @@ import org.json.simple.parser.JSONParser;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings({"UnstableApiUsage", "unchecked"})
 public class CRecipeManager {
@@ -22,6 +25,9 @@ public class CRecipeManager {
     private final CitemManager citemManager;
     private final CitemCommand cmd;
     public final File recipesFolder;
+    private final Map<NamespacedKey, RecipeData> recipeMap = new HashMap<>();
+
+
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public CRecipeManager(CitemManager citemManager, CitemCommand cmd) {
@@ -45,38 +51,47 @@ public class CRecipeManager {
             try (FileReader reader = new FileReader(file)) {
                 JSONObject json = (JSONObject) new JSONParser().parse(reader);
 
-                // Determine recipe type
+                // Load recipe type and result
                 String type = (String) json.getOrDefault("type", "shaped");
                 JSONObject resultJson = (JSONObject) json.get("result");
-                boolean craftingBook = (boolean) json.getOrDefault("crafting_book", false); // Read the parameter
-
+                boolean craftingBook = (boolean) json.getOrDefault("crafting_book", false);
+                JSONObject condition = (JSONObject) json.get("condition");
 
                 ItemStack resultItem = citemManager.loadItemFromFile(new File(cmd.citemsFolder, resultJson.get("id") + ".json"));
-
-                if (resultItem != null) {
-                    NamespacedKey key = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), recipeId);
-
-                    if (type.equals("shaped")) {
-                        handleShapedRecipe(json, resultItem, key, craftingBook);
-                    } else if (type.equals("unshaped")) {
-                        handleUnshapedRecipe(json, resultItem, key, craftingBook);
-                    } else {
-                        Bukkit.getLogger().warning("Unknown recipe type in " + file.getName() + ": " + type);
-                    }
+                if (resultItem == null) {
+                    Bukkit.getLogger().warning("Failed to load result item for recipe: " + recipeId);
+                    continue;
                 }
+
+                NamespacedKey key = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), recipeId);
+                org.bukkit.inventory.Recipe recipe;
+
+                // Handle recipe type
+                if (type.equals("shaped")) {
+                    recipe = createShapedRecipe(json, resultItem, key, craftingBook);
+                } else if (type.equals("unshaped")) {
+                    recipe = createUnshapedRecipe(json, resultItem, key, craftingBook);
+                } else {
+                    Bukkit.getLogger().warning("Unknown recipe type in " + file.getName() + ": " + type);
+                    continue;
+                }
+
+                // Store recipe and conditions
+                recipeMap.put(key, new RecipeData(recipe, condition));
+
+                // Add the recipe to Bukkit
+                Bukkit.addRecipe(recipe);
             } catch (Exception e) {
                 Bukkit.getLogger().warning("Failed to load recipe from " + file.getName() + ": " + e.getMessage());
             }
         }
     }
 
-
-    private void handleShapedRecipe(JSONObject json, ItemStack resultItem, NamespacedKey key, boolean craftingBook) {
+    private ShapedRecipe createShapedRecipe(JSONObject json, ItemStack resultItem, NamespacedKey key, boolean craftingBook) {
         ShapedRecipe recipe = new ShapedRecipe(key, resultItem);
 
         // Parse ingredients
         List<List<String>> ingredients = (List<List<String>>) json.get("ingredients");
-
         recipe.shape("ABC", "DEF", "GHI");
         char[] rows = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'};
         int index = 0;
@@ -98,16 +113,15 @@ public class CRecipeManager {
             recipe.setGroup(key.getKey());
         }
 
-        Bukkit.addRecipe(recipe);
+        return recipe;
     }
 
 
-    private void handleUnshapedRecipe(JSONObject json, ItemStack resultItem, NamespacedKey key, boolean craftingBook) {
+    private ShapelessRecipe createUnshapedRecipe(JSONObject json, ItemStack resultItem, NamespacedKey key, boolean craftingBook) {
         ShapelessRecipe recipe = new ShapelessRecipe(key, resultItem);
 
         // Parse ingredients
         List<String> ingredients = (List<String>) json.get("ingredients");
-
         for (String itemId : ingredients) {
             if (itemId != null && !itemId.equals("null")) {
                 ItemStack ingredient = citemManager.loadItemFromFile(new File(cmd.citemsFolder, itemId + ".json"));
@@ -122,7 +136,12 @@ public class CRecipeManager {
             recipe.setGroup(key.getKey());
         }
 
-        Bukkit.addRecipe(recipe);
+        return recipe;
+    }
+
+    public JSONObject getConditions(NamespacedKey key) {
+        RecipeData recipeData = recipeMap.get(key);
+        return recipeData != null ? recipeData.getConditions() : null;
     }
 
 

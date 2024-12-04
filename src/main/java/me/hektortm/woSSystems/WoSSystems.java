@@ -7,6 +7,7 @@ import me.hektortm.woSSystems.economy.commands.EcoCommand;
 import me.hektortm.woSSystems.economy.commands.PayCommand;
 import me.hektortm.woSSystems.economy.listeners.CoinflipInventoryListener;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
+import me.hektortm.woSSystems.professions.crafting.ConditionHandler;
 import me.hektortm.woSSystems.professions.crafting.CraftingListener;
 import me.hektortm.woSSystems.professions.crafting.command.CRecipeCommand;
 import me.hektortm.woSSystems.professions.fishing.FishingManager;
@@ -88,7 +89,7 @@ public final class WoSSystems extends JavaPlugin {
         // Set up all managers and handlers
         File fishingItemsFolder = new File(getDataFolder(), "professions/fishing/items");
         fishingManager = new FishingManager(fishingItemsFolder);
-        new CraftingListener(this);
+
         log = new LogManager(lang, core);
 
         YAMLLoader yamlLoader = new YAMLLoader(this);
@@ -109,6 +110,7 @@ public final class WoSSystems extends JavaPlugin {
         citemManager = new CitemManager(new CitemCommand(citemManager, interactionManager, lang, log), interactionManager, log);
         recipeManager = new CRecipeManager(citemManager, new CitemCommand(citemManager, interactionManager, lang, log));
         guiManager = new GUIManager(this, actionHandler, resolver, citemManager);
+        new CraftingListener(this, recipeManager ,new ConditionHandler(unlockableManager, statsManager));
 
         lang = new LangManager(core);
         Map<String, InteractionConfig> interactionConfigs = yamlLoader.loadInteractions();

@@ -202,8 +202,21 @@ public class UnlockableManager {
         core.savePlayerData(playerData, playerFile);
     }
 
+    public boolean getPlayerUnlockable(OfflinePlayer p, String id) {
+        File playerFile = new File(core.getDataFolder(), "playerdata" + File.separator + p.getUniqueId() + ".yml");
+        FileConfiguration playerData = YamlConfiguration.loadConfiguration(playerFile);
+
+        String path = "unlockables";
+        List<String> unlockableList = playerData.getStringList(path);
+        if (unlockableList.contains(id)) {
+            Bukkit.getLogger().info(p.getName() + ": "+id+" true");
+            return true;
+        }
+        Bukkit.getLogger().info(p.getName() + ": "+id+" false");
+        return false;
+    }
     public boolean getPlayerTempUnlockable(OfflinePlayer p, String id) {
-        File playerFile = new File(core.getDataFolder(), "playerdata" + File.separator + p.getName() + ".yml");
+        File playerFile = new File(core.getDataFolder(), "playerdata" + File.separator + p.getUniqueId() + ".yml");
         FileConfiguration playerData = YamlConfiguration.loadConfiguration(playerFile);
 
         String path = "tempunlockables";

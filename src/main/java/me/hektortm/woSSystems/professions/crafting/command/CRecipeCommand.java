@@ -27,7 +27,7 @@ public class CRecipeCommand implements CommandExecutor {
 
 
         subCommands.put("create", new Create(manager));
-        subCommands.put("reload", new Reload());
+        subCommands.put("reload", new Reload(manager));
 
 
     }
