@@ -59,6 +59,7 @@ public class EcoCommand implements CommandExecutor {
         if(PermissionUtil.hasAnyPermission(s, Permissions.ECONOMY_SET,
                 Permissions.ECONOMY_RESET, Permissions.ECONOMY_GIVE, Permissions.ECONOMY_CURRENCIES, Permissions.ECONOMY_RANDOM,
                 Permissions.ECONOMY_TAKE, Permissions.ECONOMY_PAY, Permissions.BALANCE_SELF, Permissions.BALANCE_OTHERS )) {
+            Utils.successMsg(s, "economy", "help.header");
             if(PermissionUtil.hasPermissionNoMsg(s, Permissions.ECONOMY_CURRENCIES)) s.sendMessage(lang.getMessage("economy", "help.currencies"));
             if(PermissionUtil.hasPermissionNoMsg(s, Permissions.ECONOMY_GIVE)) s.sendMessage(lang.getMessage("economy", "help.give"));
             if(PermissionUtil.hasPermissionNoMsg(s, Permissions.ECONOMY_TAKE)) s.sendMessage(lang.getMessage("economy", "help.take"));

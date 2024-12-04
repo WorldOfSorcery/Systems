@@ -4,6 +4,7 @@ import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.utils.dataclasses.RecipeData;
+import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
@@ -24,15 +25,17 @@ public class CRecipeManager {
 
     private final CitemManager citemManager;
     private final CitemCommand cmd;
+    private final LogManager logManager;
     public final File recipesFolder;
     private final Map<NamespacedKey, RecipeData> recipeMap = new HashMap<>();
 
 
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public CRecipeManager(CitemManager citemManager, CitemCommand cmd) {
+    public CRecipeManager(CitemManager citemManager, CitemCommand cmd, LogManager logManager) {
         this.citemManager = citemManager;
         this.cmd = cmd;
+        this.logManager = logManager;
         this.recipesFolder = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "CRecipes");
         if(!recipesFolder.exists()) recipesFolder.mkdirs();
     }
@@ -40,9 +43,8 @@ public class CRecipeManager {
 
     public void loadRecipes() {
         File[] recipeFiles = recipesFolder.listFiles((dir, name) -> name.endsWith(".json"));
-
         if (recipeFiles == null || recipeFiles.length == 0) {
-            Bukkit.getLogger().info("No CRecipes found in " + recipesFolder.getPath());
+            logManager.sendWarning("No CRecipes found in " + recipesFolder.getPath());
             return;
         }
 
@@ -62,7 +64,8 @@ public class CRecipeManager {
 
                 ItemStack resultItem = citemManager.loadItemFromFile(new File(cmd.citemsFolder, resultJson.get("id") + ".json"));
                 if (resultItem == null) {
-                    Bukkit.getLogger().warning("Failed to load result item for recipe: " + recipeId);
+                    //Bukkit.getLogger().warning("Failed to load result item for recipe: " + recipeId);
+                    logManager.sendWarning("Failed to load result item("+resultJson.get("id")+") for recipe: \"" + recipeId+"\"");
                     continue;
                 }
 
@@ -85,7 +88,7 @@ public class CRecipeManager {
                 // Add the recipe to Bukkit
                 Bukkit.addRecipe(recipe);
             } catch (Exception e) {
-                Bukkit.getLogger().warning("Failed to load recipe from " + file.getName() + ": " + e.getMessage());
+                //
             }
         }
     }

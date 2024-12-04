@@ -48,7 +48,7 @@ pay:
   target: "§a%player%§7 has paid you %amount%%currency%§7."
   player: "§7You have paid §a%target% %amount%%currency%§7."
 help:
-  header:
+  header: "§7Economy Commands:"
   currencies: "§e/economy currencies §7- Show available currencies."
   give: "§e/economy give <player> <currency> <amount> §7- Give a player a currency."
   take: "§e/economy take <player> <currency> <amount> §7- take a players currency."

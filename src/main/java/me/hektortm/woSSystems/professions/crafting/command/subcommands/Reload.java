@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.professions.crafting.command.subcommands;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.command.CommandSender;
 
 public class Reload extends SubCommand {
@@ -26,5 +27,8 @@ public class Reload extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
         manager.loadRecipes();
+        sender.sendMessage("§aReloaded CRecipes");
+        Utils.successMsg(sender, "crecipes", "reload");
+
     }
 }

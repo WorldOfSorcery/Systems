@@ -7,7 +7,7 @@ import me.hektortm.woSSystems.economy.commands.EcoCommand;
 import me.hektortm.woSSystems.economy.commands.PayCommand;
 import me.hektortm.woSSystems.economy.listeners.CoinflipInventoryListener;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
-import me.hektortm.woSSystems.professions.crafting.ConditionHandler;
+import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.professions.crafting.CraftingListener;
 import me.hektortm.woSSystems.professions.crafting.command.CRecipeCommand;
 import me.hektortm.woSSystems.professions.fishing.FishingManager;
@@ -108,9 +108,9 @@ public final class WoSSystems extends JavaPlugin {
 
         ActionHandler actionHandler = new ActionHandler(this, resolver);
         citemManager = new CitemManager(new CitemCommand(citemManager, interactionManager, lang, log), interactionManager, log);
-        recipeManager = new CRecipeManager(citemManager, new CitemCommand(citemManager, interactionManager, lang, log));
+        recipeManager = new CRecipeManager(citemManager, new CitemCommand(citemManager, interactionManager, lang, log), log);
         guiManager = new GUIManager(this, actionHandler, resolver, citemManager);
-        new CraftingListener(this, recipeManager ,new ConditionHandler(unlockableManager, statsManager), interactionManager);
+        new CraftingListener(this, recipeManager ,new ConditionHandler(unlockableManager, statsManager, ecoManager), interactionManager);
 
         lang = new LangManager(core);
         Map<String, InteractionConfig> interactionConfigs = yamlLoader.loadInteractions();
@@ -123,6 +123,7 @@ public final class WoSSystems extends JavaPlugin {
             lang.loadLangFileExternal(this, "stats", core);
             lang.loadLangFileExternal(this, "unlockables", core);
             lang.loadLangFileExternal(this, "economy", core);
+            lang.loadLangFileExternal(this, "crecipes", core);
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }
@@ -142,7 +143,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("balance", new BalanceCommand(ecoManager, core));
         cmdReg("pay", new PayCommand(ecoManager, lang));
         cmdReg("coinflip", coinflipCommand);
-        cmdReg("crecipe", new CRecipeCommand(this, recipeManager));
+        cmdReg("crecipe", new CRecipeCommand(this, recipeManager, lang));
 
         // Register events
         eventReg(new InventoryCloseListener(guiManager));
