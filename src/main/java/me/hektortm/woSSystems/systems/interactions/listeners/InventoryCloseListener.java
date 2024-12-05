@@ -1,7 +1,7 @@
 package me.hektortm.woSSystems.systems.interactions.listeners;
 
 
-import me.hektortm.woSSystems.systems.interactions.GUIManager;
+import me.hektortm.woSSystems.systems.guis.GUIManager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryCloseEvent;

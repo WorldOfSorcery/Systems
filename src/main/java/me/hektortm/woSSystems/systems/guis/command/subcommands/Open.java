@@ -1,6 +1,6 @@
-package me.hektortm.woSSystems.systems.interactions.commands.subcommands.gui;
+package me.hektortm.woSSystems.systems.guis.command.subcommands;
 
-import me.hektortm.woSSystems.systems.interactions.GUIManager;
+import me.hektortm.woSSystems.systems.guis.GUIManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
 import me.hektortm.woSSystems.utils.Permissions;

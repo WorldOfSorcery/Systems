@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.systems.interactions.commands.subcommands.interactions;
+package me.hektortm.woSSystems.systems.interactions.commands.subcommands;
 
 import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;

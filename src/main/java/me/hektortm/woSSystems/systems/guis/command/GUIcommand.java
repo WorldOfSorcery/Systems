@@ -1,9 +1,9 @@
-package me.hektortm.woSSystems.systems.interactions.commands;
+package me.hektortm.woSSystems.systems.guis.command;
 
 
-import me.hektortm.woSSystems.systems.interactions.commands.subcommands.gui.Open;
+import me.hektortm.woSSystems.systems.guis.command.subcommands.Open;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
-import me.hektortm.woSSystems.systems.interactions.GUIManager;
+import me.hektortm.woSSystems.systems.guis.GUIManager;
 import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;

@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.systems.interactions.commands.subcommands.interactions;
+package me.hektortm.woSSystems.systems.interactions.commands.subcommands;
 
 import me.hektortm.woSSystems.systems.interactions.BindManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;

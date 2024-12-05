@@ -3,7 +3,7 @@ package me.hektortm.woSSystems.systems.interactions.commands;
 
 import me.hektortm.woSSystems.systems.interactions.BindManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
-import me.hektortm.woSSystems.systems.interactions.commands.subcommands.interactions.*;
+import me.hektortm.woSSystems.systems.interactions.commands.subcommands.*;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.command.Command;

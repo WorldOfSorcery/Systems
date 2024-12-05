@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.systems.interactions;
 
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.systems.guis.GUIManager;
 import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
 import me.hektortm.woSSystems.systems.interactions.config.YAMLLoader;
 import me.hektortm.woSSystems.systems.interactions.actions.ActionHandler;

@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.systems.interactions;
+package me.hektortm.woSSystems.systems.guis;
 
 
 import me.hektortm.woSSystems.systems.citems.CitemManager;
