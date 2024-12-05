@@ -38,7 +38,7 @@ public class ReloadCommand extends SubCommand {
         } else {
             if (!PermissionUtil.hasPermission(sender, Permissions.INTER_RELOAD_ALL)) return;
 
-            manager.reloadAllInteractions();
+            manager.loadAllInteractions();
             sender.sendMessage("Reloaded all interactions.");
         }
     }

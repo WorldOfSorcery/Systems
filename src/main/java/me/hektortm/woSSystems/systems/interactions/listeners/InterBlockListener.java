@@ -14,6 +14,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 public class InterBlockListener implements Listener {
 
@@ -29,40 +30,39 @@ public class InterBlockListener implements Listener {
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_BLOCK) {
             Block block = event.getClickedBlock();
-            if (event.isCancelled()) {
-                return;  // If event is already canceled, do nothing
-            }
-            if (block != null) {
+
+            if (block != null && !event.isCancelled()) {
+                // Get the block's location as a string
                 String locString = block.getWorld().getName() + "," + block.getX() + "," + block.getY() + "," + block.getZ();
 
-                // Iterate through all interaction files to check if the block is bound to any interaction
-                File folder = new File(plugin.getDataFolder() + "/bound/");
-                File[] files = folder.listFiles();
-                if (files != null) {
-                    for (File file : files) {
-                        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-                        List<String> blocks = config.getStringList("block");
+                // Loop through all loaded interactions and check if the block is bound
+                for (Map.Entry<String, InteractionConfig> entry : manager.getInteractionConfigs().entrySet()) {
+                    InteractionConfig interaction = entry.getValue();
 
-                        if (blocks.contains(locString)) {
-                            String interactionID = file.getName().replace(".yml", "");
-                            InteractionConfig interaction = manager.getInteractionById(interactionID);
-                            manager.triggerInteraction(interaction, event.getPlayer());  // Trigger the interaction for the player
-                            event.setCancelled(true);  // Prevent breaking or interacting with the block
-                            return;
-                        }
+                    if (interaction.getBoundBlocks().contains(locString)) {
+                        // Trigger the interaction
+                        manager.triggerInteraction(interaction, event.getPlayer());
+                        event.setCancelled(true); // Prevent further interaction with the block
+                        return;
                     }
                 }
             }
         }
     }
 
-
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Block block = event.getBlock();
-        if (block.hasMetadata("unbreakable")) {
-            event.setCancelled(true);
-            event.getPlayer().sendMessage("You cannot break this block!");
+
+        // Check if the block is bound to an interaction
+        String locString = block.getWorld().getName() + "," + block.getX() + "," + block.getY() + "," + block.getZ();
+
+        for (InteractionConfig interaction : manager.getInteractionConfigs().values()) {
+            if (interaction.getBoundBlocks().contains(locString)) {
+                event.setCancelled(true); // Cancel block breaking
+                event.getPlayer().sendMessage("You cannot break this block!");
+                return;
+            }
         }
     }
 

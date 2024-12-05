@@ -104,7 +104,7 @@ public class CraftingListener implements Listener {
         // If conditions are valid, trigger the success interaction if available
         if (successId != null) {
             // Retrieve the interaction configuration for the successId
-            InteractionConfig interactionConfig = interactionManager.getInteractionConfig(successId);
+            InteractionConfig interactionConfig = interactionManager.getInteractionById(successId);
             if (interactionConfig != null) {
                 // Trigger the interaction
                 interactionManager.triggerInteraction(interactionConfig, player);

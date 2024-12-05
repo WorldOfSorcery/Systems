@@ -47,7 +47,7 @@ public class Open extends SubCommand {
             return;
         }
 
-        InteractionConfig interactionConfig = interactionManager.getInteractionConfig(interactionId);
+        InteractionConfig interactionConfig = interactionManager.getInteractionById(interactionId);
 
         if (interactionConfig != null) {
             Player p = Bukkit.getPlayer(args[0]);

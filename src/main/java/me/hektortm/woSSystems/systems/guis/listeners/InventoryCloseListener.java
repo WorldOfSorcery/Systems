@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.systems.interactions.listeners;
+package me.hektortm.woSSystems.systems.guis.listeners;
 
 
 import me.hektortm.woSSystems.systems.guis.GUIManager;

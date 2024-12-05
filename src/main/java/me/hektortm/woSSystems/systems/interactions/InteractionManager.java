@@ -5,6 +5,7 @@ package me.hektortm.woSSystems.systems.interactions;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.guis.GUIManager;
 import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
+import me.hektortm.woSSystems.systems.interactions.config.JSONLoader;
 import me.hektortm.woSSystems.systems.interactions.config.YAMLLoader;
 import me.hektortm.woSSystems.systems.interactions.actions.ActionHandler;
 import me.hektortm.woSSystems.systems.interactions.particles.ParticleHandler;
@@ -24,15 +25,15 @@ import java.util.Map;
 public class InteractionManager {
 
     private Map<String, InteractionConfig> interactions = new HashMap<>();
-    private YAMLLoader yamlLoader;
+    private JSONLoader jsonLoader;
     private ActionHandler actionHandler;
     private final GUIManager guiManager;
     private final WoSSystems plugin;
     private final ParticleHandler particleHandler;
     private final PlaceholderResolver resolver;
 
-    public InteractionManager(YAMLLoader yamlLoader, WoSSystems plugin, GUIManager guiManager, ParticleHandler particleHandler, PlaceholderResolver resolver) {
-        this.yamlLoader = yamlLoader;
+    public InteractionManager(JSONLoader jsonLoader, WoSSystems plugin, GUIManager guiManager, ParticleHandler particleHandler, PlaceholderResolver resolver) {
+        this.jsonLoader = jsonLoader;
         this.plugin = plugin;
         this.guiManager = guiManager;
         this.particleHandler = particleHandler;
@@ -44,40 +45,25 @@ public class InteractionManager {
 
     public void loadAllInteractions() {
         interactions.clear();
-        interactions.putAll(yamlLoader.loadInteractions());
-
-        // Load bound locations separately from the bound folder
-        for (String interactionId : interactions.keySet()) {
-            loadBoundLocations(interactionId);  // Load bound blocks for each interaction
-        }
+        interactions.putAll(jsonLoader.loadInteractions());
     }
 
     // Reload a specific interaction
     public void reloadInteraction(String id) {
-        // Create a reference to the interaction file using the ID
-        File interactionFile = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "interactions/" + id + ".yml");
+        File interactionFile = new File(plugin.getDataFolder(), "interactions/" + id + ".json");
 
-        // Check if the file exists
         if (!interactionFile.exists()) {
-            plugin.getLogger().warning("Interaction file " + id + ".yml not found!");
+            plugin.getLogger().warning("Interaction file " + id + ".json not found!");
             return;
         }
 
-        // Load the interaction from the file
-        InteractionConfig config = yamlLoader.loadInteraction(interactionFile);
+        InteractionConfig config = jsonLoader.loadInteraction(interactionFile);
 
         if (config != null) {
-            // Replace or add the new interaction config to the map
             interactions.put(id, config);
         } else {
             plugin.getLogger().warning("Failed to load interaction: " + id);
         }
-    }
-
-
-    // Reload all interactions
-    public void reloadAllInteractions() {
-        loadAllInteractions();
     }
 
     public void startParticleTask() {
@@ -168,51 +154,25 @@ public class InteractionManager {
         }
     }
 
-
-    public void loadBoundLocations(String interactionId) {
-        File boundFile = new File(plugin.getDataFolder(), "bound/" + interactionId + ".yml");
-
-        if (!boundFile.exists()) {
-            plugin.getLogger().warning("Bound file for interaction " + interactionId + " not found.");
+    public void triggerInteraction(InteractionConfig interaction, Player player) {
+        if (interaction == null) {
+            player.sendMessage(ChatColor.RED + "Interaction not found.");
             return;
         }
+        actionHandler.triggerActions(interaction, player);
 
-        // Use YamlConfiguration to load the bound file
-        FileConfiguration boundConfig = YamlConfiguration.loadConfiguration(boundFile);
-        InteractionConfig interaction = interactions.get(interactionId);
-
-        if (interaction != null) {
-            interaction.loadLocations(boundConfig);  // Load locations from the bound file
-        } else {
-            plugin.getLogger().warning("Interaction config for " + interactionId + " is null.");
-        }
+        /*
+        if (interaction.hasGui()) {
+            guiManager.openGui(interaction.getGuiId(), player);
+        } */
     }
-
-
-
-
 
     // Get an interaction by its ID
     public InteractionConfig getInteractionById(String id) {
         return interactions.get(id);
     }
 
-    // Get all loaded interaction IDs
-    public String getAllInteractionIds() {
-        return String.join(", ", interactions.keySet());
+    public Map<String, InteractionConfig> getInteractionConfigs() {
+        return interactions;
     }
-
-    // Trigger an interaction for a player
-    public void triggerInteraction(InteractionConfig interaction, Player player) {
-        if (interaction == null) {
-            player.sendMessage(ChatColor.RED + "Interaction not found.");
-            return;
-        }
-        actionHandler.triggerActions(interaction.getActions(), player);
-    }
-
-    public InteractionConfig getInteractionConfig(String id) {
-        return interactions.get(id);
-    }
-
 }
