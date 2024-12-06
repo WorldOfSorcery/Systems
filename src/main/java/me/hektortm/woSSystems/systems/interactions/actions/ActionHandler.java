@@ -1,6 +1,5 @@
 package me.hektortm.woSSystems.systems.interactions.actions;
 
-import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -18,24 +17,15 @@ public class ActionHandler {
     }
 
     // Processes and triggers a list of actions
-    public void triggerActions(InteractionConfig interactionConfig, Player player) {
-        if (interactionConfig == null) return;
-
-        List<String> actions = interactionConfig.getActions();
-        if (actions != null) {
-            for (String action : actions) {
-                triggerCommand(action, player);
-            }
+    public void triggerActions(List<String> actions, Player player) {
+        for (String action : actions) {
+            triggerCommand(action, player);
         }
-        /*
-        if (interactionConfig.hasGui()) {
-            triggerGui(interactionConfig, player);
-        } */
     }
 
     // Process a single command-based action
     public void triggerCommand(String action, Player player) {
-        if (action == null || player == null) return;
+        if (action == null) return;
 
         action = action.replace("%player%", player.getName());
 
@@ -54,10 +44,12 @@ public class ActionHandler {
             String message = action.replace("send_message", "");
             String finalMessage = resolver.resolvePlaceholders(message, player);
             player.sendMessage(finalMessage.replace("&", "§"));
+            return;
         }
         else {
             // Run any other command
             plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), action);
+            return;
         }
     }
 }
