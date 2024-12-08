@@ -23,19 +23,17 @@ import java.util.Map;
 @SuppressWarnings({"UnstableApiUsage", "unchecked"})
 public class CRecipeManager {
 
-    private final CitemManager citemManager;
-    private final CitemCommand cmd;
-    private final LogManager logManager;
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final CitemManager citemManager = plugin.getCitemManager();
+    private final CitemCommand cmd = new CitemCommand(citemManager, plugin.getInteractionManager(), plugin.getLangManager(), plugin.getLogManager());
+    private final LogManager logManager = plugin.getLogManager();
     public final File recipesFolder;
     private final Map<NamespacedKey, RecipeData> recipeMap = new HashMap<>();
 
 
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public CRecipeManager(CitemManager citemManager, CitemCommand cmd, LogManager logManager) {
-        this.citemManager = citemManager;
-        this.cmd = cmd;
-        this.logManager = logManager;
+    public CRecipeManager() {
         this.recipesFolder = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "CRecipes");
         if(!recipesFolder.exists()) recipesFolder.mkdirs();
     }

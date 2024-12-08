@@ -58,20 +58,23 @@ import java.util.UUID;
 
 public final class WoSSystems extends JavaPlugin {
 
-    private static LangManager lang;
-    WoSCore core = JavaPlugin.getPlugin(WoSCore.class);
+    private final WoSCore core = JavaPlugin.getPlugin(WoSCore.class);
+    private static LangManager lang = new LangManager(WoSCore.getPlugin(WoSCore.class));
+    public File fishingItemsFolder = new File(getDataFolder(), "professions/fishing/items");
+    private LogManager log = new LogManager(lang, core);
     private InteractionManager interactionManager;
     private GUIManager guiManager;
     private BindManager bindManager;
-    private ParticleHandler particleHandler;
-    private StatsManager statsManager;
-    private UnlockableManager unlockableManager;
-    private FishingManager fishingManager;
-    private PlaceholderResolver resolver;
-    private LogManager log;
-    private static EcoManager ecoManager;
-    private static CitemManager citemManager;
-    private static CRecipeManager recipeManager;
+
+    private final CitemManager citemManager = new CitemManager();
+    private final EcoManager ecoManager = new EcoManager(this);
+    private final ParticleHandler particleHandler = new ParticleHandler();
+    private final StatsManager statsManager = new StatsManager();
+    private final UnlockableManager unlockableManager = new UnlockableManager();
+    private final FishingManager fishingManager = new FishingManager(fishingItemsFolder);
+    private final PlaceholderResolver resolver = new PlaceholderResolver(statsManager, citemManager);
+    private final ConditionHandler conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager);
+    private final CRecipeManager recipeManager = new CRecipeManager();
 
 
     // TODO:
@@ -83,32 +86,16 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Initialize core and lang first
-        lang = new LangManager(core);
-
-        // Set up all managers and handlers
-        File fishingItemsFolder = new File(getDataFolder(), "professions/fishing/items");
-        fishingManager = new FishingManager(fishingItemsFolder);
-
-        log = new LogManager(lang, core);
 
         YAMLLoader yamlLoader = new YAMLLoader(this);
 
-        ecoManager = new EcoManager(this);
         HashMap<UUID, Challenge> challengeQueue = new HashMap<>();
-        particleHandler = new ParticleHandler();
         bindManager = new BindManager(this);
-        statsManager = new StatsManager(core, log);
-        unlockableManager = new UnlockableManager(core, log);
-
-        resolver = new PlaceholderResolver(statsManager, citemManager);
 
         // Initialize InteractionManager **before** citemManager
         interactionManager = new InteractionManager(yamlLoader, this, guiManager, particleHandler, resolver);
 
         ActionHandler actionHandler = new ActionHandler(this, resolver);
-        citemManager = new CitemManager(new CitemCommand(citemManager, interactionManager, lang, log), interactionManager, log);
-        recipeManager = new CRecipeManager(citemManager, new CitemCommand(citemManager, interactionManager, lang, log), log);
         guiManager = new GUIManager(this, actionHandler, resolver, citemManager);
         new CraftingListener(this, recipeManager ,new ConditionHandler(unlockableManager, statsManager, ecoManager), interactionManager);
 
@@ -199,6 +186,52 @@ public final class WoSSystems extends JavaPlugin {
         String message = lang.getMessage(file, msg).replace(oldChar1, value1).replace(oldChar2, value2).replace(oldChar3, value3);
         String newMessage = lang.getMessage("general", "prefix.economy") + message;
         sender.sendMessage(Utils.replaceColorPlaceholders(newMessage));
+    }
+
+    public WoSCore getCore() {
+        return core;
+    }
+
+    public LogManager getLogManager() {
+        return log;
+    }
+
+    public LangManager getLangManager() {
+        return lang;
+    }
+
+    public PlaceholderResolver getPlaceholderResolver() {
+        return resolver;
+    }
+    public StatsManager getStatsManager() {
+        return statsManager;
+    }
+    public EcoManager getEcoManager() {
+        return ecoManager;
+    }
+    public UnlockableManager getUnlockableManager() {
+        return unlockableManager;
+    }
+    public ConditionHandler getConditionHandler() {
+        return conditionHandler;
+    }
+    public CRecipeManager getRecipeManager() {
+        return recipeManager;
+    }
+    public CitemManager getCitemManager() {
+        return citemManager;
+    }
+    public ParticleHandler getParticleHandler() {
+        return particleHandler;
+    }
+    public FishingManager getFishingManager() {
+        return fishingManager;
+    }
+    public CRecipeManager getCRecipeManager() {
+        return recipeManager;
+    }
+    public InteractionManager getInteractionManager() {
+        return interactionManager;
     }
 
 }

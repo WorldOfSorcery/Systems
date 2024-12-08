@@ -8,6 +8,7 @@ import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
+import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
@@ -38,19 +39,18 @@ public class CitemManager {
     private final NamespacedKey leftActionKey;
     private final NamespacedKey rightActionKey;
 
-    private final InteractionManager interactionManager;
-    private final LogManager log;
-    private final CitemCommand cmd;
+    private final WoSSystems plugin = new WoSSystems();
+    private final InteractionManager interactionManager = plugin.getInteractionManager();
+    private final LogManager log = plugin.getLogManager();
+    private final LangManager lang = plugin.getLangManager();
+    private final CitemCommand cmd = new CitemCommand(this, interactionManager, lang, log);
 
 
-    public CitemManager(CitemCommand cmd, InteractionManager interactionManager, LogManager log) {
+    public CitemManager() {
         undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
         unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
         leftActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-left");
         rightActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-right");
-        this.cmd = cmd;
-        this.interactionManager = interactionManager;
-        this.log = log;
     }
 
     public void saveItemToFile(ItemStack item, File file, String id) {

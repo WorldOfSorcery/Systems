@@ -74,12 +74,6 @@ public class InteractionManager {
         }
     }
 
-
-    // Reload all interactions
-    public void reloadAllInteractions() {
-        loadAllInteractions();
-    }
-
     public void startParticleTask() {
         new BukkitRunnable() {
             @Override

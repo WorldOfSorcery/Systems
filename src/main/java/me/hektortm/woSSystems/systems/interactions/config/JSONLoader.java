@@ -1,14 +1,10 @@
 package me.hektortm.woSSystems.systems.interactions.config;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class JSONLoader {
     private final File interactionFolder;

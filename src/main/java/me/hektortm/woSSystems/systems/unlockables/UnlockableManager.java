@@ -29,15 +29,9 @@ public class UnlockableManager {
     public final Map<String, Unlockable> unlockables = new HashMap<>();
     public final Map<String, TempUnlockable> tempUnlockables = new HashMap<>();
 
-    private final WoSCore core;
-    private final LogManager logManager;
-
-
-    public UnlockableManager(WoSCore core, LogManager logManager) {
-        this.core = core;
-        this.logManager = logManager;
-    }
-
+    private final WoSSystems plugin = new WoSSystems();
+    private final WoSCore core = plugin.getCore();
+    private final LogManager logManager = plugin.getLogManager();
 
     public void deleteUnlockable(String id, boolean isTemp) {
         FileConfiguration config;
