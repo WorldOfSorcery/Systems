@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.systems.citems.listeners;
+package me.hektortm.woSSystems.listeners;
 
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import org.bukkit.Bukkit;
@@ -26,12 +26,9 @@ public class UseListener implements Listener {
     @EventHandler
     public void onUse(PlayerInteractEvent e) {
         ItemStack item = e.getItem();
+        if (data.isCitem(item)) return;
         Action action = e.getAction();
         Player p = e.getPlayer();
-
-        if (item == null || !item.hasItemMeta()) {
-            return;
-        }
 
         switch (action) {
             case RIGHT_CLICK_AIR:

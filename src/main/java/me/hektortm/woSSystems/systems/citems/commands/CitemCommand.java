@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.systems.citems.commands;
 
 
+import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.citems.commands.subcommands.*;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
@@ -22,25 +23,23 @@ import java.util.Map;
 public class CitemCommand implements CommandExecutor {
 
     private final Map<String, SubCommand> subCommands = new HashMap<>();
-    private final CitemManager data;
-    private final InteractionManager interactionManager;
-    private final LangManager lang;
-    private final LogManager log;
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final CitemManager data = plugin.getCitemManager();
+    private InteractionManager interactionManager;
+    private final LangManager lang = plugin.getLangManager();
+    private final LogManager log = plugin.getLogManager();
     public File citemsFolder = new File(Bukkit.getServer().getPluginManager().getPlugin("WoSSystems").getDataFolder(), "citems");
 
-    public CitemCommand(CitemManager data, InteractionManager interactionManager, LangManager lang, LogManager log) {
-        this.data = data;
-        this.interactionManager = interactionManager;
-        this.lang = lang;
-        this.log = log;
+    public CitemCommand(InteractionManager interactionManager) {
 
+        this.interactionManager = interactionManager;
         subCommands.put("save", new SaveCommand(this, data));
         subCommands.put("rename", new NameCommand());
         subCommands.put("update", new UpdateCommand(this, data));
         subCommands.put("lore", new LoreCommand());
         subCommands.put("flag", new FlagCommand(data));
         subCommands.put("delete", new DeleteCommand(this, log));
-        subCommands.put("action", new ActionCommand(interactionManager, lang));
+        subCommands.put("action", new ActionCommand(interactionManager));
     }
 
     @Override

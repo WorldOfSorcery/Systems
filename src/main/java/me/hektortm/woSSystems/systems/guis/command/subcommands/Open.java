@@ -2,7 +2,6 @@ package me.hektortm.woSSystems.systems.guis.command.subcommands;
 
 import me.hektortm.woSSystems.systems.guis.GUIManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
-import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.Bukkit;
@@ -47,7 +46,7 @@ public class Open extends SubCommand {
             return;
         }
 
-        InteractionConfig interactionConfig = interactionManager.getInteractionById(interactionId);
+       /*
 
         if (interactionConfig != null) {
             Player p = Bukkit.getPlayer(args[0]);
@@ -58,6 +57,8 @@ public class Open extends SubCommand {
         } else {
             sender.sendMessage(ChatColor.RED + "GUI not found: " + interactionId);
         }
+
+        */
 
     }
 }

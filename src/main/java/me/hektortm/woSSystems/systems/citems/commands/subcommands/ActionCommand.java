@@ -2,7 +2,7 @@ package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
+import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
@@ -23,14 +23,16 @@ public class ActionCommand extends SubCommand {
 
     private final NamespacedKey leftActionKey;
     private final NamespacedKey rightActionKey;
-    private final InteractionManager interactionManager;
-    private final LangManager lang;
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final InteractionManager manager;
+    private final LangManager lang = plugin.getLangManager();
 
-    public ActionCommand(InteractionManager interactionManager, LangManager lang) {
+
+    public ActionCommand(InteractionManager manager) {
+        this.manager = manager;
         leftActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-left");
         rightActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-right");
-        this.interactionManager = interactionManager;
-        this.lang = lang;
+
     }
 
     @Override
@@ -58,7 +60,7 @@ public class ActionCommand extends SubCommand {
         String action = args[0].toLowerCase();
         String actionID = args[1].toLowerCase();
 
-        InteractionConfig interaction = interactionManager.getInteractionById(actionID);
+        InteractionData interaction = manager.getInteractionByID(actionID);
         if (interaction == null) {
             String message = lang.getMessage("citems", "error.inter-not-found").replace("%id%", actionID);
             sender.sendMessage(lang.getMessage("general", "prefix.error")+message);

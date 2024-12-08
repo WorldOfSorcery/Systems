@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.systems.interactions.commands.subcommands;
 
 
+import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
@@ -9,11 +10,8 @@ import org.bukkit.command.CommandSender;
 
 public class ReloadCommand extends SubCommand {
 
-    private final InteractionManager manager;
-
-    public ReloadCommand(InteractionManager manager) {
-        this.manager = manager;
-    }
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final InteractionManager manager = plugin.getInteractionManager();
 
     @Override
     public String getName() {
@@ -33,12 +31,12 @@ public class ReloadCommand extends SubCommand {
             if (!PermissionUtil.hasPermission(sender, Permissions.INTER_RELOAD_SINGLE)) return;
 
             String interactionId = args[0].toLowerCase();
-            manager.reloadInteraction(interactionId);
+            manager.reloadInter(interactionId);
             sender.sendMessage("Reloaded interaction: " + interactionId);
         } else {
             if (!PermissionUtil.hasPermission(sender, Permissions.INTER_RELOAD_ALL)) return;
 
-            manager.loadAllInteractions();
+            manager.loadInteraction();
             sender.sendMessage("Reloaded all interactions.");
         }
     }

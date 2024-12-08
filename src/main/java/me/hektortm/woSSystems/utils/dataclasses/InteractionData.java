@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.systems.interactions_rework;
+package me.hektortm.woSSystems.utils.dataclasses;
 
 import org.bukkit.Location;
 import org.json.simple.JSONObject;

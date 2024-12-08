@@ -3,7 +3,6 @@ package me.hektortm.woSSystems.systems.guis;
 
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.interactions.actions.ActionHandler;
-import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -27,8 +26,6 @@ public class GUIManager implements Listener {
     private final ActionHandler actionHandler;
     private final PlaceholderResolver resolver;
     private final CitemManager citemManager;
-    private Map<String, InteractionConfig> guiInteractions = new HashMap<>();
-    public Map<Player, InteractionConfig> openGUIs = new HashMap<>();
 
     public GUIManager(Plugin plugin, ActionHandler actionHandler, PlaceholderResolver resolver, CitemManager citemManager) {
         this.plugin = plugin;
@@ -37,9 +34,9 @@ public class GUIManager implements Listener {
         this.resolver = resolver;
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
-
+/*
     // Open a GUI for the player
-    public void openGUI(Player player, InteractionConfig interactionConfig) {
+    public void openGUI(Player player) {
         String title = interactionConfig.getInventoryTitle();
         int rows = interactionConfig.getInventoryRows();
         Inventory inventory = Bukkit.createInventory(null, rows * 9, title);
@@ -185,5 +182,7 @@ public class GUIManager implements Listener {
     public void closeGUI(Player player) {
         openGUIs.remove(player);
     }
+
+ */
 
 }

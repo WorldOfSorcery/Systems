@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.economy.listeners;
+package me.hektortm.woSSystems.listeners;
 
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.Coinflip;

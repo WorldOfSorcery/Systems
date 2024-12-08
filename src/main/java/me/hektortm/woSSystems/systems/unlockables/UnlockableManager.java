@@ -29,7 +29,7 @@ public class UnlockableManager {
     public final Map<String, Unlockable> unlockables = new HashMap<>();
     public final Map<String, TempUnlockable> tempUnlockables = new HashMap<>();
 
-    private final WoSSystems plugin = new WoSSystems();
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final WoSCore core = plugin.getCore();
     private final LogManager logManager = plugin.getLogManager();
 
