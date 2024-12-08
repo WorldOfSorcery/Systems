@@ -7,6 +7,7 @@ import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
+import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
@@ -15,6 +16,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
@@ -38,18 +40,24 @@ public class CitemManager {
     private final NamespacedKey rightActionKey;
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final InteractionManager interactionManager;
+    private InteractionManager interactionManager;
     private final LogManager log = plugin.getLogManager();
     private final CitemCommand cmd;
 
 
-    public CitemManager(InteractionManager interactionManager) {
-        this.interactionManager = interactionManager;
+    public CitemManager() {
         cmd = new CitemCommand(interactionManager);
         undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
         unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
         leftActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-left");
         rightActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-right");
+    }
+
+    public void setInteractionManager(InteractionManager interactionManager) {
+        if (interactionManager == null) {
+            throw new IllegalArgumentException("ConditionHandler cannot be null.");
+        }
+        this.interactionManager = interactionManager;
     }
 
     public void saveItemToFile(ItemStack item, File file, String id) {
@@ -203,6 +211,30 @@ public class CitemManager {
         return itemId != null && !itemId.isEmpty(); // Return true if ID exists and is not empty
     }
 
+
+    public int citemAmount(Player p, String id) {
+        if (p == null || id == null) {
+            return 0;
+        }
+
+        PlayerInventory inv = p.getInventory();
+        int count = 0;
+        for (ItemStack item : inv.getContents()) {
+            if (item == null || !item.hasItemMeta()) {
+                continue;
+            }
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) {
+                continue;
+            }
+            PersistentDataContainer data = meta.getPersistentDataContainer();
+            String itemId = data.get(idKey, PersistentDataType.STRING);
+            if (id.equals(itemId)) {
+                count += item.getAmount();
+            }
+        }
+        return count;
+    }
 
     public ItemStack loadItemFromFile(File file) {
         Gson gson = new Gson();

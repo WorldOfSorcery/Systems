@@ -76,17 +76,30 @@ public final class WoSSystems extends JavaPlugin {
 
         lang = new LangManager(core);
 
-        ecoManager = new EcoManager(this);
         statsManager = new StatsManager();
+        ecoManager = new EcoManager(this);
         unlockableManager = new UnlockableManager();
-        fishingManager  = new FishingManager(fishingItemsFolder);
+        fishingManager = new FishingManager(fishingItemsFolder);
+
+
+        citemManager = new CitemManager(); // Ensure interactionManager is null-safe.
         resolver = new PlaceholderResolver(statsManager, citemManager);
-        conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager);
+        conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager, citemManager);
         interactionManager = new InteractionManager();
-        citemManager = new CitemManager(interactionManager);
+        interactionManager.setConditionHandler(conditionHandler);
+        interactionManager.setPlaceholderResolver(resolver);
+        citemManager.setInteractionManager(interactionManager);
+
+
+
+
+// Initialize the remaining managers
         recipeManager = new CRecipeManager(interactionManager);
+        fishingManager = new FishingManager(fishingItemsFolder);
+        resolver = new PlaceholderResolver(statsManager, citemManager);
         log = new LogManager(lang, core);
-        new CraftingListener(this, recipeManager ,new ConditionHandler(unlockableManager, statsManager, ecoManager), interactionManager);
+        new CraftingListener(this, recipeManager, conditionHandler, interactionManager);
+
 
 
         // Check for core initialization

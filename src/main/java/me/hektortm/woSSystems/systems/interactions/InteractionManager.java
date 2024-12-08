@@ -26,8 +26,8 @@ public class InteractionManager {
     public final File interactionFolder;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final LogManager log = new LogManager(new LangManager(WoSCore.getPlugin(WoSCore.class)), WoSCore.getPlugin(WoSCore.class));
-    private final PlaceholderResolver resolver = plugin.getPlaceholderResolver();
-    private final ConditionHandler conditionHandler = plugin.getConditionHandler();
+    private PlaceholderResolver resolver;
+    private ConditionHandler conditionHandler;
     public final Map<String, InteractionData> interactionMap = new HashMap<>();
 
     public InteractionManager() {
@@ -36,6 +36,20 @@ public class InteractionManager {
     }
 
     // TODO: Particle Conditions
+
+    public void setConditionHandler(ConditionHandler conditionHandler) {
+        if (conditionHandler == null) {
+            throw new IllegalArgumentException("ConditionHandler cannot be null.");
+        }
+        this.conditionHandler = conditionHandler;
+    }
+    public void setPlaceholderResolver(PlaceholderResolver resolver) {
+        if (resolver == null) {
+            throw new IllegalArgumentException("PlaceholderResolver cannot be null.");
+        }
+        this.resolver = resolver;
+    }
+
 
     public void loadInteraction() {
         File[] interactionFiles = interactionFolder.listFiles((dir, name) -> name.endsWith(".json"));
@@ -154,6 +168,11 @@ public class InteractionManager {
     public void triggerInteraction(Player p, String id) {
         InteractionData inter = getInteractionByID(id);
 
+        if (inter == null) {
+            Bukkit.getLogger().warning(p.getName()+": Interaction \""+ id + "\" not found");
+            return;
+        }
+
         if(!conditionHandler.validateConditions(p, inter.getConditions())) return;
 
         if(inter.getActions() == null) return;
@@ -162,7 +181,7 @@ public class InteractionManager {
             action = action.replace("%player%", p.getName());
 
             if(action.startsWith("send_message")) {
-                String message = action.replace("%message%", "");
+                String message = action.replace("send_message", "");
                 String finalMessage = resolver.resolvePlaceholders(message, p);
                 p.sendMessage(finalMessage.replace("&","§"));
             }
@@ -174,11 +193,12 @@ public class InteractionManager {
                 if (parts.length > 1) {
                     String sound = parts[1];
                     p.playSound(p.getLocation(), sound, 1.0F, 1.0F);
-                    return;
                 }
             }
             else {
-                plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), action);
+                if (!action.startsWith("send_message") && !action.startsWith("close_gui") && !action.startsWith("playsound")) {
+                    plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), action);
+                }
             }
         }
     }

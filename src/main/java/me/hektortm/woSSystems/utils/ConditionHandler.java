@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.utils;
 
 import me.hektortm.woSSystems.economy.EcoManager;
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import org.bukkit.entity.Player;
@@ -11,11 +12,13 @@ public class ConditionHandler {
     private final UnlockableManager unlockableManager;
     private final StatsManager statsManager;
     private final EcoManager ecoManager;
+    private final CitemManager citemManager;
 
-    public ConditionHandler(UnlockableManager unlockableManager, StatsManager statsManager, EcoManager ecoManager) {
+    public ConditionHandler(UnlockableManager unlockableManager, StatsManager statsManager, EcoManager ecoManager, CitemManager citemManager) {
         this.unlockableManager = unlockableManager;
         this.statsManager = statsManager;
         this.ecoManager = ecoManager;
+        this.citemManager = citemManager;
     }
 
     public boolean validateConditions(Player player, JSONObject conditions) {
@@ -114,12 +117,18 @@ public class ConditionHandler {
     private boolean validateCitem(Player player, JSONObject citem) {
         for (Object key : citem.keySet()) {
             String citemId = key.toString();
-            int requiredAmount = (int) citem.get(citemId);
+            int requiredAmount = ((Number) citem.get(citemId)).intValue();
 
-            // Method to check if a player has X amount of Citem Y in their inv
+            int playerAmount = citemManager.citemAmount(player, citemId);
+
+            if (playerAmount < requiredAmount) {
+                return false;
+            }
         }
-        return true;
+
+        return true; // All conditions passed
     }
+
 
     private boolean validateStats(Player player, JSONObject stats) {
         for (Object key : stats.keySet()) {
