@@ -39,14 +39,12 @@ public class ActionHandler {
             }
         } if (action.startsWith("close_gui")) {
             player.closeInventory();
-        }
-        else if (action.startsWith("send_message")) {
+        } if (action.startsWith("send_message")) {
             String message = action.replace("send_message", "");
             String finalMessage = resolver.resolvePlaceholders(message, player);
             player.sendMessage(finalMessage.replace("&", "§"));
             return;
-        }
-        else {
+        } else {
             // Run any other command
             plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), action);
             return;

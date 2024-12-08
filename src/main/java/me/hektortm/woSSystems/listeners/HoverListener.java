@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.systems.citems.listeners;
+package me.hektortm.woSSystems.listeners;
 
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import org.bukkit.entity.Player;

@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
-import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.logging.LogManager;
@@ -38,19 +37,19 @@ public class CitemManager {
     private final NamespacedKey leftActionKey;
     private final NamespacedKey rightActionKey;
 
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final InteractionManager interactionManager;
-    private final LogManager log;
+    private final LogManager log = plugin.getLogManager();
     private final CitemCommand cmd;
 
 
-    public CitemManager(CitemCommand cmd, InteractionManager interactionManager, LogManager log) {
+    public CitemManager(InteractionManager interactionManager) {
+        this.interactionManager = interactionManager;
+        cmd = new CitemCommand(interactionManager);
         undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
         unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
         leftActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-left");
         rightActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-right");
-        this.cmd = cmd;
-        this.interactionManager = interactionManager;
-        this.log = log;
     }
 
     public void saveItemToFile(ItemStack item, File file, String id) {
@@ -188,6 +187,22 @@ public class CitemManager {
         }
     }
 
+    public boolean isCitem(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) {
+            return false;  // Return false if the item is null or has no metadata
+        }
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return false;  // Return false if item meta is null
+        }
+
+        PersistentDataContainer data = meta.getPersistentDataContainer();
+        // Check if the item has a custom "id" key in its persistent data
+        String itemId = data.get(idKey, PersistentDataType.STRING); // Retrieve the ID
+        return itemId != null && !itemId.isEmpty(); // Return true if ID exists and is not empty
+    }
+
 
     public ItemStack loadItemFromFile(File file) {
         Gson gson = new Gson();
@@ -323,8 +338,7 @@ public class CitemManager {
         PersistentDataContainer data = meta.getPersistentDataContainer();
         String actionId = data.get(leftActionKey, PersistentDataType.STRING);
         if (actionId != null) {
-            InteractionConfig interaction = interactionManager.getInteractionById(actionId);
-            interactionManager.triggerInteraction(interaction, p);
+            interactionManager.triggerInteraction(p, actionId);
         }
     }
 
@@ -338,8 +352,7 @@ public class CitemManager {
         PersistentDataContainer data = meta.getPersistentDataContainer();
         String actionId = data.get(rightActionKey, PersistentDataType.STRING);
         if (actionId != null) {
-            InteractionConfig interaction = interactionManager.getInteractionById(actionId);
-            interactionManager.triggerInteraction(interaction, p);
+            interactionManager.triggerInteraction(p, actionId);
         }
     }
 

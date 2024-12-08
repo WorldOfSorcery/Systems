@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.professions.crafting;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
+import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.dataclasses.RecipeData;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
@@ -23,19 +24,19 @@ import java.util.Map;
 @SuppressWarnings({"UnstableApiUsage", "unchecked"})
 public class CRecipeManager {
 
-    private final CitemManager citemManager;
-    private final CitemCommand cmd;
-    private final LogManager logManager;
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final CitemManager citemManager = plugin.getCitemManager();
+    private InteractionManager interactionManager;
+    private final CitemCommand cmd = new CitemCommand(interactionManager);
+    private final LogManager logManager = plugin.getLogManager();
     public final File recipesFolder;
     private final Map<NamespacedKey, RecipeData> recipeMap = new HashMap<>();
 
 
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public CRecipeManager(CitemManager citemManager, CitemCommand cmd, LogManager logManager) {
-        this.citemManager = citemManager;
-        this.cmd = cmd;
-        this.logManager = logManager;
+    public CRecipeManager(InteractionManager interactionManager) {
+        this.interactionManager = interactionManager;
         this.recipesFolder = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "CRecipes");
         if(!recipesFolder.exists()) recipesFolder.mkdirs();
     }

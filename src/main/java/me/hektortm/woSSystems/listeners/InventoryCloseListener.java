@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.systems.guis.listeners;
+package me.hektortm.woSSystems.listeners;
 
 
 import me.hektortm.woSSystems.systems.guis.GUIManager;
@@ -20,7 +20,7 @@ public class InventoryCloseListener implements Listener {
         Player player = (Player) event.getPlayer();
 
         // Remove the player from the open GUI map when they close the custom GUI
-        guiManager.closeGUI(player);
-        guiManager.openGUIs.remove(player);
+      //  guiManager.closeGUI(player);
+      //  guiManager.openGUIs.remove(player);
     }
 }

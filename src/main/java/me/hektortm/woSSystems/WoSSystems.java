@@ -5,8 +5,10 @@ import me.hektortm.woSSystems.economy.commands.BalanceCommand;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
 import me.hektortm.woSSystems.economy.commands.EcoCommand;
 import me.hektortm.woSSystems.economy.commands.PayCommand;
-import me.hektortm.woSSystems.economy.listeners.CoinflipInventoryListener;
+import me.hektortm.woSSystems.listeners.CoinflipInventoryListener;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
+import me.hektortm.woSSystems.listeners.InterListener;
+import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.professions.crafting.CraftingListener;
 import me.hektortm.woSSystems.professions.crafting.command.CRecipeCommand;
@@ -16,22 +18,10 @@ import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.citems.commands.CgiveCommand;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.systems.citems.commands.CremoveCommand;
-import me.hektortm.woSSystems.systems.citems.listeners.DropListener;
-import me.hektortm.woSSystems.systems.citems.listeners.HoverListener;
-import me.hektortm.woSSystems.systems.citems.listeners.UseListener;
-import me.hektortm.woSSystems.systems.interactions.actions.InventoryInteraction;
-import me.hektortm.woSSystems.systems.guis.command.GUIcommand;
+import me.hektortm.woSSystems.listeners.DropListener;
+import me.hektortm.woSSystems.listeners.HoverListener;
+import me.hektortm.woSSystems.listeners.UseListener;
 import me.hektortm.woSSystems.systems.interactions.commands.InteractionCommand;
-import me.hektortm.woSSystems.systems.interactions.config.YAMLLoader;
-import me.hektortm.woSSystems.systems.interactions.actions.ActionHandler;
-import me.hektortm.woSSystems.systems.interactions.BindManager;
-import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
-import me.hektortm.woSSystems.systems.interactions.InteractionManager;
-import me.hektortm.woSSystems.systems.guis.GUIManager;
-import me.hektortm.woSSystems.systems.interactions.listeners.InterBlockListener;
-import me.hektortm.woSSystems.systems.guis.listeners.InventoryClickListener;
-import me.hektortm.woSSystems.systems.guis.listeners.InventoryCloseListener;
-import me.hektortm.woSSystems.systems.interactions.particles.ParticleHandler;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.systems.stats.commands.GlobalStatCommand;
 import me.hektortm.woSSystems.systems.stats.commands.StatsCommand;
@@ -53,25 +43,24 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 public final class WoSSystems extends JavaPlugin {
 
+    private WoSCore core;
     private static LangManager lang;
-    WoSCore core = JavaPlugin.getPlugin(WoSCore.class);
+    public File fishingItemsFolder = new File(getDataFolder(), "professions/fishing/items");
+    private LogManager log;
     private InteractionManager interactionManager;
-    private GUIManager guiManager;
-    private BindManager bindManager;
-    private ParticleHandler particleHandler;
+
+    private CitemManager citemManager;
+    private EcoManager ecoManager;
     private StatsManager statsManager;
     private UnlockableManager unlockableManager;
     private FishingManager fishingManager;
     private PlaceholderResolver resolver;
-    private LogManager log;
-    private static EcoManager ecoManager;
-    private static CitemManager citemManager;
-    private static CRecipeManager recipeManager;
+    private ConditionHandler conditionHandler;
+    private CRecipeManager recipeManager;
 
 
     // TODO:
@@ -83,39 +72,22 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Initialize core and lang first
+        core = WoSCore.getPlugin(WoSCore.class);
+
         lang = new LangManager(core);
-
-        // Set up all managers and handlers
-        File fishingItemsFolder = new File(getDataFolder(), "professions/fishing/items");
-        fishingManager = new FishingManager(fishingItemsFolder);
-
-        log = new LogManager(lang, core);
-
-        YAMLLoader yamlLoader = new YAMLLoader(this);
 
         ecoManager = new EcoManager(this);
-        HashMap<UUID, Challenge> challengeQueue = new HashMap<>();
-        particleHandler = new ParticleHandler();
-        bindManager = new BindManager(this);
-        statsManager = new StatsManager(core, log);
-        unlockableManager = new UnlockableManager(core, log);
-
+        statsManager = new StatsManager();
+        unlockableManager = new UnlockableManager();
+        fishingManager  = new FishingManager(fishingItemsFolder);
         resolver = new PlaceholderResolver(statsManager, citemManager);
-
-        // Initialize InteractionManager **before** citemManager
-        interactionManager = new InteractionManager(yamlLoader, this, guiManager, particleHandler, resolver);
-
-        ActionHandler actionHandler = new ActionHandler(this, resolver);
-        citemManager = new CitemManager(new CitemCommand(citemManager, interactionManager, lang, log), interactionManager, log);
-        recipeManager = new CRecipeManager(citemManager, new CitemCommand(citemManager, interactionManager, lang, log), log);
-        guiManager = new GUIManager(this, actionHandler, resolver, citemManager);
+        conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager);
+        interactionManager = new InteractionManager();
+        citemManager = new CitemManager(interactionManager);
+        recipeManager = new CRecipeManager(interactionManager);
+        log = new LogManager(lang, core);
         new CraftingListener(this, recipeManager ,new ConditionHandler(unlockableManager, statsManager, ecoManager), interactionManager);
 
-        lang = new LangManager(core);
-        Map<String, InteractionConfig> interactionConfigs = yamlLoader.loadInteractions();
-
-        recipeManager.loadRecipes();
 
         // Check for core initialization
         if (core != null) {
@@ -127,12 +99,38 @@ public final class WoSSystems extends JavaPlugin {
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }
+
+        /*
+        InventoryInteraction inventoryInteraction = new InventoryInteraction(this, actionHandler);
+        for (Map.Entry<String, InteractionConfig> entry : interactionConfigs.entrySet()) {
+            InteractionConfig config = entry.getValue();
+            getServer().getPluginManager().registerEvents(new InventoryClickListener(inventoryInteraction, config, guiManager), this);
+        }
+         */
+
+        // Finalize initialization
+
+        recipeManager.loadRecipes();
+        registerCommands();
+        registerEvents();
+        interactionManager.loadInteraction();
+        interactionManager.particleTask();
+        unlockableManager.loadUnlockables();
+        unlockableManager.loadTempUnlockables();
+    }
+
+    @Override
+    public void onDisable() {
+        // Plugin shutdown logic
+    }
+
+    private void registerCommands() {
+        HashMap<UUID, Challenge> challengeQueue = new HashMap<>();
         Coinflip coinflipCommand = new Coinflip(ecoManager, this, challengeQueue, lang);
 
-        // Register commands
-        cmdReg("opengui", new GUIcommand(guiManager, interactionManager));
-        cmdReg("interaction", new InteractionCommand(interactionManager, bindManager));
-        cmdReg("citem", new CitemCommand(citemManager, interactionManager, lang, log));
+        //cmdReg("opengui", new GUIcommand(guiManager, interactionManager));
+        cmdReg("interaction", new InteractionCommand());
+        cmdReg("citem", new CitemCommand(interactionManager));
         cmdReg("cgive", new CgiveCommand(citemManager, lang));
         cmdReg("cremove", new CremoveCommand(citemManager, lang));
         cmdReg("stats", new StatsCommand(statsManager));
@@ -144,34 +142,21 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("pay", new PayCommand(ecoManager, lang));
         cmdReg("coinflip", coinflipCommand);
         cmdReg("crecipe", new CRecipeCommand(this, recipeManager, lang));
-
-        // Register events
-        eventReg(new InventoryCloseListener(guiManager));
-        eventReg(new InterBlockListener(this, interactionManager));
-        eventReg(new DropListener());
-        eventReg(new HoverListener(citemManager));
-        eventReg(new UseListener(citemManager));
-        eventReg(new CleanUpListener(core, unlockableManager, coinflipCommand));
-        eventReg(new FishingListener(fishingManager, citemManager, interactionManager));
-
-        getServer().getPluginManager().registerEvents(new CoinflipInventoryListener(challengeQueue, ecoManager, coinflipCommand, lang), this);
-        // Register Inventory Interaction events
-        InventoryInteraction inventoryInteraction = new InventoryInteraction(this, actionHandler);
-        for (Map.Entry<String, InteractionConfig> entry : interactionConfigs.entrySet()) {
-            InteractionConfig config = entry.getValue();
-            getServer().getPluginManager().registerEvents(new InventoryClickListener(inventoryInteraction, config, guiManager), this);
-        }
-
-        // Finalize initialization
-        interactionManager.loadAllInteractions();
-        interactionManager.startParticleTask();
-        unlockableManager.loadUnlockables();
-        unlockableManager.loadTempUnlockables();
     }
 
-    @Override
-    public void onDisable() {
-        // Plugin shutdown logic
+    private void registerEvents() {
+        HashMap<UUID, Challenge> challengeQueue = new HashMap<>();
+        Coinflip coinflipCommand = new Coinflip(ecoManager, this, challengeQueue, lang);
+
+        //eventReg(new InventoryCloseListener(guiManager));
+        eventReg(new InterListener(interactionManager, citemManager));
+        eventReg(new DropListener());
+        eventReg(new HoverListener(citemManager));
+        //eventReg(new UseListener(citemManager));
+        eventReg(new CleanUpListener(core, unlockableManager, coinflipCommand));
+        eventReg(new FishingListener());
+
+        getServer().getPluginManager().registerEvents(new CoinflipInventoryListener(challengeQueue, ecoManager, coinflipCommand, lang), this);
     }
 
     private void eventReg(Listener l) {
@@ -199,6 +184,49 @@ public final class WoSSystems extends JavaPlugin {
         String message = lang.getMessage(file, msg).replace(oldChar1, value1).replace(oldChar2, value2).replace(oldChar3, value3);
         String newMessage = lang.getMessage("general", "prefix.economy") + message;
         sender.sendMessage(Utils.replaceColorPlaceholders(newMessage));
+    }
+
+    public WoSCore getCore() {
+        return core;
+    }
+
+    public LogManager getLogManager() {
+        return log;
+    }
+
+    public LangManager getLangManager() {
+        return lang;
+    }
+
+    public PlaceholderResolver getPlaceholderResolver() {
+        return resolver;
+    }
+    public StatsManager getStatsManager() {
+        return statsManager;
+    }
+    public EcoManager getEcoManager() {
+        return ecoManager;
+    }
+    public UnlockableManager getUnlockableManager() {
+        return unlockableManager;
+    }
+    public ConditionHandler getConditionHandler() {
+        return conditionHandler;
+    }
+    public CRecipeManager getRecipeManager() {
+        return recipeManager;
+    }
+    public CitemManager getCitemManager() {
+        return citemManager;
+    }
+    public FishingManager getFishingManager() {
+        return fishingManager;
+    }
+    public CRecipeManager getCRecipeManager() {
+        return recipeManager;
+    }
+    public InteractionManager getInteractionManager() {
+        return interactionManager;
     }
 
 }

@@ -1,8 +1,5 @@
 package me.hektortm.woSSystems.systems.interactions.commands;
 
-
-import me.hektortm.woSSystems.systems.interactions.BindManager;
-import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.systems.interactions.commands.subcommands.*;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.SubCommand;
@@ -18,18 +15,13 @@ import java.util.Map;
 public class InteractionCommand implements CommandExecutor {
 
     private final Map<String, SubCommand> subCommands = new HashMap<>();
-    private final InteractionManager interManager;
-    private final BindManager bindManager;
 
-    public InteractionCommand(InteractionManager interManager, BindManager bindManager) {
-        this.interManager = interManager;
-        this.bindManager = bindManager;
-
-        subCommands.put("trigger", new TriggerCommand(interManager));
+    public InteractionCommand() {
+        subCommands.put("trigger", new TriggerCommand());
         subCommands.put("help", new HelpCommand(this));
-        subCommands.put("reload", new ReloadCommand(interManager));
-        subCommands.put("bind", new BindCommand(bindManager));
-        subCommands.put("unbind", new UnbindCommand(bindManager));
+        subCommands.put("reload", new ReloadCommand());
+        subCommands.put("bind", new BindCommand());
+        subCommands.put("unbind", new UnbindCommand());
 
     }
 

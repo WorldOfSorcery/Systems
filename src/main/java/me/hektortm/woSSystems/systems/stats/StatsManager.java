@@ -27,13 +27,11 @@ public class StatsManager {
     private final Map<String, Stat> stats = new HashMap<>();
     private final Map<String, GlobalStat> globalStats = new HashMap<>();
 
-    private final WoSCore core;
-    private final LogManager log;
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final WoSCore core = plugin.getCore();
+    private final LogManager log = plugin.getLogManager();
 
-    public StatsManager(WoSCore core, LogManager log) {
-        this.core = core;
-        this.log = log;
-
+    public StatsManager() {
         loadStats();
         loadGlobalStats();
     }

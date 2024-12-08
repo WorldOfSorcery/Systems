@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.systems.citems.listeners;
+package me.hektortm.woSSystems.listeners;
 
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;

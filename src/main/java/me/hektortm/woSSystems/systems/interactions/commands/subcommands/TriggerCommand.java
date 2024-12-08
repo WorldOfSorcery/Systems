@@ -1,6 +1,6 @@
 package me.hektortm.woSSystems.systems.interactions.commands.subcommands;
 
-import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
+import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
@@ -10,11 +10,8 @@ import org.bukkit.entity.Player;
 
 public class TriggerCommand extends SubCommand {
 
-    private final InteractionManager interactionManager;
-
-    public TriggerCommand(InteractionManager interactionManager) {
-        this.interactionManager = interactionManager;
-    }
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final InteractionManager manager = plugin.getInteractionManager();
 
     @Override
     public String getName() {
@@ -39,15 +36,12 @@ public class TriggerCommand extends SubCommand {
                 return;
             }
 
-            InteractionConfig interaction = interactionManager.getInteractionById(interactionId);
-            if (interaction != null) {
+                if (!manager.interExists(sender,interactionId)) return;
                 // Trigger the interaction on the player
-                interactionManager.triggerInteraction(interaction, targetPlayer);
+                manager.triggerInteraction(targetPlayer, interactionId);
                 sender.sendMessage("Triggered interaction " + interactionId + " for player " + playerName);
 
-            } else {
-                sender.sendMessage("Interaction not found: " + interactionId);
-            }
+
         } else {
             sender.sendMessage("Usage: /interaction trigger <player> <id>");
         }

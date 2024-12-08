@@ -1,9 +1,9 @@
 package me.hektortm.woSSystems.professions.fishing.listeners;
 
+import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.professions.fishing.FishingManager;
 import me.hektortm.woSSystems.utils.dataclasses.FishingItem;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
-import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Item;
@@ -19,15 +19,10 @@ import java.util.Random;
 
 public class FishingListener implements Listener {
 
-    private final FishingManager fishingManager;
-    private final CitemManager citemManager;
-    private final InteractionManager interactionManager;
-
-    public FishingListener(FishingManager fishingManager, CitemManager citemManager, InteractionManager interactionManager) {
-        this.fishingManager = fishingManager;
-        this.citemManager = citemManager;
-        this.interactionManager = interactionManager;
-    }
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final FishingManager fishingManager = plugin.getFishingManager();
+    private final CitemManager citemManager = plugin.getCitemManager();
+    private final InteractionManager interactionManager = plugin.getInteractionManager();
 
     @EventHandler
     public void onFish(PlayerFishEvent event) {
@@ -49,9 +44,7 @@ public class FishingListener implements Listener {
 
                         caughtItemEntity.setItemStack(citem);
 
-                        InteractionConfig inter = interactionManager.getInteractionById(fishingItem.getInteraction());
-
-                        interactionManager.triggerInteraction(inter, player);
+                        interactionManager.triggerInteraction(player, fishingItem.getInteraction());
 
                         ItemMeta iM = citem.getItemMeta();
                         String iN = iM.getDisplayName();

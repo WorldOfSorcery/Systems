@@ -1,7 +1,7 @@
 package me.hektortm.woSSystems.professions.crafting;
 
+import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
-import me.hektortm.woSSystems.systems.interactions.config.InteractionConfig;
 import me.hektortm.woSSystems.utils.ConditionHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
@@ -104,10 +104,10 @@ public class CraftingListener implements Listener {
         // If conditions are valid, trigger the success interaction if available
         if (successId != null) {
             // Retrieve the interaction configuration for the successId
-            InteractionConfig interactionConfig = interactionManager.getInteractionById(successId);
-            if (interactionConfig != null) {
+            InteractionData interaction = interactionManager.getInteractionByID(successId);
+            if (interaction != null) {
                 // Trigger the interaction
-                interactionManager.triggerInteraction(interactionConfig, player);
+                interactionManager.triggerInteraction(player, successId);
             }
         }
     }
