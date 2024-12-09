@@ -123,7 +123,7 @@ public class WoSSystemsManager {
         eventReg(new DropListener());
         eventReg(new HoverListener(citemManager));
         eventReg(new CleanUpListener(null, unlockableManager, coinflipCommand));
-        eventReg(new FishingListener());
+        eventReg(new FishingListener(fishingManager, citemManager, interactionManager));
 
         new CraftingListener(core, recipeManager, conditionHandler, interactionManager);
         plugin.getServer().getPluginManager().registerEvents(

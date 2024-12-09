@@ -25,17 +25,19 @@ import java.util.Map;
 public class CRecipeManager {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final CitemManager citemManager = plugin.getCitemManager();
+    private final CitemManager citemManager;
     private InteractionManager interactionManager;
     private final CitemCommand cmd = new CitemCommand(interactionManager);
-    private final LogManager logManager = plugin.getLogManager();
+    private final LogManager logManager;
     public final File recipesFolder;
     private final Map<NamespacedKey, RecipeData> recipeMap = new HashMap<>();
 
 
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public CRecipeManager(InteractionManager interactionManager) {
+    public CRecipeManager(InteractionManager interactionManager, CitemManager citemManager, LogManager logManager) {
+        this.citemManager = citemManager;
+        this.logManager = logManager;
         this.interactionManager = interactionManager;
         this.recipesFolder = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "CRecipes");
         if(!recipesFolder.exists()) recipesFolder.mkdirs();

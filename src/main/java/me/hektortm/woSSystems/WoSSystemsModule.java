@@ -30,7 +30,7 @@ public class WoSSystemsModule extends AbstractModule {
                 new UnlockableManager(), new StatsManager(), new EcoManager(WoSSystems.getPlugin(WoSSystems.class)), new CitemManager()
         ));
         bind(InteractionManager.class).asEagerSingleton();
-        bind(CRecipeManager.class).toProvider(() -> new CRecipeManager(new InteractionManager()));
+        bind(CRecipeManager.class).toProvider(() -> new CRecipeManager(new InteractionManager(), new CitemManager(), new LogManager(new LangManager(WoSCore.getPlugin(WoSCore.class)), WoSCore.getPlugin(WoSCore.class))));
         bind(LogManager.class).toProvider(() -> new LogManager(new LangManager(null), WoSCore.getPlugin(WoSCore.class)));
     }
 }
