@@ -52,17 +52,7 @@ public final class WoSSystems extends JavaPlugin {
     private WoSCore core;
     private static LangManager lang;
     public File fishingItemsFolder = new File(getDataFolder(), "professions/fishing/items");
-    private LogManager log;
-    private InteractionManager interactionManager;
 
-    private CitemManager citemManager;
-    private EcoManager ecoManager;
-    private StatsManager statsManager;
-    private UnlockableManager unlockableManager;
-    private FishingManager fishingManager;
-    private PlaceholderResolver resolver;
-    private ConditionHandler conditionHandler;
-    private CRecipeManager recipeManager;
 
     private Injector injector;
 
@@ -76,6 +66,9 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        core = new WoSCore();
+        lang = new LangManager(core);
+
         injector = Guice.createInjector(new WoSSystemsModule());
 
         WoSSystemsManager manager = injector.getInstance(WoSSystemsManager.class);
@@ -103,7 +96,6 @@ public final class WoSSystems extends JavaPlugin {
         }
          */
 
-        interactionManager.particleTask();
     }
 
     @Override
@@ -130,48 +122,4 @@ public final class WoSSystems extends JavaPlugin {
         String newMessage = lang.getMessage("general", "prefix.economy") + message;
         sender.sendMessage(Utils.replaceColorPlaceholders(newMessage));
     }
-
-    public WoSCore getCore() {
-        return core;
-    }
-
-    public LogManager getLogManager() {
-        return log;
-    }
-
-    public LangManager getLangManager() {
-        return lang;
-    }
-
-    public PlaceholderResolver getPlaceholderResolver() {
-        return resolver;
-    }
-    public StatsManager getStatsManager() {
-        return statsManager;
-    }
-    public EcoManager getEcoManager() {
-        return ecoManager;
-    }
-    public UnlockableManager getUnlockableManager() {
-        return unlockableManager;
-    }
-    public ConditionHandler getConditionHandler() {
-        return conditionHandler;
-    }
-    public CRecipeManager getRecipeManager() {
-        return recipeManager;
-    }
-    public CitemManager getCitemManager() {
-        return citemManager;
-    }
-    public FishingManager getFishingManager() {
-        return fishingManager;
-    }
-    public CRecipeManager getCRecipeManager() {
-        return recipeManager;
-    }
-    public InteractionManager getInteractionManager() {
-        return interactionManager;
-    }
-
 }

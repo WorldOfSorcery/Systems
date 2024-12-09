@@ -27,7 +27,7 @@ public class WoSSystemsModule extends AbstractModule {
         bind(CitemManager.class).asEagerSingleton();
         bind(PlaceholderResolver.class).toProvider(() -> new PlaceholderResolver(new StatsManager(), new CitemManager()));
         bind(ConditionHandler.class).toProvider(() -> new ConditionHandler(
-                new UnlockableManager(), new StatsManager(), new EcoManager(null), new CitemManager()
+                new UnlockableManager(), new StatsManager(), new EcoManager(WoSSystems.getPlugin(WoSSystems.class)), new CitemManager()
         ));
         bind(InteractionManager.class).asEagerSingleton();
         bind(CRecipeManager.class).toProvider(() -> new CRecipeManager(new InteractionManager()));

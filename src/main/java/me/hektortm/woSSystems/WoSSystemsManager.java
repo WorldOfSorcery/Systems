@@ -91,6 +91,7 @@ public class WoSSystemsManager {
     private void initializeManagers() {
         recipeManager.loadRecipes();
         interactionManager.loadInteraction();
+        interactionManager.particleTask();
         unlockableManager.loadUnlockables();
         unlockableManager.loadTempUnlockables();
     }

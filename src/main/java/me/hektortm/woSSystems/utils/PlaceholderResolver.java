@@ -3,7 +3,11 @@ package me.hektortm.woSSystems.utils;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
+import java.io.File;
+import java.util.List;
 import java.util.UUID;
 
 public class PlaceholderResolver {
@@ -53,19 +57,24 @@ public class PlaceholderResolver {
         }
         if(text.contains("{citems.")) {
             // TODO
-            for (String citemId : statsManager.getStats().keySet()) {
-                String namePlaceholder = "{citems."+citemId+"_name}";
-                String lorePlaceholder = "{citems."+citemId+"_lore}";
+            for (File file : citemsManager.citemFolder.listFiles()) {
+                String id = file.getName().replace(".json", "");
+                String namePlaceholder = "{citems."+id+"_name}";
+                String lorePlaceholder = "{citems."+id+"_lore}";
 
+                ItemStack citem = citemsManager.loadItemFromFile(file);
+                ItemMeta meta = citem.getItemMeta();
                 if (text.contains(namePlaceholder)) {
-
-
-                    String name = "PLACEHOLDER";
+                    String name = meta.getDisplayName();
                     text = text.replace(namePlaceholder, name);
                 }
                 if (text.contains(lorePlaceholder)) {
-                    String lore = "PLACEHOLDER";
-                    text = text.replace(lorePlaceholder, lore);
+                    List<String> lore = meta.getLore();
+                    StringBuilder builder = new StringBuilder();
+                    for ( int i = 0; i < lore.size(); i++ ) {
+                        builder.append(lore.get(i));
+                    }
+                    text = text.replace(lorePlaceholder, builder.toString());
                 }
 
             }

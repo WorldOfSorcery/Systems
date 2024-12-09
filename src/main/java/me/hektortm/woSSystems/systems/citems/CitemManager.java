@@ -8,7 +8,9 @@ import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.ConditionHandler;
+import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
+import me.hektortm.wosCore.WoSCore;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -38,14 +40,16 @@ public class CitemManager {
     private final NamespacedKey idKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "id");
     private final NamespacedKey leftActionKey;
     private final NamespacedKey rightActionKey;
+    public final File citemFolder;
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private InteractionManager interactionManager;
-    private final LogManager log = plugin.getLogManager();
+    private final LogManager log = new LogManager(new LangManager(WoSCore.getPlugin(WoSCore.class)),WoSCore.getPlugin(WoSCore.class));
     private final CitemCommand cmd;
 
 
     public CitemManager() {
+        citemFolder = new File(plugin.getDataFolder(), "citems");
         cmd = new CitemCommand(interactionManager);
         undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
         unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
