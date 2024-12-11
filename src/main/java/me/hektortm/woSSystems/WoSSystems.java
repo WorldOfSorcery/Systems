@@ -1,7 +1,5 @@
 package me.hektortm.woSSystems;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.BalanceCommand;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
@@ -52,9 +50,17 @@ public final class WoSSystems extends JavaPlugin {
     private WoSCore core;
     private static LangManager lang;
     public File fishingItemsFolder = new File(getDataFolder(), "professions/fishing/items");
+    private LogManager log;
+    private InteractionManager interactionManager;
 
-
-    private Injector injector;
+    private CitemManager citemManager;
+    private EcoManager ecoManager;
+    private StatsManager statsManager;
+    private UnlockableManager unlockableManager;
+    private FishingManager fishingManager;
+    private PlaceholderResolver resolver;
+    private ConditionHandler conditionHandler;
+    private CRecipeManager recipeManager;
 
 
     // TODO:
@@ -66,15 +72,34 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        core = new WoSCore();
+        core = WoSCore.getPlugin(WoSCore.class);
+
         lang = new LangManager(core);
 
-        injector = Guice.createInjector(new WoSSystemsModule());
+        statsManager = new StatsManager();
+        ecoManager = new EcoManager(this);
+        unlockableManager = new UnlockableManager();
+        fishingManager = new FishingManager(fishingItemsFolder);
 
-        WoSSystemsManager manager = injector.getInstance(WoSSystemsManager.class);
 
-        manager.registerCommands();
-        manager.registerEvents();
+        citemManager = new CitemManager(); // Ensure interactionManager is null-safe.
+        resolver = new PlaceholderResolver(statsManager, citemManager);
+        conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager, citemManager);
+        interactionManager = new InteractionManager();
+        interactionManager.setConditionHandler(conditionHandler);
+        interactionManager.setPlaceholderResolver(resolver);
+        citemManager.setInteractionManager(interactionManager);
+
+
+
+
+// Initialize the remaining managers
+        recipeManager = new CRecipeManager(interactionManager);
+        fishingManager = new FishingManager(fishingItemsFolder);
+        resolver = new PlaceholderResolver(statsManager, citemManager);
+        log = new LogManager(lang, core);
+        new CraftingListener(this, recipeManager, conditionHandler, interactionManager);
+
 
 
         // Check for core initialization
@@ -96,6 +121,15 @@ public final class WoSSystems extends JavaPlugin {
         }
          */
 
+        // Finalize initialization
+
+        recipeManager.loadRecipes();
+        registerCommands();
+        registerEvents();
+        interactionManager.loadInteraction();
+        interactionManager.particleTask();
+        unlockableManager.loadUnlockables();
+        unlockableManager.loadTempUnlockables();
     }
 
     @Override
@@ -103,6 +137,48 @@ public final class WoSSystems extends JavaPlugin {
         // Plugin shutdown logic
     }
 
+    private void registerCommands() {
+        HashMap<UUID, Challenge> challengeQueue = new HashMap<>();
+        Coinflip coinflipCommand = new Coinflip(ecoManager, this, challengeQueue, lang);
+
+        //cmdReg("opengui", new GUIcommand(guiManager, interactionManager));
+        cmdReg("interaction", new InteractionCommand());
+        cmdReg("citem", new CitemCommand(interactionManager));
+        cmdReg("cgive", new CgiveCommand(citemManager, lang));
+        cmdReg("cremove", new CremoveCommand(citemManager, lang));
+        cmdReg("stats", new StatsCommand(statsManager));
+        cmdReg("globalstats", new GlobalStatCommand(statsManager));
+        cmdReg("unlockable", new UnlockableCommand(unlockableManager, lang, log));
+        cmdReg("tempunlockable", new TempUnlockableCommand(unlockableManager, lang));
+        cmdReg("economy", new EcoCommand(ecoManager, lang, log));
+        cmdReg("balance", new BalanceCommand(ecoManager, core));
+        cmdReg("pay", new PayCommand(ecoManager, lang));
+        cmdReg("coinflip", coinflipCommand);
+        cmdReg("crecipe", new CRecipeCommand(this, recipeManager, lang));
+    }
+
+    private void registerEvents() {
+        HashMap<UUID, Challenge> challengeQueue = new HashMap<>();
+        Coinflip coinflipCommand = new Coinflip(ecoManager, this, challengeQueue, lang);
+
+        //eventReg(new InventoryCloseListener(guiManager));
+        eventReg(new InterListener(interactionManager, citemManager));
+        eventReg(new DropListener());
+        eventReg(new HoverListener(citemManager));
+        //eventReg(new UseListener(citemManager));
+        eventReg(new CleanUpListener(core, unlockableManager, coinflipCommand));
+        eventReg(new FishingListener());
+
+        getServer().getPluginManager().registerEvents(new CoinflipInventoryListener(challengeQueue, ecoManager, coinflipCommand, lang), this);
+    }
+
+    private void eventReg(Listener l) {
+        getServer().getPluginManager().registerEvents(l, this);
+    }
+
+    private void cmdReg(String cmd, CommandExecutor e) {
+        this.getCommand(cmd).setExecutor(e);
+    }
 
     public static void ecoMsg(CommandSender sender, String file, String msg) {
         sender.sendMessage(lang.getMessage("general","prefix.economy")+lang.getMessage(file, msg));
@@ -122,4 +198,48 @@ public final class WoSSystems extends JavaPlugin {
         String newMessage = lang.getMessage("general", "prefix.economy") + message;
         sender.sendMessage(Utils.replaceColorPlaceholders(newMessage));
     }
+
+    public WoSCore getCore() {
+        return core;
+    }
+
+    public LogManager getLogManager() {
+        return log;
+    }
+
+    public LangManager getLangManager() {
+        return lang;
+    }
+
+    public PlaceholderResolver getPlaceholderResolver() {
+        return resolver;
+    }
+    public StatsManager getStatsManager() {
+        return statsManager;
+    }
+    public EcoManager getEcoManager() {
+        return ecoManager;
+    }
+    public UnlockableManager getUnlockableManager() {
+        return unlockableManager;
+    }
+    public ConditionHandler getConditionHandler() {
+        return conditionHandler;
+    }
+    public CRecipeManager getRecipeManager() {
+        return recipeManager;
+    }
+    public CitemManager getCitemManager() {
+        return citemManager;
+    }
+    public FishingManager getFishingManager() {
+        return fishingManager;
+    }
+    public CRecipeManager getCRecipeManager() {
+        return recipeManager;
+    }
+    public InteractionManager getInteractionManager() {
+        return interactionManager;
+    }
+
 }
