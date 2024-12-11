@@ -37,6 +37,20 @@ public class InteractionManager {
 
     // TODO: Particle Conditions
 
+    public void setConditionHandler(ConditionHandler conditionHandler) {
+        if (conditionHandler == null) {
+            throw new IllegalArgumentException("ConditionHandler cannot be null.");
+        }
+        this.conditionHandler = conditionHandler;
+    }
+    public void setPlaceholderResolver(PlaceholderResolver resolver) {
+        if (resolver == null) {
+            throw new IllegalArgumentException("PlaceholderResolver cannot be null.");
+        }
+        this.resolver = resolver;
+    }
+
+
     public void loadInteraction() {
         File[] interactionFiles = interactionFolder.listFiles((dir, name) -> name.endsWith(".json"));
         if(interactionFiles == null || interactionFiles.length == 0) {
