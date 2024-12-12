@@ -167,7 +167,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new HoverListener(citemManager));
         //eventReg(new UseListener(citemManager));
         eventReg(new CleanUpListener(core, unlockableManager, coinflipCommand));
-        eventReg(new FishingListener(fishingManager, citemManager, interactionManager));
+        eventReg(new FishingListener());
 
         getServer().getPluginManager().registerEvents(new CoinflipInventoryListener(challengeQueue, ecoManager, coinflipCommand, lang), this);
     }
