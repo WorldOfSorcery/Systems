@@ -72,9 +72,10 @@ public class InterListener implements Listener {
 
             if (block == null) return;
 
-            e.setCancelled(true);
+
 
             for (File file : interManager.interactionFolder.listFiles()) {
+
                 if (file.isFile() && file.getName().endsWith(".json")) {
                     String id = file.getName().replace(".json", "");
                     InteractionData inter = interManager.interactionMap.get(id);
@@ -84,6 +85,7 @@ public class InterListener implements Listener {
                     List<Location> locs = inter.getLocations();
                     for (Location loc : locs) {
                         if (isSameLocation(block.getLocation(), loc)) {
+                            e.setCancelled(true);
                             switch (action) {
                                 case RIGHT_CLICK_BLOCK:
                                     interManager.triggerInteraction(p, id);

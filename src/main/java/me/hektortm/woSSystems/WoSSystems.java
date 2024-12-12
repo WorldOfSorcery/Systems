@@ -1,13 +1,14 @@
 package me.hektortm.woSSystems;
 
+import me.hektortm.woSSystems.chat.ChatManager;
+import me.hektortm.woSSystems.chat.commands.ChatCommand;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.BalanceCommand;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
 import me.hektortm.woSSystems.economy.commands.EcoCommand;
 import me.hektortm.woSSystems.economy.commands.PayCommand;
-import me.hektortm.woSSystems.listeners.CoinflipInventoryListener;
+import me.hektortm.woSSystems.listeners.*;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
-import me.hektortm.woSSystems.listeners.InterListener;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.professions.crafting.CraftingListener;
@@ -18,9 +19,6 @@ import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.citems.commands.CgiveCommand;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.systems.citems.commands.CremoveCommand;
-import me.hektortm.woSSystems.listeners.DropListener;
-import me.hektortm.woSSystems.listeners.HoverListener;
-import me.hektortm.woSSystems.listeners.UseListener;
 import me.hektortm.woSSystems.systems.interactions.commands.InteractionCommand;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.systems.stats.commands.GlobalStatCommand;
@@ -28,9 +26,9 @@ import me.hektortm.woSSystems.systems.stats.commands.StatsCommand;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.systems.unlockables.commands.TempUnlockableCommand;
 import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableCommand;
-import me.hektortm.woSSystems.listeners.CleanUpListener;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.woSSystems.utils.dataclasses.Challenge;
+import me.hektortm.woSSystems.utils.dataclasses.ChannelData;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
@@ -61,6 +59,7 @@ public final class WoSSystems extends JavaPlugin {
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
     private CRecipeManager recipeManager;
+    private ChatManager chatManager;
 
 
     // TODO:
@@ -89,6 +88,8 @@ public final class WoSSystems extends JavaPlugin {
         interactionManager.setConditionHandler(conditionHandler);
         interactionManager.setPlaceholderResolver(resolver);
         citemManager.setInteractionManager(interactionManager);
+
+        chatManager = new ChatManager(this);
 
 
 
@@ -155,6 +156,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("pay", new PayCommand(ecoManager, lang));
         cmdReg("coinflip", coinflipCommand);
         cmdReg("crecipe", new CRecipeCommand(this, recipeManager, lang));
+        cmdReg("channel", new ChatCommand(chatManager));
     }
 
     private void registerEvents() {
@@ -168,6 +170,7 @@ public final class WoSSystems extends JavaPlugin {
         //eventReg(new UseListener(citemManager));
         eventReg(new CleanUpListener(core, unlockableManager, coinflipCommand));
         eventReg(new FishingListener());
+        eventReg(new ChatListener(chatManager));
 
         getServer().getPluginManager().registerEvents(new CoinflipInventoryListener(challengeQueue, ecoManager, coinflipCommand, lang), this);
     }
