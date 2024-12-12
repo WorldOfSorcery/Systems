@@ -21,35 +21,48 @@ public class ChatListener implements Listener {
 
     @EventHandler
     public void onChat(AsyncPlayerChatEvent e) {
-        Player p = e.getPlayer();
-        String focusedChannelName = chatManager.focusedChannel.get(p);
+        Player sender = e.getPlayer();
+        String focusedChannelName = chatManager.focusedChannel.get(sender);
+
+        // Check if player is focused on a channel
         if (focusedChannelName == null) {
-            p.sendMessage(ChatColor.RED + "You are not focused on any channel.");
+            sender.sendMessage(ChatColor.RED + "You are not focused on any channel.");
+            e.setCancelled(true); // Cancel the event to prevent broadcasting
             return;
         }
 
         ChannelData channel = chatManager.channels.get(focusedChannelName.toLowerCase());
         if (channel == null) {
-            p.sendMessage(ChatColor.RED + "The channel you are focused on does not exist.");
+            sender.sendMessage(ChatColor.RED + "The channel you are focused on does not exist.");
+            e.setCancelled(true); // Cancel the event to prevent broadcasting
             return;
         }
 
         Set<Player> members = chatManager.channelMembers.get(channel.getName().toLowerCase());
+        if (!members.contains(sender)) {
+            sender.sendMessage(ChatColor.RED + "You are not a member of the channel you are trying to chat in.");
+            e.setCancelled(true); // Cancel the event to prevent broadcasting
+            return;
+        }
+
+        // Modify recipients based on channel membership and range
+        e.getRecipients().clear(); // Remove all default recipients
         for (Player recipient : members) {
             if (channel.getRange() > 0) {
-                Location senderLocation = p.getLocation();
+                Location senderLocation = sender.getLocation();
                 Location recipientLocation = recipient.getLocation();
                 if (senderLocation.distance(recipientLocation) > channel.getRange()) {
                     continue; // Skip if out of range
                 }
             }
-
-            String prefix = channel.getPrefix();
-            String name = p.getName();
-
-            e.setFormat(prefix + " " + name +": "+ e.getMessage());
+            e.getRecipients().add(recipient); // Add valid recipients
         }
+
+        // Set the format for the message
+        String prefix = ChatColor.translateAlternateColorCodes('&', channel.getPrefix());
+        e.setFormat(prefix + " %s§7: %s");
     }
+
 
 
 }

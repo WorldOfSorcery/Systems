@@ -4,9 +4,12 @@ import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.utils.dataclasses.ChannelData;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -25,20 +28,74 @@ public class ChatManager {
         this.plugin = plugin;
         chatFolder = new File(plugin.getDataFolder(), "chat");
         channelsFolder = new File (chatFolder, "channels");
+
+        if (!chatFolder.exists()) {
+            chatFolder.mkdir();
+        }
+        if (!channelsFolder.exists()) {
+            channelsFolder.mkdir();
+        }
+
+        loadChannels();
     }
 
-    /**
-     * Registers a new chat channel.
-     */
+    private void createDefaultChannels() {
+        createChannelFile("Global", "G", "§6Global »", 0, null);
+        createChannelFile("Local", "L", "§aLocal »", 30, null);
+    }
+
+    private void createChannelFile(String name, String shortName, String prefix, int range, String permission) {
+        File file = new File(channelsFolder, name.toLowerCase() + ".yml");
+        if (file.exists()) return;
+
+        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+        config.set("name", name);
+        config.set("shortName", shortName);
+        config.set("prefix", prefix);
+        config.set("range", range);
+        config.set("permission", permission);
+
+        try {
+            config.save(file);
+        } catch (IOException e) {
+            plugin.getLogger().severe("Failed to create default channel file for: " + name);
+        }
+    }
+
+    private void loadChannels() {
+        File[] files = channelsFolder.listFiles((dir, name) -> name.endsWith(".yml"));
+        if (files == null || files.length == 0) {
+            plugin.getLogger().info("No channel files found. Creating default channels.");
+            createDefaultChannels();
+            files = channelsFolder.listFiles((dir, name) -> name.endsWith(".yml"));
+        }
+
+        if (files != null) {
+            for (File file : files) {
+                FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+                String name = config.getString("name");
+                String shortName = config.getString("shortName");
+                String prefix = ChatColor.translateAlternateColorCodes('&', config.getString("prefix"));
+                int range = config.getInt("range", 0);
+                String permission = config.getString("permission");
+
+                if (name != null && shortName != null && prefix != null) {
+                    ChannelData channel = new ChannelData(name, shortName, prefix, range, permission);
+                    registerChannel(channel);
+                    plugin.getLogger().info("Loaded channel: " + name);
+                } else {
+                    plugin.getLogger().warning("Invalid channel file: " + file.getName());
+                }
+            }
+        }
+    }
+
     public void registerChannel(ChannelData channel) {
         channels.put(channel.getName().toLowerCase(), channel);
         channels.put(channel.getShortName().toLowerCase(), channel);
         channelMembers.put(channel.getName().toLowerCase(), new HashSet<>());
     }
 
-    /**
-     * Joins a channel.
-     */
     public boolean joinChannel(Player player, String channelName) {
         ChannelData channel = channels.get(channelName.toLowerCase());
         if (channel == null) {
@@ -59,9 +116,6 @@ public class ChatManager {
         return true;
     }
 
-    /**
-     * Leaves a channel.
-     */
     public boolean leaveChannel(Player player, String channelName) {
         ChannelData channel = channels.get(channelName.toLowerCase());
         if (channel == null) {
@@ -82,9 +136,6 @@ public class ChatManager {
         return true;
     }
 
-    /**
-     * Sets a player's focused channel.
-     */
     public boolean focusChannel(Player player, String channelName) {
         ChannelData channel = channels.get(channelName.toLowerCase());
         if (channel == null) {
@@ -103,50 +154,10 @@ public class ChatManager {
         return true;
     }
 
-    /**
-     * Sends a message to the player's focused channel.
-     */
-
-
-
-    public void sendMessage(Player sender, String message) {
-        String focusedChannelName = focusedChannel.get(sender);
-        if (focusedChannelName == null) {
-            sender.sendMessage(ChatColor.RED + "You are not focused on any channel.");
-            return;
-        }
-
-        ChannelData channel = channels.get(focusedChannelName.toLowerCase());
-        if (channel == null) {
-            sender.sendMessage(ChatColor.RED + "The channel you are focused on does not exist.");
-            return;
-        }
-
-        Set<Player> members = channelMembers.get(channel.getName().toLowerCase());
-        for (Player recipient : members) {
-            if (channel.getRange() > 0) {
-                Location senderLocation = sender.getLocation();
-                Location recipientLocation = recipient.getLocation();
-                if (senderLocation.distance(recipientLocation) > channel.getRange()) {
-                    continue; // Skip if out of range
-                }
-            }
-
-            recipient.sendMessage(ChatColor.translateAlternateColorCodes('&', channel.getPrefix()) +
-                    ChatColor.RESET + " " + sender.getName() + ": " + message);
-        }
-    }
-
-    /**
-     * Gets all registered channels.
-     */
     public Set<ChannelData> getChannels() {
         return new HashSet<>(channels.values());
     }
 
-    /**
-     * Removes a player from all channels.
-     */
     public void removePlayer(Player player) {
         for (Set<Player> members : channelMembers.values()) {
             members.remove(player);

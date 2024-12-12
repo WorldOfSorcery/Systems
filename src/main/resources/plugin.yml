@@ -67,6 +67,11 @@ commands:
     usage: /coinflip <amount> <heads|tails>
     permission: economy.coinflip
 
+  channel:
+    aliases: [ch]
+    description: chat
+    usage: /ch <join|focus|leave>
+
 permissions:
   # Interaction Permissions
   interaction:
