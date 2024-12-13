@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems;
 
 import me.hektortm.woSSystems.chat.ChatManager;
+import me.hektortm.woSSystems.chat.NicknameManager;
 import me.hektortm.woSSystems.chat.commands.ChatCommand;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.BalanceCommand;
@@ -28,7 +29,6 @@ import me.hektortm.woSSystems.systems.unlockables.commands.TempUnlockableCommand
 import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableCommand;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.woSSystems.utils.dataclasses.Challenge;
-import me.hektortm.woSSystems.utils.dataclasses.ChannelData;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
@@ -60,6 +60,7 @@ public final class WoSSystems extends JavaPlugin {
     private ConditionHandler conditionHandler;
     private CRecipeManager recipeManager;
     private ChatManager chatManager;
+    private NicknameManager nickManager;
 
 
     // TODO:
@@ -88,8 +89,8 @@ public final class WoSSystems extends JavaPlugin {
         interactionManager.setConditionHandler(conditionHandler);
         interactionManager.setPlaceholderResolver(resolver);
         citemManager.setInteractionManager(interactionManager);
-
         chatManager = new ChatManager(this);
+        nickManager = new NicknameManager(chatManager);
 
 
 
@@ -172,7 +173,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new FishingListener());
         eventReg(new ChatListener(chatManager));
 
-        getServer().getPluginManager().registerEvents(new CoinflipInventoryListener(challengeQueue, ecoManager, coinflipCommand, lang), this);
+        getServer().getPluginManager().registerEvents(new InventoryClickListener(challengeQueue, ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager), this);
     }
 
     private void eventReg(Listener l) {

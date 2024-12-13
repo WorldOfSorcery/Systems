@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.chat;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.utils.dataclasses.ChannelData;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -96,6 +97,20 @@ public class ChatManager {
         channelMembers.put(channel.getName().toLowerCase(), new HashSet<>());
     }
 
+    public void serverChat(String channelName, String message) {
+        ChannelData channel = channels.get(channelName.toLowerCase());
+        if (channel == null) {
+            Bukkit.getLogger().warning("Channel '"+channelName+"' does not exist.");
+            return;
+        }
+
+        Set<Player> members = channelMembers.get(channel.getName().toLowerCase());
+        for (Player recipient : members) {
+            recipient.sendMessage(channel.getPrefix() + "§f§lServer§7: " + message.replace("&", "§"));
+        }
+    }
+
+
     public boolean joinChannel(Player player, String channelName) {
         ChannelData channel = channels.get(channelName.toLowerCase());
         if (channel == null) {
@@ -145,8 +160,7 @@ public class ChatManager {
 
         Set<Player> members = channelMembers.get(channel.getName().toLowerCase());
         if (!members.contains(player)) {
-            player.sendMessage(ChatColor.RED + "You must join the channel before focusing it.");
-            return false;
+            joinChannel(player, channelName);
         }
 
         focusedChannel.put(player, channel.getName());
