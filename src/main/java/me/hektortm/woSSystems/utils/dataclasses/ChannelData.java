@@ -7,13 +7,15 @@ public class ChannelData {
     private final String prefix;
     private final int range;
     private final String permission;
+    private final String format;
 
-    public ChannelData(String name, String shortName, String prefix, int range, String permission) {
+    public ChannelData(String name, String shortName, String prefix, int range, String permission, String format) {
         this.name = name;
         this.shortName = shortName;
         this.prefix = prefix;
         this.range = range;
         this.permission = permission;
+        this.format = format;
     }
 
     public String getName() {
@@ -31,6 +33,8 @@ public class ChannelData {
     public String getPermission() {
         return permission;
     }
-
+    public String getFormat() {
+        return format;
+    }
 
 }

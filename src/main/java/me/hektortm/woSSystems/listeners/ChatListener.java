@@ -68,8 +68,12 @@ public class ChatListener implements Listener {
         } else {
             name = sender.getName();
         }
-        String prefix = ChatColor.translateAlternateColorCodes('&', channel.getPrefix());
-        e.setFormat(prefix + " "+name+"§7: %s");
+        String format = channel.getFormat()
+                .replace("%name%", name)
+                .replace("%channel%", channel.getPrefix())
+                .replace("%prefix%", "PREFIX")
+                .replace("%msg%", e.getMessage());
+        e.setFormat(format);
     }
 
 

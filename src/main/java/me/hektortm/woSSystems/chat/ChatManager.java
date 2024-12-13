@@ -41,11 +41,13 @@ public class ChatManager {
     }
 
     private void createDefaultChannels() {
-        createChannelFile("Global", "G", "§6Global »", 0, null);
-        createChannelFile("Local", "L", "§aLocal »", 30, null);
+        createChannelFile("Global", "G", "§6Global »", 0, null,
+                "%channel% %prefix% §e%name%: %msg%");
+        createChannelFile("Local", "L", "§aLocal »", 30, null,
+                "%channel% §7%name%: %msg%");
     }
 
-    private void createChannelFile(String name, String shortName, String prefix, int range, String permission) {
+    private void createChannelFile(String name, String shortName, String prefix, int range, String permission, String format) {
         File file = new File(channelsFolder, name.toLowerCase() + ".yml");
         if (file.exists()) return;
 
@@ -55,6 +57,7 @@ public class ChatManager {
         config.set("prefix", prefix);
         config.set("range", range);
         config.set("permission", permission);
+        config.set("format", format);
 
         try {
             config.save(file);
@@ -79,9 +82,10 @@ public class ChatManager {
                 String prefix = ChatColor.translateAlternateColorCodes('&', config.getString("prefix"));
                 int range = config.getInt("range", 0);
                 String permission = config.getString("permission");
+                String format = config.getString("format");
 
                 if (name != null && shortName != null && prefix != null) {
-                    ChannelData channel = new ChannelData(name, shortName, prefix, range, permission);
+                    ChannelData channel = new ChannelData(name, shortName, prefix, range, permission, format);
                     registerChannel(channel);
                     plugin.getLogger().info("Loaded channel: " + name);
                 } else {
