@@ -26,7 +26,7 @@ public class Unreserve extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
         Player p = (Player) sender;
-        String nick = manager.getPlayersReservedNick(p);
+        String nick = manager.getPlayersReservedNick(p.getUniqueId());
 
         manager.unreserveNickname(p.getUniqueId(), nick);
         p.sendMessage("Unreserved nickname: " + nick);

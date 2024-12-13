@@ -110,7 +110,7 @@ public class ChatManager {
 
         Set<Player> members = channelMembers.get(channel.getName().toLowerCase());
         for (Player recipient : members) {
-            recipient.sendMessage(channel.getPrefix() + "§f§lServer§7: " + message.replace("&", "§"));
+            recipient.sendMessage(channel.getPrefix() + " §f§lNotice§7: " + message.replace("&", "§"));
         }
     }
 
@@ -130,6 +130,7 @@ public class ChatManager {
         Set<Player> members = channelMembers.get(channel.getName().toLowerCase());
         if (members.add(player)) {
             player.sendMessage(ChatColor.GREEN + "You have joined the channel: " + channel.getName());
+            focusChannel(player, channelName);
         }
 
         return true;

@@ -79,28 +79,67 @@ public class InventoryClickListener implements Listener {
             coinflipCommand.acceptChallenge(player, challenger);
         }
         if (event.getView().getTitle().equalsIgnoreCase(lang.getMessage("chat", "nick.gui.title"))) {
-            event.setCancelled(true);
+            event.setCancelled(true); // Cancel all inventory actions in this GUI
 
             ItemStack item = event.getCurrentItem();
-            if (item == null || item.getType() != Material.PLAYER_HEAD) return;
+            if (item == null || item.getType() != Material.PLAYER_HEAD) {
+                return; // If the clicked item is null or not a player head, exit
+            }
 
             SkullMeta meta = (SkullMeta) item.getItemMeta();
+            if (meta == null || meta.getOwningPlayer() == null) {
+                return; // If metadata or owning player is invalid, exit
+            }
 
             UUID requesterUUID = meta.getOwningPlayer().getUniqueId();
-            if (!nickRequests.containsKey(requesterUUID)) {
-                // error here
-            }
+
+
+
 
             OfflinePlayer p = Bukkit.getOfflinePlayer(requesterUUID);
-            if (event.getAction().equals(ClickType.LEFT)) {
-                nickManager.approveNicknameChange(p);
-            }
-            else if (event.getAction().equals(ClickType.RIGHT)) {
-                nickManager.denyNicknameChange(p);
+            Player p1 = Bukkit.getPlayer(requesterUUID);
+            ClickType ct = event.getClick();
+
+            String nick = nickRequests.get(requesterUUID);
+
+            boolean isReserved = nickManager.reservedNicks.values().stream()
+                    .anyMatch(reservedNick -> reservedNick.equalsIgnoreCase(nick));
+
+            if (isReserved) {
+                UUID reservedBy = nickManager.reservedNicks.entrySet().stream()
+                        .filter(entry -> entry.getValue().equalsIgnoreCase(nick))
+                        .map(Map.Entry::getKey)
+                        .findFirst()
+                        .orElse(null);
+
+                // If the nickname is reserved by someone else, show a warning
+                if (reservedBy != null && !reservedBy.equals(requesterUUID)) {
+                    nickManager.denyNicknameChange(p);
+                }
             }
 
+            // Handle left and right clicks
+            if (ct == ClickType.LEFT) {
+                nickManager.approveNicknameChange(p.getUniqueId());
+                if (nick.equals("reset")) {
+                    Utils.successMsg1Value(p1, "chat", "nick.approved-reset", "%nick%", nick);
+                    Utils.successMsg1Value(player, "chat", "nick.approved-reset-staff", "%player%", p1.getName());
+                    player.closeInventory();
+                    return;
+                }
+                Utils.successMsg1Value(p1, "chat", "nick.approved", "%nick%", nick);
+                Utils.successMsg1Value(player, "chat", "nick.approved-staff", "%player%", p1.getName());
+            } else if (ct == ClickType.RIGHT) {
+                nickManager.denyNicknameChange(p);
+                Utils.successMsg1Value(p1, "chat", "nick.declined", "%nick%", nick);
+                Utils.successMsg1Value(player, "chat", "nick.declined-staff", "%player%", p1.getName());
+
+            }
+
+            // Close the player's inventory after the action
             player.closeInventory();
         }
+
 
     }
 

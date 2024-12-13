@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.chat.commands;
 
+import me.hektortm.woSSystems.chat.ChatManager;
 import me.hektortm.woSSystems.chat.NicknameManager;
 import me.hektortm.woSSystems.chat.commands.subcommands.*;
 import me.hektortm.woSSystems.utils.PermissionUtil;
@@ -16,12 +17,13 @@ public class NicknameCommand implements CommandExecutor {
 
     private final Map<String, SubCommand> subCommands = new HashMap<>();
     private final NicknameManager manager;
+    private final ChatManager chatManager;
 
-    public NicknameCommand(NicknameManager manager) {
+    public NicknameCommand(NicknameManager manager, ChatManager chatManager) {
         this.manager = manager;
+        this.chatManager = chatManager;
 
-        subCommands.put("reset", new Reset(manager));
-        subCommands.put("request", new Request(manager));
+        subCommands.put("request", new Request(manager, chatManager));
         subCommands.put("requests", new Requests(manager));
         subCommands.put("reserve", new Reserve(manager));
         subCommands.put("unreserve", new Unreserve(manager));

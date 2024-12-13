@@ -1,11 +1,33 @@
 error:
   no-requests: "There are no current Nickname requests."
+  no-reserved: "You have no reserved nickname."
+  no-nick: "You do not have a nickname."
+  reserved-limit: "You can only reserve one nickname."
+
 
 
 nick:
+  reset: "§7You have reset your own nick"
+  reserved: "§7You have successfully reserved the nickname: §e%nick%"
+  reserved-currently: "§7You have reserved the nickname: §e%nick%"
+
+  request-sent: "§aSuccessfully submitted nickname request."
+  request-reset-sent: "§aSuccessfully requested a nickname reset."
+  request-receive: "§e%player%§a has submitted a nickname request."
+  request-reset-receive: "§e%player%§a has requested a nickname reset."
+
+  approved-staff: "§aYou have approved §e%player%'s§a nickname request."
+  approved-reset-staff: "§aYou have approved §e%player%'s§a nickname reset."
+  approved: "§aYour nickname request \"§e%nick%§a\" has been approved."
+  approved-reset: "§aYour nickname reset request has been approved."
+
+
+  declined-staff: "§cYou have declined §e%player%'s§c nickname request."
+  declined: "§cYour nickname request \"§e%nick%§c\" has been declined."
   gui:
     title: "§6Nickname Requests"
+    name: "§6%player%"
     nick: "§7Requested Nickname: §e%nick%"
-    warning: "&cThis Nickname is reserved by: %player%"
-    accept: "§aLEFTCLICK to accept"
-    decline: "§cRIGHTCLICK to decline"
+    warning: "§cThis Nickname is reserved by: %player%"
+    accept: "§aAccept [Left Click]"
+    decline: "§cDecline [Right Click]"

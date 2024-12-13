@@ -64,7 +64,7 @@ public class ChatListener implements Listener {
         // Set the format for the message
         String name;
         if (nickManager.getNickname(sender) != null) {
-            name = nickManager.getNickname(sender);
+            name = nickManager.getNickname(sender).replace("_", " ");
         } else {
             name = sender.getName();
         }
@@ -73,7 +73,7 @@ public class ChatListener implements Listener {
                 .replace("%channel%", channel.getPrefix())
                 .replace("%prefix%", "PREFIX")
                 .replace("%msg%", e.getMessage());
-        e.setFormat(format);
+        e.setFormat(ChatColor.translateAlternateColorCodes('&', format));
     }
 
 

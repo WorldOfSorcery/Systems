@@ -3,6 +3,7 @@ package me.hektortm.woSSystems;
 import me.hektortm.woSSystems.chat.ChatManager;
 import me.hektortm.woSSystems.chat.NicknameManager;
 import me.hektortm.woSSystems.chat.commands.ChatCommand;
+import me.hektortm.woSSystems.chat.commands.NicknameCommand;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.BalanceCommand;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
@@ -111,6 +112,7 @@ public final class WoSSystems extends JavaPlugin {
             lang.loadLangFileExternal(this, "unlockables", core);
             lang.loadLangFileExternal(this, "economy", core);
             lang.loadLangFileExternal(this, "crecipes", core);
+            lang.loadLangFileExternal(this, "chat", core);
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }
@@ -158,6 +160,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("coinflip", coinflipCommand);
         cmdReg("crecipe", new CRecipeCommand(this, recipeManager, lang));
         cmdReg("channel", new ChatCommand(chatManager));
+        cmdReg("nickname", new NicknameCommand(nickManager, chatManager));
     }
 
     private void registerEvents() {

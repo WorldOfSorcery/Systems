@@ -26,7 +26,7 @@ public class NicknameManager {
     private final WoSCore core = WoSCore.getPlugin(WoSCore.class);
     private final LangManager lang = new LangManager(core);
     private final Map<UUID, String> nickRequests = new HashMap<>();
-    private final Map<UUID, String> reservedNicks = new HashMap<>();
+    public final Map<UUID, String> reservedNicks = new HashMap<>();
     static Inventory inv;
 
     public NicknameManager(ChatManager chatManager) {
@@ -56,11 +56,22 @@ public class NicknameManager {
     private void loadReservedNicknames() {
         FileConfiguration config = YamlConfiguration.loadConfiguration(reservedNickFile);
         reservedNicks.clear();
-        config.getKeys(false).forEach(nickname -> {
-            UUID uuid = UUID.fromString(config.getString(nickname));
-            reservedNicks.put(uuid, nickname);
+
+        config.getKeys(false).forEach(uuidString -> {
+            try {
+                UUID uuid = UUID.fromString(uuidString); // Parse the key as UUID
+                String nickname = config.getString(uuidString); // Get the nickname value
+                if (nickname != null) {
+                    reservedNicks.put(uuid, nickname); // Add to the map
+                } else {
+                    Bukkit.getLogger().warning("Missing nickname for UUID: " + uuidString);
+                }
+            } catch (IllegalArgumentException e) {
+                Bukkit.getLogger().warning("Invalid UUID format in reserved_nicks.yml: " + uuidString);
+            }
         });
     }
+
 
     private void loadNickRequests() {
         FileConfiguration config = YamlConfiguration.loadConfiguration(nickRequestFile);
@@ -77,9 +88,9 @@ public class NicknameManager {
         }
 
         Inventory menu = Bukkit.createInventory(null, getInvSize(), lang.getMessage("chat", "nick.gui.title"));
+
         nickRequests.forEach((uuid, nick) -> {
             OfflinePlayer requester = Bukkit.getOfflinePlayer(uuid);
-            String nickname = nickRequests.get(uuid);
 
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
@@ -88,16 +99,32 @@ public class NicknameManager {
             String warning = "";
             String accept = lang.getMessage("chat", "nick.gui.accept");
             String decline = lang.getMessage("chat", "nick.gui.decline");
-            if (reservedNicks.containsKey(nickname)) {
-                warning = lang.getMessage("chat", "nick.gui.warning");
-                accept = "";
-                decline = "";
+
+            // Check if the nickname is reserved
+            boolean isReserved = reservedNicks.values().stream()
+                    .anyMatch(reservedNick -> reservedNick.equalsIgnoreCase(nick));
+
+            if (isReserved) {
+                UUID reservedBy = reservedNicks.entrySet().stream()
+                        .filter(entry -> entry.getValue().equalsIgnoreCase(nick))
+                        .map(Map.Entry::getKey)
+                        .findFirst()
+                        .orElse(null);
+
+                // If the nickname is reserved by someone else, show a warning
+                if (reservedBy != null && !reservedBy.equals(uuid)) {
+                    warning = lang.getMessage("chat", "nick.gui.warning")
+                            .replace("%player%", Bukkit.getOfflinePlayer(reservedBy).getName());
+                    accept = ""; // Clear the accept option
+                    decline = lang.getMessage("chat", "nick.gui.decline");
+                }
             }
 
-            meta.setOwningPlayer(requester);
-            meta.setDisplayName(lang.getMessage("chat", "nick.gui.name").replace("%player%", requester.getName()));
+            meta.setOwningPlayer(Bukkit.getOfflinePlayer(uuid));
+            meta.setDisplayName(lang.getMessage("chat", "nick.gui.name")
+                    .replace("%player%", requester.getName()));
             meta.setLore(List.of(
-                    lang.getMessage("chat", "nick.gui.nick").replace("%nick%", nickname),
+                    lang.getMessage("chat", "nick.gui.nick").replace("%nick%", nick),
                     "§7", warning, accept, decline
             ));
             head.setItemMeta(meta);
@@ -108,6 +135,8 @@ public class NicknameManager {
         p.openInventory(menu);
     }
 
+
+
     private int getInvSize() {
         int size = nickRequests.size();
         if (size <= 9) return 9;
@@ -116,10 +145,10 @@ public class NicknameManager {
         return 54;
     }
 
-    public void saveNickname(Player player, String nickname) {
+    public void saveNickname(UUID uuid, String nickname) {
         FileConfiguration config = getNicknamesConfig();
 
-        UUID uuid = player.getUniqueId();
+        OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
         String realName = player.getName();
 
         config.set(uuid + ".username", realName);
@@ -134,15 +163,14 @@ public class NicknameManager {
         saveConfig(config);
     }
 
-    public void resetNickname(Player player) {
+    public void resetNickname(UUID uuid) {
         FileConfiguration config = getNicknamesConfig();
-        UUID uuid = player.getUniqueId();
 
         config.set(uuid + ".nickname", null);
         saveConfig(config);
     }
 
-    public String getNickname(Player player) {
+    public String getNickname(OfflinePlayer player) {
         UUID uuid = player.getUniqueId();
         return getNicknamesConfig().getString(uuid + ".nickname", player.getName());
     }
@@ -159,12 +187,16 @@ public class NicknameManager {
         Bukkit.getLogger().info("Nickname request submitted for " + player.getName() + ": " + nickname);
     }
 
-    public void approveNicknameChange(OfflinePlayer player) {
-        UUID uuid = player.getUniqueId();
+    public void approveNicknameChange(UUID uuid) {
+        OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
         String requestedNickname = nickRequests.remove(uuid);
+        if (Objects.equals(requestedNickname, "reset")) {
+            resetNickname(uuid);
+            return;
+        }
 
         if (requestedNickname != null) {
-            saveNickname((Player) player, requestedNickname);
+            saveNickname(uuid, requestedNickname);
             saveNickRequests();
             Bukkit.getLogger().info("Nickname approved for " + player.getName() + ": " + requestedNickname);
         } else {
@@ -204,9 +236,7 @@ public class NicknameManager {
         }
     }
 
-    public String getPlayersReservedNick(Player p) {
-        UUID playerUUID = p.getUniqueId();
-
+    public String getPlayersReservedNick(UUID playerUUID) {
         String nick;
         if (reservedNicks.containsKey(playerUUID)) {
             nick = reservedNicks.get(playerUUID);
@@ -233,13 +263,14 @@ public class NicknameManager {
 
     private void saveReservedNicknames() {
         FileConfiguration config = new YamlConfiguration();
-        reservedNicks.forEach(config::set);
+        reservedNicks.forEach((uuid, nick) -> config.set(uuid.toString(), nick));
         try {
             config.save(reservedNickFile);
         } catch (IOException e) {
-            Bukkit.getLogger().severe("Could not save reserved_nicks.yml");
+            Bukkit.getLogger().severe("Could not save nick_requests.yml");
         }
     }
+
 
     public boolean isNicknameReserved(String nickname) {
         return reservedNicks.containsValue(nickname);
