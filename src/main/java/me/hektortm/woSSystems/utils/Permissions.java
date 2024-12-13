@@ -63,7 +63,22 @@ public enum Permissions {
     ECONOMY_CURRENCIES("economy.modify.currencies"),
     ECONOMY_COINFLIP("economy.coinflip"),
 
-    ECONOMY_PAY("economy.pay");
+    ECONOMY_PAY("economy.pay"),
+
+    NICK_REQUEST_SEND("nick.request.send"),
+    NICK_REQUEST_VIEW("nick.request.view"),
+    NICK_REQUEST_APPROVE("nick.request.approve"),
+    NICK_REQUEST_DENY("nick.request.deny"),
+    NICK_RESERVE("nick.reserve"),
+    NICK_UNRESERVE("nick.unreserve"),
+    NICK_RESET_SELF("nick.reset.self"),
+    NICK_RESET_OTHERS("nick.reset.others"),
+
+    CHAT_CHANNEL_FOCUS("chat.channel.focus"),
+    CHAT_CHANNEL_JOIN("chat.channel.join"),
+    CHAT_CHANNEL_LEAVE("chat.channel.leave"),
+    CHAT_RELOAD("chat.reload");
+
 
 
     private final String permission;
