@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.listeners;
 
 import me.hektortm.woSSystems.chat.ChatManager;
+import me.hektortm.woSSystems.chat.NicknameManager;
 import me.hektortm.woSSystems.utils.dataclasses.ChannelData;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -14,9 +15,11 @@ import java.util.Set;
 public class ChatListener implements Listener {
 
     private final ChatManager chatManager;
+    private final NicknameManager nickManager;
 
-    public ChatListener(ChatManager chatManager) {
+    public ChatListener(ChatManager chatManager, NicknameManager nickManager) {
         this.chatManager = chatManager;
+        this.nickManager = nickManager;
     }
 
     @EventHandler
@@ -59,8 +62,14 @@ public class ChatListener implements Listener {
         }
 
         // Set the format for the message
+        String name;
+        if (nickManager.getNickname(sender) != null) {
+            name = nickManager.getNickname(sender);
+        } else {
+            name = sender.getName();
+        }
         String prefix = ChatColor.translateAlternateColorCodes('&', channel.getPrefix());
-        e.setFormat(prefix + " %s§7: %s");
+        e.setFormat(prefix + " "+name+"§7: %s");
     }
 
 
