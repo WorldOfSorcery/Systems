@@ -1,0 +1,11 @@
+error:
+  no-requests: "There are no current Nickname requests."
+
+
+nick:
+  gui:
+    title: "§6Nickname Requests"
+    nick: "§7Requested Nickname: §e%nick%"
+    warning: "&cThis Nickname is reserved by: %player%"
+    accept: "§aLEFTCLICK to accept"
+    decline: "§cRIGHTCLICK to decline"
