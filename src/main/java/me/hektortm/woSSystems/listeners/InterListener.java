@@ -19,13 +19,15 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class InterListener implements Listener {
 
     private final InteractionManager interManager;
     private final CitemManager citemManager;
-
+    private final Map<Location, Long> blockCooldowns = new HashMap<>();
     private final NamespacedKey unusableKey;
 
     public InterListener(InteractionManager manager, CitemManager citemManager) {
@@ -64,37 +66,54 @@ public class InterListener implements Listener {
         }
 
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK || e.getAction() == Action.LEFT_CLICK_BLOCK) {
-
             Block block = e.getClickedBlock();
             if (e.isCancelled()) {
-                return;  // If event is already canceled, do nothing
+                return; // Event already canceled
             }
-
             if (block == null) return;
 
+            Location blockLocation = block.getLocation();
+            long currentTime = System.currentTimeMillis();
+            long cooldownTime = 250; // 250 ms cooldown
 
+            if (blockCooldowns.containsKey(blockLocation)) {
+                long lastInteractionTime = blockCooldowns.get(blockLocation);
+                long elapsedTime = currentTime - lastInteractionTime;
 
+                if (elapsedTime < cooldownTime) {
+                    return; // Skip processing if block is on cooldown
+                }
+            }
+
+            // Update cooldown
+            blockCooldowns.put(blockLocation, currentTime);
+
+            // Process interactions
             for (File file : interManager.interactionFolder.listFiles()) {
-
                 if (file.isFile() && file.getName().endsWith(".json")) {
                     String id = file.getName().replace(".json", "");
                     InteractionData inter = interManager.interactionMap.get(id);
+
                     if (inter == null) {
-                        Bukkit.getLogger().info("Inter "+id+" is null.");
+                        Bukkit.getLogger().info("Interaction " + id + " is null.");
+                        continue; // Skip invalid interaction files
                     }
+
                     List<Location> locs = inter.getLocations();
                     for (Location loc : locs) {
-                        if (isSameLocation(block.getLocation(), loc)) {
-                            e.setCancelled(true);
-                            switch (action) {
+                        if (isSameLocation(blockLocation, loc)) {
+                            e.setCancelled(true); // Cancel default behavior
+
+                            Bukkit.getLogger().info("Interaction triggered for ID: " + id);
+
+                            // Trigger interaction based on action
+                            switch (e.getAction()) {
                                 case RIGHT_CLICK_BLOCK:
-                                    interManager.triggerInteraction(p, id);
-                                    break;
                                 case LEFT_CLICK_BLOCK:
                                     interManager.triggerInteraction(p, id);
                                     break;
                             }
-                            return;
+                            return; // Exit after handling interaction
                         }
                     }
                 }
