@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.chat;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.utils.dataclasses.ChannelData;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -11,10 +12,7 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ChatManager {
 
@@ -24,11 +22,15 @@ public class ChatManager {
     private final WoSSystems plugin;
     public final File chatFolder;
     public final File channelsFolder;
+    private final File playerDataFile;
+    public FileConfiguration playerDataConfig;
+
 
     public ChatManager(WoSSystems plugin) {
         this.plugin = plugin;
         chatFolder = new File(plugin.getDataFolder(), "chat");
         channelsFolder = new File (chatFolder, "channels");
+        playerDataFile = new File(chatFolder, "player_channels.yml");
 
         if (!chatFolder.exists()) {
             chatFolder.mkdir();
@@ -36,9 +38,83 @@ public class ChatManager {
         if (!channelsFolder.exists()) {
             channelsFolder.mkdir();
         }
+        if (!playerDataFile.exists()) {
+            try {
+                playerDataFile.createNewFile();
+            } catch (IOException e) {
+                plugin.getLogger().severe("Failed to create player_channels.yml!");
+            }
+        }
+
+        playerDataConfig = YamlConfiguration.loadConfiguration(playerDataFile);
 
         loadChannels();
+        loadPlayerData();
     }
+
+    public void savePlayerData() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            String playerKey = player.getUniqueId().toString();
+            Set<String> joinedChannels = new HashSet<>();
+
+            // Collect joined channels
+            for (Map.Entry<String, Set<Player>> entry : channelMembers.entrySet()) {
+                if (entry.getValue().contains(player)) {
+                    joinedChannels.add(entry.getKey());
+                }
+            }
+
+            // Save joined channels and focused channel
+            playerDataConfig.set(playerKey + ".joined", new ArrayList<>(joinedChannels));
+            playerDataConfig.set(playerKey + ".focused", focusedChannel.get(player));
+        }
+
+        try {
+            playerDataConfig.save(playerDataFile);
+        } catch (IOException e) {
+            plugin.getLogger().severe("Failed to save player channel data!");
+        }
+    }
+
+
+    private void loadPlayerData() {
+        for (String playerKey : playerDataConfig.getKeys(false)) {
+            UUID playerUUID = UUID.fromString(playerKey);
+
+            // Load joined channels
+            List<String> joinedChannels = playerDataConfig.getStringList(playerKey + ".joined");
+            for (String channelName : joinedChannels) {
+                ChannelData channel = channels.get(channelName.toLowerCase());
+                if (channel != null) {
+                    Set<Player> members = channelMembers.get(channel.getName().toLowerCase());
+                    if (members != null) {
+                        // Add player to channelMembers when they come online
+                        plugin.getServer().getScheduler().runTask(plugin, () -> {
+                            Player player = Bukkit.getPlayer(playerUUID);
+                            if (player != null && player.isOnline()) {
+                                members.add(player);
+                            }
+                        });
+                    }
+                }
+            }
+
+            // Load focused channel
+            String focusedChannelName = playerDataConfig.getString(playerKey + ".focused");
+            if (focusedChannelName != null && channels.containsKey(focusedChannelName.toLowerCase())) {
+                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    Player player = Bukkit.getPlayer(playerUUID);
+                    if (player != null && player.isOnline()) {
+                        focusedChannel.put(player, focusedChannelName);
+                    }
+                });
+            }
+        }
+    }
+
+
+
+
 
     private void createDefaultChannels() {
         createChannelFile("Global", "G", "§6Global »", 0, null,
@@ -66,7 +142,7 @@ public class ChatManager {
         }
     }
 
-    private void loadChannels() {
+    public void loadChannels() {
         File[] files = channelsFolder.listFiles((dir, name) -> name.endsWith(".yml"));
         if (files == null || files.length == 0) {
             plugin.getLogger().info("No channel files found. Creating default channels.");
@@ -118,60 +194,67 @@ public class ChatManager {
     public boolean joinChannel(Player player, String channelName) {
         ChannelData channel = channels.get(channelName.toLowerCase());
         if (channel == null) {
-            player.sendMessage(ChatColor.RED + "Channel " + channelName + " does not exist.");
+            Utils.error(player, "chat", "error.channel-exist");
             return false;
         }
 
         if (channel.getPermission() != null && !player.hasPermission(channel.getPermission())) {
-            player.sendMessage(ChatColor.RED + "You do not have permission to join this channel.");
+            Utils.error(player, "chat", "error.channel-exist");
             return false;
         }
 
         Set<Player> members = channelMembers.get(channel.getName().toLowerCase());
         if (members.add(player)) {
-            player.sendMessage(ChatColor.GREEN + "You have joined the channel: " + channel.getName());
-            focusChannel(player, channelName);
+            Utils.successMsg1Value(player, "chat", "channel.joined", "%channel%", channel.getName());
+            focusChannel(player, channelName); // Automatically focuses the channel when joining
         }
 
+        savePlayerData(); // Save immediately after joining
         return true;
     }
+
 
     public boolean leaveChannel(Player player, String channelName) {
         ChannelData channel = channels.get(channelName.toLowerCase());
         if (channel == null) {
-            player.sendMessage(ChatColor.RED + "Channel " + channelName + " does not exist.");
+            Utils.error(player, "chat", "error.channel-exist");
             return false;
         }
 
         Set<Player> members = channelMembers.get(channel.getName().toLowerCase());
         if (members.remove(player)) {
-            player.sendMessage(ChatColor.GREEN + "You have left the channel: " + channel.getName());
+            Utils.successMsg1Value(player, "chat", "channel.left", "%channel%", channel.getName());
             if (focusedChannel.get(player).equalsIgnoreCase(channel.getName())) {
                 focusedChannel.remove(player);
             }
         } else {
-            player.sendMessage(ChatColor.RED + "You are not a member of this channel.");
+            Utils.error(player, "chat", "error.not-member");
         }
 
+        savePlayerData(); // Save immediately after leaving
         return true;
     }
+
 
     public boolean focusChannel(Player player, String channelName) {
         ChannelData channel = channels.get(channelName.toLowerCase());
         if (channel == null) {
-            player.sendMessage(ChatColor.RED + "Channel " + channelName + " does not exist.");
+            Utils.error(player, "chat", "error.channel-exist");
             return false;
         }
 
         Set<Player> members = channelMembers.get(channel.getName().toLowerCase());
         if (!members.contains(player)) {
-            joinChannel(player, channelName);
+            joinChannel(player, channelName); // Automatically joins the channel if not already joined
         }
 
         focusedChannel.put(player, channel.getName());
-        player.sendMessage(ChatColor.GREEN + "You are now focused on channel: " + channel.getName());
+        Utils.successMsg1Value(player, "chat", "channel.focused", "%channel%", channel.getName());
+
+        savePlayerData(); // Save immediately after focusing
         return true;
     }
+
 
     public Set<ChannelData> getChannels() {
         return new HashSet<>(channels.values());

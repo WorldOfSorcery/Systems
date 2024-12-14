@@ -9,6 +9,7 @@ import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -34,10 +35,9 @@ public class Coinflip implements CommandExecutor, Listener {
     // Map to store active challenges
     public Map<UUID, Challenge> challengeQueue = new HashMap<>();
 
-    public Coinflip(EcoManager ecoManager, WoSSystems plugin, Map<UUID, Challenge> challengeQueue, LangManager lang) {
+    public Coinflip(EcoManager ecoManager, WoSSystems plugin, LangManager lang) {
         this.ecoManager = ecoManager;
         this.plugin = plugin;
-        this.challengeQueue = challengeQueue;
         this.lang = lang;
     }
 
@@ -106,11 +106,21 @@ public class Coinflip implements CommandExecutor, Listener {
             SkullMeta meta = (SkullMeta) head.getItemMeta();
             assert meta != null;
 
+            String action;
+
+            if (p.getUniqueId().equals(challenger.getUniqueId())) {
+                action = lang.getMessage("economy", "coinflip.cancel");
+            } else {
+                action = lang.getMessage("economy", "coinflip.accept");
+            }
+
             meta.setOwningPlayer(challenger); // Use the Bukkit API to set the player
             meta.setDisplayName(lang.getMessage("economy", "coinflip.gui.name").replace("%player%", challenger.getName()));
             meta.setLore(List.of(
                     lang.getMessage("economy", "coinflip.gui.bet").replace("%amount%", String.valueOf(challenge.getAmount())),
-                    lang.getMessage("economy", "coinflip.gui.choice").replace("%choice%", challenge.getChoice())
+                    lang.getMessage("economy", "coinflip.gui.choice").replace("%choice%", challenge.getChoice()),
+                    "",
+                    action
             ));
             head.setItemMeta(meta);
 
@@ -142,8 +152,17 @@ public class Coinflip implements CommandExecutor, Listener {
             return;
         }
 
+        Bukkit.getScheduler().runTaskLater(plugin, () -> sendFlipping(acceptor, challenger), 0L);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> sendFlipping(acceptor, challenger), 20L);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> sendFlipping(acceptor, challenger), 40L);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> resolveChallenge(acceptor, challenger, challenge), 60L);
+    }
+
+    private void sendFlipping(Player acceptor, Player challenger) {
         Utils.successMsg(acceptor, "economy", "coinflip.flipping");
-        Bukkit.getScheduler().runTaskLater(plugin, () -> resolveChallenge(acceptor, challenger, challenge), 20L);
+        Utils.successMsg(challenger, "economy", "coinflip.flipping");
+        acceptor.playSound(acceptor, Sound.UI_BUTTON_CLICK, 1L, 1L);
+        challenger.playSound(challenger, Sound.UI_BUTTON_CLICK, 1L, 1L);
     }
 
     private void resolveChallenge(Player acceptor, Player challenger, Challenge challenge) {
@@ -166,9 +185,24 @@ public class Coinflip implements CommandExecutor, Listener {
         // Notify players
         Utils.successMsg2Values(winner, "economy", "coinflip.win", "%result%", result, "%amount%", String.valueOf(winnings));
         Utils.successMsg1Value(loser, "economy", "coinflip.loss", "%result%", result);
+        winner.playSound(winner, Sound.ENTITY_PLAYER_LEVELUP, 1L, 1L);
+        loser.playSound(loser, Sound.BLOCK_NOTE_BLOCK_BASS, 1L, 2L);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> loser.playSound(loser, Sound.BLOCK_NOTE_BLOCK_BASS, 1L, 1L), 5L);
+
+    }
+
+    public void cancelChallenge(Player p) {
+        challengeQueue.remove(p.getUniqueId());
+        Utils.successMsg(p, "economy", "coinflip.cancelled");
+        p.closeInventory();
     }
 
     private int randomInt(int max, int min) {
         return (int) (Math.random() * ((max - min) + 1)) + min;
     }
+
+    public Map<UUID, Challenge> getChallengeQueue() {
+        return challengeQueue;
+    }
+
 }

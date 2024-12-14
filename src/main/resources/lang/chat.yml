@@ -3,8 +3,14 @@ error:
   no-reserved: "You have no reserved nickname."
   no-nick: "You do not have a nickname."
   reserved-limit: "You can only reserve one nickname."
+  channel-exist: "This Channel does not exist."
+  not-member: "You are not a member of this channel."
 
 
+channel:
+  joined: "§aYou have joined the channel: §e%channel%"
+  left: "§aYou have left the channel: §e%channel%"
+  focused: "§aYou are now focused on channel: §e%channel%"
 
 nick:
   reset: "§7You have reset your own nick"

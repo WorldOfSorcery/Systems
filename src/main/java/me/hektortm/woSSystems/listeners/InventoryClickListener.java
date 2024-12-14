@@ -24,15 +24,13 @@ import java.util.UUID;
 
 public class InventoryClickListener implements Listener {
 
-    private final Map<UUID, Challenge> challengeQueue;
     private final EcoManager ecoManager;
     private final Coinflip coinflipCommand;
     private final LangManager lang;
     private final NicknameManager nickManager;
     private final Map<UUID, String> nickRequests;
 
-    public InventoryClickListener(Map<UUID, Challenge> challengeQueue, EcoManager ecoManager, Coinflip coinflipCommand, LangManager lang, Map<UUID, String> nickRequests, NicknameManager nickManager) {
-        this.challengeQueue = challengeQueue;
+    public InventoryClickListener(EcoManager ecoManager, Coinflip coinflipCommand, LangManager lang, Map<UUID, String> nickRequests, NicknameManager nickManager) {
         this.ecoManager = ecoManager;
         this.coinflipCommand = coinflipCommand;
         this.lang = lang;
@@ -58,7 +56,12 @@ public class InventoryClickListener implements Listener {
 
             UUID challengerUUID = meta.getOwningPlayer().getUniqueId();
 
-            if (!challengeQueue.containsKey(challengerUUID)) {
+            if(player.getUniqueId().equals(challengerUUID)) {
+                coinflipCommand.cancelChallenge(player);
+                return;
+            }
+
+            if (!coinflipCommand.challengeQueue.containsKey(challengerUUID)) {
                 Utils.error(player, "economy", "error.challenge-not-found");
                 return;
             }
@@ -68,7 +71,7 @@ public class InventoryClickListener implements Listener {
                 Utils.error(player, "economy", "error.challenger-offline");
                 return;
             }
-            Challenge challenge = challengeQueue.get(challengerUUID);
+            Challenge challenge = coinflipCommand.challengeQueue.get(challengerUUID);
 
             if (!ecoManager.hasEnoughCurrency(player.getUniqueId(), "gold", challenge.getAmount())) {
                 Utils.error(player, "economy", "error.funds");

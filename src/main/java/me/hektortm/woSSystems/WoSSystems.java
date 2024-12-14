@@ -4,6 +4,7 @@ import me.hektortm.woSSystems.chat.ChatManager;
 import me.hektortm.woSSystems.chat.NicknameManager;
 import me.hektortm.woSSystems.chat.commands.ChatCommand;
 import me.hektortm.woSSystems.chat.commands.NicknameCommand;
+import me.hektortm.woSSystems.chat.commands.subcommands.Join;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.BalanceCommand;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
@@ -62,6 +63,7 @@ public final class WoSSystems extends JavaPlugin {
     private CRecipeManager recipeManager;
     private ChatManager chatManager;
     private NicknameManager nickManager;
+    private Coinflip coinflipCommand;
 
 
     // TODO:
@@ -76,6 +78,7 @@ public final class WoSSystems extends JavaPlugin {
         core = WoSCore.getPlugin(WoSCore.class);
 
         lang = new LangManager(core);
+        log = new LogManager(lang, core);
 
         statsManager = new StatsManager();
         ecoManager = new EcoManager(this);
@@ -93,14 +96,13 @@ public final class WoSSystems extends JavaPlugin {
         chatManager = new ChatManager(this);
         nickManager = new NicknameManager(chatManager);
 
-
+        coinflipCommand = new Coinflip(ecoManager, this, lang);
 
 
 // Initialize the remaining managers
         recipeManager = new CRecipeManager(interactionManager);
         fishingManager = new FishingManager(fishingItemsFolder);
         resolver = new PlaceholderResolver(statsManager, citemManager);
-        log = new LogManager(lang, core);
         new CraftingListener(this, recipeManager, conditionHandler, interactionManager);
 
 
@@ -138,12 +140,10 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        chatManager.savePlayerData();
     }
 
     private void registerCommands() {
-        HashMap<UUID, Challenge> challengeQueue = new HashMap<>();
-        Coinflip coinflipCommand = new Coinflip(ecoManager, this, challengeQueue, lang);
 
         //cmdReg("opengui", new GUIcommand(guiManager, interactionManager));
         cmdReg("interaction", new InteractionCommand());
@@ -164,19 +164,19 @@ public final class WoSSystems extends JavaPlugin {
     }
 
     private void registerEvents() {
-        HashMap<UUID, Challenge> challengeQueue = new HashMap<>();
-        Coinflip coinflipCommand = new Coinflip(ecoManager, this, challengeQueue, lang);
+
 
         //eventReg(new InventoryCloseListener(guiManager));
         eventReg(new InterListener(interactionManager, citemManager));
         eventReg(new DropListener());
         eventReg(new HoverListener(citemManager));
         //eventReg(new UseListener(citemManager));
-        eventReg(new CleanUpListener(core, unlockableManager, coinflipCommand));
+        eventReg(new CleanUpListener(core, unlockableManager, coinflipCommand, chatManager));
         eventReg(new FishingListener());
         eventReg(new ChatListener(chatManager, nickManager));
+        eventReg(new JoinListener(chatManager));
 
-        getServer().getPluginManager().registerEvents(new InventoryClickListener(challengeQueue, ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager), this);
+        getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager), this);
     }
 
     private void eventReg(Listener l) {

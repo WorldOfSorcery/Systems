@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.listeners;
 
+import me.hektortm.woSSystems.chat.ChatManager;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.wosCore.WoSCore;
@@ -20,16 +21,19 @@ public class CleanUpListener implements Listener {
     private final UnlockableManager manager;
     private final WoSCore core;
     private final Coinflip coinflip;
+    private final ChatManager chatManager;
 
-    public CleanUpListener(WoSCore core, UnlockableManager manager, Coinflip coinflip) {
+    public CleanUpListener(WoSCore core, UnlockableManager manager, Coinflip coinflip, ChatManager chatManager) {
         this.core = core;
         this.manager = manager;
         this.coinflip = coinflip;
+        this.chatManager = chatManager;
     }
 
 
     @EventHandler
     public void leaveEvent(PlayerQuitEvent event) {
+        chatManager.savePlayerData();
         Player p = event.getPlayer();
 
         if (coinflip.challengeQueue.containsKey(p.getUniqueId())) {
