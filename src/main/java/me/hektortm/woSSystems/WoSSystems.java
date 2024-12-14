@@ -1,13 +1,17 @@
 package me.hektortm.woSSystems;
 
+import me.hektortm.woSSystems.chat.ChatManager;
+import me.hektortm.woSSystems.chat.NicknameManager;
+import me.hektortm.woSSystems.chat.commands.ChatCommand;
+import me.hektortm.woSSystems.chat.commands.NicknameCommand;
+import me.hektortm.woSSystems.chat.commands.subcommands.Join;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.BalanceCommand;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
 import me.hektortm.woSSystems.economy.commands.EcoCommand;
 import me.hektortm.woSSystems.economy.commands.PayCommand;
-import me.hektortm.woSSystems.listeners.CoinflipInventoryListener;
+import me.hektortm.woSSystems.listeners.*;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
-import me.hektortm.woSSystems.listeners.InterListener;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.professions.crafting.CraftingListener;
@@ -18,9 +22,6 @@ import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.citems.commands.CgiveCommand;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.systems.citems.commands.CremoveCommand;
-import me.hektortm.woSSystems.listeners.DropListener;
-import me.hektortm.woSSystems.listeners.HoverListener;
-import me.hektortm.woSSystems.listeners.UseListener;
 import me.hektortm.woSSystems.systems.interactions.commands.InteractionCommand;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.systems.stats.commands.GlobalStatCommand;
@@ -28,7 +29,6 @@ import me.hektortm.woSSystems.systems.stats.commands.StatsCommand;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.systems.unlockables.commands.TempUnlockableCommand;
 import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableCommand;
-import me.hektortm.woSSystems.listeners.CleanUpListener;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.woSSystems.utils.dataclasses.Challenge;
 import me.hektortm.wosCore.LangManager;
@@ -61,6 +61,9 @@ public final class WoSSystems extends JavaPlugin {
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
     private CRecipeManager recipeManager;
+    private ChatManager chatManager;
+    private NicknameManager nickManager;
+    private Coinflip coinflipCommand;
 
 
     // TODO:
@@ -75,6 +78,7 @@ public final class WoSSystems extends JavaPlugin {
         core = WoSCore.getPlugin(WoSCore.class);
 
         lang = new LangManager(core);
+        log = new LogManager(lang, core);
 
         statsManager = new StatsManager();
         ecoManager = new EcoManager(this);
@@ -89,15 +93,16 @@ public final class WoSSystems extends JavaPlugin {
         interactionManager.setConditionHandler(conditionHandler);
         interactionManager.setPlaceholderResolver(resolver);
         citemManager.setInteractionManager(interactionManager);
+        chatManager = new ChatManager(this);
+        nickManager = new NicknameManager(chatManager);
 
-
+        coinflipCommand = new Coinflip(ecoManager, this, lang);
 
 
 // Initialize the remaining managers
         recipeManager = new CRecipeManager(interactionManager);
         fishingManager = new FishingManager(fishingItemsFolder);
         resolver = new PlaceholderResolver(statsManager, citemManager);
-        log = new LogManager(lang, core);
         new CraftingListener(this, recipeManager, conditionHandler, interactionManager);
 
 
@@ -109,6 +114,7 @@ public final class WoSSystems extends JavaPlugin {
             lang.loadLangFileExternal(this, "unlockables", core);
             lang.loadLangFileExternal(this, "economy", core);
             lang.loadLangFileExternal(this, "crecipes", core);
+            lang.loadLangFileExternal(this, "chat", core);
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }
@@ -134,12 +140,10 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        chatManager.savePlayerData();
     }
 
     private void registerCommands() {
-        HashMap<UUID, Challenge> challengeQueue = new HashMap<>();
-        Coinflip coinflipCommand = new Coinflip(ecoManager, this, challengeQueue, lang);
 
         //cmdReg("opengui", new GUIcommand(guiManager, interactionManager));
         cmdReg("interaction", new InteractionCommand());
@@ -155,21 +159,24 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("pay", new PayCommand(ecoManager, lang));
         cmdReg("coinflip", coinflipCommand);
         cmdReg("crecipe", new CRecipeCommand(this, recipeManager, lang));
+        cmdReg("channel", new ChatCommand(chatManager));
+        cmdReg("nickname", new NicknameCommand(nickManager, chatManager));
     }
 
     private void registerEvents() {
-        HashMap<UUID, Challenge> challengeQueue = new HashMap<>();
-        Coinflip coinflipCommand = new Coinflip(ecoManager, this, challengeQueue, lang);
+
 
         //eventReg(new InventoryCloseListener(guiManager));
         eventReg(new InterListener(interactionManager, citemManager));
         eventReg(new DropListener());
         eventReg(new HoverListener(citemManager));
         //eventReg(new UseListener(citemManager));
-        eventReg(new CleanUpListener(core, unlockableManager, coinflipCommand));
+        eventReg(new CleanUpListener(core, unlockableManager, coinflipCommand, chatManager));
         eventReg(new FishingListener());
+        eventReg(new ChatListener(chatManager, nickManager));
+        eventReg(new JoinListener(chatManager));
 
-        getServer().getPluginManager().registerEvents(new CoinflipInventoryListener(challengeQueue, ecoManager, coinflipCommand, lang), this);
+        getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager), this);
     }
 
     private void eventReg(Listener l) {

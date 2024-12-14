@@ -67,7 +67,39 @@ commands:
     usage: /coinflip <amount> <heads|tails>
     permission: economy.coinflip
 
+  channel:
+    aliases: [ch]
+    description: chat
+    usage: /ch <join|focus|leave>
+  nickname:
+    aliases: [nick]
+    description: nick
+    permission: nick.request.send
+    usage: /<command>
+
 permissions:
+  # Chat Permissions
+  nick.request:
+    description: access to all request cmds
+    default: op
+    children:
+      nick.request.send: true
+      nick.request.view: true
+  nick.request.send:
+    description: Send a Nickname request
+    default: true
+  nick.request.view:
+    description: view Nickname requests
+    default: op
+  nick.reserve:
+    description: reserve
+    default: op
+  nick.unreserve:
+    description: unreserve
+    default: op
+
+
+
   # Interaction Permissions
   interaction:
     description: grants access to all Interaction commands

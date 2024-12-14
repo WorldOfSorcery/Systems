@@ -177,27 +177,40 @@ public class InteractionManager {
 
         if(inter.getActions() == null) return;
 
-        for (String action : inter.getActions()) {
-            action = action.replace("%player%", p.getName());
+        int length = inter.getActions().size();
 
-            if(action.startsWith("send_message")) {
-                String message = action.replace("send_message", "");
-                String finalMessage = resolver.resolvePlaceholders(message, p);
-                p.sendMessage(finalMessage.replace("&","§"));
-            }
-            if (action.startsWith("close_gui")) {
-                p.closeInventory();
-            }
-            if (action.startsWith("playsound")) {
-                String[] parts = action.split(" ");
-                if (parts.length > 1) {
-                    String sound = parts[1];
-                    p.playSound(p.getLocation(), sound, 1.0F, 1.0F);
+        int i = length;
+
+        while (i>0) {
+
+            for (String action : inter.getActions()) {
+                action = action.replace("%player%", p.getName());
+
+                if (action.startsWith("send_message")) {
+                    String message = action.replace("send_message", "");
+                    String finalMessage = resolver.resolvePlaceholders(message, p);
+                    p.sendMessage(finalMessage.replace("&", "§"));
                 }
-            }
-            else {
-                if (!action.startsWith("send_message") && !action.startsWith("close_gui") && !action.startsWith("playsound")) {
-                    plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), action);
+                if (action.startsWith("close_gui")) {
+                    p.closeInventory();
+                }
+                if (action.startsWith("playsound")) {
+                    String[] parts = action.split(" ");
+                    if (parts.length > 1) {
+                        String sound = parts[1];
+                        p.playSound(p.getLocation(), sound, 1.0F, 1.0F);
+                    }
+                }
+                if (action.startsWith("player_cmd")) {
+                    String cmd = action.replace("player_cmd", "");
+                    plugin.getServer().dispatchCommand(p, cmd);
+                } else {
+                    if (!action.startsWith("send_message") &&
+                            !action.startsWith("close_gui") &&
+                            !action.startsWith("playsound") &&
+                            !action.startsWith("player_cmd")) {
+                        plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), action);
+                    }
                 }
             }
         }
