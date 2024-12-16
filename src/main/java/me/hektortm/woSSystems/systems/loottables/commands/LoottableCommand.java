@@ -17,7 +17,7 @@ public class LoottableCommand implements CommandExecutor {
 
     public LoottableCommand() {
         subCommands.put("give", new Give());
-        subCommands.put("reload", new Reload());
+        //subCommands.put("reload", new Reload());
 
     }
 
