@@ -14,6 +14,9 @@ public enum Icons {
     COLLECTABLE(""),
     POTION(""),
     BOUND(""),
+    FOOD(""),
+    QUEST(""),
+    WEARABLE(""),
 
     DEV(""),
     HEAD_OF_DEV("");
