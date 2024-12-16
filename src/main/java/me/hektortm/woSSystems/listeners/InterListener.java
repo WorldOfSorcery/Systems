@@ -60,7 +60,6 @@ public class InterListener implements Listener {
                 PersistentDataContainer data = meta.getPersistentDataContainer();
                 if (data.has(unusableKey, PersistentDataType.BOOLEAN)) {
                     e.setCancelled(true); // Prevent the item from being dropped
-                    e.getPlayer().sendMessage("§bDEBUG: §cYou cannot Use this item.");
                 }
             }
         }

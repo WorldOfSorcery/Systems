@@ -25,7 +25,6 @@ public class DropListener implements Listener {
             PersistentDataContainer data = meta.getPersistentDataContainer();
             if (data.has(undroppableKey, PersistentDataType.BOOLEAN)) {
                 event.setCancelled(true); // Prevent the item from being dropped
-                event.getPlayer().sendMessage("§bDEBUG: §cYou cannot drop this item.");
             }
         }
     }

@@ -95,22 +95,45 @@ public class CraftingListener implements Listener {
         JSONObject conditions = recipeManager.getConditions(key);
         String successId = recipeManager.getSuccessId(key);
 
-        // Validate the conditions using ConditionHandler
+        // Check if the player is shift-clicking
+        if (event.isShiftClick()) {
+            // Shift-click detected
+            if (!conditionHandler.validateConditions(player, conditions)) {
+                event.setCancelled(true);  // Cancel the entire crafting operation if conditions fail
+                player.sendMessage("You cannot bulk craft this item due to unmet conditions.");  // Optional feedback
+                return;
+            }
+
+            // Allow bulk crafting if conditions are met
+            if (successId != null) {
+                triggerSuccessInteraction(player, successId);
+            }
+            return;
+        }
+
+        // For regular crafting
         if (!conditionHandler.validateConditions(player, conditions)) {
             event.setCancelled(true);  // Cancel the crafting event if conditions are not met
+            player.sendMessage("You cannot craft this item due to unmet conditions.");  // Optional feedback
             return;
         }
 
         // If conditions are valid, trigger the success interaction if available
         if (successId != null) {
-            // Retrieve the interaction configuration for the successId
-            InteractionData interaction = interactionManager.getInteractionByID(successId);
-            if (interaction != null) {
-                // Trigger the interaction
-                interactionManager.triggerInteraction(player, successId);
-            }
+            triggerSuccessInteraction(player, successId);
         }
     }
+
+    // Helper method to trigger success interaction
+    private void triggerSuccessInteraction(Player player, String successId) {
+        // Retrieve the interaction configuration for the successId
+        InteractionData interaction = interactionManager.getInteractionByID(successId);
+        if (interaction != null) {
+            // Trigger the interaction
+            interactionManager.triggerInteraction(player, successId);
+        }
+    }
+
 
     private boolean isCustomRecipe(Recipe recipe) {
         if (recipe instanceof ShapedRecipe shapedRecipe) {

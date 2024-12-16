@@ -122,7 +122,7 @@ public class InventoryClickListener implements Listener {
             }
 
             // Handle left and right clicks
-            if (ct == ClickType.LEFT) {
+            if (ct == ClickType.LEFT || ct == ClickType.SHIFT_LEFT) {
                 nickManager.approveNicknameChange(p.getUniqueId());
                 if (nick.equals("reset")) {
                     Utils.successMsg1Value(p1, "chat", "nick.approved-reset", "%nick%", nick);
@@ -132,7 +132,7 @@ public class InventoryClickListener implements Listener {
                 }
                 Utils.successMsg1Value(p1, "chat", "nick.approved", "%nick%", nick);
                 Utils.successMsg1Value(player, "chat", "nick.approved-staff", "%player%", p1.getName());
-            } else if (ct == ClickType.RIGHT) {
+            } else if (ct == ClickType.RIGHT || ct == ClickType.SHIFT_RIGHT) {
                 nickManager.denyNicknameChange(p);
                 Utils.successMsg1Value(p1, "chat", "nick.declined", "%nick%", nick);
                 Utils.successMsg1Value(player, "chat", "nick.declined-staff", "%player%", p1.getName());
