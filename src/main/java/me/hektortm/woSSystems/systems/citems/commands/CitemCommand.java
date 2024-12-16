@@ -41,6 +41,7 @@ public class CitemCommand implements CommandExecutor {
         subCommands.put("delete", new DeleteCommand(this, log));
         subCommands.put("action", new ActionCommand(interactionManager));
         subCommands.put("tag", new Tag());
+        subCommands.put("info", new Info(data));
     }
 
     @Override

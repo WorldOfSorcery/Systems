@@ -19,7 +19,7 @@ public class Tag extends SubCommand {
 
     @Override
     public Permissions getPermission() {
-        return null;
+        return Permissions.CITEM_TAG;
     }
 
     @Override

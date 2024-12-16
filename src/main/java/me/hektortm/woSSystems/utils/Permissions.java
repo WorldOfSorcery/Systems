@@ -11,6 +11,8 @@ public enum Permissions {
     CITEM_ACTIONS("citem.modify.actions"),
     CITEM_GIVE("citem.give"),
     CITEM_REMOVE("citem.remove"),
+    CITEM_TAG("citem.tag"),
+    CITEM_INFO("citem.info"),
 
     CRECIPE_CREATE("crecipe.create"),
     CRECIPE_DELETE("crecipe.delete"),
