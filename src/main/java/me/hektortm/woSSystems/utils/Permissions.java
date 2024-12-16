@@ -77,7 +77,11 @@ public enum Permissions {
     CHAT_CHANNEL_FOCUS("chat.channel.focus"),
     CHAT_CHANNEL_JOIN("chat.channel.join"),
     CHAT_CHANNEL_LEAVE("chat.channel.leave"),
-    CHAT_RELOAD("chat.reload");
+    CHAT_RELOAD("chat.reload"),
+
+    LOOTTABLE_GIVE("loottable.give"),
+    LOOTTABLE_RELOAD("loottable.reload");
+
 
 
 
