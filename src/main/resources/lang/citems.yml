@@ -6,6 +6,7 @@ error:
   exists: "An item with this ID already exists."
   wrong-action: "Unrecognized Action. Use 'left' or 'right'."
   inter-not-found: "Interaction not found: %id%"
+  invalid-icon: "Invalid Icon."
   lore:
     invalid-row: "Invalid row number."
     out-of-bounds: "Lore row out of bounds."
@@ -21,6 +22,7 @@ error:
     update: "Usage: /citem update <id>"
     cgive: "Usage: /cgive <player> <id> [amount]"
     cremove: "Usage: /cremove <player> <id> [amount]"
+    tag: "Usage: /citem tag <tag1> <tag2>"
 
 delete:
   confirm: "§7Confirm deletion with: /citem delete %id% confirm"
@@ -40,6 +42,9 @@ lore:
   added: "§aLore added."
   edited: "§aLore edited."
   removed: "§aLore removed."
+
+tag:
+  success: "Successfully added tags."
 
 action:
   set:
