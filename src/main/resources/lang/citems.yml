@@ -34,10 +34,12 @@ flag:
     undroppable: "§aUndroppable flag added."
     unbreakable: "§aUnbreakable flag added."
     unusable: "§aUnusable flag added."
+    hide: "§aHide flags added."
   remove:
     undroppable: "§cUndroppable flag removed."
     unbreakable: "§cUnbreakable flag removed."
     unusable: "§cUnusable flag removed."
+    hide: "§cHide flags removed."
 
 lore:
   added: "§aLore added."

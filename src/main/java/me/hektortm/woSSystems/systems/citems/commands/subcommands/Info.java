@@ -71,6 +71,8 @@ public class Info extends SubCommand {
         player.sendMessage("§7Flags:");
         player.sendMessage(" §7- §eUndroppable: §f" + (undroppable ? "Yes" : "No"));
         player.sendMessage(" §7- §eUnusable: §f" + (unusable ? "Yes" : "No"));
+        boolean hasHideFlags = !meta.getItemFlags().isEmpty();
+        player.sendMessage(" §7- §eHide Flags: §f" + (hasHideFlags ? "Yes" : "No"));
 
         // Display actions
         String leftAction = data.get(citemManager.getLeftActionKey(), PersistentDataType.STRING);

@@ -11,6 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -77,6 +78,18 @@ public class FlagCommand extends SubCommand {
                     data.set(unusableKey, PersistentDataType.BOOLEAN, true);
                     Utils.successMsg(p, "citems", "flag.add.unusable");
                 }
+                if (flag.equals("hide")) {
+                    meta.removeItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                    meta.removeItemFlags(ItemFlag.HIDE_ENCHANTS);
+                    meta.removeItemFlags(ItemFlag.HIDE_UNBREAKABLE);
+                    meta.removeItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+                    meta.removeItemFlags(ItemFlag.HIDE_DYE);
+                    meta.removeItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
+                    meta.removeItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
+                    meta.removeItemFlags(ItemFlag.HIDE_DESTROYS);
+                    meta.removeItemFlags(ItemFlag.HIDE_PLACED_ON);
+                    Utils.successMsg(p, "citems", "flag.remove.hide");
+                }
                 break;
 
             case "remove":
@@ -93,6 +106,18 @@ public class FlagCommand extends SubCommand {
                     PersistentDataContainer data = meta.getPersistentDataContainer();
                     data.remove(unusableKey);
                     Utils.successMsg(p, "citems", "flag.remove.unusable");
+                }
+                if (flag.equals("hide")) {
+                    meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                    meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                    meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
+                    meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+                    meta.addItemFlags(ItemFlag.HIDE_DYE);
+                    meta.addItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
+                    meta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
+                    meta.addItemFlags(ItemFlag.HIDE_DESTROYS);
+                    meta.addItemFlags(ItemFlag.HIDE_PLACED_ON);
+                    Utils.successMsg(p, "citems", "flag.add.hide");
                 }
                 break;
 
