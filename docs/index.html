@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WoSSystems Documentation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        table th {
+            background-color: #f4f4f4;
+            text-align: left;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        hr {
+            margin: 40px 0;
+            border: none;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>WoSSystems Documentation</h1>
+
+    <h2>Table of Contents</h2>
+    <ul>
+        <li><a href="#Economy">Economy</a></li>
+    </ul>
+
+    <h2 id="Economy">Economy</h2>
+    <h3>Commands</h3>
+
+    <p><code>/eco subcommand parameters</code></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Subcommand</th>
+                <th>Example</th>
+                <th>Permissions</th>
+                <th>Function</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>give</strong> player currency amount</td>
+                <td>HektorTM gold 1</td>
+                <td>economy.modify.give</td>
+                <td>Give a player a currency</td>
+            </tr>
+            <tr>
+                <td><strong>take</strong> player currency amount</td>
+                <td>HektorTM gold 1</td>
+                <td>economy.modify.take</td>
+                <td>Takes currency from a player</td>
+            </tr>
+            <tr>
+                <td><strong>set</strong> player currency amount</td>
+                <td>HektorTM gold 1</td>
+                <td>economy.modify.set</td>
+                <td>Set a player's currency</td>
+            </tr>
+            <tr>
+                <td><strong>reset</strong> player currency</td>
+                <td>HektorTM gold</td>
+                <td>economy.modify.reset</td>
+                <td>Reset a player's currency</td>
+            </tr>
+            <tr>
+                <td><strong>random</strong> player currency min max</td>
+                <td>HektorTM gold 1 30</td>
+                <td>economy.modify.random</td>
+                <td>Give a player a random amount between min and max</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <p><code>/pay player currency amount</code></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Example</th>
+                <th>Function</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>HektorTM gold 10</td>
+                <td>Pay a player a currency</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <p><code>/balance player</code></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Parameters</th>
+                <th>Permissions</th>
+                <th>Function</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>balance HektorTM</td>
+                <td>economy.balance.self, economy.balance.others</td>
+                <td>View your own or a player's currency</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <p><code>/coinflip amount(in gold) heads/tails</code></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Parameters</th>
+                <th>Permissions</th>
+                <th>Function</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>10 heads</td>
+                <td>economy.coinflip</td>
+                <td>Creates a coinflip challenge</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 id="Systems">Systems</h2>
+
+    <h3>Citems</h3>
+
+    <p><code>/citem</code></p>
+
+    <p><strong>Flags:</strong></p>
+    <ul>
+        <li>Unusable</li>
+        <li>Undroppable</li>
+        <li>Hide</li>
+    </ul>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Subcommands</th>
+                <th>Permissions</th>
+                <th>Function</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>rename</strong> newName</td>
+                <td>citem.modify.rename</td>
+                <td>Set name of item</td>
+            </tr>
+            <tr>
+                <td><strong>lore</strong> add/remove/edit</td>
+                <td>citem.modify.lore</td>
+                <td>Edit/add/remove lore</td>
+            </tr>
+            <tr>
+                <td><strong>flag</strong> add/remove</td>
+                <td>citem.modify.flags</td>
+                <td>Add/remove flag</td>
+            </tr>
+            <tr>
+                <td><strong>action</strong> right/left interactionID</td>
+                <td>citem.modify.actions</td>
+                <td>Add actions to right/left click</td>
+            </tr>
+            <tr>
+                <td><strong>save</strong> ID</td>
+                <td>citem.save</td>
+                <td>Save a citem</td>
+            </tr>
+            <tr>
+                <td><strong>update</strong> ID</td>
+                <td>citem.update</td>
+                <td>Update a citem</td>
+            </tr>
+            <tr>
+                <td><strong>tag</strong> tagID</td>
+                <td>citem.tag</td>
+                <td>Add tags</td>
+            </tr>
+            <tr>
+                <td><strong>info</strong></td>
+                <td>citem.info</td>
+                <td>View a Citem's information</td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>
