@@ -13,6 +13,8 @@ import me.hektortm.woSSystems.economy.commands.PayCommand;
 import me.hektortm.woSSystems.listeners.*;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
+import me.hektortm.woSSystems.systems.loottables.LoottableManager;
+import me.hektortm.woSSystems.systems.loottables.commands.LoottableCommand;
 import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.professions.crafting.CraftingListener;
 import me.hektortm.woSSystems.professions.crafting.command.CRecipeCommand;
@@ -64,6 +66,7 @@ public final class WoSSystems extends JavaPlugin {
     private ChatManager chatManager;
     private NicknameManager nickManager;
     private Coinflip coinflipCommand;
+    private LoottableManager lootTableManager;
 
 
     // TODO:
@@ -96,6 +99,7 @@ public final class WoSSystems extends JavaPlugin {
         chatManager = new ChatManager(this);
         nickManager = new NicknameManager(chatManager);
 
+        lootTableManager = new LoottableManager(interactionManager, citemManager);
         coinflipCommand = new Coinflip(ecoManager, this, lang);
 
 
@@ -161,6 +165,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("crecipe", new CRecipeCommand(this, recipeManager, lang));
         cmdReg("channel", new ChatCommand(chatManager));
         cmdReg("nickname", new NicknameCommand(nickManager, chatManager));
+        cmdReg("loottable", new LoottableCommand(lootTableManager));
     }
 
     private void registerEvents() {
