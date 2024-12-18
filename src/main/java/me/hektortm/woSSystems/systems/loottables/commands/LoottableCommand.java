@@ -31,7 +31,7 @@ public class LoottableCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if (args.length == 0) {
-            Utils.error(sender, "loottable", "error.usage.loottable");
+            Utils.error(sender, "loottables", "error.usage.loottable");
             return true;
         }
 
@@ -42,7 +42,7 @@ public class LoottableCommand implements CommandExecutor {
             if(!(PermissionUtil.hasPermission(sender, subCommand.getPermission()))) return true;
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));
         } else {
-            Utils.error(sender, "loottable", "error.usage.loottable");
+            Utils.error(sender, "loottables", "error.usage.loottable");
         }
 
         return true;

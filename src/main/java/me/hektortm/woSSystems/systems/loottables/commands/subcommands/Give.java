@@ -29,7 +29,7 @@ public class Give extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            Utils.error(sender, "loottable", "error.usage.give");
+            Utils.error(sender, "loottables", "error.usage.give");
             return;
         }
 
@@ -37,6 +37,7 @@ public class Give extends SubCommand {
         String id = args[1].toLowerCase();
 
         manager.giveLoottables(p, id);
+        Utils.successMsg2Values(sender, "loottables", "given", "%player%", p.getName(), "%id%", id);
 
 
     }

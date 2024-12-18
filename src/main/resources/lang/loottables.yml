@@ -4,3 +4,4 @@ error:
     give: "Usage: /loottable give <player> <id>"
 
 reload: "§aReloaded Loot tables."
+given: "§aYou have given §e%player%§a the loot table §e\"%id%\"§a."
