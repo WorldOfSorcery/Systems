@@ -77,6 +77,11 @@ commands:
     permission: nick.request.send
     usage: /<command>
 
+  loottable:
+    aliases: [lt]
+    description: loottable
+    usage: /<command> give
+
 permissions:
   # Chat Permissions
   nick.request:
