@@ -1,0 +1,6 @@
+error:
+  usage:
+    loottable: "Usage: /loottable <give|reload>"
+    give: "Usage: /loottable give <player> <id>"
+
+reload: "§aReloaded Loot tables."
