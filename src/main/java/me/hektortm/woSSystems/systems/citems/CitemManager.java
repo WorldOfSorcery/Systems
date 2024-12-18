@@ -21,6 +21,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
@@ -97,6 +98,8 @@ public class CitemManager {
             }
             itemData.put("attributes", Collections.singletonMap("unbreakable", meta.isUnbreakable()));
 
+
+
             Map<String, Boolean> customFlags = new HashMap<>();
             customFlags.put("undroppable", meta.getPersistentDataContainer().has(undroppableKey, PersistentDataType.BYTE) &&
                     meta.getPersistentDataContainer().get(undroppableKey, PersistentDataType.BOOLEAN) == true);
@@ -119,6 +122,10 @@ public class CitemManager {
                     enchantments.put(enchantment.getKey().getKey(), level);
                 });
                 itemData.put("enchantments", enchantments);
+            }
+            if (meta instanceof Damageable) {
+                Damageable damageableMeta = (Damageable) meta;
+                itemData.put("damage", damageableMeta.getDamage()); // Use getDamage() here
             }
         }
 
@@ -162,43 +169,42 @@ public class CitemManager {
         // Create a new JSON object to hold the item data
         JSONObject itemData = new JSONObject();
 
-        // Load existing item data from the file to preserve the ID
-        try (FileReader reader = new FileReader(file)) {
-            JsonObject existingData = JsonParser.parseReader(reader).getAsJsonObject();
+        // Get the item material and add it to the JSON
+        Material material = item.getType();
+        itemData.put("material", material.toString());
 
-            // Preserve existing ID and material
-            if (existingData.has("id")) {
-                itemData.put("id", existingData.get("id").getAsString());
-            }
-
-            if (existingData.has("material")) {
-                itemData.put("material", existingData.get("material").getAsString());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // Now add or update the new item properties
+        // Get the item meta and check if it's not null
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
+            // Preserve the ID (if present) in the PersistentDataContainer
+            PersistentDataContainer data = meta.getPersistentDataContainer();
+            if (data.has(idKey, PersistentDataType.STRING)) {
+                String id = data.get(idKey, PersistentDataType.STRING);
+                itemData.put("id", id);
+            }
+
+            // Add the display name, if present
             if (meta.hasDisplayName()) {
                 itemData.put("name", meta.getDisplayName());
             }
 
+            // Add the lore, if present
             if (meta.hasLore()) {
                 itemData.put("lore", meta.getLore());
             }
 
+            // Add attributes (e.g., unbreakable)
             Map<String, Object> attributes = new HashMap<>();
             attributes.put("unbreakable", meta.isUnbreakable());
             itemData.put("attributes", attributes);
 
+            // Add custom flags (undroppable, unusable)
             Map<String, Boolean> customFlags = new HashMap<>();
-            PersistentDataContainer data = meta.getPersistentDataContainer();
             customFlags.put("undroppable", data.has(undroppableKey, PersistentDataType.BYTE) && data.get(undroppableKey, PersistentDataType.BYTE) == 1);
             customFlags.put("unusable", data.has(unusableKey, PersistentDataType.BYTE) && data.get(unusableKey, PersistentDataType.BYTE) == 1);
             itemData.put("custom_flags", customFlags);
 
+            // Add left and right action, if present
             if (data.has(leftActionKey, PersistentDataType.STRING)) {
                 itemData.put("action-left", data.get(leftActionKey, PersistentDataType.STRING));
             }
@@ -207,6 +213,7 @@ public class CitemManager {
                 itemData.put("action-right", data.get(rightActionKey, PersistentDataType.STRING));
             }
 
+            // Add enchantments, if present
             if (meta.hasEnchants()) {
                 Map<String, Integer> enchantments = new HashMap<>();
                 meta.getEnchants().forEach((enchantment, level) -> {
@@ -214,9 +221,15 @@ public class CitemManager {
                 });
                 itemData.put("enchantments", enchantments);
             }
+
+            // Add damage value, if item is Damageable
+            if (meta instanceof Damageable) {
+                Damageable damageableMeta = (Damageable) meta;
+                itemData.put("damage", damageableMeta.getDamage());
+            }
         }
 
-        // Write the updated item data to the file
+        // Write the updated item data to the file, overwriting the old data
         try (FileWriter writer = new FileWriter(file)) {
             writer.write(itemData.toJSONString());
             writer.flush();
@@ -224,6 +237,7 @@ public class CitemManager {
             e.printStackTrace();
         }
     }
+
 
     public boolean isCitem(ItemStack item) {
         if (item == null || !item.hasItemMeta()) {
@@ -339,6 +353,13 @@ public class CitemManager {
                         if (enchantment != null) {
                             meta.addEnchant(enchantment, level, true);
                         }
+                    }
+                }
+                if (jsonObject.has("damage")) {
+                    if (meta instanceof Damageable) {
+                        int damage = jsonObject.get("damage").getAsInt();
+                        Damageable damageableMeta = (Damageable) meta;
+                        damageableMeta.setDamage(damage);  // Set the damage value
                     }
                 }
 
