@@ -418,7 +418,25 @@ public class CitemManager {
         }
     }
 
+    public NamespacedKey getIdKey() {
+        return idKey;
+    }
 
+    public NamespacedKey getUndroppableKey() {
+        return undroppableKey;
+    }
+
+    public NamespacedKey getUnusableKey() {
+        return unusableKey;
+    }
+
+    public NamespacedKey getLeftActionKey() {
+        return leftActionKey;
+    }
+
+    public NamespacedKey getRightActionKey() {
+        return rightActionKey;
+    }
 
 
 
