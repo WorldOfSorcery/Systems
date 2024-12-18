@@ -80,9 +80,18 @@ commands:
   loottable:
     aliases: [lt]
     description: loottable
+    permission: loottable.give
     usage: /<command> give
 
 permissions:
+  # Loot table Permissions
+  loottable.give:
+    description: give lt
+    default: op
+  loottable.reload:
+    description: reload lts
+    default: op
+
   # Chat Permissions
   nick.request:
     description: access to all request cmds

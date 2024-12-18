@@ -70,6 +70,7 @@ public class LoottableManager {
 
         if (lootTable == null || lootTable.isEmpty()) {
             Bukkit.getLogger().warning("Loot table with ID '"+id+"' not found or is empty");
+
             return;
         }
 
@@ -103,15 +104,12 @@ public class LoottableManager {
                 switch (category) {
                     case "command":
                         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), action.replace("{player}", p.getName()));
-                        Bukkit.getLogger().info("Executing command: " + action);
                         break;
                     case "citem":
                         citemManager.giveCitem(Bukkit.getConsoleSender(), p, action, 1);
-                        Bukkit.getLogger().info("Giving citem: " + action);
                         break;
                     case "interaction":
                         interManager.triggerInteraction(p, action);
-                        Bukkit.getLogger().info("trying to trigger interaction: " + action);
                         break;
                     default:
                         Bukkit.getLogger().warning("Unrecognized category: " + category);

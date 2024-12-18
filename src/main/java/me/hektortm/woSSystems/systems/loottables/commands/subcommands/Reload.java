@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.systems.loottables.commands.subcommands;
 import me.hektortm.woSSystems.systems.loottables.LoottableManager;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.command.CommandSender;
 
 public class Reload extends SubCommand {
@@ -18,11 +19,12 @@ public class Reload extends SubCommand {
 
     @Override
     public Permissions getPermission() {
-        return null;
+        return Permissions.LOOTTABLE_RELOAD;
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
         manager.loadLoottables();
+        Utils.successMsg(sender, "loottables", "reload");
     }
 }
