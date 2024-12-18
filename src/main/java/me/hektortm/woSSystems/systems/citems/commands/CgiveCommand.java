@@ -20,11 +20,9 @@ import java.io.File;
 public class CgiveCommand implements CommandExecutor {
 
     private final CitemManager data;
-    private final LangManager lang;
 
-    public CgiveCommand(CitemManager data , LangManager lang) {
+    public CgiveCommand(CitemManager data) {
         this.data = data;
-        this.lang = lang;
     }
 
 
@@ -52,29 +50,9 @@ public class CgiveCommand implements CommandExecutor {
 
             }
 
-            File dir = new File(Bukkit.getServer().getPluginManager().getPlugin("WoSSystems").getDataFolder(), "citems");
-            if (!dir.exists()) {
-                Utils.error(sender, "citems", "error.no-items");
-                return true;
-            }
+            data.giveCitem(sender, t, id, amount);
 
-            File itemFile = new File(dir, id + ".json");
-            if (!itemFile.exists()) {
-                Utils.error(sender, "citems", "error.no-items");
-                return true;
-            }
-            ItemStack savedItem = data.loadItemFromFile(itemFile);
-            ItemStack item = savedItem.clone();
 
-            item.setAmount(amount);
-            if (savedItem == null) {
-                Utils.error(sender, "citems", "error.not-found");
-                return true;
-            }
-            t.getInventory().addItem(item);
-            t.playSound(t.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1 ,1);
-            String message = lang.getMessage("citems", "given").replace("%amount%", String.valueOf(amount)).replace("%id%", id).replace("%player%", t.getName());
-            sender.sendMessage(message);
 
         }
         return true;

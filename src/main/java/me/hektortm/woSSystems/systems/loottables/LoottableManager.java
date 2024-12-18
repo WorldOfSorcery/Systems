@@ -26,7 +26,7 @@ public class LoottableManager {
     private final WoSCore core = WoSCore.getPlugin(WoSCore.class);
     private final LogManager log = new LogManager(new LangManager(core), core);
     private final File loottableFolder = new File(woSSystems.getDataFolder(), "loottables");
-    public final Map<String, Map<String, Integer>> loottableMap = new HashMap<>();
+    public final Map<String, JSONObject> loottableMap = new HashMap<>();
 
     public LoottableManager(InteractionManager interManager, CitemManager citemManager) {
         this.interManager = interManager;
@@ -40,66 +40,86 @@ public class LoottableManager {
     }
 
     public void loadLoottables() {
-        File[] loottableFiles = loottableFolder.listFiles((dir, name) -> name.endsWith(".json"));
-        if (loottableFiles == null || loottableFiles.length == 0) {
-            log.sendWarning("No valid interactions loaded. Check JSON structure in " + loottableFolder.getPath());
+        File[] lootTableFiles = loottableFolder.listFiles((dir, name) -> name.endsWith(".json"));
+        if (lootTableFiles == null || lootTableFiles.length == 0) {
+            Bukkit.getLogger().warning("No valid loot tables found in folder: " + loottableFolder.getPath());
             return;
         }
 
-        for (File file : loottableFiles) {
-            String id = file.getName().replace(".json", "");
+        for (File file : lootTableFiles) {
+            String lootTableId = file.getName().replace(".json", "");
             try (FileReader reader = new FileReader(file)) {
-                JSONObject json = (JSONObject) new JSONParser().parse(reader);
+                JSONObject lootTableJson = (JSONObject) new JSONParser().parse(reader);
 
-                Map<String, Integer> lootTable = new HashMap<>();
-                for (Object key : json.keySet()) {
-                    String action = (String) key;
-                    int chance = ((Long) json.get(key)).intValue();
-                    lootTable.put(action, chance);
-                }
+                // Validate and store the loot table
+                loottableMap.put(lootTableId, lootTableJson);
 
-                loottableMap.put(id, lootTable);
+                Bukkit.getLogger().info("Loaded loot table: " + lootTableId);
+
             } catch (Exception e) {
-                Bukkit.getLogger().warning("Error loading loot tables from file " + file.getName());
+                Bukkit.getLogger().warning("Error loading loot table from file " + file.getName() + ": " + e.getMessage());
+                e.printStackTrace();
             }
-
         }
     }
 
 
 
     public void giveLoottables(Player p, String id) {
-        Map<String, Integer> lootTable = loottableMap.get(id);
+        JSONObject lootTable = loottableMap.get(id);
 
         if (lootTable == null || lootTable.isEmpty()) {
             Bukkit.getLogger().warning("Loot table with ID '"+id+"' not found or is empty");
             return;
         }
 
-        int totalWeight = lootTable.values().stream().mapToInt(Integer::intValue).sum();
+        Map<String, Integer> weightedActions = new HashMap<>();
+        lootTable.forEach((category, value) -> {
+            JSONObject categoryItems = (JSONObject) value;
+            categoryItems.forEach((action, weight) -> {
+                weightedActions.put(category + ":" + action, ((Long) weight).intValue());
+            });
+        });
+
+        int totalWeight = weightedActions.values().stream().mapToInt(Integer::intValue).sum();
 
         if (totalWeight <= 0) {
             Bukkit.getLogger().warning("Loot table with ID '" + id + "' has no valid chances.");
             return;
         }
 
+        // Generate a random value
         int randomValue = new Random().nextInt(totalWeight);
 
+        // Determine which action to execute
         int currentWeight = 0;
-        for(Map.Entry<String, Integer> entry : lootTable.entrySet()) {
+        for (Map.Entry<String, Integer> entry : weightedActions.entrySet()) {
             currentWeight += entry.getValue();
             if (randomValue < currentWeight) {
-                String action = entry.getKey();
+                String[] parts = entry.getKey().split(":");
+                String category = parts[0];
+                String action = parts[1];
 
-
-
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), action.replace("%player%", p.getName()));
-                return;
-
+                switch (category) {
+                    case "command":
+                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), action.replace("{player}", p.getName()));
+                        Bukkit.getLogger().info("Executing command: " + action);
+                        break;
+                    case "citem":
+                        citemManager.giveCitem(Bukkit.getConsoleSender(), p, action, 1);
+                        Bukkit.getLogger().info("Giving citem: " + action);
+                        break;
+                    case "interaction":
+                        interManager.triggerInteraction(p, action);
+                        Bukkit.getLogger().info("trying to trigger interaction: " + action);
+                        break;
+                    default:
+                        Bukkit.getLogger().warning("Unrecognized category: " + category);
+                        break;
+                }
+                return; // Exit after executing one action
             }
         }
-        Bukkit.getLogger().warning("No action executed for loot table with ID '"+id+"'");
-
     }
 
 

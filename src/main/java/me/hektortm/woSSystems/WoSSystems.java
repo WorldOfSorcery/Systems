@@ -152,7 +152,7 @@ public final class WoSSystems extends JavaPlugin {
         //cmdReg("opengui", new GUIcommand(guiManager, interactionManager));
         cmdReg("interaction", new InteractionCommand());
         cmdReg("citem", new CitemCommand(interactionManager));
-        cmdReg("cgive", new CgiveCommand(citemManager, lang));
+        cmdReg("cgive", new CgiveCommand(citemManager));
         cmdReg("cremove", new CremoveCommand(citemManager, lang));
         cmdReg("stats", new StatsCommand(statsManager));
         cmdReg("globalstats", new GlobalStatCommand(statsManager));
