@@ -15,6 +15,8 @@ import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
+import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -45,6 +47,7 @@ public class CitemManager {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private InteractionManager interactionManager;
     private final LogManager log = new LogManager(new LangManager(WoSCore.getPlugin(WoSCore.class)),WoSCore.getPlugin(WoSCore.class));
+    private final LangManager lang = new LangManager(WoSCore.getPlugin(WoSCore.class));
     private final CitemCommand cmd;
 
 
@@ -129,7 +132,30 @@ public class CitemManager {
     }
 
 
+    public void giveCitem(CommandSender s, Player t, String id, Integer amount) {
+        if (!citemFolder.exists()) {
+            Utils.error(s, "citems", "error.no-items");
+            return;
+        }
 
+        File itemFile = new File(citemFolder, id + ".json");
+        if (!itemFile.exists()) {
+            Utils.error(s, "citems", "error.no-items");
+            return;
+        }
+        ItemStack savedItem = loadItemFromFile(itemFile);
+        ItemStack item = savedItem.clone();
+
+        item.setAmount(amount);
+        if (savedItem == null) {
+            Utils.error(s, "citems", "error.not-found");
+            return;
+        }
+        t.getInventory().addItem(item);
+        t.playSound(t.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1 ,1);
+        String message = lang.getMessage("citems", "given").replace("%amount%", String.valueOf(amount)).replace("%id%", id).replace("%player%", t.getName());
+        s.sendMessage(message);
+    }
 
 
     public void updateItemInFile(ItemStack item, File file) {
@@ -390,26 +416,6 @@ public class CitemManager {
         if (actionId != null) {
             interactionManager.triggerInteraction(p, actionId);
         }
-    }
-
-    public NamespacedKey getIdKey() {
-        return idKey;
-    }
-
-    public NamespacedKey getUndroppableKey() {
-        return undroppableKey;
-    }
-
-    public NamespacedKey getUnusableKey() {
-        return unusableKey;
-    }
-
-    public NamespacedKey getLeftActionKey() {
-        return leftActionKey;
-    }
-
-    public NamespacedKey getRightActionKey() {
-        return rightActionKey;
     }
 
 
