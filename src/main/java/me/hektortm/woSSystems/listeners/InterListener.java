@@ -128,7 +128,6 @@ public class InterListener implements Listener {
             if (file.isFile() && file.getName().endsWith(".json")) {
                 String id = file.getName().replace(".json", "");
                 InteractionData inter = interManager.interactionMap.get(id);
-                System.out.println("Looking for InteractionData with id: " + id);
                 if (inter == null) {
                     Bukkit.getLogger().info("Inter "+id+" is null.");
                 }
