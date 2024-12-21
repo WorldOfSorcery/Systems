@@ -12,8 +12,10 @@ public class InteractionData {
     private final List<String> npcIDs;
     private final String particleType;
     private final String particleColor;
+    private final String elseParticleType;
+    private final String elseParticleColor;
 
-    public InteractionData(JSONObject conditions, List<String> actions, List<Location> locations, List<String> npcIDs, String particleType, String particleColor) {
+    public InteractionData(JSONObject conditions, List<String> actions, List<Location> locations, List<String> npcIDs, String particleType, String particleColor, String elseParticleType, String elseParticleColor) {
 
         this.conditions = conditions;
         this.actions = actions;
@@ -21,6 +23,8 @@ public class InteractionData {
         this.npcIDs = npcIDs;
         this.particleType = particleType;
         this.particleColor = particleColor;
+        this.elseParticleType = elseParticleType;
+        this.elseParticleColor = elseParticleColor;
     }
 
 
@@ -46,6 +50,13 @@ public class InteractionData {
 
     public String getParticleColor() {
         return particleColor;
+    }
+
+    public String getElseParticleType() {
+        return elseParticleType;
+    }
+    public String getElseParticleColor() {
+        return elseParticleColor;
     }
 
     // Methods to add locations and NPC IDs

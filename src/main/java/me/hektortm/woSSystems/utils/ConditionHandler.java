@@ -90,6 +90,51 @@ public class ConditionHandler {
         return true;
     }
 
+    public boolean validateConditionsNoActions(Player player, JSONObject conditions) {
+        if (conditions == null) {
+            return true; // No conditions mean the recipe is allowed
+        }
+
+        for (Object conditionType : conditions.keySet()) {
+            String type = conditionType.toString();
+            JSONObject specificConditions = (JSONObject) conditions.get(conditionType);
+
+            switch (type) {
+                case "unlockable":
+                    if (!validateUnlockable(player, specificConditions)) {
+                        return false;
+                    }
+                    break;
+
+                case "stats":
+                    if (!validateStats(player, specificConditions)) {
+                        return false;
+                    }
+                    break;
+                case "permission":
+                    if(!validatePermission(player, specificConditions)) {
+                        return false;
+                    }
+                    break;
+                case "citem":
+                    if(!validateCitem(player, specificConditions)) {
+                        return false;
+                    }
+                    break;
+                case "currency":
+                    if (!validateCurrency(player, specificConditions)) {
+                        return false;
+                    }
+                    break;
+
+                default:
+                    throw new IllegalArgumentException("Unknown condition type: " + type);
+            }
+        }
+
+        return true;
+    }
+
     private void validateElse(Player p, JSONArray elseActions) {
         for (Object elseAction : elseActions) {
             String action = elseAction.toString();
