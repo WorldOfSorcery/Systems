@@ -203,10 +203,9 @@ public class UnlockableManager {
         String path = "unlockables";
         List<String> unlockableList = playerData.getStringList(path);
         if (unlockableList.contains(id)) {
-            Bukkit.getLogger().info(p.getName() + ": "+id+" true");
+
             return true;
         }
-        Bukkit.getLogger().info(p.getName() + ": "+id+" false");
         return false;
     }
     public boolean getPlayerTempUnlockable(OfflinePlayer p, String id) {
