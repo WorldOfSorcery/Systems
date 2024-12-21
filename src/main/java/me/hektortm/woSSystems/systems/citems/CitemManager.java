@@ -127,6 +127,9 @@ public class CitemManager {
                 Damageable damageableMeta = (Damageable) meta;
                 itemData.put("damage", damageableMeta.getDamage()); // Use getDamage() here
             }
+            if (meta.hasCustomModelData()) {
+                itemData.put("custom_model_data", meta.getCustomModelData());
+            }
         }
 
         // Write to file
@@ -226,6 +229,9 @@ public class CitemManager {
             if (meta instanceof Damageable) {
                 Damageable damageableMeta = (Damageable) meta;
                 itemData.put("damage", damageableMeta.getDamage());
+            }
+            if (meta.hasCustomModelData()) {
+                itemData.put("custom_model_data", meta.getCustomModelData());
             }
         }
 
@@ -361,6 +367,10 @@ public class CitemManager {
                         Damageable damageableMeta = (Damageable) meta;
                         damageableMeta.setDamage(damage);  // Set the damage value
                     }
+                }
+                if(jsonObject.has("custom_model_data")) {
+                    int customModelData = jsonObject.get("custom_model_data").getAsInt();
+                    meta.setCustomModelData(customModelData);
                 }
 
                 itemStack.setItemMeta(meta);

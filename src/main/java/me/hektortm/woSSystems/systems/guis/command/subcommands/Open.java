@@ -11,11 +11,9 @@ import org.bukkit.entity.Player;
 
 public class Open extends SubCommand {
 
-    private final InteractionManager interactionManager;
     private final GUIManager guiManager;
 
-    public Open(InteractionManager interactionManager, GUIManager guiManager) {
-        this.interactionManager = interactionManager;
+    public Open(GUIManager guiManager) {
         this.guiManager = guiManager;
 
     }
@@ -39,26 +37,13 @@ public class Open extends SubCommand {
         }
 
         Player target = Bukkit.getPlayer(args[0]);
-        String interactionId = args[1];
+        String id = args[1];
 
         if (target == null) {
             sender.sendMessage(ChatColor.RED + "Player not found: " + args[0]);
             return;
         }
 
-       /*
-
-        if (interactionConfig != null) {
-            Player p = Bukkit.getPlayer(args[0]);
-
-            p.closeInventory();
-            guiManager.openGUI(target, interactionConfig);
-            sender.sendMessage("Opening the GUI(" + interactionId+") for "+target.getName());
-        } else {
-            sender.sendMessage(ChatColor.RED + "GUI not found: " + interactionId);
-        }
-
-        */
-
+        guiManager.openGUI(target, id);
     }
 }

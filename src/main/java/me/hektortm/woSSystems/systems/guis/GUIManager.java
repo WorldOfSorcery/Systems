@@ -1,188 +1,121 @@
 package me.hektortm.woSSystems.systems.guis;
 
-
-import me.hektortm.woSSystems.systems.citems.CitemManager;
-import me.hektortm.woSSystems.systems.interactions.actions.ActionHandler;
-import me.hektortm.woSSystems.utils.PlaceholderResolver;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import me.hektortm.woSSystems.WoSSystems;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.Plugin;
 
 import java.io.File;
+import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 public class GUIManager implements Listener {
 
+    private final Gson gson = new Gson();
+    private final Map<String, Inventory> guis = new HashMap<>();
+    private final File guiFolder = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "guis");
 
-
-    private final Plugin plugin;
-    private final ActionHandler actionHandler;
-    private final PlaceholderResolver resolver;
-    private final CitemManager citemManager;
-
-    public GUIManager(Plugin plugin, ActionHandler actionHandler, PlaceholderResolver resolver, CitemManager citemManager) {
-        this.plugin = plugin;
-        this.citemManager = citemManager;
-        this.actionHandler = actionHandler;
-        this.resolver = resolver;
-        Bukkit.getPluginManager().registerEvents(this, plugin);
+    public GUIManager() {
     }
-/*
-    // Open a GUI for the player
-    public void openGUI(Player player) {
-        String title = interactionConfig.getInventoryTitle();
-        int rows = interactionConfig.getInventoryRows();
+
+    public void loadGUIs() {
+        if (!guiFolder.exists() || !guiFolder.isDirectory()) {
+            System.err.println("Invalid directory: " + guiFolder.getAbsolutePath());
+            return;
+        }
+
+        File[] files = guiFolder.listFiles((dir, name) -> name.endsWith(".json"));
+        if (files == null) return;
+
+        for (File file : files) {
+            String guiID = file.getName().replace(".json", "");
+            try {
+                JsonObject json = JsonParser.parseReader(new FileReader(file)).getAsJsonObject();
+                Inventory gui = createGUIFromJson(json);
+                guis.put(guiID, gui);
+                System.out.println("Loaded GUI: " + guiID);
+            } catch (Exception e) {
+                System.err.println("Failed to load GUI from " + file.getName() + ": " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // Create GUI from JSON
+    private Inventory createGUIFromJson(JsonObject config) {
+        String title = ChatColor.translateAlternateColorCodes('&', config.get("title").getAsString());
+        int rows = config.get("rows").getAsInt();
         Inventory inventory = Bukkit.createInventory(null, rows * 9, title);
 
-        // Update the inventory items based on the current player stats
-        updateInventory(inventory, interactionConfig, player);
-
-        // Track that this player has this custom GUI open
-        openGUIs.put(player, interactionConfig);
-
-        // Open the inventory for the player
-        player.openInventory(inventory);
-    }
-
-    private void updateInventory(Inventory inventory, InteractionConfig interactionConfig, Player player) {
-        // Clear the inventory to prepare for new items
-        inventory.clear();
-
-        // Setup inventory slots based on the configuration
-        Map<Integer, Map<String, Object>> slots = interactionConfig.getSlots();
-        for (Map.Entry<Integer, Map<String, Object>> entry : slots.entrySet()) {
-            int slot = entry.getKey();
-            // Create items based on the current stats instead of a static config
-            inventory.setItem(slot, createItemFromConfig2(entry.getValue(), player));
-        }
-
-        // The inventory is now populated with the latest items
-    }
-
-    private ItemStack createItemFromConfig2(Map<String, Object> slotConfig, Player player) {
-        ItemStack item = null;
-        ItemMeta meta = null;
-
-        // Check if it's a citem
-        if (slotConfig.containsKey("citem")) {
-            String citemId = (String) slotConfig.get("citem");
-
-            // Load the citem from the custom item system (replace with your actual loading mechanism)
-            File citemFile = new File(plugin.getDataFolder()+ "citems/", citemId + ".json");  // Adjust the path as needed
-            item = citemManager.loadItemFromFile(citemFile);  // Assuming this method returns an ItemStack
-
+        JsonObject slots = config.getAsJsonObject("slots");
+        for (Map.Entry<String, JsonElement> entry : slots.entrySet()) {
+            int slot = Integer.parseInt(entry.getKey());
+            JsonObject itemConfig = entry.getValue().getAsJsonObject().getAsJsonObject("item");
+            ItemStack item = createItem(itemConfig);
             if (item != null) {
-                meta = item.getItemMeta();  // Use the metadata from the custom item directly
+                inventory.setItem(slot, item);
             }
-
-            List<String> lore = (List<String>) slotConfig.get("citem.lore");
-            if (lore != null) {
-                for (int i = 0; i < lore.size(); i++) {
-                    lore.set(i, lore.get(i).replace("&", "§"));
-                }
-                meta.setLore(lore);
-            }
-
         }
 
-        // If no citem or it failed to load, fallback to a regular item
-        if (item == null && slotConfig.containsKey("item")) {
-            Material material = Material.getMaterial((String) slotConfig.get("item"));
-            if (material == null) material = Material.STONE;  // Fallback to stone if item is invalid
-            item = new ItemStack(material, (int) slotConfig.getOrDefault("amount", 1));
-            meta = item.getItemMeta();  // Use the regular item meta
-        }
-
-        // If no valid item was found, fallback to STONE
-        if (item == null) {
-            item = new ItemStack(Material.STONE);  // Default to stone
-            meta = item.getItemMeta();
-        }
-
-        // Apply metadata from slotConfig only if it's a regular item (not citem)
-        if (meta != null && !slotConfig.containsKey("citem")) {
-            // Set custom name from slotConfig
-            String name = (String) slotConfig.get("meta.name");
-            if (name != null) {
-                meta.setDisplayName(name.replace("&", "§"));
-            }
-
-            // Set lore dynamically based on the config
-            List<String> lore = (List<String>) slotConfig.get("meta.lore");
-            if (lore != null) {
-                for (int i = 0; i < lore.size(); i++) {
-                    lore.set(i, lore.get(i).replace("&", "§"));
-                }
-                meta.setLore(lore);
-            }
-
-            // Set unbreakable
-            Boolean unbreakable = (Boolean) slotConfig.get("meta.unbreakable");
-            if (unbreakable != null) meta.setUnbreakable(unbreakable);
-
-            item.setItemMeta(meta);
-        }
-
-        return item;
+        return inventory;
     }
 
-    // Create an item based on YAML configuration
-    private ItemStack createItemFromConfig(Map<String, Object> slotConfig, Player player) {
-        Material material = Material.getMaterial((String) slotConfig.get("item"));
-        if (material == null) material = Material.STONE;  // Fallback to stone if item is invalid
-        ItemStack item = new ItemStack(material, (int) slotConfig.getOrDefault("amount", 1));
+    // Open a GUI for a player
+    public void openGUI(Player player, String guiID) {
+        Inventory gui = guis.get(guiID);
+        if (gui != null) {
+            player.openInventory(gui);
+        } else {
+            player.sendMessage(ChatColor.RED + "GUI with ID '" + guiID + "' not found.");
+        }
+    }
 
+
+    private ItemStack createItem(JsonObject itemConfig) {
+        if (itemConfig == null) return null;
+
+        Material material = Material.BARRIER;
+        if (itemConfig.has("material")) material = Material.getMaterial(itemConfig.get("material").getAsString());
+
+        ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            // Set custom name
-            String name = (String) slotConfig.get("meta.name");
-            if (name != null) {
-                name = resolver.resolvePlaceholders(name, player);  // Ensure this accesses the current player's state
-                meta.setDisplayName(name.replace("&", "§"));
+        if (meta == null) return null;
+        if (itemConfig.has("name")) {
+            String name = ChatColor.translateAlternateColorCodes('&', itemConfig.get("name").getAsString());
+            meta.setDisplayName(name);
+        }
+        if (itemConfig.has("lore")) {
+            List<String> lore = new ArrayList<>();
+            for (JsonElement line : itemConfig.getAsJsonArray("lore")) {
+                lore.add(ChatColor.translateAlternateColorCodes('&', line.getAsString()));
             }
-
-            // Set lore dynamically based on current player stats
-            List<String> lore = (List<String>) slotConfig.get("meta.lore");
-            if (lore != null) {
-                for (int i = 0; i < lore.size(); i++) {
-                    // Resolve lore with current player stats
-                    lore.set(i, resolver.resolvePlaceholders(lore.get(i), player).replace("&", "§"));
-                }
-                meta.setLore(lore);
-            }
-
-            // Set unbreakable
-            Boolean unbreakable = (Boolean) slotConfig.get("meta.unbreakable");
-            if (unbreakable != null) meta.setUnbreakable(unbreakable);
-
-            item.setItemMeta(meta);
+            meta.setLore(lore);
         }
 
+        if (itemConfig.has("amount")) {
+            int amount = itemConfig.getAsJsonPrimitive("amount").getAsInt();
+            item.setAmount(amount);
+        }
+
+        if(itemConfig.has("enchanted") && itemConfig.get("enchanted").getAsBoolean()) {
+            meta.addEnchant(Enchantment.UNBREAKING, 1, true);
+        }
+        item.setItemMeta(meta);
         return item;
+
     }
-
-
-    public boolean hasCustomGUIOpen(Player player) {
-        return openGUIs.containsKey(player);
-    }
-
-    // Get the InteractionConfig for the player’s open GUI
-    public InteractionConfig getOpenGUIConfig(Player player) {
-        return openGUIs.get(player);
-    }
-
-    // Remove the player from the open GUI map when they close their GUI
-    public void closeGUI(Player player) {
-        openGUIs.remove(player);
-    }
-
- */
-
 }
