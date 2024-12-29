@@ -43,7 +43,6 @@ public class Open extends SubCommand {
             sender.sendMessage(ChatColor.RED + "Player not found: " + args[0]);
             return;
         }
-
         guiManager.openGUI(target, id);
     }
 }

@@ -83,6 +83,16 @@ commands:
     permission: loottable.give
     usage: /<command> give
 
+  gui:
+    description: gui
+    usage: /<command> open
+  sign:
+    description: sign item
+    usage: /<command>
+  meta:
+    description: meta
+    usage: /meta
+
 permissions:
   # Loot table Permissions
   loottable.give:

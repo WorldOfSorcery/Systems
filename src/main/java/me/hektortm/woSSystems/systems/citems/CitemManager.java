@@ -27,14 +27,15 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.json.simple.JSONObject;
 
+import javax.xml.stream.events.Namespace;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 public class CitemManager {
 
@@ -43,6 +44,9 @@ public class CitemManager {
     private final NamespacedKey idKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "id");
     private final NamespacedKey leftActionKey;
     private final NamespacedKey rightActionKey;
+    private final NamespacedKey timeKey;
+    private final NamespacedKey nameKey;
+    public final NamespacedKey ownerKey;
     public final File citemFolder;
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
@@ -59,6 +63,10 @@ public class CitemManager {
         unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
         leftActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-left");
         rightActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-right");
+        timeKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "stamp-time");
+        nameKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "stamp-name");
+        ownerKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "owner");
+
     }
 
     public void setInteractionManager(InteractionManager interactionManager) {
@@ -155,6 +163,9 @@ public class CitemManager {
         }
         ItemStack savedItem = loadItemFromFile(itemFile);
         ItemStack item = savedItem.clone();
+        ItemMeta meta = item.getItemMeta();
+        PersistentDataContainer data = meta.getPersistentDataContainer();
+        data.set(ownerKey, PersistentDataType.STRING, t.getUniqueId().toString());
 
         item.setAmount(amount);
         if (savedItem == null) {
@@ -178,9 +189,12 @@ public class CitemManager {
 
         // Get the item meta and check if it's not null
         ItemMeta meta = item.getItemMeta();
+
         if (meta != null) {
             // Preserve the ID (if present) in the PersistentDataContainer
             PersistentDataContainer data = meta.getPersistentDataContainer();
+            String time = data.get(timeKey, PersistentDataType.STRING);
+            String name = data.get(nameKey, PersistentDataType.STRING);
             if (data.has(idKey, PersistentDataType.STRING)) {
                 String id = data.get(idKey, PersistentDataType.STRING);
                 itemData.put("id", id);
@@ -384,41 +398,110 @@ public class CitemManager {
 
     public void updateItem(Player p) {
         ItemStack item = p.getItemInHand();
-        if (item == null || !item.hasItemMeta()) return;
-
+        if (item == null || item.getType() == Material.AIR) {
+            return;
+        }
         ItemMeta meta = item.getItemMeta();
+
+        if (meta == null || !meta.hasLore()) return;
+
+        List<String> copyLore = meta.getLore();
+        int length = copyLore.size();
+
+        String time = "Null";
+        String nameKey2 = "Null";
+
+        // Process lore to preserve "Time" and "Obtained by" and remove others
+        if (length > 1) {
+            String indLast = copyLore.get(length - 1);
+            String indSecLast = copyLore.get(length - 2);
+
+            // If "Time" and "Obtained by" are found, capture their values and remove them from the main lore list
+            if (indLast.contains("Time:")) {
+                time = indLast.split("Time: ")[1];
+                nameKey2 = indSecLast.split("Obtained by: ")[1];
+
+                // Safely remove the last 3 lore entries containing "Time" and "Obtained by"
+                int itemsToRemove = Math.min(3, copyLore.size());
+                for (int i = 0; i < itemsToRemove; i++) {
+                    copyLore.remove(copyLore.size() - 1);
+                }
+            }
+        }
+
+        // Remove "Time" and "Obtained by" entries from the filtered lore list (do not touch these in the update)
+        List<String> filteredLore = new ArrayList<>();
+        for (String loreLine : copyLore) {
+            if (!loreLine.contains("Time:") && !loreLine.contains("Obtained by:")) {
+                filteredLore.add(loreLine);
+            }
+        }
+
+        // Now check if the filtered lore is different from the original lore
+        boolean loreChanged = !filteredLore.equals(copyLore);
+
+        // If the lore was changed, update it on the item
+        if (loreChanged) {
+            meta.setLore(filteredLore);
+            item.setItemMeta(meta);
+        }
+
+        if (item == null || !item.hasItemMeta()) return;
         if (meta == null) return;
 
         // Attempt to retrieve the item's ID from persistent data
         NamespacedKey idKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "id");
         PersistentDataContainer data = meta.getPersistentDataContainer();
-        String itemId = data.get(idKey, PersistentDataType.STRING); // Retrieve the actual item ID
+        String itemId = data.get(idKey, PersistentDataType.STRING);
 
-        // Check if item has a valid ID
         if (itemId != null) {
             // Construct the file path based on the ID
             File file = new File(cmd.citemsFolder, itemId + ".json");
 
-            // Check if the file exists
             if (!file.exists()) {
-                // Remove the item from the player's inventory
+                // Remove the item from the player's inventory if the file doesn't exist
                 p.getInventory().remove(item);
                 Utils.successMsg1Value(p, "citems", "update.removed", "%item%", item.getItemMeta().getDisplayName());
-                return; // Exit the method early since the item was removed
+                return;
             }
 
             // Load the item data from the file
             ItemStack savedItem = loadItemFromFile(file);
 
+            // Compare the item meta and update if necessary
             if (savedItem != null && !item.isSimilar(savedItem)) {
-                // Update the player's item to match the saved data if there are differences
-                item.setItemMeta(savedItem.getItemMeta());
-                Utils.successMsg1Value(p, "citems", "update.updated", "%item%", item.getItemMeta().getDisplayName());
+                ItemMeta newMeta = savedItem.getItemMeta();
+                if (newMeta != null) {
+                    // Keep the "Time" and "Obtained by" intact, but update other lore entries
+                    List<String> newLore = newMeta.getLore();
+
+                    // Re-attach "Time" and "Obtained by" to the new lore
+                    if (nameKey2 != null && !nameKey2.equals("Null") && time != null && !time.equals("Null")) {
+                        newLore.add("§7");
+                        newLore.add("§7Signed by: §e" + nameKey2);
+                        newLore.add("§7Time: §e" + time);
+                    }
+
+                    newMeta.setLore(newLore);
+                    savedItem.setItemMeta(newMeta);
+
+                    // Update the player's item to match the saved data
+                    if (!newMeta.equals(meta)) {  // Only update if the new meta is different
+                        item.setItemMeta(newMeta);
+                        Utils.successMsg1Value(p, "citems", "update.updated", "%item%", item.getItemMeta().getDisplayName());
+                    }
+                }
             }
         } else {
-            log.sendWarning(p.getName() + ": Item \""+ item.getItemMeta().getDisplayName()+"%red_300%\" -> no valid ID");
+            log.sendWarning(p.getName() + ": Item \"" + item.getItemMeta().getDisplayName() + "%red_300%\" -> no valid ID");
         }
     }
+
+
+
+
+
+
 
 
     public void leftClickAction(Player p) {
@@ -448,6 +531,68 @@ public class CitemManager {
             interactionManager.triggerInteraction(p, actionId);
         }
     }
+
+    private void setStamp(ItemStack item) {
+        if (item == null) return;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        PersistentDataContainer data = meta.getPersistentDataContainer();
+        String time = data.get(timeKey, PersistentDataType.STRING);
+        String name = data.get(nameKey, PersistentDataType.STRING);
+
+        System.out.println("Setting stamp: time=" + time + ", name=" + name);
+
+        if (time == null || name == null) {
+            System.out.println("Time or name is null, skipping stamp.");
+            return;
+        }
+
+        List<String> lore = meta.getLore();
+        if (lore == null) {
+            lore = new ArrayList<>();
+        }
+
+        lore.add("§7");
+        lore.add("§7Signed by: §e" + name);
+        lore.add("§7Time: §e" + time);
+
+        meta.setLore(lore);
+        item.setItemMeta(meta); // Ensure changes are applied
+    }
+
+
+
+    public void createStamp(Player player, ItemStack item) {
+        if (item == null || player == null) return;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        PersistentDataContainer data = meta.getPersistentDataContainer();
+
+        String parsedTime = parseTime();
+        String playerName = player.getName();
+
+        data.set(timeKey, PersistentDataType.STRING, parsedTime);
+        data.set(nameKey, PersistentDataType.STRING, playerName);
+
+
+        item.setItemMeta(meta); // Ensure changes are applied
+        setStamp(item); // Ensure stamping happens after setting data
+    }
+
+
+
+
+    private String parseTime() {
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        return now.format(formatter);
+    }
+
+
 
     public NamespacedKey getIdKey() {
         return idKey;

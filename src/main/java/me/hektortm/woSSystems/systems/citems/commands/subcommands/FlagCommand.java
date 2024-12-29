@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 
 import com.google.common.collect.Multimap;
+import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
@@ -27,8 +28,10 @@ public class FlagCommand extends SubCommand {
 
     private final NamespacedKey undroppableKey;
     private final NamespacedKey unusableKey;
+    private final NamespacedKey ownerKey;
 
     public FlagCommand(CitemManager data) {
+        ownerKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "owner");
         undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
         unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
     }
@@ -99,6 +102,11 @@ public class FlagCommand extends SubCommand {
                     meta.addItemFlags(ItemFlag.HIDE_PLACED_ON);
                     Utils.successMsg(p, "citems", "flag.add.hide");
                 }
+                if (flag.equals("owner")) {
+                    PersistentDataContainer data = meta.getPersistentDataContainer();
+                    data.set(ownerKey, PersistentDataType.STRING, "");
+                }
+
                 break;
 
             case "remove":
