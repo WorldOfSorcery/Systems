@@ -5,6 +5,7 @@ import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.citems.commands.subcommands.*;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
+import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.LangManager;
@@ -25,6 +26,7 @@ public class CitemCommand implements CommandExecutor {
     private final Map<String, SubCommand> subCommands = new HashMap<>();
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final CitemManager data = plugin.getCitemManager();
+    private final StatsManager statsManager = plugin.getStatsManager();
     private InteractionManager interactionManager;
     private final LangManager lang = plugin.getLangManager();
     private final LogManager log = plugin.getLogManager();
@@ -40,6 +42,7 @@ public class CitemCommand implements CommandExecutor {
         subCommands.put("flag", new FlagCommand(data));
         subCommands.put("delete", new DeleteCommand(this, log));
         subCommands.put("action", new ActionCommand(interactionManager));
+        subCommands.put("stamp", new Stamp(data));
         subCommands.put("tag", new Tag());
         subCommands.put("info", new Info(data));
     }

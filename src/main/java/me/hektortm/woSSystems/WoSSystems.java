@@ -12,6 +12,10 @@ import me.hektortm.woSSystems.economy.commands.EcoCommand;
 import me.hektortm.woSSystems.economy.commands.PayCommand;
 import me.hektortm.woSSystems.listeners.*;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
+import me.hektortm.woSSystems.systems.citems.commands.SignCommand;
+import me.hektortm.woSSystems.systems.citems.commands.subcommands.MetaCommand;
+import me.hektortm.woSSystems.systems.guis.GUIManager;
+import me.hektortm.woSSystems.systems.guis.command.GUIcommand;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.systems.loottables.LoottableManager;
 import me.hektortm.woSSystems.systems.loottables.commands.LoottableCommand;
@@ -67,6 +71,7 @@ public final class WoSSystems extends JavaPlugin {
     private NicknameManager nickManager;
     private Coinflip coinflipCommand;
     private LoottableManager lootTableManager;
+    private GUIManager guiManager;
 
 
     // TODO:
@@ -102,7 +107,7 @@ public final class WoSSystems extends JavaPlugin {
         lootTableManager = new LoottableManager(interactionManager, citemManager);
         coinflipCommand = new Coinflip(ecoManager, this, lang);
 
-
+        guiManager = new GUIManager();
 // Initialize the remaining managers
         recipeManager = new CRecipeManager(interactionManager);
         fishingManager = new FishingManager(fishingItemsFolder);
@@ -124,15 +129,6 @@ public final class WoSSystems extends JavaPlugin {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }
 
-        /*
-        InventoryInteraction inventoryInteraction = new InventoryInteraction(this, actionHandler);
-        for (Map.Entry<String, InteractionConfig> entry : interactionConfigs.entrySet()) {
-            InteractionConfig config = entry.getValue();
-            getServer().getPluginManager().registerEvents(new InventoryClickListener(inventoryInteraction, config, guiManager), this);
-        }
-         */
-
-        // Finalize initialization
 
         recipeManager.loadRecipes();
         registerCommands();
@@ -141,6 +137,7 @@ public final class WoSSystems extends JavaPlugin {
         interactionManager.particleTask();
         unlockableManager.loadUnlockables();
         unlockableManager.loadTempUnlockables();
+        guiManager.loadGUIs();
     }
 
     @Override
@@ -167,6 +164,10 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("channel", new ChatCommand(chatManager));
         cmdReg("nickname", new NicknameCommand(nickManager, chatManager));
         cmdReg("loottable", new LoottableCommand(lootTableManager));
+        cmdReg("gui", new GUIcommand(guiManager));
+        cmdReg("sign", new SignCommand(citemManager, statsManager));
+
+        cmdReg("meta", new MetaCommand());
     }
 
     private void registerEvents() {
@@ -182,7 +183,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new ChatListener(chatManager, nickManager));
         eventReg(new JoinListener(chatManager));
 
-        getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager), this);
+        getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager, guiManager), this);
     }
 
     private void eventReg(Listener l) {

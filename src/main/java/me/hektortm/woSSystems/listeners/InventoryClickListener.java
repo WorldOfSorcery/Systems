@@ -1,12 +1,17 @@
 package me.hektortm.woSSystems.listeners;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import me.hektortm.woSSystems.chat.NicknameManager;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
+import me.hektortm.woSSystems.systems.guis.GUIManager;
 import me.hektortm.woSSystems.utils.dataclasses.Challenge;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -16,6 +21,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
@@ -28,19 +34,23 @@ public class InventoryClickListener implements Listener {
     private final Coinflip coinflipCommand;
     private final LangManager lang;
     private final NicknameManager nickManager;
+    private final GUIManager guiManager;
     private final Map<UUID, String> nickRequests;
 
-    public InventoryClickListener(EcoManager ecoManager, Coinflip coinflipCommand, LangManager lang, Map<UUID, String> nickRequests, NicknameManager nickManager) {
+
+    public InventoryClickListener(EcoManager ecoManager, Coinflip coinflipCommand, LangManager lang, Map<UUID, String> nickRequests, NicknameManager nickManager, GUIManager guiManager) {
         this.ecoManager = ecoManager;
         this.coinflipCommand = coinflipCommand;
         this.lang = lang;
         this.nickManager = nickManager;
         this.nickRequests = nickRequests;
+        this.guiManager = guiManager;
     }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
+        Inventory inv = event.getClickedInventory();
 
         if (event.getView().getTitle().equalsIgnoreCase(lang.getMessage("economy", "coinflip.gui.title"))) {
             event.setCancelled(true);
@@ -143,7 +153,68 @@ public class InventoryClickListener implements Listener {
             player.closeInventory();
         }
 
+        if (guiManager.openGUIs.containsKey(player.getUniqueId())) {
+            if (inv == null || event.getView().getTopInventory() != inv) {
+                return;
+            }
 
+            // Fetch GUI ID from the title
+            String guiID = guiManager.openGUIs.get(player.getUniqueId());
+
+            // Check if the GUI exists
+            if (!guiManager.guiConfigs.containsKey(guiID)) {
+                return;
+            }
+
+            event.setCancelled(true); // Prevent default interactions
+
+            JsonObject guiConfig = guiManager.guiConfigs.get(guiID);
+            String slotKey = String.valueOf(event.getRawSlot());
+
+            // Check if the clicked slot is defined in the GUI config
+            JsonObject slotConfig = guiConfig.getAsJsonObject("slots").getAsJsonObject(slotKey);
+            if (slotConfig == null) {
+                return;
+            }
+
+            // Check if slot is clickable
+            JsonObject attributes = slotConfig.getAsJsonObject("attributes");
+            if (attributes != null && attributes.has("clickable") && !attributes.get("clickable").getAsBoolean()) {
+                return;
+            }
+
+            // Handle slot actions
+            JsonObject actions = slotConfig.getAsJsonObject("actions");
+            if (actions != null) {
+                String actionType = getClickAction(event);
+                JsonArray actionList = actions.getAsJsonArray(actionType);
+
+                if (actionList != null) {
+                    for (JsonElement action : actionList) {
+                        executeAction((Player) event.getWhoClicked(), action.getAsString());
+                    }
+                }
+            }
+        }
+
+
+
+    }
+    private String getClickAction(InventoryClickEvent event) {
+        if (event.isShiftClick()) {
+            if (event.isLeftClick()) return "shift-left";
+            if (event.isRightClick()) return "shift-right";
+        } else {
+            if (event.isLeftClick()) return "left";
+            if (event.isRightClick()) return "right";
+        }
+        return "unknown";
+    }
+
+    // Execute actions (stub for demonstration purposes)
+    private void executeAction(Player player, String action) {
+        player.sendMessage(ChatColor.GREEN + "Executed action: " + action);
+        // Add your action execution logic here
     }
 
 }
