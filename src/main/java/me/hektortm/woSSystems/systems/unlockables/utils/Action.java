@@ -1,6 +1,3 @@
 package me.hektortm.woSSystems.systems.unlockables.utils;
 
-public enum Action {
-    GIVE, TAKE
-
-}
+public enum Action {GIVE, TAKE}

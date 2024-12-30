@@ -1,6 +1,6 @@
 <component name="ArtifactManager">
   <artifact type="jar" name="WoSSystems">
-    <output-path>$USER_HOME$/Desktop/1.20.1 Server/plugins</output-path>
+    <output-path>I:/1.20.1 Server/plugins</output-path>
     <root id="archive" name="WoSSystems.jar">
       <element id="module-output" name="WoSSystems" />
     </root>

@@ -45,9 +45,10 @@ public class GiveCommand extends SubCommand {
         }
 
         String playerName = args[0];
-        String currencyName = args[1].replace("_", " ");
+        String currencyID = args[1];
         int amount;
-        Currency currency = ecoManager.getCurrencies().get(currencyName.toLowerCase());
+        Currency currency = ecoManager.getCurrencies().get(currencyID.toLowerCase());
+        String name = currency.getName();
         String color = currency.getColor();
         String icon = currency.getIcon();
 
@@ -70,17 +71,17 @@ public class GiveCommand extends SubCommand {
         }
 
         if (sender instanceof Player p && target.getName().equals(p.getName())) {
-                log.sendWarning(p.getName()+ "-> "+ target.getName() +": Gave "+amount+" "+currencyName);
-                log.writeLog(p, "-> "+ target.getName() +": Gave "+amount+" "+currencyName);
+                log.sendWarning(p.getName()+ "-> "+ target.getName() +": Gave "+amount+" "+currencyID);
+                log.writeLog(p, "-> "+ target.getName() +": Gave "+amount+" "+currencyID);
         }
 
-        ecoManager.modifyCurrency(target.getUniqueId(), currencyName, amount, EcoManager.Operation.GIVE);
-        WoSSystems.ecoMsg3Values(sender, "economy", "currency.given", "%amount%", String.valueOf(amount), "%currency%", color+currencyName, "%player%", playerName);
+        ecoManager.modifyCurrency(target.getUniqueId(), currencyID, amount, EcoManager.Operation.GIVE);
+        WoSSystems.ecoMsg3Values(sender, "economy", "currency.given", "%amount%", String.valueOf(amount), "%currency%", color+name, "%player%", playerName);
 
         String actionbar = lang.getMessage("economy", "actionbar.given")
                 .replace("%icon%", icon)
                 .replace("%amount%", String.valueOf(amount))
-                .replace("%name%", currencyName)
+                .replace("%name%", name)
                 .replace("%color%", color);
         target.sendActionBar(actionbar);
 

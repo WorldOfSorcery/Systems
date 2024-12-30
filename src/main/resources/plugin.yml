@@ -89,9 +89,6 @@ commands:
   sign:
     description: sign item
     usage: /<command>
-  meta:
-    description: meta
-    usage: /meta
 
 permissions:
   # Loot table Permissions

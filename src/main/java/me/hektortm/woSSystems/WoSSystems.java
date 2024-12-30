@@ -165,9 +165,9 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("nickname", new NicknameCommand(nickManager, chatManager));
         cmdReg("loottable", new LoottableCommand(lootTableManager));
         cmdReg("gui", new GUIcommand(guiManager));
-        cmdReg("sign", new SignCommand(citemManager, statsManager));
+        cmdReg("sign", new SignCommand(citemManager, ecoManager));
 
-        cmdReg("meta", new MetaCommand());
+     //   cmdReg("meta", new MetaCommand());
     }
 
     private void registerEvents() {

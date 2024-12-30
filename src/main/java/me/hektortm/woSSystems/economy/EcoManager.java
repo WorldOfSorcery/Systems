@@ -8,6 +8,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 public class EcoManager {
@@ -22,10 +23,11 @@ public class EcoManager {
         this.currencyDirectory = new File(plugin.getDataFolder(), "currencies");
         this.core = (WoSCore) plugin.getServer().getPluginManager().getPlugin("WoSCore");
 
+        loadDefaultCurrencies();
         loadCurrencies();
     }
 
-    public void modifyCurrency(UUID uuid, String currencyName, long amount, Operation operation) {
+    public void modifyCurrency(UUID uuid, String currencyID, long amount, Operation operation) {
         Player player = plugin.getServer().getPlayer(uuid);
 
 
@@ -33,7 +35,7 @@ public class EcoManager {
         FileConfiguration playerData = core.getPlayerData(uuid, player.getName());
         File playerFile = new File(core.getDataFolder() ,"playerdata" + File.separator + uuid + ".yml");
 
-        String path = "economy." + currencyName;
+        String path = "economy." + currencyID;
         long currentAmount = playerData.getLong(path, 0);
 
         switch (operation) {
@@ -69,6 +71,7 @@ public class EcoManager {
             for (File file : files) {
                 FileConfiguration config = YamlConfiguration.loadConfiguration(file);
 
+                String id = file.getName().replace(".yml", "");
                 String name = config.getString("name");
                 String shortName = config.getString("short");
                 String icon = config.getString("icon");
@@ -76,9 +79,57 @@ public class EcoManager {
 
                 me.hektortm.woSSystems.utils.dataclasses.Currency currency = new me.hektortm.woSSystems.utils.dataclasses.Currency(name, shortName, icon, color);
                 assert name != null;
-                currencies.put(name.toLowerCase(), currency);
+                currencies.put(id, currency);
             }
         }
+    }
+
+    private void loadDefaultCurrencies() {
+        if (!currencyDirectory.exists()) currencyDirectory.mkdir();
+        File goldFile = new File(currencyDirectory, "gold.yml");
+        File signatureFile = new File(currencyDirectory, "signature_token.yml");
+        if (!goldFile.exists()) {
+            FileConfiguration config = YamlConfiguration.loadConfiguration(goldFile);
+            String id = goldFile.getName().replace(".yml", "");
+            String name = "Gold";
+            String shortName = "g";
+            String icon = "";
+            String color = "§6";
+
+            config.set("name", name);
+            config.set("short", shortName);
+            config.set("icon", icon);
+            config.set("color", color);
+            try {
+                config.save(goldFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Currency currency = new Currency(name, shortName, icon, color);
+            currencies.put(id, currency);
+        }
+        if (!signatureFile.exists()) {
+            FileConfiguration config = YamlConfiguration.loadConfiguration(signatureFile);
+            String id = signatureFile.getName().replace(".yml", "");
+            String name = "Signature Token";
+            String shortName = "st";
+            String icon = "";
+            String color = "§e";
+
+            config.set("name", name);
+            config.set("short", shortName);
+            config.set("icon", icon);
+            config.set("color", color);
+            try {
+                config.save(signatureFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Currency currency = new Currency(name, shortName, icon, color);
+            currencies.put(id, currency);
+        }
+
+
     }
 
     public Map<String, Currency> getCurrencies() {

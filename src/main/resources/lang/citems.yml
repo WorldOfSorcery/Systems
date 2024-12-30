@@ -7,6 +7,7 @@ error:
   wrong-action: "Unrecognized Action. Use 'left' or 'right'."
   inter-not-found: "Interaction not found: %id%"
   invalid-icon: "Invalid Icon."
+  invalid-item: "Invalid item."
   not-citem: "This item is not a valid Citem."
   lore:
     invalid-row: "Invalid row number."
@@ -24,6 +25,8 @@ error:
     cgive: "Usage: /cgive <player> <id> [amount]"
     cremove: "Usage: /cremove <player> <id> [amount]"
     tag: "Usage: /citem tag <tag1> <tag2>"
+
+stamp: "§aSuccessfully signed the current item."
 
 delete:
   confirm: "§7Confirm deletion with: /citem delete %id% confirm"
