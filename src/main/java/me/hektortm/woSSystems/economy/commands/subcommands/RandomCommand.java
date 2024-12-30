@@ -48,12 +48,13 @@ public class RandomCommand extends SubCommand {
         }
 
         String playerName = args[0];
-        String currencyName = args[1].replace("_", " ");
+        String currencyID = args[1];
         int amount1;
         int amount2;
         Random random = new Random();
         int randomNumber;
-        Currency currency = ecoManager.getCurrencies().get(currencyName.toLowerCase());
+        Currency currency = ecoManager.getCurrencies().get(currencyID.toLowerCase());
+        String name = currency.getName();
         String color = currency.getColor();
         String icon = currency.getIcon();
 
@@ -77,16 +78,16 @@ public class RandomCommand extends SubCommand {
         }
 
         if (sender instanceof Player p && target.getName().equals(p.getName())) {
-            log.sendWarning(p.getName()+ "-> "+ target.getName() +": Random give "+randomNumber+" "+currencyName);
-            log.writeLog(p, "-> "+ target.getName() +": Random give "+randomNumber+" "+currencyName);
+            log.sendWarning(p.getName()+ "-> "+ target.getName() +": Random give "+randomNumber+" "+name);
+            log.writeLog(p, "-> "+ target.getName() +": Random give "+randomNumber+" "+name);
         }
 
-        ecoManager.modifyCurrency(target.getUniqueId(), currencyName, randomNumber, EcoManager.Operation.GIVE);
-        WoSSystems.ecoMsg3Values(sender, "economy", "currency.given", "%amount%", String.valueOf(randomNumber), "%currency%", color+currencyName, "%player%", playerName);
+        ecoManager.modifyCurrency(target.getUniqueId(), currencyID, randomNumber, EcoManager.Operation.GIVE);
+        WoSSystems.ecoMsg3Values(sender, "economy", "currency.given", "%amount%", String.valueOf(randomNumber), "%currency%", color+name, "%player%", playerName);
         String actionbar = lang.getMessage("economy", "actionbar.given")
                 .replace("%icon%", icon)
                 .replace("%amount%", String.valueOf(randomNumber))
-                .replace("%name%", currencyName)
+                .replace("%name%", name)
                 .replace("%color%", color);
         target.sendActionBar(actionbar); /* Deprecated */
     }

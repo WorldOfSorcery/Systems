@@ -42,9 +42,10 @@ public class SetCommand extends SubCommand {
         }
 
         String playerName = args[0];
-        String currencyName = args[1].replace("_", " ");
+        String currencyName = args[1];
         int amount;
         Currency currency = ecoManager.getCurrencies().get(currencyName.toLowerCase());
+        String name = currency.getName();
         String color = currency.getColor();
 
         try {
@@ -61,12 +62,12 @@ public class SetCommand extends SubCommand {
         }
 
         if (sender instanceof Player p && target.getName().equals(p.getName())) {
-            log.sendWarning(p.getName()+ "-> "+ target.getName() +": Set "+currencyName+" to "+amount);
-            log.writeLog(p, "-> "+ target.getName() +": Set "+currencyName+" to "+amount);
+            log.sendWarning(p.getName()+ "-> "+ target.getName() +": Set "+name+" to "+amount);
+            log.writeLog(p, "-> "+ target.getName() +": Set "+name+" to "+amount);
         }
 
         ecoManager.modifyCurrency(target.getUniqueId(), currencyName, amount, EcoManager.Operation.SET);
-        WoSSystems.ecoMsg3Values(sender, "economy", "currency.set", "%amount%", String.valueOf(amount), "%currency%", color+currencyName, "%player%", playerName);
+        WoSSystems.ecoMsg3Values(sender, "economy", "currency.set", "%amount%", String.valueOf(amount), "%currency%", color+name, "%player%", playerName);
 
     }
 }

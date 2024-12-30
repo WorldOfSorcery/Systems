@@ -42,8 +42,9 @@ public class ResetCommand extends SubCommand {
         }
 
         String playerName = args[0];
-        String currencyName = args[1].replace("_", " ");
+        String currencyName = args[1];
         Currency currency = ecoManager.getCurrencies().get(currencyName.toLowerCase());
+        String name = currency.getName();
         String color = currency.getColor();
 
         Player target = Bukkit.getPlayer(playerName);
@@ -53,12 +54,12 @@ public class ResetCommand extends SubCommand {
         }
 
         if (sender instanceof Player p && target.getName().equals(p.getName())) {
-            log.sendWarning(p.getName()+ "-> "+ target.getName() +": Reset "+currencyName);
-            log.writeLog(p, "-> "+ target.getName() +": Reset "+currencyName);
+            log.sendWarning(p.getName()+ "-> "+ target.getName() +": Reset "+name);
+            log.writeLog(p, "-> "+ target.getName() +": Reset "+name);
         }
 
         ecoManager.modifyCurrency(target.getUniqueId(), currencyName, 0, EcoManager.Operation.RESET);
-        WoSSystems.ecoMsg2Values(sender, "economy", "currency.reset",  "%currency%", color+currencyName, "%player%", playerName);
+        WoSSystems.ecoMsg2Values(sender, "economy", "currency.reset",  "%currency%", color+name, "%player%", playerName);
 
     }
 }

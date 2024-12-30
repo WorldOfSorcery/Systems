@@ -92,11 +92,13 @@ public class BalanceCommand implements CommandExecutor {
         }
 
         WoSSystems.ecoMsg1Value(sender, "economy", "balance", "%player%", playerName);
-        for (Currency currency : currencies.values()) {
-            String currencyName = currency.getName().toLowerCase();
+        for (File file : ecoManager.currencyDirectory.listFiles()) {
+            String id = file.getName().replace(".yml", "");
+            Currency currency = currencies.get(id);
+            String currencyName = currency.getName();
             String color = currency.getColor();
-            int balance = playerData.getInt("economy." + currencyName, 0);
-            sender.sendMessage(color+currency.getName()+": §7" + balance);
+            long balance = ecoManager.getCurrencyBalance(uuid, id);
+            sender.sendMessage(color+currencyName+": §7" + balance);
         }
 
     }

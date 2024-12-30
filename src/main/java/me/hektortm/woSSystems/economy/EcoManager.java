@@ -14,7 +14,7 @@ import java.util.*;
 public class EcoManager {
     private final WoSCore core;
     private final WoSSystems plugin;
-    private final File currencyDirectory;
+    public final File currencyDirectory;
     private final Map<String, me.hektortm.woSSystems.utils.dataclasses.Currency> currencies = new HashMap<>();
 
 
