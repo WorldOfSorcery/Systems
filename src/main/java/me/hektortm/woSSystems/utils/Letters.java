@@ -40,7 +40,22 @@ public enum Letters {
     NINE("\uE435"),
     UNDERSCORE("\uE436"),
     DASH("\uE437"),
-    QUOTE("\uE438");
+    QUOTE("\uE438"),
+    AMPERSAND("\uE439"),
+    BRACKET_OPEN("\uE440"),
+    BRACKET_CLOSED("\uE441"),
+    COLON("\uE442"),
+    EQUALS("\uE443"),
+    EXCLAMATION("\uE444"),
+    HASHTAG("\uE445"),
+    PLUS("\uE446"),
+    QUESTION("\uE447"),
+    SLASH("\uE448"),
+    SEMICOLON("\uE449"),
+    PERCENTAGE("\uE450"),
+    DOT("\uE451"),
+    COMMA("\uE452"),
+    STAR("\uE453");
 
     Letters(String letter) {
         this.letter = letter;

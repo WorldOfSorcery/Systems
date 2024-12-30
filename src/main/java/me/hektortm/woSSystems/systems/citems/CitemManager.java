@@ -39,7 +39,7 @@ import java.util.*;
 
 import static me.hektortm.woSSystems.utils.Icons.SIGNED_BY;
 import static me.hektortm.woSSystems.utils.Icons.TIME;
-import static me.hektortm.woSSystems.utils.Letters.QUOTE;
+import static me.hektortm.woSSystems.utils.Letters.*;
 
 
 public class CitemManager {
@@ -646,6 +646,36 @@ public class CitemManager {
                 letterEnum = Letters.DASH;
             } else if (c == '"') {
                 letterEnum = QUOTE;
+            } else if (c == '&') {
+                letterEnum = AMPERSAND;
+            } else if (c == '(') {
+                letterEnum = BRACKET_OPEN;
+            } else if (c == ')') {
+                letterEnum = BRACKET_CLOSED;
+            } else if (c == ':') {
+                letterEnum = COLON;
+            } else if (c == '=') {
+                letterEnum = EQUALS;
+            } else if (c == '!') {
+                letterEnum = EXCLAMATION;
+            } else if (c == '#') {
+                letterEnum = HASHTAG;
+            } else if (c == '+') {
+                letterEnum = PLUS;
+            } else if (c == '?') {
+                letterEnum = QUESTION;
+            } else if (c == '/') {
+                letterEnum = SLASH;
+            } else if (c == ';') {
+                letterEnum = SEMICOLON;
+            } else if (c == '%') {
+                letterEnum = PERCENTAGE;
+            } else if (c == '.') {
+                letterEnum = DOT;
+            } else if (c == ',') {
+                letterEnum = COMMA;
+            } else if (c == '*') {
+                letterEnum = STAR;
             }
 
             // Append the Unicode value or the original character if no mapping exists
