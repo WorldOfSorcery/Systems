@@ -5,6 +5,7 @@ import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.systems.stats.utils.Operation;
 import me.hektortm.wosCore.Utils;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -27,6 +28,19 @@ public class SignCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         Player target = (Player) sender;
+        String quote = null;
+        if (args.length != 0) {
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < args.length; i++) {
+                if (i == 0) {
+                    builder.append(args[i]);
+                } else {
+                    builder.append(" "+args[i]);
+                }
+
+            }
+            quote = builder.toString();
+        }
 
         ItemStack item = target.getInventory().getItemInMainHand();
         if (item == null || !item.hasItemMeta()) {
@@ -38,8 +52,7 @@ public class SignCommand implements CommandExecutor {
             Utils.error(target, "economy", "error.funds");
             return true;
         }
-
-        manager.createStamp(target, item);
+        manager.createStamp(target, item, quote);
         eco.modifyCurrency(target.getUniqueId(), "signature_token", 1, EcoManager.Operation.TAKE);
         Utils.successMsg(target, "citems", "stamp");
 

@@ -42,7 +42,6 @@ public class CitemCommand implements CommandExecutor {
         subCommands.put("flag", new FlagCommand(data));
         subCommands.put("delete", new DeleteCommand(this, log));
         subCommands.put("action", new ActionCommand(interactionManager));
-        subCommands.put("stamp", new Stamp(data));
         subCommands.put("tag", new Tag());
         subCommands.put("info", new Info(data));
     }

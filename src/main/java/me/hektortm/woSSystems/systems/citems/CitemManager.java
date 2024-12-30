@@ -5,17 +5,18 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.chat.ChatManager;
+import me.hektortm.woSSystems.chat.NicknameManager;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.ConditionHandler;
+import me.hektortm.woSSystems.utils.Icons;
+import me.hektortm.woSSystems.utils.Letters;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
 import me.hektortm.wosCore.logging.LogManager;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -27,15 +28,19 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.json.simple.JSONObject;
 
-import javax.xml.stream.events.Namespace;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import static me.hektortm.woSSystems.utils.Icons.SIGNED_BY;
+import static me.hektortm.woSSystems.utils.Icons.TIME;
+import static me.hektortm.woSSystems.utils.Letters.QUOTE;
+
 
 public class CitemManager {
 
@@ -46,6 +51,7 @@ public class CitemManager {
     private final NamespacedKey rightActionKey;
     private final NamespacedKey timeKey;
     private final NamespacedKey nameKey;
+    private final NamespacedKey quoteKey;
     public final NamespacedKey ownerKey;
     public final File citemFolder;
 
@@ -53,6 +59,7 @@ public class CitemManager {
     private InteractionManager interactionManager;
     private final LogManager log = new LogManager(new LangManager(WoSCore.getPlugin(WoSCore.class)),WoSCore.getPlugin(WoSCore.class));
     private final LangManager lang = new LangManager(WoSCore.getPlugin(WoSCore.class));
+    private final NicknameManager nickManager = new NicknameManager(new ChatManager(plugin));
     private final CitemCommand cmd;
 
 
@@ -65,6 +72,7 @@ public class CitemManager {
         rightActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-right");
         timeKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "stamp-time");
         nameKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "stamp-name");
+        quoteKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "stamp-quote");
         ownerKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "owner");
 
     }
@@ -408,20 +416,27 @@ public class CitemManager {
         List<String> copyLore = meta.getLore();
         int length = copyLore.size();
 
-        String time = "Null";
-        String nameKey2 = "Null";
+        String nameKey2 = "null";
+        String time = "null";
+        String quote = "null";
 
         // Process lore to preserve "Time" and "Obtained by" and remove others
         if (length > 1) {
             String indLast = copyLore.get(length - 1);
             String indSecLast = copyLore.get(length - 2);
 
-            // If "Time" and "Obtained by" are found, capture their values and remove them from the main lore list
-            if (indLast.contains("Time:")) {
-                time = indLast.split("Time: ")[1];
-                nameKey2 = indSecLast.split("Obtained by: ")[1];
+            // If "Signed By" is found, capture its value and process the rest
+            if (indSecLast.contains(SIGNED_BY.getIcon())) {
+                nameKey2 = indSecLast.split(SIGNED_BY.getIcon() + " ")[1];
 
-                // Safely remove the last 3 lore entries containing "Time" and "Obtained by"
+                // Check the last line for "Time" or "Quote" and capture appropriately
+                if (indLast.contains(QUOTE.getLetter())) {
+                    quote = indLast;
+                } else if (indLast.contains(TIME.getIcon())) {
+                    time = indLast.split(TIME.getIcon() + " ")[1];
+                }
+
+                // Safely remove the last 3 lore entries containing "Time", "Obtained by", and "Quote"
                 int itemsToRemove = Math.min(3, copyLore.size());
                 for (int i = 0; i < itemsToRemove; i++) {
                     copyLore.remove(copyLore.size() - 1);
@@ -432,7 +447,7 @@ public class CitemManager {
         // Remove "Time" and "Obtained by" entries from the filtered lore list (do not touch these in the update)
         List<String> filteredLore = new ArrayList<>();
         for (String loreLine : copyLore) {
-            if (!loreLine.contains("Time:") && !loreLine.contains("Obtained by:")) {
+            if (!loreLine.contains(SIGNED_BY.getIcon()) && (!loreLine.contains(TIME.getIcon()) || !loreLine.contains(QUOTE.getLetter()))) {
                 filteredLore.add(loreLine);
             }
         }
@@ -474,12 +489,17 @@ public class CitemManager {
                 if (newMeta != null) {
                     // Keep the "Time" and "Obtained by" intact, but update other lore entries
                     List<String> newLore = newMeta.getLore();
-
                     // Re-attach "Time" and "Obtained by" to the new lore
-                    if (nameKey2 != null && !nameKey2.equals("Null") && time != null && !time.equals("Null")) {
+                    if (nameKey2 != null && !nameKey2.equals("null")) {
                         newLore.add("§7");
-                        newLore.add("§7Signed by: §e" + nameKey2);
-                        newLore.add("§7Time: §e" + time);
+                        newLore.add("§f" + SIGNED_BY.getIcon() + " §e" + nameKey2);
+
+                        // Add "Quote" if present, otherwise add "Time"
+                        if (quote != null && !quote.equals("null")) {
+                            newLore.add("§e" + quote);
+                        } else if (time != null && !time.equals("null")) {
+                            newLore.add("§f" + TIME.getIcon() + " §e" + time);
+                        }
                     }
 
                     newMeta.setLore(newLore);
@@ -541,6 +561,7 @@ public class CitemManager {
         PersistentDataContainer data = meta.getPersistentDataContainer();
         String time = data.get(timeKey, PersistentDataType.STRING);
         String name = data.get(nameKey, PersistentDataType.STRING);
+        String quote = data.get(quoteKey, PersistentDataType.STRING);
 
         System.out.println("Setting stamp: time=" + time + ", name=" + name);
 
@@ -553,10 +574,15 @@ public class CitemManager {
         if (lore == null) {
             lore = new ArrayList<>();
         }
-
+        name = parseUni(name);
+        time = parseUni(time);
         lore.add("§7");
-        lore.add("§7Signed by: §e" + name);
-        lore.add("§7Time: §e" + time);
+        lore.add("§f"+ SIGNED_BY.getIcon() +" §e" + name);
+        if (quote.equals("null") || quote == null) {
+            lore.add("§f" + TIME.getIcon() + " §e" + time);
+        } else {
+            lore.add("§e"+parseUni(quote));
+        }
 
         meta.setLore(lore);
         item.setItemMeta(meta); // Ensure changes are applied
@@ -564,7 +590,7 @@ public class CitemManager {
 
 
 
-    public void createStamp(Player player, ItemStack item) {
+    public void createStamp(Player player, ItemStack item, @Nullable String message) {
         if (item == null || player == null) return;
 
         ItemMeta meta = item.getItemMeta();
@@ -574,16 +600,64 @@ public class CitemManager {
 
         String parsedTime = parseTime();
         String playerName = player.getName();
+        String quote = "null";
+        if (message != null) {
+            quote = "\""+ message+ "\"";
+        }
+        if (nickManager.getNickname(player) != null) {
+            playerName = nickManager.getNickname(player).replace("_", " ");
+        }
 
+        data.set(quoteKey, PersistentDataType.STRING, quote);
         data.set(timeKey, PersistentDataType.STRING, parsedTime);
         data.set(nameKey, PersistentDataType.STRING, playerName);
+
 
 
         item.setItemMeta(meta); // Ensure changes are applied
         setStamp(item); // Ensure stamping happens after setting data
     }
 
+    private String parseUni(String s) {
+        StringBuilder result = new StringBuilder();
 
+        for (char c : s.toCharArray()) {
+            Letters letterEnum = null;
+
+            // Map each character to the corresponding enum value
+            if (Character.isLetter(c)) {
+                letterEnum = Letters.valueOf(String.valueOf(c).toUpperCase());
+            } else if (Character.isDigit(c)) {
+                switch (c) {
+                    case '0': letterEnum = Letters.ZERO; break;
+                    case '1': letterEnum = Letters.ONE; break;
+                    case '2': letterEnum = Letters.TWO; break;
+                    case '3': letterEnum = Letters.THREE; break;
+                    case '4': letterEnum = Letters.FOUR; break;
+                    case '5': letterEnum = Letters.FIVE; break;
+                    case '6': letterEnum = Letters.SIX; break;
+                    case '7': letterEnum = Letters.SEVEN; break;
+                    case '8': letterEnum = Letters.EIGHT; break;
+                    case '9': letterEnum = Letters.NINE; break;
+                }
+            } else if (c == '_') {
+                letterEnum = Letters.UNDERSCORE;
+            } else if (c == '-') {
+                letterEnum = Letters.DASH;
+            } else if (c == '"') {
+                letterEnum = QUOTE;
+            }
+
+            // Append the Unicode value or the original character if no mapping exists
+            if (letterEnum != null) {
+                result.append(letterEnum.getLetter());
+            } else {
+                result.append(c); // Keep non-mapped characters as is
+            }
+        }
+
+        return result.toString();
+    }
 
 
     private String parseTime() {

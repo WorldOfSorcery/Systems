@@ -2,24 +2,40 @@ package me.hektortm.woSSystems.utils;
 
 public enum Icons {
 
-    LEGENDARY(""),
-    DIVINE(""),
-    ANCIENT(""),
-    EPIC(""),
-    RARE(""),
-    UNCOMMON(""),
-    COMMON(""),
+    MYTHIC("\uE000"),
+    ANCIENT("\uE001"),
+    LEGENDARY("\uE002"),
+    EPIC("\uE003"),
+    RARE("\uE004"),
+    UNCOMMON("\uE005"),
+    COMMON("\uE006"),
 
-    INGREDIENT(""),
-    COLLECTABLE(""),
-    POTION(""),
-    BOUND(""),
-    FOOD(""),
-    QUEST(""),
-    WEARABLE(""),
+    INGREDIENT("\uE100"),
+    COLLECTABLE("\uE101"),
+    POTION("\uE102"),
+    BOUND("\uE103"),
+    FOOD("\uE104"),
+    QUEST("\uE105"),
+    WEARABLE("\uE106"),
+    MAGIC("\uE107"),
+    SIGNED_BY("\uE108"),
+    TIME("\uE109"),
 
-    DEV(""),
-    HEAD_OF_DEV("");
+    MAGIC_CHARM("\uE200"),
+    MAGIC_HEX("\uE201"),
+    MAGIC_CURSE("\uE202"),
+    MAGIC_DARK("\uE203"),
+    MAGIC_SINISTER("\uE204"),
+    MAGIC_UTILITY("\uE205"),
+    MAGIC_DEFENSE("\uE206"),
+    MAGIC_COMBAT("\uE207"),
+
+    RANK_HEADSTAFF("\uE300"),
+    RANK_SR("\uE301"),
+    RANK_STAFF("\uE302"),
+    RANK_JR("\uE303"),
+    RANK_DEV("\uE304"),
+    RANK_MOD("\uE305");
 
 
 
