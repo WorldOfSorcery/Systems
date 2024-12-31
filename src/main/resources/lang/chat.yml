@@ -5,10 +5,13 @@ error:
   reserved-limit: "You can only reserve one nickname."
   channel-exist: "This Channel does not exist."
   not-member: "You are not a member of this channel."
+  realname-invalid: "This Player does not have a nick."
   invalid:
     length: "Your nickname is too long."
     null: "You cannot submit no nickname."
     letter: "You can only use Characters A-Z, 0-9 and \"_\"."
+  usage:
+    realname: "Usage: /realname <nick|player>"
 
 
 channel:
@@ -47,3 +50,6 @@ nick:
     characters: "§7Available Characters: §eA-Z, 0-9, _"
     space: "§7Putting an \"_\" makes a space in your nickname."
     example: "§7Example: §efirstname_lastname -> firstname lastname"
+
+realname:
+  success: "§e%target%'s§7 real name is: §e%result%"

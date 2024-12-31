@@ -175,10 +175,29 @@ public class NicknameManager {
         return getNicknamesConfig().getString(uuid + ".nickname", player.getName());
     }
 
-    public String getRealName(Player player) {
-        UUID uuid = player.getUniqueId();
-        return getNicknamesConfig().getString(uuid + ".username", player.getName());
+    public String getRealNameOrNickname(String input) {
+        FileConfiguration config = getNicknamesConfig();
+
+        // Check if the input matches a username
+        for (String key : config.getKeys(false)) {
+            String username = config.getString(key + ".username");
+            String currentNickname = config.getString(key + ".nickname");
+
+            // If input matches the username, return the current nickname or username
+            if (username != null && username.equalsIgnoreCase(input)) {
+                return currentNickname != null ? currentNickname : username;
+            }
+
+            // If input matches the current nickname, return the username
+            if (currentNickname != null && currentNickname.equalsIgnoreCase(input)) {
+                return username;
+            }
+        }
+
+        return null; // No match found
     }
+
+
 
     public void requestNicknameChange(OfflinePlayer player, String nickname) {
         UUID uuid = player.getUniqueId();

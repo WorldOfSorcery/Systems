@@ -4,6 +4,7 @@ import me.hektortm.woSSystems.chat.ChatManager;
 import me.hektortm.woSSystems.chat.NicknameManager;
 import me.hektortm.woSSystems.chat.commands.ChatCommand;
 import me.hektortm.woSSystems.chat.commands.NicknameCommand;
+import me.hektortm.woSSystems.chat.commands.RealnameCommand;
 import me.hektortm.woSSystems.chat.commands.subcommands.Join;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.BalanceCommand;
@@ -163,6 +164,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("crecipe", new CRecipeCommand(this, recipeManager, lang));
         cmdReg("channel", new ChatCommand(chatManager));
         cmdReg("nickname", new NicknameCommand(nickManager, chatManager));
+        cmdReg("realname", new RealnameCommand(nickManager));
         cmdReg("loottable", new LoottableCommand(lootTableManager));
         cmdReg("gui", new GUIcommand(guiManager));
         cmdReg("sign", new SignCommand(citemManager, ecoManager));
