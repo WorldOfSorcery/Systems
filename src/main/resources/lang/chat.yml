@@ -5,6 +5,10 @@ error:
   reserved-limit: "You can only reserve one nickname."
   channel-exist: "This Channel does not exist."
   not-member: "You are not a member of this channel."
+  invalid:
+    length: "Your nickname is too long."
+    null: "You cannot submit no nickname."
+    letter: "You can only use Characters A-Z, 0-9 and \"_\"."
 
 
 channel:
@@ -37,3 +41,9 @@ nick:
     warning: "§cThis Nickname is reserved by: %player%"
     accept: "§aAccept [Left Click]"
     decline: "§cDecline [Right Click]"
+  info:
+    cmd: "§7/nick request <nickname>"
+    length: "§7Length: §eMaximum of 17 Characters"
+    characters: "§7Available Characters: §eA-Z, 0-9, _"
+    space: "§7Putting an \"_\" makes a space in your nickname."
+    example: "§7Example: §efirstname_lastname -> firstname lastname"
