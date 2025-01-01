@@ -6,6 +6,7 @@ import me.hektortm.wosCore.WoSCore;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -175,7 +176,7 @@ public class NicknameManager {
         return getNicknamesConfig().getString(uuid + ".nickname", player.getName());
     }
 
-    public String getRealNameOrNickname(String input) {
+    public void getRealNameOrNickname(CommandSender sender, String input) {
         FileConfiguration config = getNicknamesConfig();
 
         // Check if the input matches a username
@@ -185,16 +186,24 @@ public class NicknameManager {
 
             // If input matches the username, return the current nickname or username
             if (username != null && username.equalsIgnoreCase(input)) {
-                return currentNickname != null ? currentNickname : username;
+                String nickname = currentNickname != null ? currentNickname : username;
+                if (nickname != username) {
+                    Utils.successMsg2Values(sender, "chat", "realname.success.nickname", "%result%", nickname.replace("_", " "), "%input%", username);
+                    return;
+                } else {
+                    Utils.error(sender, "chat", "error.realname-invalid");
+                    return;
+                }
             }
 
             // If input matches the current nickname, return the username
             if (currentNickname != null && currentNickname.equalsIgnoreCase(input)) {
-                return username;
+                Utils.successMsg2Values(sender, "chat", "realname.success.username", "%result%", username, "%input%", input.replace("_", " "));
+                return;
             }
         }
 
-        return null; // No match found
+        return;
     }
 
 

@@ -35,14 +35,7 @@ public class RealnameCommand implements CommandExecutor {
         String nick = builder.toString().replace(" ", "_");
         Bukkit.getLogger().info(nick);
 
-        if (nicknameManager.getRealNameOrNickname(nick) == null) {
-            Utils.error(sender, "chat", "error.realname-invalid");
-            return true;
-        }
-
-        String result = nicknameManager.getRealNameOrNickname(nick);
-
-        Utils.successMsg2Values(sender, "chat", "realname.success", "%result%", result.replace("_", " "), "%target%", nick);
+        nicknameManager.getRealNameOrNickname(sender, nick);
         return true;
     }
 }

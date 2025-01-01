@@ -5,7 +5,7 @@ error:
   reserved-limit: "You can only reserve one nickname."
   channel-exist: "This Channel does not exist."
   not-member: "You are not a member of this channel."
-  realname-invalid: "This Player does not have a nick."
+  realname-invalid: "This Player does not have a nickname."
   invalid:
     length: "Your nickname is too long."
     null: "You cannot submit no nickname."
@@ -52,4 +52,6 @@ nick:
     example: "§7Example: §efirstname_lastname -> firstname lastname"
 
 realname:
-  success: "§e%target%'s§7 real name is: §e%result%"
+  success:
+    username: "§e%input%'s§7 username is: §e%result%"
+    nickname: "§e%input%'s§7 nickname is: §e%result%"
