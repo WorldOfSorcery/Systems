@@ -76,7 +76,9 @@ commands:
     description: nick
     permission: nick.request.send
     usage: /<command>
-
+  realname:
+    description: realname
+    usage: /<command> <input>
   loottable:
     aliases: [lt]
     description: loottable

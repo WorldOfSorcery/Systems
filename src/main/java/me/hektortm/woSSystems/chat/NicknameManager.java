@@ -6,6 +6,7 @@ import me.hektortm.wosCore.WoSCore;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -175,10 +176,37 @@ public class NicknameManager {
         return getNicknamesConfig().getString(uuid + ".nickname", player.getName());
     }
 
-    public String getRealName(Player player) {
-        UUID uuid = player.getUniqueId();
-        return getNicknamesConfig().getString(uuid + ".username", player.getName());
+    public void getRealNameOrNickname(CommandSender sender, String input) {
+        FileConfiguration config = getNicknamesConfig();
+
+        // Check if the input matches a username
+        for (String key : config.getKeys(false)) {
+            String username = config.getString(key + ".username");
+            String currentNickname = config.getString(key + ".nickname");
+
+            // If input matches the username, return the current nickname or username
+            if (username != null && username.equalsIgnoreCase(input)) {
+                String nickname = currentNickname != null ? currentNickname : username;
+                if (nickname != username) {
+                    Utils.successMsg2Values(sender, "chat", "realname.success.nickname", "%result%", nickname.replace("_", " "), "%input%", username);
+                    return;
+                } else {
+                    Utils.error(sender, "chat", "error.realname-invalid");
+                    return;
+                }
+            }
+
+            // If input matches the current nickname, return the username
+            if (currentNickname != null && currentNickname.equalsIgnoreCase(input)) {
+                Utils.successMsg2Values(sender, "chat", "realname.success.username", "%result%", username, "%input%", input.replace("_", " "));
+                return;
+            }
+        }
+
+        return;
     }
+
+
 
     public void requestNicknameChange(OfflinePlayer player, String nickname) {
         UUID uuid = player.getUniqueId();
