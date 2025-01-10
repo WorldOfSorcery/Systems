@@ -4,7 +4,6 @@ import me.hektortm.woSSystems.channels.cmd.subcmd.Request;
 import me.hektortm.woSSystems.channels.cmd.subcmd.Requests;
 import me.hektortm.woSSystems.channels.cmd.subcmd.Reserve;
 import me.hektortm.woSSystems.channels.cmd.subcmd.Unreserve;
-import me.hektortm.woSSystems.chat.ChatManager;
 import me.hektortm.woSSystems.channels.NicknameManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.SubCommand;

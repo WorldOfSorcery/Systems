@@ -1,6 +1,7 @@
-package me.hektortm.woSSystems.chat.commands;
+package me.hektortm.woSSystems.channels.cmd;
 
-import me.hektortm.woSSystems.chat.NicknameManager;
+
+import me.hektortm.woSSystems.channels.NicknameManager;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;

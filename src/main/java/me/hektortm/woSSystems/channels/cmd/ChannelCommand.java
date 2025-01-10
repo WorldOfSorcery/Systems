@@ -102,6 +102,9 @@ public class ChannelCommand implements CommandExecutor {
                     player.sendMessage("Now focused on channel: " + focusChannel.getName());
                 }
                 break;
+            case "reload":
+                channelManager.loadChannels();
+                player.sendMessage("Reloaded channels.");
             default:
                 player.sendMessage("Unknown subcommand.");
                 break;

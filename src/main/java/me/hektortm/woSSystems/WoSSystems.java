@@ -176,14 +176,13 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new InterListener(interactionManager, citemManager));
         eventReg(new DropListener());
         eventReg(new HoverListener(citemManager));
-        //eventReg(new UseListener(citemManager));
         eventReg(new CleanUpListener(core, unlockableManager, coinflipCommand));
         eventReg(new FishingListener());
-        //eventReg(new ChatListener(chatManager, nickManager));
-        //eventReg(new JoinListener(chatManager));
+        eventReg(new JoinListener());
         eventReg(new ChannelListener(channelManager, nickManager));
 
-        //getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager), this);
+
+        getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager), this);
     }
 
     private void eventReg(Listener l) {

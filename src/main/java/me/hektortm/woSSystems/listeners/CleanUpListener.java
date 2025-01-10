@@ -1,6 +1,5 @@
 package me.hektortm.woSSystems.listeners;
 
-import me.hektortm.woSSystems.chat.ChatManager;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.wosCore.WoSCore;
@@ -32,6 +31,8 @@ public class CleanUpListener implements Listener {
     @EventHandler
     public void leaveEvent(PlayerQuitEvent event) {
         Player p = event.getPlayer();
+
+        event.setQuitMessage(null);
 
         if (coinflip.challengeQueue.containsKey(p.getUniqueId())) {
             coinflip.challengeQueue.remove(p.getUniqueId());

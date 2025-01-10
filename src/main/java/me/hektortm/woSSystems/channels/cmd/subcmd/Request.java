@@ -1,6 +1,5 @@
 package me.hektortm.woSSystems.channels.cmd.subcmd;
 
-import me.hektortm.woSSystems.chat.ChatManager;
 import me.hektortm.woSSystems.channels.NicknameManager;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;

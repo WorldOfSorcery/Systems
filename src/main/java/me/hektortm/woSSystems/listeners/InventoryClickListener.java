@@ -32,17 +32,15 @@ public class InventoryClickListener implements Listener {
     private final Coinflip coinflipCommand;
     private final LangManager lang;
     private final NicknameManager nickManager;
-    private final GUIManager guiManager;
     private final Map<UUID, String> nickRequests;
 
 
-    public InventoryClickListener(EcoManager ecoManager, Coinflip coinflipCommand, LangManager lang, Map<UUID, String> nickRequests, NicknameManager nickManager, GUIManager guiManager) {
+    public InventoryClickListener(EcoManager ecoManager, Coinflip coinflipCommand, LangManager lang, Map<UUID, String> nickRequests, NicknameManager nickManager) {
         this.ecoManager = ecoManager;
         this.coinflipCommand = coinflipCommand;
         this.lang = lang;
         this.nickManager = nickManager;
         this.nickRequests = nickRequests;
-        this.guiManager = guiManager;
     }
 
     @EventHandler
@@ -150,69 +148,5 @@ public class InventoryClickListener implements Listener {
             // Close the player's inventory after the action
             player.closeInventory();
         }
-
-        if (guiManager.openGUIs.containsKey(player.getUniqueId())) {
-            if (inv == null || event.getView().getTopInventory() != inv) {
-                return;
-            }
-
-            // Fetch GUI ID from the title
-            String guiID = guiManager.openGUIs.get(player.getUniqueId());
-
-            // Check if the GUI exists
-            if (!guiManager.guiConfigs.containsKey(guiID)) {
-                return;
-            }
-
-            event.setCancelled(true); // Prevent default interactions
-
-            JsonObject guiConfig = guiManager.guiConfigs.get(guiID);
-            String slotKey = String.valueOf(event.getRawSlot());
-
-            // Check if the clicked slot is defined in the GUI config
-            JsonObject slotConfig = guiConfig.getAsJsonObject("slots").getAsJsonObject(slotKey);
-            if (slotConfig == null) {
-                return;
-            }
-
-            // Check if slot is clickable
-            JsonObject attributes = slotConfig.getAsJsonObject("attributes");
-            if (attributes != null && attributes.has("clickable") && !attributes.get("clickable").getAsBoolean()) {
-                return;
-            }
-
-            // Handle slot actions
-            JsonObject actions = slotConfig.getAsJsonObject("actions");
-            if (actions != null) {
-                String actionType = getClickAction(event);
-                JsonArray actionList = actions.getAsJsonArray(actionType);
-
-                if (actionList != null) {
-                    for (JsonElement action : actionList) {
-                        executeAction((Player) event.getWhoClicked(), action.getAsString());
-                    }
-                }
-            }
-        }
-
-
-
     }
-    private String getClickAction(InventoryClickEvent event) {
-        if (event.isShiftClick()) {
-            if (event.isLeftClick()) return "shift-left";
-            if (event.isRightClick()) return "shift-right";
-        } else {
-            if (event.isLeftClick()) return "left";
-            if (event.isRightClick()) return "right";
-        }
-        return "unknown";
-    }
-
-    // Execute actions (stub for demonstration purposes)
-    private void executeAction(Player player, String action) {
-        player.sendMessage(ChatColor.GREEN + "Executed action: " + action);
-        // Add your action execution logic here
-    }
-
 }

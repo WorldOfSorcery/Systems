@@ -5,7 +5,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.chat.ChatManager;
 import me.hektortm.woSSystems.channels.NicknameManager;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
@@ -57,7 +56,7 @@ public class CitemManager {
     private InteractionManager interactionManager;
     private final LogManager log = new LogManager(new LangManager(WoSCore.getPlugin(WoSCore.class)),WoSCore.getPlugin(WoSCore.class));
     private final LangManager lang = new LangManager(WoSCore.getPlugin(WoSCore.class));
-    private final NicknameManager nickManager = new NicknameManager(new ChatManager(plugin));
+    private final NicknameManager nickManager = new NicknameManager();
     private final CitemCommand cmd;
 
 

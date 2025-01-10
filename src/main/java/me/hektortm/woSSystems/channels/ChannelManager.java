@@ -48,22 +48,40 @@ public class ChannelManager {
 
     public void loadChannels() {
         if (!channelsFile.exists()) {
-            channelsFile.mkdirs();
+            try {
+                if (!channelsFile.getParentFile().exists()) {
+                    channelsFile.getParentFile().mkdirs();  // Create the parent directory if it doesn't exist
+                }
+                if (!channelsFile.createNewFile()) {
+                    plugin.getLogger().severe("Could not create channels.yml file!");
+                }
+            } catch (IOException e) {
+                plugin.getLogger().severe("An error occurred while creating the channels.yml file.");
+                e.printStackTrace();
+            }
         }
 
+        // Now, load the channels after ensuring the file exists
         for (String key : channelsConfig.getKeys(false)) {
             String name = key;
             String shortName = channelsConfig.getString(key + ".shortName");
-            String format = channelsConfig.getString(key + ".format");
-            List<UUID> recipients = (List<UUID>) channelsConfig.getList(key + ".recipients");
+            String format = channelsConfig.getString(key + ".format"); // Ensure the format is fetched
+            List<String> recipients = channelsConfig.getStringList(key + ".recipients");
             boolean autoJoin = channelsConfig.getBoolean(key + ".autoJoin");
             boolean forceJoin = channelsConfig.getBoolean(key + ".forceJoin");
             int radius = channelsConfig.getInt(key + ".radius", -1);
+
+            // Error handling in case the format is invalid or missing
+            if (format == null || format.isEmpty()) {
+                plugin.getLogger().warning("Channel format for " + name + " is invalid or missing. Defaulting to a placeholder format.");
+                format = "default_format"; // Set a default value
+            }
 
             Channel channel = new Channel(name, shortName, format, recipients, autoJoin, forceJoin, radius);
             channels.put(name.toLowerCase(), channel);
         }
     }
+
 
     public void saveChannels() {
         for (Channel channel : channels.values()) {
@@ -77,37 +95,61 @@ public class ChannelManager {
         }
 
         try {
-            channelsConfig.save(channelsFile);
+            channelsConfig.save(channelsFile); // Save the configuration
+            plugin.getLogger().info("Channels saved successfully.");
         } catch (IOException e) {
             plugin.getLogger().severe("Could not save channels.yml!");
             e.printStackTrace();
         }
     }
 
-    public void joinChannel(Player player, String channel) {
-        UUID uuid = player.getUniqueId();
 
-        List<UUID> recipients = (List<UUID>) channelsConfig.getList(channel + ".recipients");
-        recipients.add(uuid);
+    public void joinChannel(Player player, String channel) {
+        String playerS = player.getName();
+
+        // Retrieve the current recipients list
+        List<String> recipients = channelsConfig.getStringList(channel + ".recipients");
+        if (!recipients.contains(playerS)) {
+            recipients.add(playerS); // Add the player to the list if not already in it
+        }
         channelsConfig.set(channel + ".recipients", recipients);
+
+        // Add recipient to the in-memory Channel object
+        Channel c = getChannel(channel);
+        c.addRecipient(playerS);
+
+        // Save the updated channels.yml
         try {
             channelsConfig.save(channelsFile);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        saveChannels(); // Ensure all data is persisted
     }
 
     public void leaveChannel(Player player, String channel) {
-        UUID uuid = player.getUniqueId();
-        List<UUID> recipients = (List<UUID>) channelsConfig.getList(channel + ".recipients");
-        recipients.remove(uuid);
+        String playerS = player.getName();
+
+        // Retrieve the current recipients list
+        List<String> recipients = channelsConfig.getStringList(channel + ".recipients");
+        recipients.remove(playerS); // Remove player from recipients list
         channelsConfig.set(channel + ".recipients", recipients);
+
+        // Remove recipient from the in-memory Channel object
+        Channel c = getChannel(channel);
+        c.removeRecipient(playerS);
+
+        // Save the updated channels.yml
         try {
             channelsConfig.save(channelsFile);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        saveChannels(); // Ensure all data is persisted
     }
+
 
     public Channel getChannel(String name) {
         return channels.get(name.toLowerCase());
@@ -117,9 +159,10 @@ public class ChannelManager {
         return channels.values();
     }
 
-    public void createChannel(String name, String shortName, String format, List<UUID> recipients, boolean autoJoin, boolean forceJoin, int radius) {
+    public void createChannel(String name, String shortName, String format, List<String> recipients, boolean autoJoin, boolean forceJoin, int radius) {
         Channel channel = new Channel(name, shortName, format, recipients, autoJoin, forceJoin, radius);
         channels.put(name.toLowerCase(), channel);
+        saveChannels();
     }
 
     public void deleteChannel(String name) {
