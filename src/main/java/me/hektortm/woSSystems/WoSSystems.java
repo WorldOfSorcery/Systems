@@ -1,10 +1,9 @@
 package me.hektortm.woSSystems;
 
-import me.hektortm.woSSystems.chat.ChatManager;
-import me.hektortm.woSSystems.chat.NicknameManager;
-import me.hektortm.woSSystems.chat.commands.ChatCommand;
-import me.hektortm.woSSystems.chat.commands.NicknameCommand;
-import me.hektortm.woSSystems.chat.commands.subcommands.Join;
+import me.hektortm.woSSystems.channels.ChannelManager;
+import me.hektortm.woSSystems.channels.cmd.ChannelCommand;
+import me.hektortm.woSSystems.channels.NicknameManager;
+import me.hektortm.woSSystems.channels.cmd.NicknameCommand;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.BalanceCommand;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
@@ -12,10 +11,7 @@ import me.hektortm.woSSystems.economy.commands.EcoCommand;
 import me.hektortm.woSSystems.economy.commands.PayCommand;
 import me.hektortm.woSSystems.listeners.*;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
-import me.hektortm.woSSystems.systems.citems.commands.SignCommand;
-import me.hektortm.woSSystems.systems.citems.commands.subcommands.MetaCommand;
 import me.hektortm.woSSystems.systems.guis.GUIManager;
-import me.hektortm.woSSystems.systems.guis.command.GUIcommand;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.systems.loottables.LoottableManager;
 import me.hektortm.woSSystems.systems.loottables.commands.LoottableCommand;
@@ -36,7 +32,6 @@ import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.systems.unlockables.commands.TempUnlockableCommand;
 import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableCommand;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
-import me.hektortm.woSSystems.utils.dataclasses.Challenge;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
@@ -48,8 +43,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.UUID;
 
 public final class WoSSystems extends JavaPlugin {
 
@@ -67,7 +60,7 @@ public final class WoSSystems extends JavaPlugin {
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
     private CRecipeManager recipeManager;
-    private ChatManager chatManager;
+    private ChannelManager channelManager;
     private NicknameManager nickManager;
     private Coinflip coinflipCommand;
     private LoottableManager lootTableManager;
@@ -93,7 +86,7 @@ public final class WoSSystems extends JavaPlugin {
         unlockableManager = new UnlockableManager();
         fishingManager = new FishingManager(fishingItemsFolder);
 
-
+        guiManager = new GUIManager();
         citemManager = new CitemManager(); // Ensure interactionManager is null-safe.
         resolver = new PlaceholderResolver(statsManager, citemManager);
         conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager, citemManager);
@@ -101,13 +94,13 @@ public final class WoSSystems extends JavaPlugin {
         interactionManager.setConditionHandler(conditionHandler);
         interactionManager.setPlaceholderResolver(resolver);
         citemManager.setInteractionManager(interactionManager);
-        chatManager = new ChatManager(this);
-        nickManager = new NicknameManager(chatManager);
+        channelManager = new ChannelManager(this);
+        nickManager = new NicknameManager();
 
         lootTableManager = new LoottableManager(interactionManager, citemManager);
         coinflipCommand = new Coinflip(ecoManager, this, lang);
 
-        guiManager = new GUIManager();
+
 // Initialize the remaining managers
         recipeManager = new CRecipeManager(interactionManager);
         fishingManager = new FishingManager(fishingItemsFolder);
@@ -129,7 +122,17 @@ public final class WoSSystems extends JavaPlugin {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }
 
+        /*
+        InventoryInteraction inventoryInteraction = new InventoryInteraction(this, actionHandler);
+        for (Map.Entry<String, InteractionConfig> entry : interactionConfigs.entrySet()) {
+            InteractionConfig config = entry.getValue();
+            getServer().getPluginManager().registerEvents(new InventoryClickListener(inventoryInteraction, config, guiManager), this);
+        }
+         */
 
+        // Finalize initialization
+
+        channelManager.loadChannels();
         recipeManager.loadRecipes();
         registerCommands();
         registerEvents();
@@ -137,12 +140,11 @@ public final class WoSSystems extends JavaPlugin {
         interactionManager.particleTask();
         unlockableManager.loadUnlockables();
         unlockableManager.loadTempUnlockables();
-        guiManager.loadGUIs();
     }
 
     @Override
     public void onDisable() {
-        chatManager.savePlayerData();
+        channelManager.saveChannels();
     }
 
     private void registerCommands() {
@@ -161,13 +163,10 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("pay", new PayCommand(ecoManager, lang));
         cmdReg("coinflip", coinflipCommand);
         cmdReg("crecipe", new CRecipeCommand(this, recipeManager, lang));
-        cmdReg("channel", new ChatCommand(chatManager));
-        cmdReg("nickname", new NicknameCommand(nickManager, chatManager));
+        cmdReg("channel", new ChannelCommand(channelManager));
+        cmdReg("nickname", new NicknameCommand(nickManager));
         cmdReg("loottable", new LoottableCommand(lootTableManager));
-        cmdReg("gui", new GUIcommand(guiManager));
-        cmdReg("sign", new SignCommand(citemManager, ecoManager));
-
-     //   cmdReg("meta", new MetaCommand());
+        //cmdReg("gui", new GUIcommand(new GUIHandler(guiManager)));
     }
 
     private void registerEvents() {
@@ -178,12 +177,13 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new DropListener());
         eventReg(new HoverListener(citemManager));
         //eventReg(new UseListener(citemManager));
-        eventReg(new CleanUpListener(core, unlockableManager, coinflipCommand, chatManager));
+        eventReg(new CleanUpListener(core, unlockableManager, coinflipCommand));
         eventReg(new FishingListener());
-        eventReg(new ChatListener(chatManager, nickManager));
-        eventReg(new JoinListener(chatManager));
+        //eventReg(new ChatListener(chatManager, nickManager));
+        //eventReg(new JoinListener(chatManager));
+        eventReg(new ChannelListener(channelManager, nickManager));
 
-        getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager, guiManager), this);
+        //getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager), this);
     }
 
     private void eventReg(Listener l) {

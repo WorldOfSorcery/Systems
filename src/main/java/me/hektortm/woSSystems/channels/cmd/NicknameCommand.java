@@ -1,8 +1,11 @@
-package me.hektortm.woSSystems.chat.commands;
+package me.hektortm.woSSystems.channels.cmd;
 
+import me.hektortm.woSSystems.channels.cmd.subcmd.Request;
+import me.hektortm.woSSystems.channels.cmd.subcmd.Requests;
+import me.hektortm.woSSystems.channels.cmd.subcmd.Reserve;
+import me.hektortm.woSSystems.channels.cmd.subcmd.Unreserve;
 import me.hektortm.woSSystems.chat.ChatManager;
-import me.hektortm.woSSystems.chat.NicknameManager;
-import me.hektortm.woSSystems.chat.commands.subcommands.*;
+import me.hektortm.woSSystems.channels.NicknameManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.command.Command;
@@ -17,13 +20,11 @@ public class NicknameCommand implements CommandExecutor {
 
     private final Map<String, SubCommand> subCommands = new HashMap<>();
     private final NicknameManager manager;
-    private final ChatManager chatManager;
 
-    public NicknameCommand(NicknameManager manager, ChatManager chatManager) {
+    public NicknameCommand(NicknameManager manager) {
         this.manager = manager;
-        this.chatManager = chatManager;
 
-        subCommands.put("request", new Request(manager, chatManager));
+        subCommands.put("request", new Request(manager));
         subCommands.put("requests", new Requests(manager));
         subCommands.put("reserve", new Reserve(manager));
         subCommands.put("unreserve", new Unreserve(manager));

@@ -1,7 +1,7 @@
-package me.hektortm.woSSystems.chat.commands.subcommands;
+package me.hektortm.woSSystems.channels.cmd.subcmd;
 
 import me.hektortm.woSSystems.chat.ChatManager;
-import me.hektortm.woSSystems.chat.NicknameManager;
+import me.hektortm.woSSystems.channels.NicknameManager;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.LangManager;
@@ -12,12 +12,10 @@ import org.bukkit.command.CommandSender;
 
 public class Request extends SubCommand {
     private final NicknameManager manager;
-    private final ChatManager chatManager;
     private final LangManager lang = new LangManager(WoSCore.getPlugin(WoSCore.class));
 
-    public Request(NicknameManager manager, ChatManager chatManager) {
+    public Request(NicknameManager manager) {
         this.manager = manager;
-        this.chatManager = chatManager;
     }
 
     @Override
@@ -40,10 +38,10 @@ public class Request extends SubCommand {
         manager.requestNicknameChange(p, nick);
         if (nick.equals("reset")) {
             Utils.successMsg(sender, "chat", "nick.request-reset-sent");
-            chatManager.serverChat("Staff", lang.getMessage("chat", "nick.request-reset-receive").replace("%player%", p.getName()));
+            //chatManager.serverChat("Staff", lang.getMessage("chat", "nick.request-reset-receive").replace("%player%", p.getName()));
             return;
         }
         Utils.successMsg(sender, "chat", "nick.request-sent");
-        chatManager.serverChat("Staff", lang.getMessage("chat", "nick.request-receive").replace("%player%", p.getName()));
+        //chatManager.serverChat("Staff", lang.getMessage("chat", "nick.request-receive").replace("%player%", p.getName()));
     }
 }

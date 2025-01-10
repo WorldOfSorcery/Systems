@@ -1,5 +1,6 @@
-package me.hektortm.woSSystems.chat;
+package me.hektortm.woSSystems.channels;
 
+import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
@@ -19,21 +20,20 @@ import java.util.*;
 
 public class NicknameManager {
 
+    private final File nickFolder = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "channels" + File.separator + "nicknames");
     private final File currentNickFile;
     private final File reservedNickFile;
     private final File nickRequestFile;
-    private final ChatManager chatManager;
     private final WoSCore core = WoSCore.getPlugin(WoSCore.class);
     private final LangManager lang = new LangManager(core);
     private final Map<UUID, String> nickRequests = new HashMap<>();
     public final Map<UUID, String> reservedNicks = new HashMap<>();
     static Inventory inv;
 
-    public NicknameManager(ChatManager chatManager) {
-        this.chatManager = chatManager;
-        this.currentNickFile = new File(chatManager.chatFolder, "current_nicks.yml");
-        this.reservedNickFile = new File(chatManager.chatFolder, "reserved_nicks.yml");
-        this.nickRequestFile = new File(chatManager.chatFolder, "nick_requests.yml");
+    public NicknameManager() {
+        this.currentNickFile = new File(nickFolder, "current_nicks.yml");
+        this.reservedNickFile = new File(nickFolder, "reserved_nicks.yml");
+        this.nickRequestFile = new File(nickFolder, "nick_requests.yml");
 
         ensureFileExists(currentNickFile);
         ensureFileExists(reservedNickFile);

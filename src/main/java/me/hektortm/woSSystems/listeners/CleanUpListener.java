@@ -21,19 +21,16 @@ public class CleanUpListener implements Listener {
     private final UnlockableManager manager;
     private final WoSCore core;
     private final Coinflip coinflip;
-    private final ChatManager chatManager;
 
-    public CleanUpListener(WoSCore core, UnlockableManager manager, Coinflip coinflip, ChatManager chatManager) {
+    public CleanUpListener(WoSCore core, UnlockableManager manager, Coinflip coinflip) {
         this.core = core;
         this.manager = manager;
         this.coinflip = coinflip;
-        this.chatManager = chatManager;
     }
 
 
     @EventHandler
     public void leaveEvent(PlayerQuitEvent event) {
-        chatManager.savePlayerData();
         Player p = event.getPlayer();
 
         if (coinflip.challengeQueue.containsKey(p.getUniqueId())) {
