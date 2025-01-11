@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.time;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.utils.Letters_bg;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -131,7 +132,7 @@ public class TimeManager {
                 String time = String.format("%02d:%02d", hours, minutes);
 
                 String dayOfWeek = capitalizeFirstLetter(inGameDayOfWeek.name().toLowerCase());
-                String formattedDate = String.format("%s | %s %02d", dayOfWeek, monthNames.get(inGameMonth), inGameDayOfMonth);
+                String formattedDate = String.format("%s"+ Letters_bg.COMMA.getLetter() +" %s %02d", dayOfWeek, monthNames.get(inGameMonth), inGameDayOfMonth);
 
                 String activeActivity = new TimeEvents(plugin, TimeManager.this).getActiveActivity(inGameTimeMinutes);
 
