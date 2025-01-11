@@ -92,7 +92,25 @@ commands:
     description: sign item
     usage: /<command>
 
+  time:
+    description: View and manipulate the time
+    usage: /<command> [date|reload|freeze]
+
 permissions:
+
+  # Time Permissions
+  time:
+    subcommands:
+      date:
+        permission: time.date
+        description: "set a date"
+      freeze:
+        permission: time.freeze
+        description: "freeze/unfreeze time"
+      reload:
+        permission: time.reload
+        description: "reload the config"
+
   # Loot table Permissions
   loottable.give:
     description: give lt
@@ -120,8 +138,6 @@ permissions:
   nick.unreserve:
     description: unreserve
     default: op
-
-
 
   # Interaction Permissions
   interaction:

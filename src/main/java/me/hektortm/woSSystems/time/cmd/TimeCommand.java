@@ -1,0 +1,93 @@
+package me.hektortm.woSSystems.time.cmd;
+
+import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.time.TimeEvents;
+import me.hektortm.woSSystems.time.TimeManager;
+import me.hektortm.woSSystems.time.cmd.subcmd.DateCommand;
+import me.hektortm.woSSystems.time.cmd.subcmd.FreezeCommand;
+import me.hektortm.woSSystems.time.cmd.subcmd.ReloadCommand;
+import me.hektortm.woSSystems.utils.SubCommand;
+import me.hektortm.wosCore.LangManager;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+public class TimeCommand implements CommandExecutor {
+
+    private final Map<String, SubCommand> subCommands = new HashMap<>();
+    private final TimeManager manager;
+    private final WoSSystems plugin;
+    private final LangManager lang;
+
+    public TimeCommand(TimeManager manager, WoSSystems plugin, LangManager lang) {
+        this.manager = manager;
+        this.plugin = plugin;
+        this.lang = lang;
+
+        subCommands.put("reload", new ReloadCommand(manager));
+        subCommands.put("date", new DateCommand(manager));
+        subCommands.put("freeze", new FreezeCommand(manager));
+
+    }
+
+    @Override
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
+        // Check if there are any arguments
+        if (args.length == 0) {
+            // Handle the case where no arguments are provided (just "/time")
+            if (!(sender instanceof Player)) {
+                sender.sendMessage("This command can only be used by players.");
+                return true;
+            }
+
+            Player player = (Player) sender;
+            showInGameTimeAndActivity(player);
+            return true;
+        }
+
+        // Handle subcommands
+        String subCommandName = args[0];
+        SubCommand subCommand = subCommands.get(subCommandName.toLowerCase());
+
+        if (subCommand != null) {
+            subCommand.execute(sender, Arrays.copyOfRange(args, 1, args.length));
+            return true;
+        } else {
+            sender.sendMessage("Unknown subcommand. Use '/time' or valid subcommands like '/time date'.");
+            return true;
+        }
+    }
+
+    private void showInGameTimeAndActivity(Player player) {
+        int inGameMinutes = manager.getInGameTimeMinutes();
+
+        // Convert in-game minutes to hours and minutes
+        int hours = inGameMinutes / 60;
+        int minutes = inGameMinutes % 60;
+        String time = String.format("%02d:%02d", hours, minutes);
+
+        // Get the current date in the game
+        String date = String.format("%s %02d", manager.getMonthName(manager.getInGameMonth()), manager.getInGameDayOfMonth());
+
+        // Get the active activity using TimeEventListener
+        TimeEvents eventListener = new TimeEvents(plugin, manager);
+        String activeActivity = eventListener.getActiveActivity(inGameMinutes);
+
+        if (activeActivity == null) {
+            activeActivity = "No scheduled activity.";
+        }
+
+        // Send the in-game time, date, and activity to the player
+        player.sendMessage("§eIn-Game Time: §f" + time);
+        player.sendMessage("§eIn-Game Date: §f" + date);
+        player.sendMessage("§eCurrent Activity: §f" + activeActivity);
+    }
+
+
+}

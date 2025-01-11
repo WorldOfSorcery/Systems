@@ -11,10 +11,14 @@ import me.hektortm.woSSystems.economy.commands.EcoCommand;
 import me.hektortm.woSSystems.economy.commands.PayCommand;
 import me.hektortm.woSSystems.listeners.*;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
+import me.hektortm.woSSystems.systems.citems.commands.SignCommand;
 import me.hektortm.woSSystems.systems.guis.GUIManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.systems.loottables.LoottableManager;
 import me.hektortm.woSSystems.systems.loottables.commands.LoottableCommand;
+import me.hektortm.woSSystems.time.BossBarManager;
+import me.hektortm.woSSystems.time.TimeManager;
+import me.hektortm.woSSystems.time.cmd.TimeCommand;
 import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.professions.crafting.CraftingListener;
 import me.hektortm.woSSystems.professions.crafting.command.CRecipeCommand;
@@ -37,8 +41,10 @@ import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
 
 import me.hektortm.wosCore.logging.LogManager;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -65,6 +71,8 @@ public final class WoSSystems extends JavaPlugin {
     private Coinflip coinflipCommand;
     private LoottableManager lootTableManager;
     private GUIManager guiManager;
+    private BossBarManager bossBarManager;
+    private TimeManager timeManager;
 
 
     // TODO:
@@ -77,7 +85,8 @@ public final class WoSSystems extends JavaPlugin {
     @Override
     public void onEnable() {
         core = WoSCore.getPlugin(WoSCore.class);
-
+        bossBarManager = new BossBarManager();
+        timeManager = new TimeManager(this, bossBarManager);
         lang = new LangManager(core);
         log = new LogManager(lang, core);
 
@@ -132,6 +141,16 @@ public final class WoSSystems extends JavaPlugin {
 
         // Finalize initialization
 
+        timeManager.loadConfiguration();
+        timeManager.loadGameStateConfig();
+        timeManager.loadGameState();
+        timeManager.loadConfig();
+        timeManager.initializeMonthNames();
+        timeManager.startInGameClock();
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            bossBarManager.removeBossBar(p);
+            bossBarManager.createBossBar(p);
+        }
         channelManager.loadChannels();
         recipeManager.loadRecipes();
         registerCommands();
@@ -145,6 +164,11 @@ public final class WoSSystems extends JavaPlugin {
     @Override
     public void onDisable() {
         channelManager.saveChannels();
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            bossBarManager.removeBossBar(p);
+        }
+        timeManager.saveGameState();
+
     }
 
     private void registerCommands() {
@@ -166,6 +190,9 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("channel", new ChannelCommand(channelManager));
         cmdReg("nickname", new NicknameCommand(nickManager));
         cmdReg("loottable", new LoottableCommand(lootTableManager));
+        cmdReg("sign", new SignCommand(citemManager, ecoManager));
+        cmdReg("time", new TimeCommand(timeManager, this, lang));
+
         //cmdReg("gui", new GUIcommand(new GUIHandler(guiManager)));
     }
 
@@ -176,9 +203,9 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new InterListener(interactionManager, citemManager));
         eventReg(new DropListener());
         eventReg(new HoverListener(citemManager));
-        eventReg(new CleanUpListener(core, unlockableManager, coinflipCommand));
+        eventReg(new QuitListener(core, unlockableManager, coinflipCommand, this));
         eventReg(new FishingListener());
-        eventReg(new JoinListener());
+        eventReg(new JoinListener(this));
         eventReg(new ChannelListener(channelManager, nickManager));
 
 
@@ -253,6 +280,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public InteractionManager getInteractionManager() {
         return interactionManager;
+    }
+    public BossBarManager getBossBarManager() {
+        return bossBarManager;
     }
 
 }

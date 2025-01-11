@@ -1,7 +1,9 @@
 package me.hektortm.woSSystems.listeners;
 
+import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
+import me.hektortm.woSSystems.time.TimeManager;
 import me.hektortm.wosCore.WoSCore;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -15,16 +17,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class CleanUpListener implements Listener {
+public class QuitListener implements Listener {
 
     private final UnlockableManager manager;
     private final WoSCore core;
     private final Coinflip coinflip;
+    private final WoSSystems plugin;
 
-    public CleanUpListener(WoSCore core, UnlockableManager manager, Coinflip coinflip) {
+    public QuitListener(WoSCore core, UnlockableManager manager, Coinflip coinflip, WoSSystems plugin) {
         this.core = core;
         this.manager = manager;
         this.coinflip = coinflip;
+        this.plugin = plugin;
     }
 
 
@@ -37,6 +41,8 @@ public class CleanUpListener implements Listener {
         if (coinflip.challengeQueue.containsKey(p.getUniqueId())) {
             coinflip.challengeQueue.remove(p.getUniqueId());
         }
+
+        plugin.getBossBarManager().removeBossBar(p);
 
         File playerFile = new File(core.getDataFolder() + File.separator + "playerdata" + File.separator + p.getUniqueId() + ".yml");
         FileConfiguration playerData = YamlConfiguration.loadConfiguration(playerFile);
@@ -55,6 +61,8 @@ public class CleanUpListener implements Listener {
         } catch (IOException e) {
             Bukkit.getLogger().severe("Could not save player file: " + p.getUniqueId() + ".yml");
         }
+
+
     }
 
 

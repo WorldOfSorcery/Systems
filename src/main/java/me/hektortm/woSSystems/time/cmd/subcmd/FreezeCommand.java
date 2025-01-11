@@ -1,0 +1,40 @@
+package me.hektortm.woSSystems.time.cmd.subcmd;
+
+import me.hektortm.woSSystems.time.TimeManager;
+import me.hektortm.woSSystems.utils.Permissions;
+import me.hektortm.woSSystems.utils.SubCommand;
+import org.bukkit.command.CommandSender;
+
+public class FreezeCommand extends SubCommand {
+
+    private final TimeManager manager;
+
+    public FreezeCommand(TimeManager manager) {
+        this.manager = manager;
+    }
+
+    @Override
+    public String getName() {
+        return "freeze";
+    }
+
+    @Override
+    public Permissions getPermission() {
+        return null;
+    }
+
+    @Override
+    public void execute(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("time.freeze")) {
+            sender.sendMessage("You do not have permission to use this command!");
+            return;
+        }
+
+        manager.toggleTimeFreeze();
+        boolean isFrozen = manager.isTimeFrozen();
+
+        // Notify the player whether time is now frozen or unfrozen
+        String message = isFrozen ? "Time is now frozen." : "Time is no longer frozen.";
+        sender.sendMessage(message);
+    }
+}
