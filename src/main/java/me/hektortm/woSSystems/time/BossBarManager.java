@@ -15,6 +15,7 @@ import java.util.UUID;
 
 import static me.hektortm.woSSystems.utils.Letters.*;
 import static me.hektortm.woSSystems.utils.Letters.STAR;
+import static me.hektortm.woSSystems.utils.Letters_bg.*;
 
 public class BossBarManager {
 
@@ -53,15 +54,15 @@ public class BossBarManager {
 
         // If there is an active activity, use its name as the title; otherwise, use the time and date
         String title = (formattedActivityName != null) ? String.format(
-                colorCode+Letters_bg.BORDER_LEFT.getLetter()+Letters_bg.NEGATIVE_SPACE.getLetter() + "%s" + Letters_bg.BORDER_RIGHT.getLetter()
+                colorCode+BORDER_LEFT.getLetter()+NEGATIVE_SPACE.getLetter()+CLOCK.getLetter()+ NEGATIVE_SPACE.getLetter() + "%s" + BORDER_RIGHT.getLetter()
                         + "  " +
-                        Letters_bg.BORDER_LEFT.getLetter() + Letters_bg.NEGATIVE_SPACE.getLetter() + "%s" + Letters_bg.BORDER_RIGHT.getLetter()
+                        BORDER_LEFT.getLetter() + NEGATIVE_SPACE.getLetter()+CALENDER.getLetter()+ NEGATIVE_SPACE.getLetter() + "%s" + Letters_bg.BORDER_RIGHT.getLetter()
                         + "  " +
-                        Letters_bg.BORDER_LEFT.getLetter() + Letters_bg.NEGATIVE_SPACE.getLetter() + "%s" + Letters_bg.BORDER_RIGHT.getLetter(),
+                        BORDER_LEFT.getLetter() + NEGATIVE_SPACE.getLetter() + "%s" + Letters_bg.BORDER_RIGHT.getLetter(),
                 formattedTime, formattedDate, formattedActivityName) : String.format(
-                colorCode+Letters_bg.BORDER_LEFT.getLetter() + Letters_bg.NEGATIVE_SPACE.getLetter() + "%s" + Letters_bg.BORDER_RIGHT.getLetter()
+                colorCode+ BORDER_LEFT.getLetter() + NEGATIVE_SPACE.getLetter()+ CLOCK.getLetter()+ NEGATIVE_SPACE.getLetter() + "%s" + Letters_bg.BORDER_RIGHT.getLetter()
                         + "  " +
-                        Letters_bg.BORDER_LEFT.getLetter() + Letters_bg.NEGATIVE_SPACE.getLetter() + "%s" + Letters_bg.BORDER_RIGHT.getLetter(),
+                        BORDER_LEFT.getLetter() + NEGATIVE_SPACE.getLetter()+CALENDER.getLetter()+ NEGATIVE_SPACE.getLetter() + "%s" + Letters_bg.BORDER_RIGHT.getLetter(),
                 formattedTime, formattedDate);
 
         bossBar.setTitle(title);
@@ -168,7 +169,7 @@ public class BossBarManager {
             }
 
             // Add the NEGATIVE_SPACE Unicode after each letter
-            result.append(Letters_bg.NEGATIVE_SPACE.getLetter());
+            result.append(NEGATIVE_SPACE.getLetter());
         }
         return result.toString();
     }

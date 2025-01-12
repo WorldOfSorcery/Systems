@@ -72,6 +72,9 @@ public enum Letters_bg {
     COLON("\uE565"),
     COMMA("\uE566"),
 
+    CLOCK("\uE567"),
+    CALENDER("\uE568"),
+
     NEGATIVE_SPACE("\uF001");
 
 
