@@ -1,0 +1,70 @@
+package me.hektortm.woSSystems.regions;
+
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldguard.LocalPlayer;
+import com.sk89q.worldguard.WorldGuard;
+import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import com.sk89q.worldguard.protection.flags.Flag;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import me.hektortm.woSSystems.WoSSystems;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerMoveEvent;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+public class CustomHandler implements Listener {
+
+    private final RegionBossBar bossbar;
+    private final Map<Player, String> playerRegions = new HashMap<>(); // Tracks player's current region
+
+    public CustomHandler(RegionBossBar bossbar) {
+        this.bossbar = bossbar;
+    }
+
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent event) {
+        Player player = event.getPlayer();
+        updateRegion(player);
+    }
+
+    public void updateRegion(Player player) {
+        LocalPlayer localPlayer = WorldGuardPlugin.getPlugin(WorldGuardPlugin.class).wrapPlayer(player);
+        RegionManager regionManager = WorldGuard.getInstance().getPlatform().getRegionContainer().get(localPlayer.getWorld());
+
+        if (regionManager == null) {
+            bossbar.updateBossBar(player, ""); // Clear bossbar if no regions
+            playerRegions.remove(player); // Remove the player from tracked regions
+            return;
+        }
+
+        BlockVector3 blockVector3 = localPlayer.getBlockLocation().toVector().toBlockPoint();
+        ApplicableRegionSet regions = regionManager.getApplicableRegions(blockVector3);
+
+        String newRegionId = null; // Track the region with a display-name flag
+
+        for (ProtectedRegion region : regions) {
+            String displayName = region.getFlag(WoSSystems.DISPLAY_NAME); // Get the display-name flag
+            if (displayName != null) {
+                newRegionId = region.getId(); // Found a region with a display-name
+                bossbar.updateBossBar(player, displayName); // Update boss bar with the display name
+                break;
+            }
+        }
+
+        String currentRegionId = playerRegions.get(player);
+
+        // If the player has left their current region
+        if (!Objects.equals(currentRegionId, newRegionId)) {
+            if (newRegionId == null) {
+                bossbar.updateBossBar(player, ""); // Clear the bossbar if no region with display-name
+            }
+            playerRegions.put(player, newRegionId); // Update the player's current region
+        }
+    }
+}

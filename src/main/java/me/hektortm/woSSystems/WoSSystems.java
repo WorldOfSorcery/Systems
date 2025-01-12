@@ -1,5 +1,12 @@
 package me.hektortm.woSSystems;
 
+import com.sk89q.worldguard.WorldGuard;
+import com.sk89q.worldguard.protection.flags.Flag;
+import com.sk89q.worldguard.protection.flags.StateFlag;
+import com.sk89q.worldguard.protection.flags.StringFlag;
+import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
+import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
+import com.sk89q.worldguard.session.SessionManager;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.channels.cmd.ChannelCommand;
 import me.hektortm.woSSystems.channels.NicknameManager;
@@ -11,6 +18,8 @@ import me.hektortm.woSSystems.economy.commands.EcoCommand;
 import me.hektortm.woSSystems.economy.commands.PayCommand;
 import me.hektortm.woSSystems.listeners.*;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
+import me.hektortm.woSSystems.regions.CustomHandler;
+import me.hektortm.woSSystems.regions.RegionBossBar;
 import me.hektortm.woSSystems.systems.citems.commands.SignCommand;
 import me.hektortm.woSSystems.systems.guis.GUIManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
@@ -73,7 +82,9 @@ public final class WoSSystems extends JavaPlugin {
     private GUIManager guiManager;
     private BossBarManager bossBarManager;
     private TimeManager timeManager;
+    private RegionBossBar regionBossBarManager;
 
+    public static StringFlag DISPLAY_NAME;
 
     // TODO:
     //  - Interactions
@@ -86,6 +97,7 @@ public final class WoSSystems extends JavaPlugin {
     public void onEnable() {
         core = WoSCore.getPlugin(WoSCore.class);
         bossBarManager = new BossBarManager();
+        regionBossBarManager = new RegionBossBar();
         timeManager = new TimeManager(this, bossBarManager);
         lang = new LangManager(core);
         log = new LogManager(lang, core);
@@ -131,14 +143,6 @@ public final class WoSSystems extends JavaPlugin {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }
 
-        /*
-        InventoryInteraction inventoryInteraction = new InventoryInteraction(this, actionHandler);
-        for (Map.Entry<String, InteractionConfig> entry : interactionConfigs.entrySet()) {
-            InteractionConfig config = entry.getValue();
-            getServer().getPluginManager().registerEvents(new InventoryClickListener(inventoryInteraction, config, guiManager), this);
-        }
-         */
-
         // Finalize initialization
 
         timeManager.loadConfiguration();
@@ -150,7 +154,11 @@ public final class WoSSystems extends JavaPlugin {
         for (Player p : Bukkit.getOnlinePlayers()) {
             bossBarManager.removeBossBar(p);
             bossBarManager.createBossBar(p);
+            regionBossBarManager.removeBossBar(p);
+            regionBossBarManager.createBossBar(p);
         }
+        //SessionManager sessionManager = WorldGuard.getInstance().getPlatform().getSessionManager();
+        //sessionManager.registerHandler(new DisplayNameFlag.Factory(), null);
         channelManager.loadChannels();
         recipeManager.loadRecipes();
         registerCommands();
@@ -166,10 +174,29 @@ public final class WoSSystems extends JavaPlugin {
         channelManager.saveChannels();
         for (Player p : Bukkit.getOnlinePlayers()) {
             bossBarManager.removeBossBar(p);
+            regionBossBarManager.removeBossBar(p);
         }
         timeManager.saveGameState();
 
     }
+
+    @Override
+    public void onLoad() {
+        FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
+        try {
+            StringFlag flag = new StringFlag("display-name");
+            registry.register(flag);
+            DISPLAY_NAME = flag;
+        } catch (FlagConflictException e) {
+            Flag<?> existing = registry.get("display-name");
+            if (existing instanceof StateFlag) {
+                DISPLAY_NAME = (StringFlag) existing;
+            } else {
+                Bukkit.getLogger().warning("wtf is happening");
+            }
+        }
+    }
+
 
     private void registerCommands() {
 
@@ -207,6 +234,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new FishingListener());
         eventReg(new JoinListener(this));
         eventReg(new ChannelListener(channelManager, nickManager));
+        eventReg(new CustomHandler(regionBossBarManager));
 
 
         getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager), this);
@@ -284,5 +312,7 @@ public final class WoSSystems extends JavaPlugin {
     public BossBarManager getBossBarManager() {
         return bossBarManager;
     }
-
+    public RegionBossBar getRegionBossBarManager() {
+        return regionBossBarManager;
+    }
 }

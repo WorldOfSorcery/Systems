@@ -1,9 +1,7 @@
-package me.hektortm.woSSystems.time;
+package me.hektortm.woSSystems.regions;
 
-import me.hektortm.woSSystems.utils.Letters;
 import me.hektortm.woSSystems.utils.Letters_bg;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -11,56 +9,50 @@ import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import static me.hektortm.woSSystems.utils.Letters_bg.*;
+import static me.hektortm.woSSystems.utils.Letters_bg.NEGATIVE_SPACE;
 
-public class BossBarManager {
-
-    private final Map<UUID, BossBar> playerBars = new HashMap<>();
+public class RegionBossBar {
+    private final Map<UUID, BossBar> bossbars = new HashMap<>();
 
     public void createBossBar(Player p) {
-        BossBar timeBar = Bukkit.createBossBar("", BarColor.WHITE, BarStyle.SOLID);
-        timeBar.setVisible(true);
-        timeBar.addPlayer(p);
-        playerBars.put(p.getUniqueId(), timeBar);
+        BossBar regionBar = Bukkit.createBossBar("", BarColor.WHITE, BarStyle.SOLID);
+        regionBar.setVisible(true);
+        regionBar.addPlayer(p);
+        bossbars.put(p.getUniqueId(), regionBar);
     }
 
-    public void updateBossBar(Player p, String time, String date, String activityName) {
-        BossBar bossBar = playerBars.get(p.getUniqueId());
+    public void updateBossBar(Player p, String regionName) {
+        BossBar bossBar = bossbars.get(p.getUniqueId());
+
+        if (regionName.equals("")) {
+            bossBar.setTitle("");
+            return;
+        }
 
         if (bossBar == null) {
             return;
         }
 
-        time = parseUni(time);
-        date = parseUni(date);
-        if (activityName != null) {
-            activityName = parseUni(activityName);
-
-        }
+        regionName = parseUni(regionName);
 
         // Define the color code for the shadow-free effect (#4e5c24)
         String colorCode = "§x§4§e§5§c§2§4";  // Minecraft color code for #4e5c24
 
         // Apply the color to the text
-        String formattedTime = applyColorAndNegativeSpace(colorCode, time);
-        String formattedDate = applyColorAndNegativeSpace(colorCode, date);
-        String formattedActivityName = activityName != null ? applyColorAndNegativeSpace(colorCode, activityName) : null;
+        String formattedName = applyColorAndNegativeSpace(colorCode, regionName);
 
+        String borderLeft = colorCode+BORDER_LEFT.getLetter()+NEGATIVE_SPACE.getLetter();
+        String icon = CLOCK.getLetter()+NEGATIVE_SPACE.getLetter();
+        String borderRight = BORDER_RIGHT.getLetter();
 
         // If there is an active activity, use its name as the title; otherwise, use the time and date
-        String title = (formattedActivityName != null) ? String.format(
-                colorCode+BORDER_LEFT.getLetter()+NEGATIVE_SPACE.getLetter()+CLOCK.getLetter()+ NEGATIVE_SPACE.getLetter() + "%s" + BORDER_RIGHT.getLetter()
-                        + "  " +
-                        BORDER_LEFT.getLetter() + NEGATIVE_SPACE.getLetter()+CALENDER.getLetter()+ NEGATIVE_SPACE.getLetter() + "%s" + Letters_bg.BORDER_RIGHT.getLetter()
-                        + "  " +
-                        BORDER_LEFT.getLetter() + NEGATIVE_SPACE.getLetter() + "%s" + Letters_bg.BORDER_RIGHT.getLetter(),
-                formattedTime, formattedDate, formattedActivityName) : String.format(
-                colorCode+ BORDER_LEFT.getLetter() + NEGATIVE_SPACE.getLetter()+ CLOCK.getLetter()+ NEGATIVE_SPACE.getLetter() + "%s" + Letters_bg.BORDER_RIGHT.getLetter()
-                        + "  " +
-                        BORDER_LEFT.getLetter() + NEGATIVE_SPACE.getLetter()+CALENDER.getLetter()+ NEGATIVE_SPACE.getLetter() + "%s" + Letters_bg.BORDER_RIGHT.getLetter(),
-                formattedTime, formattedDate);
+        String title = String.format(
+                borderLeft+"%s" +borderRight,
+                formattedName);
 
         bossBar.setTitle(title);
     }
@@ -68,7 +60,7 @@ public class BossBarManager {
 
 
     public void removeBossBar(Player p) {
-        BossBar bossBar = playerBars.remove(p.getUniqueId());
+        BossBar bossBar = bossbars.remove(p.getUniqueId());
         if (bossBar != null) {
             bossBar.removePlayer(p);
         }
