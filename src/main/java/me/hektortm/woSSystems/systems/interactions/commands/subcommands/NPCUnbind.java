@@ -5,21 +5,18 @@ import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
-import net.citizensnpcs.Citizens;
 import net.citizensnpcs.api.CitizensAPI;
-import net.citizensnpcs.api.npc.NPCSelector;
-import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class NPCBind extends SubCommand {
+public class NPCUnbind extends SubCommand {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final InteractionManager manager = plugin.getInteractionManager();
 
     @Override
     public String getName() {
-        return "npcbind";
+        return "npcunbind";
     }
 
     @Override
@@ -42,7 +39,7 @@ public class NPCBind extends SubCommand {
 
         if (args.length == 1) {
             String interactionId = args[0];
-            manager.bindNPC(p, interactionId, npcId);
+            manager.unbindNPC(p, interactionId, npcId);
         } else {
             sender.sendMessage("/interaction bind <id>");
         }

@@ -4,6 +4,7 @@ import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import net.citizensnpcs.api.event.NPCClickEvent;
+import net.citizensnpcs.api.event.NPCRightClickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -23,12 +24,14 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class InterListener implements Listener {
 
     private final InteractionManager interManager;
     private final CitemManager citemManager;
     private final Map<Location, Long> blockCooldowns = new HashMap<>();
+    private final Map<String, Long> npcCooldowns = new HashMap<>();
     private final NamespacedKey unusableKey;
 
     public InterListener(InteractionManager manager, CitemManager citemManager) {
@@ -38,26 +41,24 @@ public class InterListener implements Listener {
     }
 
     @EventHandler
-    public void onNPCInteract(NPCClickEvent event) {
+    public void onNPCInteract(NPCRightClickEvent event) {
         Player p = event.getClicker();
         int clickedNPCid = event.getNPC().getId();
+        String npcIdString = String.valueOf(clickedNPCid);
+        Bukkit.getLogger().info("Interacted with NPC: " + clickedNPCid);
 
         for (File file : interManager.interactionFolder.listFiles()) {
             if (file.isFile() && file.getName().endsWith(".json")) {
                 String id = file.getName().replace(".json", "");
                 InteractionData inter = interManager.interactionMap.get(id);
-
                 if (inter == null) {
                     Bukkit.getLogger().info("Interaction " + id + " is null.");
                     continue; // Skip invalid interaction files
                 }
+                List<String> ids = inter.getNpcIDs();
 
-                List<Integer> ids = inter.getNpcIDs();
-
-                for (Integer npcid : ids) {
-                    if (npcid == clickedNPCid) {
-                        //event.setCancelled(true); // Cancel default behavior
-
+                for (String npcid : ids) {
+                    if (Objects.equals(npcid, npcIdString)) {
                         Bukkit.getLogger().info("NPC Interaction triggered for ID: " + id);
 
                         // Trigger interaction based on action
@@ -67,7 +68,6 @@ public class InterListener implements Listener {
                 }
             }
         }
-
     }
 
     @EventHandler

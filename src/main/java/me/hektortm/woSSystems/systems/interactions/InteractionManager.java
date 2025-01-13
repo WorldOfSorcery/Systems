@@ -7,6 +7,8 @@ import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.WoSCore;
 import me.hektortm.wosCore.logging.LogManager;
+import net.citizensnpcs.api.CitizensAPI;
+import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
@@ -75,10 +77,17 @@ public class InteractionManager {
                     }
                 }
 
-                List<String> npcs = new ArrayList<>();
+                List<String> validNpcIds = new ArrayList<>();
                 if (npcArray != null) {
-                    for (Object npc : npcArray) {
-                        npcs.add((String) npc);
+                    for (Object npcId : npcArray) {
+                        if (npcId instanceof String) {
+                            int id = Integer.parseInt((String) npcId);
+                            if (CitizensAPI.getNPCRegistry().getById(id) != null) { // Check if NPC exists
+                                validNpcIds.add((String) npcId);
+                            } else {
+                                Bukkit.getLogger().info("Removed invalid NPC ID: " + npcId + " from interaction " + interactionId);
+                            }
+                        }
                     }
                 }
 
@@ -108,7 +117,7 @@ public class InteractionManager {
                     }
                 }
 
-                interactionMap.put(interactionId, new InteractionData(conditions,actions,locations,npcs,particleType,particleColor, elseType, elseColor));
+                interactionMap.put(interactionId, new InteractionData(conditions,actions,locations,validNpcIds,particleType,particleColor, elseType, elseColor));
 
             } catch (Exception e) {
                 Bukkit.getLogger().warning("Error loading interaction from file " + file.getName() + ": " + e.getMessage());
@@ -221,6 +230,7 @@ public class InteractionManager {
     }
 
     public void particleTask() {
+        ParticleHandler particleHandler = new ParticleHandler();
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -229,92 +239,27 @@ public class InteractionManager {
                         if (location != null) {
                             for (Player player : Bukkit.getOnlinePlayers()) {
                                 // Check if player meets conditions
-                                    spawnParticlesForPlayer(player, inter, location);
+                                    particleHandler.spawnParticlesForPlayer(player, inter, location);
                             }
                         }
                     }
+                    for (String id : inter.getNpcIDs()) {
+                        if (id != null) {
+                            for (Player player : Bukkit.getOnlinePlayers()) {
+                                NPC npc1 = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(id));
+                                Location location = npc1.getEntity().getLocation();
+                                particleHandler.spawnParticlesForPlayer(player, inter, location);
+                            }
+                        }
+                    }
+
                 }
             }
         }.runTaskTimer(plugin, 0L, 10L);
     }
 
 
-    public void spawnParticlesForPlayer(Player player, InteractionData inter, Location location) {
-        String particleType = inter.getParticleType();
-        if (conditionHandler.validateConditionsNoActions(player, inter.getConditions())) {
-            particleType = inter.getParticleType();
-        } else {
-            if (inter.getElseParticleType() != null) {
-                particleType = inter.getElseParticleType();
-            } else {
-                return;
-            }
-        }
 
-
-        switch (particleType.toLowerCase()) {
-            case "redstone_dust":
-                sendRedstoneParticleToPlayer(player,location, inter);
-                break;
-            case "redstone_dust_circle":
-                spawnRedstoneParticleCircle(player, location, inter);
-                break;
-            case "portal":
-                spawnSurroundingParticles(player, location, Particle.PORTAL);
-                break;
-            case "villager_happy":
-                spawnVillagerHappyParticles(player, location);
-                break;
-            case "villager_happy_circle":
-                spawnVillagerHappyCircleParticles(player, location);
-                break;
-            case "flame":
-                spawnSurroundingParticles(player, location, Particle.SMALL_FLAME);
-                break;
-            case "totem":
-                spawnSurroundingParticles(player, location, Particle.TOTEM_OF_UNDYING);
-                break;
-            case "smoke":
-                spawnSurroundingParticles(player, location, Particle.SMOKE);
-                break;
-            case "explosion":
-                spawnSurroundingParticles(player, location, Particle.EXPLOSION);
-                break;
-            case "mycelium":
-                spawnSurroundingParticles(player, location, Particle.MYCELIUM);
-                break;
-            default:
-                // Default behavior if the particle type is unknown
-                break;
-        }
-    }
-
-
-    private void spawnSurroundingParticles(Player player, Location location, Particle particle) {
-        double radius = 2.5;
-        int countPerLayer = 1; // Number of particles to spawn per layer
-        double offset = 0.28; // Half of the block size for offsetting (smaller value for tighter surrounding)
-
-        // Loop to create a cuboid shape around the block
-        for (int x = -1; x <= 1; x++) { // X dimension
-            for (int z = -1; z <= 1; z++) { // Z dimension
-                for (int y = 0; y <= 1; y++) { // Y dimension, only the top and middle
-                    for (int i = 0; i < countPerLayer; i++) {
-                        double randomX = radius * (Math.random() * offset * 2) - offset+0.1; // Random x offset within the range
-                        double randomZ = radius * (Math.random() * offset * 1.9) - offset+0.1; // Random z offset within the range
-                        double randomY = radius * Math.random() * 0.4; // Random y offset to create vertical variation
-
-                        // Spawn particles at the calculated position relative to the block
-                        player.spawnParticle(particle,
-                                location.getX() + randomX,
-                                location.getY() + randomY,
-                                location.getZ() + randomZ,
-                                1);
-                    }
-                }
-            }
-        }
-    }
 
     public Location getTargetBlock(Player p) {
         double distance = 5.0;
@@ -334,6 +279,7 @@ public class InteractionManager {
         inter.removeLocation(loc);
         interactionMap.put(id, inter);
         saveInteractionToFile(id, inter);
+        p.sendMessage("Unbound interaction '"+id);
     }
 
     public void bindLocation(Player p, String id, Location loc) {
@@ -346,6 +292,40 @@ public class InteractionManager {
         inter.addLocation(loc);
         interactionMap.put(id, inter);
         saveInteractionToFile(id, inter);
+        p.sendMessage("Bound interaction '"+id);
+    }
+
+    public void bindNPC(Player p, String id, int npcID) {
+        String npcIDString = String.valueOf(npcID);
+        if(!interExists(p,id)) return;
+        if (isNPCBound(npcID)) {
+            p.sendMessage("error isBound");
+            return;
+        }
+        InteractionData inter = getInteractionByID(id);
+        inter.addNpcID(npcIDString);
+        interactionMap.put(id, inter);
+        saveInteractionToFile(id, inter);
+        p.sendMessage("Bound interaction '"+id+"' to NPC '"+npcID+"'");
+    }
+    public void unbindNPC(Player p, String id, int npcID) {
+        String npcIDString = String.valueOf(npcID);
+        if (!interExists(p,id)) return;
+        if (!isNPCBound(npcID)) {
+            p.sendMessage("Theres no interaction bound on this NPC.");
+        }
+        InteractionData inter = getInteractionByID(id);
+        inter.removeNpcID(npcIDString);
+        interactionMap.put(id, inter);
+        saveInteractionToFile(id, inter);
+        p.sendMessage("Unbound interaction '"+id+"' from NPC '"+npcID+"'");
+    }
+
+    public boolean isNPCBound(int id) {
+        for (InteractionData inter : interactionMap.values()) {
+            if(inter.getNpcIDs().contains(id)) return true;
+        }
+        return false;
     }
 
     public boolean isBound(Location loc) {
@@ -365,142 +345,6 @@ public class InteractionManager {
 
     public InteractionData getInteractionByID(String id) {
         return interactionMap.get(id);
-    }
-
-
-    public void spawnVillagerHappyParticles(Player player, Location location) {
-        double radius = 2.5;
-        int countPerLayer = 1; // Number of particles to spawn per layer
-        double offset = 0.28; // Half of the block size for offsetting (smaller value for tighter surrounding)
-
-        // Loop to create a cuboid shape around the block
-        for (int x = -1; x <= 1; x++) { // X dimension
-            for (int z = -1; z <= 1; z++) { // Z dimension
-                for (int y = 0; y <= 1; y++) { // Y dimension, only the top and middle
-                    for (int i = 0; i < countPerLayer; i++) {
-                        double randomX = radius * (Math.random() * offset * 2) - offset+0.1; // Random x offset within the range
-                        double randomZ = radius * (Math.random() * offset * 1.9) - offset+0.1; // Random z offset within the range
-                        double randomY = radius * Math.random() * 0.4; // Random y offset to create vertical variation
-
-                        // Spawn particles at the calculated position relative to the block
-                        player.spawnParticle(Particle.HAPPY_VILLAGER,
-                                location.getX() + randomX,
-                                location.getY() + randomY,
-                                location.getZ() + randomZ,
-                                1);
-                    }
-                }
-            }
-        }
-    }
-
-    public void spawnVillagerHappyCircleParticles(Player player, Location location) {
-        int count = 15; // Total number of particles
-        double radius = 0.5; // Distance from the center of the block to spawn particles
-
-        for (int i = 0; i < count; i++) {
-            double angle = Math.random() * Math.PI * 2; // Random angle for circular distribution
-            double yOffset = Math.random() * 0.5; // Randomly offset particles a little above and below the center
-            double xOffset = radius * Math.cos(angle)+0.5; // Calculate x offset
-            double zOffset = radius * Math.sin(angle)+0.5; // Calculate z offset
-
-            // Spawn the particle around the block, using the center of the block
-            player.spawnParticle(Particle.HAPPY_VILLAGER, location.getX() + xOffset, location.getY() + yOffset, location.getZ() + zOffset, 1);
-        }
-    }
-
-    public void sendRedstoneParticleToPlayer(Player player, Location location, InteractionData interactionData) {
-        // Ensure the player meets the conditions for the interaction
-        String colorHex = interactionData.getParticleColor();
-        if (conditionHandler.validateConditionsNoActions(player, interactionData.getConditions())) {
-            colorHex = interactionData.getParticleColor();
-
-        } else {
-            if (interactionData.getElseParticleColor() != null) {
-                colorHex = interactionData.getElseParticleColor();
-            } else {
-                return;
-            }
-        }
-
-        // Get the color from the interaction data (assumed to be in hex format)
-
-        Color color = Color.fromRGB(
-                Integer.valueOf(colorHex.substring(1, 3), 16),
-                Integer.valueOf(colorHex.substring(3, 5), 16),
-                Integer.valueOf(colorHex.substring(5, 7), 16)
-        );
-
-        // Create the DustOptions for the redstone particle
-        Particle.DustOptions dustOptions = new Particle.DustOptions(color, 1.0F);
-
-        // Spawn the redstone particles around the location for the player
-        double radius = 2.5; // The radius in which particles will spawn around the target location
-        int countPerLayer = 1; // Number of particles to spawn per layer
-        double offset = 0.28; // The offset for randomness (to make the particles more spread out)
-
-        // Loop to create a cuboid shape around the block
-        for (int x = -1; x <= 1; x++) { // X dimension
-            for (int z = -1; z <= 1; z++) { // Z dimension
-                for (int y = 0; y <= 1; y++) { // Y dimension, only the top and middle
-                    for (int i = 0; i < countPerLayer; i++) {
-                        // Randomize the position a bit around the location to create a spread
-                        double randomX = radius * (Math.random() * offset * 2) - offset + 0.1; // Random x offset within the range
-                        double randomZ = radius * (Math.random() * offset * 1.9) - offset + 0.1; // Random z offset within the range
-                        double randomY = radius * Math.random() * 0.4; // Random y offset to create vertical variation
-
-                        // Spawn the particle at the randomized position relative to the location
-                        player.spawnParticle(Particle.DUST,
-                                location.getX() + randomX,
-                                location.getY() + randomY,
-                                location.getZ() + randomZ,
-                                1, dustOptions);
-                    }
-                }
-            }
-        }
-    }
-
-    public void spawnRedstoneParticleCircle(Player player, Location location, InteractionData inter) {
-
-        String colorHex = inter.getParticleColor();
-        if (conditionHandler.validateConditionsNoActions(player, inter.getConditions())) {
-            colorHex = inter.getParticleColor();
-
-        } else {
-            if (inter.getElseParticleColor() != null) {
-                colorHex = inter.getElseParticleColor();
-            } else {
-                return;
-            }
-        }
-
-        int count = 15; // Total number of particles
-        double radius = 0.5; // Distance from the center of the block to spawn particles
-
-        // Parse the color from the hex string
-        Color color = Color.fromRGB(
-                Integer.valueOf(colorHex.substring(1, 3), 16),
-                Integer.valueOf(colorHex.substring(3, 5), 16),
-                Integer.valueOf(colorHex.substring(5, 7), 16)
-        );
-
-        // Create the DustOptions for the redstone particle
-        Particle.DustOptions dustOptions = new Particle.DustOptions(color, 1.0F);
-
-        for (int i = 0; i < count; i++) {
-            double angle = Math.random() * Math.PI * 2; // Random angle for circular distribution
-            double yOffset = Math.random() * 0.5; // Randomly offset particles a little above and below the center
-            double xOffset = radius * Math.cos(angle)+0.5; // Calculate x offset
-            double zOffset = radius * Math.sin(angle)+0.5; // Calculate z offset
-
-            // Spawn the particle around the block, using the center of the block
-            player.spawnParticle(Particle.DUST,
-                    location.getX() + xOffset,
-                    location.getY() + yOffset,
-                    location.getZ() + zOffset,
-                    1, dustOptions);
-        }
     }
 
 

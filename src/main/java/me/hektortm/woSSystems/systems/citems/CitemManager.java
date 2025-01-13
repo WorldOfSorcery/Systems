@@ -395,7 +395,7 @@ public class CitemManager {
                 itemStack.setItemMeta(meta);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Bukkit.getLogger().warning("Couldnt Load File for:" + file.getAbsolutePath());
         }
 
         return itemStack;

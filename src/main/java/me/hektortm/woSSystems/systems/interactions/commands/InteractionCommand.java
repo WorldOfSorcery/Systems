@@ -22,6 +22,8 @@ public class InteractionCommand implements CommandExecutor {
         subCommands.put("reload", new ReloadCommand());
         subCommands.put("bind", new BindCommand());
         subCommands.put("unbind", new UnbindCommand());
+        subCommands.put("npcbind", new NPCBind());
+        subCommands.put("npcunbind", new NPCUnbind());
 
     }
 
