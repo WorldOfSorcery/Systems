@@ -239,7 +239,7 @@ public class InteractionManager {
                         if (location != null) {
                             for (Player player : Bukkit.getOnlinePlayers()) {
                                 // Check if player meets conditions
-                                    particleHandler.spawnParticlesForPlayer(player, inter, location);
+                                    particleHandler.spawnParticlesForPlayer(player, inter, location, false);
                             }
                         }
                     }
@@ -248,7 +248,7 @@ public class InteractionManager {
                             for (Player player : Bukkit.getOnlinePlayers()) {
                                 NPC npc1 = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(id));
                                 Location location = npc1.getEntity().getLocation();
-                                particleHandler.spawnParticlesForPlayer(player, inter, location);
+                                particleHandler.spawnParticlesForPlayer(player, inter, location, true);
                             }
                         }
                     }
