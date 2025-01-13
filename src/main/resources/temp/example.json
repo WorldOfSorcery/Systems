@@ -1,0 +1,48 @@
+{
+  "bound":{
+    "npc":[],
+    "location":[]
+  },
+  "particles":{
+    "color":"#ff3729",
+    "type":"redstone_dust"
+  },
+  "hologram": [
+    "Welcome to the interaction!",
+    "You meet the conditions."
+  ],
+  "actions":[
+    "send_message EXAMPLE MESSAGE 123 %player%",
+    "eco give %player% gold 50","send_message msg3"
+  ],
+  "conditions":{
+    "has_citem:johnny":{
+      "true": {
+        "actions": [
+          "placeholder: command true"
+        ],
+        "particles": {
+          "color": "#ffffff",
+          "type": "redstone_dust"
+        },
+        "hologram": [
+          "holo1",
+          "holo2"
+        ]
+      },
+      "false": {
+        "actions": [
+          "placeholder: command false"
+        ],
+        "particles": {
+          "color": "#ffffff",
+          "type": "redstone_dust"
+        },
+        "hologram": [
+          "holo1",
+          "holo2"
+        ]
+      }
+    }
+  }
+}

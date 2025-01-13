@@ -6,7 +6,6 @@ import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
-import com.sk89q.worldguard.session.SessionManager;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.channels.cmd.ChannelCommand;
 import me.hektortm.woSSystems.channels.NicknameManager;
@@ -60,13 +59,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 
 public final class WoSSystems extends JavaPlugin {
-
     private WoSCore core;
     private static LangManager lang;
     public File fishingItemsFolder = new File(getDataFolder(), "professions/fishing/items");
     private LogManager log;
     private InteractionManager interactionManager;
-
     private CitemManager citemManager;
     private EcoManager ecoManager;
     private StatsManager statsManager;
@@ -182,6 +179,7 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onLoad() {
+
         FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
         try {
             StringFlag flag = new StringFlag("display-name");
@@ -315,4 +313,5 @@ public final class WoSSystems extends JavaPlugin {
     public RegionBossBar getRegionBossBarManager() {
         return regionBossBarManager;
     }
+
 }

@@ -12,8 +12,12 @@ import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.TextDisplay;
 import org.bukkit.scheduler.BukkitRunnable;
+
+import org.bukkit.util.Vector;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -31,6 +35,8 @@ public class InteractionManager {
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
     public final Map<String, InteractionData> interactionMap = new HashMap<>();
+    private final Map<Location, TextDisplay> textDisplayMap = new HashMap<>();
+    private final Map<Player, Map<Location, TextDisplay>> playerTextDisplays = new HashMap<>();
 
     public InteractionManager() {
         this.interactionFolder = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "interactions");
@@ -80,14 +86,7 @@ public class InteractionManager {
                 List<String> validNpcIds = new ArrayList<>();
                 if (npcArray != null) {
                     for (Object npcId : npcArray) {
-                        if (npcId instanceof String) {
-                            int id = Integer.parseInt((String) npcId);
-                            if (CitizensAPI.getNPCRegistry().getById(id) != null) { // Check if NPC exists
-                                validNpcIds.add((String) npcId);
-                            } else {
-                                Bukkit.getLogger().info("Removed invalid NPC ID: " + npcId + " from interaction " + interactionId);
-                            }
-                        }
+                        validNpcIds.add((String) npcId);
                     }
                 }
 
@@ -104,6 +103,28 @@ public class InteractionManager {
 
                 }
 
+                JSONObject hologramJson = (JSONObject) json.get("hologram");
+                List<String> hologramDefault = new ArrayList<>();
+                List<String> hologramElse = new ArrayList<>();
+
+                if (hologramJson != null) {
+                    JSONArray defaultJson = (JSONArray) hologramJson.get("default");
+                    if (defaultJson != null) {
+                        for (Object line : defaultJson) {
+                            hologramDefault.add((String) line);
+                            Bukkit.getLogger().info("[DefaultHolo] added" +line);
+                        }
+                    }
+                    JSONArray ElseJson = (JSONArray) hologramJson.get("else");
+                    if (ElseJson != null) {
+                        for (Object line : ElseJson) {
+                            hologramElse.add((String) line);
+                            Bukkit.getLogger().info("[ElseHolo] added" +line);
+                        }
+                    }
+
+                }
+
 
                 // Load the "conditions" section
                 JSONObject conditions = (JSONObject) json.get("conditions");
@@ -117,7 +138,7 @@ public class InteractionManager {
                     }
                 }
 
-                interactionMap.put(interactionId, new InteractionData(conditions,actions,locations,validNpcIds,particleType,particleColor, elseType, elseColor));
+                interactionMap.put(interactionId, new InteractionData(interactionId, conditions,actions,locations,validNpcIds,particleType,particleColor, elseType, elseColor, hologramDefault, hologramElse));
 
             } catch (Exception e) {
                 Bukkit.getLogger().warning("Error loading interaction from file " + file.getName() + ": " + e.getMessage());
@@ -184,6 +205,8 @@ public class InteractionManager {
     }
 
 
+
+
     public void triggerInteraction(Player p, String id) {
         InteractionData inter = getInteractionByID(id);
 
@@ -238,8 +261,17 @@ public class InteractionManager {
                     for (Location location : inter.getLocations()) {
                         if (location != null) {
                             for (Player player : Bukkit.getOnlinePlayers()) {
-                                // Check if player meets conditions
-                                    particleHandler.spawnParticlesForPlayer(player, inter, location, false);
+                                boolean conditionsMet = conditionHandler.validateConditionsNoActions(player, inter.getConditions());
+
+                                // Display particles
+                                particleHandler.spawnParticlesForPlayer(player, inter, location, false);
+
+                                // Determine hologram lines
+                                List<String> hologramLines = conditionsMet
+                                        ? inter.getHologramDefault()
+                                        : inter.getHologramElse();
+                             //   createTextDisplayAtBlockBelow(location, hologramLines, -147, 0);
+
                             }
                         }
                     }
@@ -248,16 +280,77 @@ public class InteractionManager {
                             for (Player player : Bukkit.getOnlinePlayers()) {
                                 NPC npc1 = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(id));
                                 Location location = npc1.getEntity().getLocation();
+                                boolean conditionsMet = conditionHandler.validateConditionsNoActions(player, inter.getConditions());
                                 particleHandler.spawnParticlesForPlayer(player, inter, location, true);
+
+                                // Determine hologram lines
+                                List<String> hologramLines = conditionsMet
+                                        ? inter.getHologramDefault()
+                                        : inter.getHologramElse();
+                               createTextDisplayAtBlockBelow(player, location, hologramLines, 180, 0);
                             }
                         }
                     }
-
                 }
             }
-        }.runTaskTimer(plugin, 0L, 10L);
+        }.runTaskTimer(plugin, 0L, 50L);
     }
 
+
+    public void createTextDisplayAtBlockBelow(Player player, Location loc, List<String> lines, float yaw, float pitch) {
+        // Clone the location to ensure no accidental modifications
+        Location newL = new Location(loc.getWorld(), loc.getBlockX() + 0.5, loc.getBlockY() + 2, loc.getBlockZ() + 0.5);
+
+        // Get or initialize the player's display map
+        playerTextDisplays.putIfAbsent(player, new HashMap<>());
+        Map<Location, TextDisplay> textDisplays = playerTextDisplays.get(player);
+
+        // Check if a TextDisplay already exists for this player at the location
+        TextDisplay existingDisplay = textDisplays.get(newL);
+
+        if (existingDisplay != null) {
+            // Compare the current text with the new lines
+            if (existingDisplay.getText().equals(String.join("\n", lines))) {
+                // If the text matches, no need to update
+                return;
+            }
+
+            // If the text differs, remove the old display
+            existingDisplay.remove();
+            textDisplays.remove(newL);
+        }
+
+        // Get a custom direction vector (optional, based on yaw/pitch)
+        Vector direction = getCustomDirection(yaw, pitch);
+
+        // Create a new TextDisplay
+        TextDisplay textDisplay = newL.getWorld().spawn(newL, TextDisplay.class);
+        textDisplay.setText(String.join("\n", lines)); // Combine lines into one text
+        textDisplay.setBillboard(TextDisplay.Billboard.VERTICAL); // Fixed orientation
+        textDisplay.setShadowed(true);
+        textDisplay.setViewRange(32.0F);
+        textDisplay.setTextOpacity((byte) 255); // Fully visible
+        textDisplay.setDefaultBackground(true);
+        textDisplay.setBackgroundColor(Color.fromRGB(0)); // Transparent black background
+
+        // Store the new display in the player's map
+        textDisplays.put(newL, textDisplay);
+    }
+
+
+    public Vector getCustomDirection(float yaw, float pitch) {
+        // Convert degrees to radians
+        double yawRad = Math.toRadians(yaw);
+        double pitchRad = Math.toRadians(pitch);
+
+        // Calculate x, y, z components
+        double x = -Math.cos(pitchRad) * Math.sin(yawRad);
+        double y = -Math.sin(pitchRad);
+        double z = Math.cos(pitchRad) * Math.cos(yawRad);
+
+        // Create and return the vector
+        return new Vector(x, y, z);
+    }
 
 
 
@@ -362,8 +455,6 @@ public class InteractionManager {
 
             JSONObject json = new JSONObject();
 
-
-
             // Bound locations
             JSONObject bound = new JSONObject();
             JSONArray locationArray = new JSONArray();
@@ -386,6 +477,14 @@ public class InteractionManager {
             particlesJson.put("color", interaction.getParticleColor());
             json.put("particles", particlesJson);
 
+            // Hologram
+            // Hologram
+            JSONObject hologramJson = new JSONObject();
+            hologramJson.put("default", listToJsonArray(interaction.getHologramDefault()));
+            hologramJson.put("else", listToJsonArray(interaction.getHologramElse()));
+            json.put("hologram", hologramJson);
+
+
             // Conditions
             json.put("conditions", interaction.getConditions());
 
@@ -404,4 +503,14 @@ public class InteractionManager {
             e.printStackTrace();
         }
     }
+    private JSONArray listToJsonArray(List<String> lines) {
+        JSONArray jsonArray = new JSONArray();
+        if (lines != null) {
+            for (String line : lines) {
+                jsonArray.add(line); // Add each line to the JSONArray
+            }
+        }
+        return jsonArray;
+    }
+
 }
