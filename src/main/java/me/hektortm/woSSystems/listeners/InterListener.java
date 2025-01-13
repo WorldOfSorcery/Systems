@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.listeners;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
+import net.citizensnpcs.api.event.NPCClickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -34,6 +35,39 @@ public class InterListener implements Listener {
         this.interManager = manager;
         this.citemManager = citemManager;
         unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
+    }
+
+    @EventHandler
+    public void onNPCInteract(NPCClickEvent event) {
+        Player p = event.getClicker();
+        int clickedNPCid = event.getNPC().getId();
+
+        for (File file : interManager.interactionFolder.listFiles()) {
+            if (file.isFile() && file.getName().endsWith(".json")) {
+                String id = file.getName().replace(".json", "");
+                InteractionData inter = interManager.interactionMap.get(id);
+
+                if (inter == null) {
+                    Bukkit.getLogger().info("Interaction " + id + " is null.");
+                    continue; // Skip invalid interaction files
+                }
+
+                List<Integer> ids = inter.getNpcIDs();
+
+                for (Integer npcid : ids) {
+                    if (npcid == clickedNPCid) {
+                        //event.setCancelled(true); // Cancel default behavior
+
+                        Bukkit.getLogger().info("NPC Interaction triggered for ID: " + id);
+
+                        // Trigger interaction based on action
+                        interManager.triggerInteraction(p, id);
+                        return; // Exit after handling interaction
+                    }
+                }
+            }
+        }
+
     }
 
     @EventHandler

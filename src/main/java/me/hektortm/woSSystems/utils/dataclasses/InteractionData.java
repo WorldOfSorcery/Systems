@@ -9,13 +9,13 @@ public class InteractionData {
     private final JSONObject conditions;
     private final List<String> actions;
     private final List<Location> locations;
-    private final List<String> npcIDs;
+    private final List<Integer> npcIDs;
     private final String particleType;
     private final String particleColor;
     private final String elseParticleType;
     private final String elseParticleColor;
 
-    public InteractionData(JSONObject conditions, List<String> actions, List<Location> locations, List<String> npcIDs, String particleType, String particleColor, String elseParticleType, String elseParticleColor) {
+    public InteractionData(JSONObject conditions, List<String> actions, List<Location> locations, List<Integer> npcIDs, String particleType, String particleColor, String elseParticleType, String elseParticleColor) {
 
         this.conditions = conditions;
         this.actions = actions;
@@ -40,7 +40,7 @@ public class InteractionData {
         return locations;
     }
 
-    public List<String> getNpcIDs() {
+    public List<Integer> getNpcIDs() {
         return npcIDs;
     }
 
