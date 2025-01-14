@@ -1,5 +1,7 @@
 package me.hektortm.woSSystems;
 
+import com.maximde.hologramlib.HologramLib;
+import com.maximde.hologramlib.hologram.HologramManager;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.StateFlag;
@@ -59,6 +61,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 
 public final class WoSSystems extends JavaPlugin {
+    private HologramManager hologramManager;
     private WoSCore core;
     private static LangManager lang;
     public File fishingItemsFolder = new File(getDataFolder(), "professions/fishing/items");
@@ -92,6 +95,10 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        HologramLib.getManager().ifPresentOrElse(
+                manager -> hologramManager = manager,
+                () -> getLogger().severe("Failed to initialize HologramLib manager.")
+        );
         core = WoSCore.getPlugin(WoSCore.class);
         bossBarManager = new BossBarManager();
         regionBossBarManager = new RegionBossBar();
@@ -311,6 +318,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public ConditionHandler getConditionHandler() {
         return conditionHandler;
+    }
+    public HologramManager getHologramManager() {
+        return hologramManager;
     }
 
 }

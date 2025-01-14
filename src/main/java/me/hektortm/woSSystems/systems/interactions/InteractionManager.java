@@ -1,5 +1,8 @@
 package me.hektortm.woSSystems.systems.interactions;
 
+import com.maximde.hologramlib.hologram.Hologram;
+import com.maximde.hologramlib.hologram.RenderMode;
+import com.maximde.hologramlib.hologram.TextHologram;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
@@ -9,9 +12,11 @@ import me.hektortm.wosCore.WoSCore;
 import me.hektortm.wosCore.logging.LogManager;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
+import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -20,6 +25,7 @@ import org.bukkit.util.Vector;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.FileReader;
@@ -256,7 +262,7 @@ public class InteractionManager {
 
                                 List<String> lines = inter.getHologram();
 
-                                createTextDisplay(player, location, lines, false);
+                               // createTextDisplay(player, location, lines, false);
 
                             }
                         }
@@ -268,9 +274,8 @@ public class InteractionManager {
                                 Location location = npc1.getEntity().getLocation().getBlock().getLocation();
                                 particleHandler.spawnParticlesForPlayer(player, inter, location, true);
 
-                                List<String> lines = inter.getHologram();
 
-                                createTextDisplay(player, location, lines, true);
+                                createTextDisplay(location, inter, id,true);
                             }
                         }
                     }
@@ -279,45 +284,32 @@ public class InteractionManager {
         }.runTaskTimer(plugin, 0L, 50L);
     }
 
+    public void createTextDisplay(Location location, InteractionData inter, String npcID, boolean npc) {
 
+        Location newL = location.clone().add(0, 1.5, 0.5);
 
-    public void createTextDisplay(Player player, Location location, List<String> lines, boolean npc) {
-
-        Location newL = location.clone().add(0.5, 1.5, 0.5);
-        // Get or initialize the player's display map
-        playerTextDisplays.putIfAbsent(player, new HashMap<>());
-        Map<Location, TextDisplay> textDisplays = playerTextDisplays.get(player);
-
-        // Check if a TextDisplay already exists for this player at the location
-        TextDisplay existingDisplay = textDisplays.get(newL);
-
-        if (existingDisplay != null) {
-            // Compare the current text with the new lines
-            if (existingDisplay.getText().equals(String.join("\n", lines))) {
-                // If the text matches, no need to update
-                return;
-            }
-
-            // If the text differs, remove the old display
-            existingDisplay.remove();
-            textDisplays.remove(newL);
+        String interId = inter.getId();
+        String id;
+        if (npc) {
+            id = interId+":npc_"+npcID;
+        } else {
+            //placeholder for now
+            id = interId+":loc_"+location.toString();
         }
 
-        // Create a new TextDisplay
-        Color bg = Color.fromRGB(0,0,0);
-        TextDisplay textDisplay = newL.getWorld().spawn(newL, TextDisplay.class);
-        textDisplay.setText(String.join("\n", lines)); // Combine lines into one text
-        textDisplay.setBillboard(TextDisplay.Billboard.VERTICAL); // Fixed orientation
-        textDisplay.setShadowed(true);
-        textDisplay.setViewRange(32.0F);
-        textDisplay.setDefaultBackground(false);
-        textDisplay.setTextOpacity((byte) 0);
+        TextHologram textHologram = new TextHologram(id, RenderMode.ALL, (player1, textDisplayMeta) ->{
+            ConditionHandler.ConditionOutcomes outcomes = conditionHandler.getUnmetConditionOutcomes(player1, inter.getConditions());
+            List<String> lines = outcomes.holograms;
+            String combinedText = String.join("\n", lines);
+            Component component = Component.text(combinedText);
+            textDisplayMeta.setText(component);
+            return textDisplayMeta;
+        })
+                .setBackgroundColor(0)
+                .setTextOpacity((byte) 255)
+                .setBillboard(Display.Billboard.VERTICAL);
 
-         // Transparent black background
-
-        // Store the new display in the player's map
-        textDisplays.put(newL, textDisplay);
-
+        plugin.getHologramManager().spawn(textHologram, newL);
     }
 
 
