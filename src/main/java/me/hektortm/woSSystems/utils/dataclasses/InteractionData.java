@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.utils.dataclasses;
 
 import org.bukkit.Location;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.Collections;
@@ -8,7 +9,7 @@ import java.util.List;
 
 public class InteractionData {
     private final String id;
-    private final JSONObject conditions;
+    private final JSONArray conditions;
     private final List<String> actions;
     private final List<Location> locations;
     private final List<String> npcIDs;
@@ -17,7 +18,7 @@ public class InteractionData {
     private final String particleColor;
     private final List<String> hologram;
 
-    public InteractionData(String id,JSONObject conditions, List<String> actions, List<Location> locations, List<String> npcIDs, String particleType, String particleColor, List<String> hologram) {
+    public InteractionData(String id,JSONArray conditions, List<String> actions, List<Location> locations, List<String> npcIDs, String particleType, String particleColor, List<String> hologram) {
 
         this.conditions = conditions;
         this.actions = actions;
@@ -36,7 +37,7 @@ public class InteractionData {
         return actions;
     }
 
-    public JSONObject getConditions() {
+    public JSONArray getConditions() {
         return conditions;
     }
 
@@ -54,13 +55,6 @@ public class InteractionData {
 
     public String getParticleColor() {
         return particleColor;
-    }
-
-    public String getElseParticleType() {
-        return elseParticleType;
-    }
-    public String getElseParticleColor() {
-        return elseParticleColor;
     }
 
     // Methods to add locations and NPC IDs
@@ -86,10 +80,6 @@ public class InteractionData {
 
     public List<String> getHologram() {
         return hologram != null ? hologram : Collections.emptyList();
-    }
-
-    public List<String> getHologramElse() {
-        return hologramElse != null ? hologramElse : Collections.emptyList();
     }
 
 }

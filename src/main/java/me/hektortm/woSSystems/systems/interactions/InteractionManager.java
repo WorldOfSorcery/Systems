@@ -96,23 +96,25 @@ public class InteractionManager {
                 String particleColor = particlesJson != null ? (String) particlesJson.get("color") : "";
 
 
-                JSONObject hologramJson = (JSONObject) json.get("hologram");
+                JSONArray hologramJson = (JSONArray) json.get("hologram");
                 List<String> hologramDefault = new ArrayList<>();
-                List<String> hologramElse = new ArrayList<>();
 
                 if (hologramJson != null) {
-                    JSONArray defaultJson = (JSONArray) hologramJson.get("default");
-                    if (defaultJson != null) {
-                        for (Object line : defaultJson) {
-                            hologramDefault.add((String) line);
-                            Bukkit.getLogger().info("[DefaultHolo] added" +line);
-                        }
+                    for (Object line : hologramJson) {
+                        hologramDefault.add((String) line);
                     }
                 }
 
 
+
                 // Load the "conditions" section
-                JSONObject conditions = (JSONObject) json.get("conditions");
+                JSONArray conditionsArray = (JSONArray) json.get("conditions");
+                List<JSONObject> orderedConditions = new ArrayList<>();
+                if (conditionsArray != null) {
+                    for (Object obj : conditionsArray) {
+                        orderedConditions.add((JSONObject) obj);
+                    }
+                }
 
                 // Load the "actions" section
                 JSONArray actionsArray = (JSONArray) json.get("actions");
@@ -123,7 +125,7 @@ public class InteractionManager {
                     }
                 }
 
-                interactionMap.put(interactionId, new InteractionData(interactionId, conditions,actions,locations,validNpcIds,particleType,particleColor, hologramDefault));
+                interactionMap.put(interactionId, new InteractionData(interactionId, conditionsArray,actions,locations,validNpcIds,particleType,particleColor, hologramDefault));
 
             } catch (Exception e) {
                 Bukkit.getLogger().warning("Error loading interaction from file " + file.getName() + ": " + e.getMessage());
@@ -200,12 +202,11 @@ public class InteractionManager {
             return;
         }
 
-        if(!conditionHandler.validateConditions(p, inter.getConditions())) return;
         if(inter.getActions() == null) return;
         List<String> actions;
         // proritize conditions
-        ConditionHandler_new.UnmetConditionOutcomes unMetOutcomes = newConditionHandler.getUnmetConditionOutcomes(p, inter.getConditions());
-        if (unMetOutcomes.actions != null) {
+        ConditionHandler_new.ConditionOutcomes unMetOutcomes = newConditionHandler.getUnmetConditionOutcomes(p, inter.getConditions());
+        if (unMetOutcomes != null) {
             actions = unMetOutcomes.actions;
         } else {
              actions = inter.getActions();
@@ -257,15 +258,18 @@ public class InteractionManager {
                     for (Location location : inter.getLocations()) {
                         if (location != null) {
                             for (Player player : Bukkit.getOnlinePlayers()) {
-                                boolean conditionsMet = conditionHandler.validateConditionsNoActions(player, inter.getConditions());
+                                //boolean conditionsMet = conditionHandler.validateConditionsNoActions(player, inter.getConditions());
 
                                 // Display particles
-                                particleHandler.spawnParticlesForPlayer(player, inter, location, false);
+                                //particleHandler.spawnParticlesForPlayer(player, inter, location, false);
 
                                 // Determine hologram lines
+                                /*
                                 List<String> hologramLines = conditionsMet
                                         ? inter.getHologram()
                                         : inter.getHologramElse();
+
+                                 */
                              //   createTextDisplayAtBlockBelow(location, hologramLines, -147, 0);
 
                             }
@@ -276,14 +280,17 @@ public class InteractionManager {
                             for (Player player : Bukkit.getOnlinePlayers()) {
                                 NPC npc1 = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(id));
                                 Location location = npc1.getEntity().getLocation();
-                                boolean conditionsMet = conditionHandler.validateConditionsNoActions(player, inter.getConditions());
-                                particleHandler.spawnParticlesForPlayer(player, inter, location, true);
+                                //boolean conditionsMet = conditionHandler.validateConditionsNoActions(player, inter.getConditions());
+                                //particleHandler.spawnParticlesForPlayer(player, inter, location, true);
 
                                 // Determine hologram lines
+                                /*
                                 List<String> hologramLines = conditionsMet
                                         ? inter.getHologram()
                                         : inter.getHologramElse();
                                createTextDisplayAtBlockBelow(player, location, hologramLines, 180, 0);
+
+                                 */
                             }
                         }
                     }
@@ -476,8 +483,7 @@ public class InteractionManager {
             // Hologram
             // Hologram
             JSONObject hologramJson = new JSONObject();
-            hologramJson.put("default", listToJsonArray(interaction.getHologram()));
-            hologramJson.put("else", listToJsonArray(interaction.getHologramElse()));
+            hologramJson.put("hologram", listToJsonArray(interaction.getHologram()));
             json.put("hologram", hologramJson);
 
 

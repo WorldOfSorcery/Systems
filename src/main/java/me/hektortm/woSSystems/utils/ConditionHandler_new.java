@@ -5,6 +5,7 @@ import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -31,16 +32,19 @@ public class ConditionHandler_new {
         resolver  = new PlaceholderResolver(statsManager, citemManager);
     }
 
-    public UnmetConditionOutcomes getUnmetConditionOutcomes(Player player, JSONObject conditions) {
-        UnmetConditionOutcomes unmetOutcomes = new UnmetConditionOutcomes();
+    public ConditionOutcomes getUnmetConditionOutcomes(Player player, JSONArray conditions) {
+        ConditionOutcomes outcomes = new ConditionOutcomes();
 
         if (conditions == null) {
-            return unmetOutcomes; // No conditions mean nothing to check
+            return outcomes; // No conditions mean nothing to check
         }
 
-        for (Object key : conditions.keySet()) {
-            String conditionKey = key.toString();
-            JSONObject conditionData = (JSONObject) conditions.get(conditionKey);
+        for (Object obj : conditions) {
+            JSONObject conditionPair = (JSONObject) obj;
+
+            // There should only be one key per conditionPair
+            String conditionKey = (String) conditionPair.keySet().iterator().next();
+            JSONObject conditionData = (JSONObject) conditionPair.get(conditionKey);
 
             // Split the condition key into type and specific identifier
             String[] parts = conditionKey.split(":");
@@ -50,40 +54,65 @@ public class ConditionHandler_new {
             // Evaluate the condition based on its type
             boolean isMet = evaluateCondition(player, conditionType, conditionIdentifier, conditionData);
 
-            // If the condition is not met, collect the "false" branch outcomes
             if (!isMet) {
+                // If the condition is not met, process only the "false" outcomes and stop further checks
                 JSONObject falseOutcome = (JSONObject) conditionData.get("false");
 
                 if (falseOutcome != null) {
-                    // Collect actions
                     if (falseOutcome.containsKey("actions")) {
                         JSONArray actions = (JSONArray) falseOutcome.get("actions");
                         for (Object actionObj : actions) {
-                            unmetOutcomes.actions.add(actionObj.toString());
+                            outcomes.actions.add(actionObj.toString());
                         }
                     }
 
-                    // Collect holograms
                     if (falseOutcome.containsKey("hologram")) {
                         JSONArray hologram = (JSONArray) falseOutcome.get("hologram");
                         for (Object lineObj : hologram) {
-                            unmetOutcomes.holograms.add(lineObj.toString());
+                            outcomes.holograms.add(lineObj.toString());
                         }
                     }
 
-                    // Collect particles
                     if (falseOutcome.containsKey("particles")) {
                         JSONObject particles = (JSONObject) falseOutcome.get("particles");
                         String type = (String) particles.get("type");
                         String color = (String) particles.get("color");
-                        unmetOutcomes.particleData.put(type, color);
+                        outcomes.particleData.put(type, color);
                     }
                 }
+                return outcomes; // Stop processing further conditions
             }
+
+            // If the condition is met, process the "true" outcomes
+            JSONObject trueOutcome = (JSONObject) conditionData.get("true");
+            if (trueOutcome != null) {
+                if (trueOutcome.containsKey("actions")) {
+                    JSONArray actions = (JSONArray) trueOutcome.get("actions");
+                    for (Object actionObj : actions) {
+                        outcomes.actions.add(actionObj.toString());
+                    }
+                }
+
+                if (trueOutcome.containsKey("hologram")) {
+                    JSONArray hologram = (JSONArray) trueOutcome.get("hologram");
+                    for (Object lineObj : hologram) {
+                        outcomes.holograms.add(lineObj.toString());
+                    }
+                }
+
+                if (trueOutcome.containsKey("particles")) {
+                    JSONObject particles = (JSONObject) trueOutcome.get("particles");
+                    String type = (String) particles.get("type");
+                    String color = (String) particles.get("color");
+                    outcomes.particleData.put(type, color);
+                }
+            }
+
         }
 
-        return unmetOutcomes;
+        return outcomes; // Return outcomes if all conditions are met
     }
+
 
     private boolean evaluateCondition(Player player, String conditionType, String conditionIdentifier, JSONObject conditionData) {
         switch (conditionType) {
@@ -112,18 +141,11 @@ public class ConditionHandler_new {
         }
     }
 
-    // Existing methods like executeOutcome, executeActions, etc., remain unchanged.
-
-    /**
-     * Helper class to collect unmet condition outcomes.
-     */
-    public static class UnmetConditionOutcomes {
+    public static class ConditionOutcomes {
         public final List<String> actions = new ArrayList<>();
         public final List<String> holograms = new ArrayList<>();
         public final Map<String, String> particleData = new HashMap<>();
     }
-
-
 
     private boolean validateUnlockable(Player player, JSONObject unlockables) {
         for (Object key : unlockables.keySet()) {

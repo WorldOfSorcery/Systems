@@ -14,16 +14,8 @@ public class ParticleHandler {
     private final ConditionHandler conditionHandler =  plugin.getConditionHandler();
 
     public void spawnParticlesForPlayer(Player player, InteractionData inter , Location location, boolean npc) {
-        String particleType;
-        if (conditionHandler.validateConditionsNoActions(player, inter.getConditions())) {
-            particleType = inter.getParticleType();
-        } else {
-            if (inter.getElseParticleType() != null) {
-                particleType = inter.getElseParticleType();
-            } else {
-                return;
-            }
-        }
+        String particleType = inter.getParticleType();
+
 
         if (npc) {
             switch (particleType.toLowerCase()) {
@@ -218,16 +210,7 @@ public class ParticleHandler {
     public void spawnRedstoneParticles(Player player, Location location, InteractionData interactionData) {
         // Ensure the player meets the conditions for the interaction
         String colorHex = interactionData.getParticleColor();
-        if (conditionHandler.validateConditionsNoActions(player, interactionData.getConditions())) {
-            colorHex = interactionData.getParticleColor();
 
-        } else {
-            if (interactionData.getElseParticleColor() != null) {
-                colorHex = interactionData.getElseParticleColor();
-            } else {
-                return;
-            }
-        }
 
         // Get the color from the interaction data (assumed to be in hex format)
 
@@ -270,16 +253,7 @@ public class ParticleHandler {
     public void spawnRedstoneNPCParticles(Player player, Location location, InteractionData interactionData) {
         // Ensure the player meets the conditions for the interaction
         String colorHex = interactionData.getParticleColor();
-        if (conditionHandler.validateConditionsNoActions(player, interactionData.getConditions())) {
-            colorHex = interactionData.getParticleColor();
 
-        } else {
-            if (interactionData.getElseParticleColor() != null) {
-                colorHex = interactionData.getElseParticleColor();
-            } else {
-                return;
-            }
-        }
 
         // Get the color from the interaction data (assumed to be in hex format)
 
@@ -318,16 +292,7 @@ public class ParticleHandler {
     public void spawnRedstoneParticleCircle(Player player, Location location, InteractionData inter) {
 
         String colorHex = inter.getParticleColor();
-        if (conditionHandler.validateConditionsNoActions(player, inter.getConditions())) {
-            colorHex = inter.getParticleColor();
 
-        } else {
-            if (inter.getElseParticleColor() != null) {
-                colorHex = inter.getElseParticleColor();
-            } else {
-                return;
-            }
-        }
 
         int count = 15; // Total number of particles
         double radius = 0.5; // Distance from the center of the block to spawn particles

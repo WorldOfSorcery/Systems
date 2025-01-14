@@ -317,7 +317,7 @@ public final class WoSSystems extends JavaPlugin {
         return regionBossBarManager;
     }
     public ConditionHandler_new getNewConditionHandler() {
-
+        return newConditionHandler;
     }
 
 }
