@@ -217,7 +217,12 @@ public class InteractionManager {
 
         if(!conditionHandler.validateConditions(p, inter.getConditions())) return;
 
+        List<String> actions = inter.getActions();
+        // proritize conditions
+
         if(inter.getActions() == null) return;
+
+
 
         for (String action : inter.getActions()) {
             action = action.replace("%player%", p.getName());
