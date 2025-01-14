@@ -1,14 +1,15 @@
 package me.hektortm.woSSystems.utils.dataclasses;
 
 import org.bukkit.inventory.Recipe;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 public class RecipeData {
     private final Recipe recipe;
-    private final JSONObject conditions;
+    private final JSONArray conditions;
     private final String successId;
 
-    public RecipeData(Recipe recipe, JSONObject conditions, String successId) {
+    public RecipeData(Recipe recipe, JSONArray conditions, String successId) {
         this.recipe = recipe;
         this.conditions = conditions;
         this.successId = successId;
@@ -18,7 +19,7 @@ public class RecipeData {
         return recipe;
     }
 
-    public JSONObject getConditions() {
+    public JSONArray getConditions() {
         return conditions;
     }
 

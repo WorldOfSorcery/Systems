@@ -1,9 +1,8 @@
 package me.hektortm.woSSystems.systems.interactions;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.utils.ConditionHandler_new;
-import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
 import me.hektortm.woSSystems.utils.ConditionHandler;
+import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.WoSCore;
@@ -31,7 +30,7 @@ public class InteractionManager {
 
     public final File interactionFolder;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final ConditionHandler_new newConditionHandler = plugin.getNewConditionHandler();
+    private final ConditionHandler newConditionHandler = plugin.getConditionHandler();
     private final LogManager log = new LogManager(new LangManager(WoSCore.getPlugin(WoSCore.class)), WoSCore.getPlugin(WoSCore.class));
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
@@ -94,7 +93,6 @@ public class InteractionManager {
                 JSONObject particlesJson = (JSONObject) json.get("particles");
                 String particleType = particlesJson != null ? (String) particlesJson.get("type") : "";
                 String particleColor = particlesJson != null ? (String) particlesJson.get("color") : "";
-
 
                 JSONArray hologramJson = (JSONArray) json.get("hologram");
                 List<String> hologramDefault = new ArrayList<>();
@@ -205,16 +203,12 @@ public class InteractionManager {
         if(inter.getActions() == null) return;
         List<String> actions;
         // proritize conditions
-        ConditionHandler_new.ConditionOutcomes unMetOutcomes = newConditionHandler.getUnmetConditionOutcomes(p, inter.getConditions());
+        ConditionHandler.ConditionOutcomes unMetOutcomes = newConditionHandler.getUnmetConditionOutcomes(p, inter.getConditions());
         if (unMetOutcomes != null) {
             actions = unMetOutcomes.actions;
         } else {
              actions = inter.getActions();
         }
-
-
-
-
 
         for (String action : actions) {
             action = action.replace("%player%", p.getName());
@@ -258,19 +252,11 @@ public class InteractionManager {
                     for (Location location : inter.getLocations()) {
                         if (location != null) {
                             for (Player player : Bukkit.getOnlinePlayers()) {
-                                //boolean conditionsMet = conditionHandler.validateConditionsNoActions(player, inter.getConditions());
+                                particleHandler.spawnParticlesForPlayer(player, inter, location, false);
 
-                                // Display particles
-                                //particleHandler.spawnParticlesForPlayer(player, inter, location, false);
+                                List<String> lines = inter.getHologram();
 
-                                // Determine hologram lines
-                                /*
-                                List<String> hologramLines = conditionsMet
-                                        ? inter.getHologram()
-                                        : inter.getHologramElse();
-
-                                 */
-                             //   createTextDisplayAtBlockBelow(location, hologramLines, -147, 0);
+                                createTextDisplay(player, location, lines, false);
 
                             }
                         }
@@ -279,18 +265,12 @@ public class InteractionManager {
                         if (id != null) {
                             for (Player player : Bukkit.getOnlinePlayers()) {
                                 NPC npc1 = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(id));
-                                Location location = npc1.getEntity().getLocation();
-                                //boolean conditionsMet = conditionHandler.validateConditionsNoActions(player, inter.getConditions());
-                                //particleHandler.spawnParticlesForPlayer(player, inter, location, true);
+                                Location location = npc1.getEntity().getLocation().getBlock().getLocation();
+                                particleHandler.spawnParticlesForPlayer(player, inter, location, true);
 
-                                // Determine hologram lines
-                                /*
-                                List<String> hologramLines = conditionsMet
-                                        ? inter.getHologram()
-                                        : inter.getHologramElse();
-                               createTextDisplayAtBlockBelow(player, location, hologramLines, 180, 0);
+                                List<String> lines = inter.getHologram();
 
-                                 */
+                                createTextDisplay(player, location, lines, true);
                             }
                         }
                     }
@@ -300,10 +280,10 @@ public class InteractionManager {
     }
 
 
-    public void createTextDisplayAtBlockBelow(Player player, Location loc, List<String> lines, float yaw, float pitch) {
-        // Clone the location to ensure no accidental modifications
-        Location newL = new Location(loc.getWorld(), loc.getBlockX() + 0.5, loc.getBlockY() + 2, loc.getBlockZ() + 0.5);
 
+    public void createTextDisplay(Player player, Location location, List<String> lines, boolean npc) {
+
+        Location newL = location.clone().add(0.5, 1.5, 0.5);
         // Get or initialize the player's display map
         playerTextDisplays.putIfAbsent(player, new HashMap<>());
         Map<Location, TextDisplay> textDisplays = playerTextDisplays.get(player);
@@ -323,21 +303,21 @@ public class InteractionManager {
             textDisplays.remove(newL);
         }
 
-        // Get a custom direction vector (optional, based on yaw/pitch)
-        Vector direction = getCustomDirection(yaw, pitch);
-
         // Create a new TextDisplay
+        Color bg = Color.fromRGB(0,0,0);
         TextDisplay textDisplay = newL.getWorld().spawn(newL, TextDisplay.class);
         textDisplay.setText(String.join("\n", lines)); // Combine lines into one text
         textDisplay.setBillboard(TextDisplay.Billboard.VERTICAL); // Fixed orientation
         textDisplay.setShadowed(true);
         textDisplay.setViewRange(32.0F);
-        textDisplay.setTextOpacity((byte) 255); // Fully visible
-        textDisplay.setDefaultBackground(true);
-        textDisplay.setBackgroundColor(Color.fromRGB(0)); // Transparent black background
+        textDisplay.setDefaultBackground(false);
+        textDisplay.setTextOpacity((byte) 0);
+
+         // Transparent black background
 
         // Store the new display in the player's map
         textDisplays.put(newL, textDisplay);
+
     }
 
 
@@ -481,10 +461,8 @@ public class InteractionManager {
             json.put("particles", particlesJson);
 
             // Hologram
-            // Hologram
-            JSONObject hologramJson = new JSONObject();
-            hologramJson.put("hologram", listToJsonArray(interaction.getHologram()));
-            json.put("hologram", hologramJson);
+
+            json.put("hologram", interaction.getHologram());
 
 
             // Conditions

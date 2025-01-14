@@ -5,9 +5,16 @@ import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
+import me.hektortm.woSSystems.utils.dataclasses.ParticleData;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ConditionHandler {
 
@@ -26,149 +33,181 @@ public class ConditionHandler {
         resolver  = new PlaceholderResolver(statsManager, citemManager);
     }
 
-    public boolean validateConditions(Player player, JSONObject conditions) {
+    public ConditionOutcomes getUnmetConditionOutcomes(Player player, JSONArray conditions) {
+        ConditionOutcomes outcomes = new ConditionOutcomes();
+
         if (conditions == null) {
-            return true; // No conditions mean the recipe is allowed
+            return outcomes; // No conditions mean nothing to check
         }
 
-        for (Object conditionType : conditions.keySet()) {
-            String type = conditionType.toString();
-            JSONObject specificConditions = (JSONObject) conditions.get(conditionType);
-            JSONArray elseActions = null;
-            if (specificConditions.get("else") != null) {
-                elseActions = (JSONArray) specificConditions.get("else");
+        for (Object obj : conditions) {
+            JSONObject conditionPair = (JSONObject) obj;
+
+            // There should only be one key per conditionPair
+            String conditionKey = (String) conditionPair.keySet().iterator().next();
+            JSONObject conditionData = (JSONObject) conditionPair.get(conditionKey);
+
+            // Split the condition key into type and specific identifier
+            String[] parts = conditionKey.split(":");
+            String conditionType = parts[0];
+            String conditionIdentifier = parts.length > 1 ? parts[1] : null;
+
+            // Evaluate the condition based on its type
+            boolean isMet = evaluateCondition(player, conditionType, conditionIdentifier, conditionData);
+
+            if (!isMet) {
+                // If the condition is not met, process only the "false" outcomes and stop further checks
+                JSONObject falseOutcome = (JSONObject) conditionData.get("false");
+
+                if (falseOutcome != null) {
+                    if (falseOutcome.containsKey("actions")) {
+                        JSONArray actions = (JSONArray) falseOutcome.get("actions");
+                        for (Object actionObj : actions) {
+                            outcomes.actions.add(actionObj.toString());
+                        }
+                    }
+
+                    if (falseOutcome.containsKey("hologram")) {
+                        JSONArray hologram = (JSONArray) falseOutcome.get("hologram");
+                        for (Object lineObj : hologram) {
+                            outcomes.holograms.add(lineObj.toString());
+                        }
+                    }
+
+                    if (falseOutcome.containsKey("particles")) {
+                        JSONObject particles = (JSONObject) falseOutcome.get("particles");
+                        if (particles != null && !particles.isEmpty()) {
+                            String type = (String) particles.get("type");
+                            String color = (String) particles.get("color");
+                            outcomes.setParticleType(type);
+                            outcomes.setParticleColor(color);
+                        }
+
+                    }
+                }
+                return outcomes; // Stop processing further conditions
             }
 
-            switch (type) {
-                case "unlockable":
-                    if (!validateUnlockable(player, specificConditions)) {
-                        if (elseActions != null) {
-                            validateElse(player, elseActions);
-                        }
-                        return false;
+            // If the condition is met, process the "true" outcomes
+            JSONObject trueOutcome = (JSONObject) conditionData.get("true");
+            if (trueOutcome != null) {
+                if (trueOutcome.containsKey("actions")) {
+                    JSONArray actions = (JSONArray) trueOutcome.get("actions");
+                    for (Object actionObj : actions) {
+                        outcomes.actions.add(actionObj.toString());
                     }
-                    break;
+                }
 
-                case "stats":
-                    if (!validateStats(player, specificConditions)) {
-                        if (elseActions != null) {
-                            validateElse(player, elseActions);
-                        }
-                        return false;
+                if (trueOutcome.containsKey("hologram")) {
+                    JSONArray hologram = (JSONArray) trueOutcome.get("hologram");
+                    for (Object lineObj : hologram) {
+                        outcomes.holograms.add(lineObj.toString());
                     }
-                    break;
-                case "permission":
-                    if(!validatePermission(player, specificConditions)) {
-                        if (elseActions != null) {
-                            validateElse(player, elseActions);
-                        }
-                        return false;
+                }
+
+                if (trueOutcome.containsKey("particles")) {
+                    JSONObject particles = (JSONObject) trueOutcome.get("particles");
+                    if (particles != null && !particles.isEmpty()) {
+                        String type = (String) particles.get("type");
+                        String color = (String) particles.get("color");
+                        outcomes.setParticleType(type);
+                        outcomes.setParticleColor(color);
                     }
-                    break;
-                case "citem":
-                    if(!validateCitem(player, specificConditions)) {
-                        if (elseActions != null) {
-                            validateElse(player, elseActions);
-                        }
-                        return false;
-                    }
-                    break;
-                case "currency":
-                    if (!validateCurrency(player, specificConditions)) {
-                        if (elseActions != null) {
-                            validateElse(player, elseActions);
-                        }
-                        return false;
-                    }
-                    break;
 
-                default:
-                    throw new IllegalArgumentException("Unknown condition type: " + type);
-            }
-        }
-
-        return true;
-    }
-
-    public boolean validateConditionsNoActions(Player player, JSONObject conditions) {
-        if (conditions == null) {
-            return true; // No conditions mean the recipe is allowed
-        }
-
-        for (Object conditionType : conditions.keySet()) {
-            String type = conditionType.toString();
-            JSONObject specificConditions = (JSONObject) conditions.get(conditionType);
-
-            switch (type) {
-                case "unlockable":
-                    if (!validateUnlockable(player, specificConditions)) {
-                        return false;
-                    }
-                    break;
-
-                case "stats":
-                    if (!validateStats(player, specificConditions)) {
-                        return false;
-                    }
-                    break;
-                case "permission":
-                    if(!validatePermission(player, specificConditions)) {
-                        return false;
-                    }
-                    break;
-                case "citem":
-                    if(!validateCitem(player, specificConditions)) {
-                        return false;
-                    }
-                    break;
-                case "currency":
-                    if (!validateCurrency(player, specificConditions)) {
-                        return false;
-                    }
-                    break;
-
-                default:
-                    throw new IllegalArgumentException("Unknown condition type: " + type);
-            }
-        }
-
-        return true;
-    }
-
-    private void validateElse(Player p, JSONArray elseActions) {
-        for (Object elseAction : elseActions) {
-            String action = elseAction.toString();
-            action = action.replace("%player%", p.getName());
-
-            if (action.startsWith("send_message")) {
-                String message = action.replace("send_message", "");
-                String finalMessage = resolver.resolvePlaceholders(message, p);
-                p.sendMessage(finalMessage.replace("&", "§"));
-            }
-            if (action.startsWith("close_gui")) {
-                p.closeInventory();
-            }
-            if (action.startsWith("playsound")) {
-                String[] parts = action.split(" ");
-                if (parts.length > 1) {
-                    String sound = parts[1];
-                    p.playSound(p.getLocation(), sound, 1.0F, 1.0F);
                 }
             }
-            if (action.startsWith("player_cmd")) {
-                String cmd = action.replace("player_cmd", "");
-                plugin.getServer().dispatchCommand(p, cmd);
-            } else {
-                if (!action.startsWith("send_message") &&
-                        !action.startsWith("close_gui") &&
-                        !action.startsWith("playsound") &&
-                        !action.startsWith("player_cmd")) {
-                    plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), action);
-                }
+
+        }
+
+        return outcomes; // Return outcomes if all conditions are met
+    }
+
+    public boolean validateConditionsBOOL(Player player, JSONArray conditions) {
+        boolean validation = false;
+        if (conditions == null) {
+            return true; // No conditions mean nothing to check
+        }
+
+        for (Object obj : conditions) {
+            JSONObject conditionPair = (JSONObject) obj;
+
+            // There should only be one key per conditionPair
+            String conditionKey = (String) conditionPair.keySet().iterator().next();
+            JSONObject conditionData = (JSONObject) conditionPair.get(conditionKey);
+
+            // Split the condition key into type and specific identifier
+            String[] parts = conditionKey.split(":");
+            String conditionType = parts[0];
+            String conditionIdentifier = parts.length > 1 ? parts[1] : null;
+
+            // Evaluate the condition based on its type
+            boolean isMet = evaluateCondition(player, conditionType, conditionIdentifier, conditionData);
+
+            if (!isMet) {
+                return false; // Stop processing further conditions
             }
+
+            validation = true;
+
+
+        }
+
+        return validation; // Return outcomes if all conditions are met
+    }
+
+    public boolean evaluateCondition(Player player, String conditionType, String conditionIdentifier, JSONObject conditionData) {
+        switch (conditionType) {
+            case "has_citem":
+                return citemManager.citemAmount(player, conditionIdentifier) > 0;
+
+            case "stats":
+                long playerStatValue = statsManager.getPlayerStat(player.getUniqueId(), conditionIdentifier);
+                long requiredValue = ((Number) conditionData.get("value")).longValue();
+                return playerStatValue >= requiredValue;
+
+            case "currency":
+                long playerBalance = ecoManager.getCurrencyBalance(player.getUniqueId(), conditionIdentifier);
+                long requiredBalance = ((Number) conditionData.get("value")).longValue();
+                return playerBalance >= requiredBalance;
+
+            case "permission":
+                return player.hasPermission(conditionIdentifier);
+
+            case "unlockable":
+                return unlockableManager.getPlayerUnlockable(player, conditionIdentifier);
+
+            default:
+                plugin.getLogger().warning("Unknown condition type: " + conditionType);
+                return false;
         }
     }
 
+    public static class ConditionOutcomes {
+        public final List<String> actions = new ArrayList<>();
+        public final List<String> holograms = new ArrayList<>();
+        private String particleType;
+        private String particleColor;
+
+        // Getter for particleType
+        public String getParticleType() {
+            return particleType;
+        }
+
+        // Getter for particleColor
+        public String getParticleColor() {
+            return particleColor;
+        }
+
+        // Setter for particleType
+        public void setParticleType(String particleType) {
+            this.particleType = particleType;
+        }
+
+        // Setter for particleColor
+        public void setParticleColor(String particleColor) {
+            this.particleColor = particleColor;
+        }
+    }
 
     private boolean validateUnlockable(Player player, JSONObject unlockables) {
         for (Object key : unlockables.keySet()) {

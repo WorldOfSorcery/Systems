@@ -14,6 +14,7 @@ import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.inventory.*;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 public class CraftingListener implements Listener {
@@ -58,12 +59,12 @@ public class CraftingListener implements Listener {
         }
 
         // Retrieve the conditions and success ID
-        JSONObject conditions = recipeManager.getConditions(key);
+        JSONArray conditions = recipeManager.getConditions(key);
         String successId = recipeManager.getSuccessId(key);  // Add this method to get success ID
 
         // Validate the conditions using ConditionHandler
         if (!event.getViewers().isEmpty() && event.getViewers().get(0) instanceof Player player) {
-            if (!conditionHandler.validateConditions(player, conditions)) {
+            if (!conditionHandler.validateConditionsBOOL(player, conditions)) {
                 inventory.setResult(new ItemStack(Material.AIR));
             }
         }
@@ -92,13 +93,13 @@ public class CraftingListener implements Listener {
         }
 
         // Retrieve the conditions and success ID
-        JSONObject conditions = recipeManager.getConditions(key);
+        JSONArray conditions = recipeManager.getConditions(key);
         String successId = recipeManager.getSuccessId(key);
 
         // Check if the player is shift-clicking
         if (event.isShiftClick()) {
             // Shift-click detected
-            if (!conditionHandler.validateConditions(player, conditions)) {
+            if (!conditionHandler.validateConditionsBOOL(player, conditions)) {
                 event.setCancelled(true);  // Cancel the entire crafting operation if conditions fail
                 player.sendMessage("You cannot bulk craft this item due to unmet conditions.");  // Optional feedback
                 return;
@@ -112,7 +113,7 @@ public class CraftingListener implements Listener {
         }
 
         // For regular crafting
-        if (!conditionHandler.validateConditions(player, conditions)) {
+        if (!conditionHandler.validateConditionsBOOL(player, conditions)) {
             event.setCancelled(true);  // Cancel the crafting event if conditions are not met
             player.sendMessage("You cannot craft this item due to unmet conditions.");  // Optional feedback
             return;

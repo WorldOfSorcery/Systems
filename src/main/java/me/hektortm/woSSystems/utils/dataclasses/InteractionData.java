@@ -19,12 +19,11 @@ public class InteractionData {
     private final List<String> hologram;
 
     public InteractionData(String id,JSONArray conditions, List<String> actions, List<Location> locations, List<String> npcIDs, String particleType, String particleColor, List<String> hologram) {
-
+        this.id = id;
         this.conditions = conditions;
         this.actions = actions;
         this.locations = locations;
         this.npcIDs = npcIDs;
-        this.id = id;
         this.particleType = particleType;
         this.particleColor = particleColor;
         this.hologram = hologram;

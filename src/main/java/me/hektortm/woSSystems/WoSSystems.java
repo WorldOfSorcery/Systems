@@ -27,7 +27,6 @@ import me.hektortm.woSSystems.systems.loottables.commands.LoottableCommand;
 import me.hektortm.woSSystems.time.BossBarManager;
 import me.hektortm.woSSystems.time.TimeManager;
 import me.hektortm.woSSystems.time.cmd.TimeCommand;
-import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.professions.crafting.CraftingListener;
 import me.hektortm.woSSystems.professions.crafting.command.CRecipeCommand;
 import me.hektortm.woSSystems.professions.fishing.FishingManager;
@@ -43,7 +42,7 @@ import me.hektortm.woSSystems.systems.stats.commands.StatsCommand;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.systems.unlockables.commands.TempUnlockableCommand;
 import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableCommand;
-import me.hektortm.woSSystems.utils.ConditionHandler_new;
+import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
@@ -72,7 +71,6 @@ public final class WoSSystems extends JavaPlugin {
     private FishingManager fishingManager;
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
-    private ConditionHandler_new newConditionHandler;
     private CRecipeManager recipeManager;
     private ChannelManager channelManager;
     private NicknameManager nickManager;
@@ -109,8 +107,8 @@ public final class WoSSystems extends JavaPlugin {
         guiManager = new GUIManager();
         citemManager = new CitemManager(); // Ensure interactionManager is null-safe.
         resolver = new PlaceholderResolver(statsManager, citemManager);
+
         conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager, citemManager);
-        newConditionHandler = new ConditionHandler_new(unlockableManager, statsManager, ecoManager, citemManager);
         interactionManager = new InteractionManager();
         interactionManager.setConditionHandler(conditionHandler);
         interactionManager.setPlaceholderResolver(resolver);
@@ -157,8 +155,6 @@ public final class WoSSystems extends JavaPlugin {
             regionBossBarManager.removeBossBar(p);
             regionBossBarManager.createBossBar(p);
         }
-        //SessionManager sessionManager = WorldGuard.getInstance().getPlatform().getSessionManager();
-        //sessionManager.registerHandler(new DisplayNameFlag.Factory(), null);
         channelManager.loadChannels();
         recipeManager.loadRecipes();
         registerCommands();
@@ -292,9 +288,6 @@ public final class WoSSystems extends JavaPlugin {
     public UnlockableManager getUnlockableManager() {
         return unlockableManager;
     }
-    public ConditionHandler getConditionHandler() {
-        return conditionHandler;
-    }
     public CRecipeManager getRecipeManager() {
         return recipeManager;
     }
@@ -316,8 +309,8 @@ public final class WoSSystems extends JavaPlugin {
     public RegionBossBar getRegionBossBarManager() {
         return regionBossBarManager;
     }
-    public ConditionHandler_new getNewConditionHandler() {
-        return newConditionHandler;
+    public ConditionHandler getConditionHandler() {
+        return conditionHandler;
     }
 
 }

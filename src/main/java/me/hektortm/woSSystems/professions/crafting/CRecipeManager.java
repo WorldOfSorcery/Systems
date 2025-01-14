@@ -12,11 +12,13 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +60,7 @@ public class CRecipeManager {
                 String type = (String) json.getOrDefault("type", "shaped");
                 JSONObject resultJson = (JSONObject) json.get("result");
                 boolean craftingBook = (boolean) json.getOrDefault("crafting_book", false);
-                JSONObject condition = (JSONObject) json.get("condition");
+                JSONArray conditions = (JSONArray) json.get("conditions");
 
                 // Load the success ID
                 String successId = (String) resultJson.get("success");
@@ -84,7 +86,7 @@ public class CRecipeManager {
                 }
 
                 // Store recipe, success ID, and conditions
-                recipeMap.put(key, new RecipeData(recipe, condition, successId));
+                recipeMap.put(key, new RecipeData(recipe, conditions, successId));
 
                 // Add the recipe to Bukkit
                 Bukkit.addRecipe(recipe);
@@ -152,7 +154,7 @@ public class CRecipeManager {
         return recipe;
     }
 
-    public JSONObject getConditions(NamespacedKey key) {
+    public JSONArray getConditions(NamespacedKey key) {
         RecipeData recipeData = recipeMap.get(key);
         return recipeData != null ? recipeData.getConditions() : null;
     }

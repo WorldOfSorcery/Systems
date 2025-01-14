@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.systems.interactions;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -14,16 +15,26 @@ public class ParticleHandler {
     private final ConditionHandler conditionHandler =  plugin.getConditionHandler();
 
     public void spawnParticlesForPlayer(Player player, InteractionData inter , Location location, boolean npc) {
-        String particleType = inter.getParticleType();
+        String particleType = inter.getParticleType().toLowerCase();
+        String color = inter.getParticleColor();
+
+        ConditionHandler.ConditionOutcomes outcomes = conditionHandler.getUnmetConditionOutcomes(player, inter.getConditions());
+
+        if (outcomes.getParticleType() != null) {
+            particleType = outcomes.getParticleType();
+        }
+        if (outcomes.getParticleColor() != null) {
+            color = outcomes.getParticleColor();
+        }
 
 
         if (npc) {
             switch (particleType.toLowerCase()) {
                 case "redstone_dust":
-                    spawnRedstoneNPCParticles(player,location, inter);
+                    spawnRedstoneNPCParticles(player,location, color);
                     break;
                 case "redstone_dust_circle":
-                    spawnRedstoneParticleCircle(player, location, inter);
+                    spawnRedstoneParticleCircle(player, location, color);
                     break;
                 case "portal":
                     spawnSurroundingNPCParticles(player, location, Particle.PORTAL);
@@ -54,12 +65,12 @@ public class ParticleHandler {
                     break;
             }
         } else {
-            switch (particleType.toLowerCase()) {
+            switch (particleType) {
                 case "redstone_dust":
-                    spawnRedstoneParticles(player,location, inter);
+                    spawnRedstoneParticles(player,location, color);
                     break;
                 case "redstone_dust_circle":
-                    spawnRedstoneParticleCircle(player, location, inter);
+                    spawnRedstoneParticleCircle(player, location, color);
                     break;
                 case "portal":
                     spawnSurroundingParticles(player, location, Particle.PORTAL);
@@ -207,11 +218,8 @@ public class ParticleHandler {
         }
     }
 
-    public void spawnRedstoneParticles(Player player, Location location, InteractionData interactionData) {
+    public void spawnRedstoneParticles(Player player, Location location, String colorHex) {
         // Ensure the player meets the conditions for the interaction
-        String colorHex = interactionData.getParticleColor();
-
-
         // Get the color from the interaction data (assumed to be in hex format)
 
         Color color = Color.fromRGB(
@@ -250,9 +258,9 @@ public class ParticleHandler {
         }
     }
 
-    public void spawnRedstoneNPCParticles(Player player, Location location, InteractionData interactionData) {
+    public void spawnRedstoneNPCParticles(Player player, Location location, String colorHex) {
         // Ensure the player meets the conditions for the interaction
-        String colorHex = interactionData.getParticleColor();
+
 
 
         // Get the color from the interaction data (assumed to be in hex format)
@@ -289,11 +297,7 @@ public class ParticleHandler {
         }
     }
 
-    public void spawnRedstoneParticleCircle(Player player, Location location, InteractionData inter) {
-
-        String colorHex = inter.getParticleColor();
-
-
+    public void spawnRedstoneParticleCircle(Player player, Location location, String colorHex) {
         int count = 15; // Total number of particles
         double radius = 0.5; // Distance from the center of the block to spawn particles
 
