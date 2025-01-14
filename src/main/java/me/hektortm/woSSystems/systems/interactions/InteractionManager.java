@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.systems.interactions;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.utils.ConditionHandler_new;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
 import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
@@ -12,7 +13,6 @@ import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -31,6 +31,7 @@ public class InteractionManager {
 
     public final File interactionFolder;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final ConditionHandler_new newConditionHandler = plugin.getNewConditionHandler();
     private final LogManager log = new LogManager(new LangManager(WoSCore.getPlugin(WoSCore.class)), WoSCore.getPlugin(WoSCore.class));
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
@@ -94,14 +95,6 @@ public class InteractionManager {
                 String particleType = particlesJson != null ? (String) particlesJson.get("type") : "";
                 String particleColor = particlesJson != null ? (String) particlesJson.get("color") : "";
 
-                JSONObject elseJson = (JSONObject) particlesJson.get("else");
-                String elseColor = null;
-                String elseType = null;
-                if (elseJson != null) {
-                    elseColor = (String) elseJson.get("color");
-                    elseType = (String) elseJson.get("type");
-
-                }
 
                 JSONObject hologramJson = (JSONObject) json.get("hologram");
                 List<String> hologramDefault = new ArrayList<>();
@@ -115,14 +108,6 @@ public class InteractionManager {
                             Bukkit.getLogger().info("[DefaultHolo] added" +line);
                         }
                     }
-                    JSONArray ElseJson = (JSONArray) hologramJson.get("else");
-                    if (ElseJson != null) {
-                        for (Object line : ElseJson) {
-                            hologramElse.add((String) line);
-                            Bukkit.getLogger().info("[ElseHolo] added" +line);
-                        }
-                    }
-
                 }
 
 
@@ -138,7 +123,7 @@ public class InteractionManager {
                     }
                 }
 
-                interactionMap.put(interactionId, new InteractionData(interactionId, conditions,actions,locations,validNpcIds,particleType,particleColor, elseType, elseColor, hologramDefault, hologramElse));
+                interactionMap.put(interactionId, new InteractionData(interactionId, conditions,actions,locations,validNpcIds,particleType,particleColor, hologramDefault));
 
             } catch (Exception e) {
                 Bukkit.getLogger().warning("Error loading interaction from file " + file.getName() + ": " + e.getMessage());
@@ -216,15 +201,21 @@ public class InteractionManager {
         }
 
         if(!conditionHandler.validateConditions(p, inter.getConditions())) return;
-
-        List<String> actions = inter.getActions();
-        // proritize conditions
-
         if(inter.getActions() == null) return;
+        List<String> actions;
+        // proritize conditions
+        ConditionHandler_new.UnmetConditionOutcomes unMetOutcomes = newConditionHandler.getUnmetConditionOutcomes(p, inter.getConditions());
+        if (unMetOutcomes.actions != null) {
+            actions = unMetOutcomes.actions;
+        } else {
+             actions = inter.getActions();
+        }
 
 
 
-        for (String action : inter.getActions()) {
+
+
+        for (String action : actions) {
             action = action.replace("%player%", p.getName());
 
             if (action.startsWith("send_message")) {
@@ -273,7 +264,7 @@ public class InteractionManager {
 
                                 // Determine hologram lines
                                 List<String> hologramLines = conditionsMet
-                                        ? inter.getHologramDefault()
+                                        ? inter.getHologram()
                                         : inter.getHologramElse();
                              //   createTextDisplayAtBlockBelow(location, hologramLines, -147, 0);
 
@@ -290,7 +281,7 @@ public class InteractionManager {
 
                                 // Determine hologram lines
                                 List<String> hologramLines = conditionsMet
-                                        ? inter.getHologramDefault()
+                                        ? inter.getHologram()
                                         : inter.getHologramElse();
                                createTextDisplayAtBlockBelow(player, location, hologramLines, 180, 0);
                             }
@@ -485,7 +476,7 @@ public class InteractionManager {
             // Hologram
             // Hologram
             JSONObject hologramJson = new JSONObject();
-            hologramJson.put("default", listToJsonArray(interaction.getHologramDefault()));
+            hologramJson.put("default", listToJsonArray(interaction.getHologram()));
             hologramJson.put("else", listToJsonArray(interaction.getHologramElse()));
             json.put("hologram", hologramJson);
 

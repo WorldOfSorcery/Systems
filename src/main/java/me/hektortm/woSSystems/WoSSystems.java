@@ -43,6 +43,7 @@ import me.hektortm.woSSystems.systems.stats.commands.StatsCommand;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.systems.unlockables.commands.TempUnlockableCommand;
 import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableCommand;
+import me.hektortm.woSSystems.utils.ConditionHandler_new;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
@@ -71,6 +72,7 @@ public final class WoSSystems extends JavaPlugin {
     private FishingManager fishingManager;
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
+    private ConditionHandler_new newConditionHandler;
     private CRecipeManager recipeManager;
     private ChannelManager channelManager;
     private NicknameManager nickManager;
@@ -108,6 +110,7 @@ public final class WoSSystems extends JavaPlugin {
         citemManager = new CitemManager(); // Ensure interactionManager is null-safe.
         resolver = new PlaceholderResolver(statsManager, citemManager);
         conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager, citemManager);
+        newConditionHandler = new ConditionHandler_new(unlockableManager, statsManager, ecoManager, citemManager);
         interactionManager = new InteractionManager();
         interactionManager.setConditionHandler(conditionHandler);
         interactionManager.setPlaceholderResolver(resolver);
@@ -312,6 +315,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public RegionBossBar getRegionBossBarManager() {
         return regionBossBarManager;
+    }
+    public ConditionHandler_new getNewConditionHandler() {
+
     }
 
 }

@@ -5,7 +5,6 @@ import org.json.simple.JSONObject;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 public class InteractionData {
     private final String id;
@@ -16,12 +15,9 @@ public class InteractionData {
 
     private final String particleType;
     private final String particleColor;
-    private final String elseParticleType;
-    private final String elseParticleColor;
-    private final List<String> hologramDefault;
-    private final List<String> hologramElse;
+    private final List<String> hologram;
 
-    public InteractionData(String id,JSONObject conditions, List<String> actions, List<Location> locations, List<String> npcIDs, String particleType, String particleColor, String elseParticleType, String elseParticleColor, List<String> hologramDefault, List<String> hologramElse) {
+    public InteractionData(String id,JSONObject conditions, List<String> actions, List<Location> locations, List<String> npcIDs, String particleType, String particleColor, List<String> hologram) {
 
         this.conditions = conditions;
         this.actions = actions;
@@ -30,10 +26,7 @@ public class InteractionData {
         this.id = id;
         this.particleType = particleType;
         this.particleColor = particleColor;
-        this.elseParticleType = elseParticleType;
-        this.elseParticleColor = elseParticleColor;
-        this.hologramDefault = hologramDefault;
-        this.hologramElse = hologramElse;
+        this.hologram = hologram;
     }
     public String getId() {
         return id;
@@ -91,8 +84,8 @@ public class InteractionData {
         npcIDs.remove(npcID);
     }
 
-    public List<String> getHologramDefault() {
-        return hologramDefault != null ? hologramDefault : Collections.emptyList();
+    public List<String> getHologram() {
+        return hologram != null ? hologram : Collections.emptyList();
     }
 
     public List<String> getHologramElse() {

@@ -29,103 +29,96 @@ public class ConditionHandler_new {
         resolver  = new PlaceholderResolver(statsManager, citemManager);
     }
 
-    public enum conditonKeys {
-        has_unlockable,
-        has_citem,
-        has_permission,
-        is_in_region,
-        currency,
-        date,
-        date_before,
-        date_after,
-        time_before,
-        time_after,
-        stats;
+    public UnmetConditionOutcomes getUnmetConditionOutcomes(Player player, JSONObject conditions) {
+        UnmetConditionOutcomes unmetOutcomes = new UnmetConditionOutcomes();
 
-    }
-
-    public boolean getConditions(Player player, JSONObject conditions) {
-        // "conditions":
         if (conditions == null) {
-            return true;
+            return unmetOutcomes; // No conditions mean nothing to check
         }
 
-        for (Object conditionType : conditions.keySet()) {
-            // "conditions":
-            //    "type":
-            String type = conditionType.toString();
-            JSONObject specificConditions = (JSONObject) conditions.get(conditionType);
+        for (Object key : conditions.keySet()) {
+            String conditionKey = key.toString();
+            JSONObject conditionData = (JSONObject) conditions.get(conditionKey);
 
-            if (type.startsWith("has_permission:")) {
-                String id = type.substring("has_permission:".length());
+            // Split the condition key into type and specific identifier
+            String[] parts = conditionKey.split(":");
+            String conditionType = parts[0];
+            String conditionIdentifier = parts.length > 1 ? parts[1] : null;
 
-            }
-        }
+            // Evaluate the condition based on its type
+            boolean isMet = evaluateCondition(player, conditionType, conditionIdentifier, conditionData);
 
-        return true;
-    }
+            // If the condition is not met, collect the "false" branch outcomes
+            if (!isMet) {
+                JSONObject falseOutcome = (JSONObject) conditionData.get("false");
 
-    public List<String> returnActions(Player player, JSONObject conditionType, String type) {
-        boolean state = validate(player, type);
+                if (falseOutcome != null) {
+                    // Collect actions
+                    if (falseOutcome.containsKey("actions")) {
+                        JSONArray actions = (JSONArray) falseOutcome.get("actions");
+                        for (Object actionObj : actions) {
+                            unmetOutcomes.actions.add(actionObj.toString());
+                        }
+                    }
 
-        if (state) {
-            JSONObject trueJson = (JSONObject) conditionType.get("true");
-            List<String> actions = new ArrayList<>();
-            JSONArray actionsJson = (JSONArray) trueJson.get("actions");
-            if (actionsJson != null) {
-                for (Object action : actionsJson) {
-                    actions.add(action.toString());
-                }
-            }
-        } else {
-            JSONObject falseJson = (JSONObject) conditionType.get("false");
-        }
-    }
+                    // Collect holograms
+                    if (falseOutcome.containsKey("hologram")) {
+                        JSONArray hologram = (JSONArray) falseOutcome.get("hologram");
+                        for (Object lineObj : hologram) {
+                            unmetOutcomes.holograms.add(lineObj.toString());
+                        }
+                    }
 
-    public boolean validate(Player player, String type) {
-        if (type.startsWith("has_permission:")) {
-            String id = type.substring("has_permission:".length());
-            if (hasPerms(player, id)) {
-                return true;
-            }
-            return false;
-        }
-        return false;
-    }
-
-    private void validateElse(Player p, JSONArray elseActions) {
-        for (Object elseAction : elseActions) {
-            String action = elseAction.toString();
-            action = action.replace("%player%", p.getName());
-
-            if (action.startsWith("send_message")) {
-                String message = action.replace("send_message", "");
-                String finalMessage = resolver.resolvePlaceholders(message, p);
-                p.sendMessage(finalMessage.replace("&", "§"));
-            }
-            if (action.startsWith("close_gui")) {
-                p.closeInventory();
-            }
-            if (action.startsWith("playsound")) {
-                String[] parts = action.split(" ");
-                if (parts.length > 1) {
-                    String sound = parts[1];
-                    p.playSound(p.getLocation(), sound, 1.0F, 1.0F);
-                }
-            }
-            if (action.startsWith("player_cmd")) {
-                String cmd = action.replace("player_cmd", "");
-                plugin.getServer().dispatchCommand(p, cmd);
-            } else {
-                if (!action.startsWith("send_message") &&
-                        !action.startsWith("close_gui") &&
-                        !action.startsWith("playsound") &&
-                        !action.startsWith("player_cmd")) {
-                    plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), action);
+                    // Collect particles
+                    if (falseOutcome.containsKey("particles")) {
+                        JSONObject particles = (JSONObject) falseOutcome.get("particles");
+                        unmetOutcomes.particles.add(particles.toJSONString());
+                    }
                 }
             }
         }
+
+        return unmetOutcomes;
     }
+
+    private boolean evaluateCondition(Player player, String conditionType, String conditionIdentifier, JSONObject conditionData) {
+        switch (conditionType) {
+            case "has_citem":
+                return citemManager.citemAmount(player, conditionIdentifier) > 0;
+
+            case "stats":
+                long playerStatValue = statsManager.getPlayerStat(player.getUniqueId(), conditionIdentifier);
+                long requiredValue = ((Number) conditionData.get("value")).longValue();
+                return playerStatValue >= requiredValue;
+
+            case "currency":
+                long playerBalance = ecoManager.getCurrencyBalance(player.getUniqueId(), conditionIdentifier);
+                long requiredBalance = ((Number) conditionData.get("value")).longValue();
+                return playerBalance >= requiredBalance;
+
+            case "permission":
+                return player.hasPermission(conditionIdentifier);
+
+            case "unlockable":
+                return unlockableManager.getPlayerUnlockable(player, conditionIdentifier);
+
+            default:
+                plugin.getLogger().warning("Unknown condition type: " + conditionType);
+                return false;
+        }
+    }
+
+    // Existing methods like executeOutcome, executeActions, etc., remain unchanged.
+
+    /**
+     * Helper class to collect unmet condition outcomes.
+     */
+    public static class UnmetConditionOutcomes {
+        public final List<String> actions = new ArrayList<>();
+        public final List<String> holograms = new ArrayList<>();
+        public final List<String> particles = new ArrayList<>();
+    }
+
 
 
     private boolean validateUnlockable(Player player, JSONObject unlockables) {
