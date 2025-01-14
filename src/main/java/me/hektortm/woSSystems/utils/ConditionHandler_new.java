@@ -10,7 +10,9 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ConditionHandler_new {
 
@@ -72,7 +74,9 @@ public class ConditionHandler_new {
                     // Collect particles
                     if (falseOutcome.containsKey("particles")) {
                         JSONObject particles = (JSONObject) falseOutcome.get("particles");
-                        unmetOutcomes.particles.add(particles.toJSONString());
+                        String type = (String) particles.get("type");
+                        String color = (String) particles.get("color");
+                        unmetOutcomes.particleData.put(type, color);
                     }
                 }
             }
@@ -116,7 +120,7 @@ public class ConditionHandler_new {
     public static class UnmetConditionOutcomes {
         public final List<String> actions = new ArrayList<>();
         public final List<String> holograms = new ArrayList<>();
-        public final List<String> particles = new ArrayList<>();
+        public final Map<String, String> particleData = new HashMap<>();
     }
 
 
