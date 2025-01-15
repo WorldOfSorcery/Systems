@@ -164,6 +164,8 @@ public final class WoSSystems extends JavaPlugin {
         }
         channelManager.loadChannels();
         recipeManager.loadRecipes();
+        hologramManager.removeAll();
+        interactionManager.spawnTextDisplays();
         registerCommands();
         registerEvents();
         interactionManager.loadInteraction();
@@ -174,6 +176,7 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        interactionManager.removeTextDisplays();
         channelManager.saveChannels();
         for (Player p : Bukkit.getOnlinePlayers()) {
             bossBarManager.removeBossBar(p);

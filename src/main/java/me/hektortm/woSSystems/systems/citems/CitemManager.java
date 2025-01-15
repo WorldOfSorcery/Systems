@@ -9,6 +9,7 @@ import me.hektortm.woSSystems.channels.NicknameManager;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.Letters;
+import me.hektortm.woSSystems.utils.Parsers;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
@@ -58,6 +59,7 @@ public class CitemManager {
     private final LangManager lang = new LangManager(WoSCore.getPlugin(WoSCore.class));
     private final NicknameManager nickManager = new NicknameManager();
     private final CitemCommand cmd;
+    private final Parsers parsers = new Parsers();
 
 
     public CitemManager() {
@@ -571,14 +573,14 @@ public class CitemManager {
         if (lore == null) {
             lore = new ArrayList<>();
         }
-        name = parseUni(name);
-        time = parseUni(time);
+        name = parsers.parseUni(name);
+        time = parsers.parseUni(time);
         lore.add("§7");
         lore.add("§f"+ SIGNED_BY.getIcon() +" §e" + name);
         if (quote.equals("null") || quote == null) {
             lore.add("§f" + TIME.getIcon() + " §e" + time);
         } else {
-            lore.add("§e"+parseUni(quote));
+            lore.add("§e"+parsers.parseUni(quote));
         }
 
         meta.setLore(lore);
@@ -615,76 +617,7 @@ public class CitemManager {
         setStamp(item); // Ensure stamping happens after setting data
     }
 
-    private String parseUni(String s) {
-        StringBuilder result = new StringBuilder();
 
-        for (char c : s.toCharArray()) {
-            Letters letterEnum = null;
-
-            // Map each character to the corresponding enum value
-            if (Character.isLetter(c)) {
-                letterEnum = Letters.valueOf(String.valueOf(c).toUpperCase());
-            } else if (Character.isDigit(c)) {
-                switch (c) {
-                    case '0': letterEnum = Letters.ZERO; break;
-                    case '1': letterEnum = Letters.ONE; break;
-                    case '2': letterEnum = Letters.TWO; break;
-                    case '3': letterEnum = Letters.THREE; break;
-                    case '4': letterEnum = Letters.FOUR; break;
-                    case '5': letterEnum = Letters.FIVE; break;
-                    case '6': letterEnum = Letters.SIX; break;
-                    case '7': letterEnum = Letters.SEVEN; break;
-                    case '8': letterEnum = Letters.EIGHT; break;
-                    case '9': letterEnum = Letters.NINE; break;
-                }
-            } else if (c == '_') {
-                letterEnum = Letters.UNDERSCORE;
-            } else if (c == '-') {
-                letterEnum = Letters.DASH;
-            } else if (c == '"') {
-                letterEnum = QUOTE;
-            } else if (c == '&') {
-                letterEnum = AMPERSAND;
-            } else if (c == '(') {
-                letterEnum = BRACKET_OPEN;
-            } else if (c == ')') {
-                letterEnum = BRACKET_CLOSED;
-            } else if (c == ':') {
-                letterEnum = COLON;
-            } else if (c == '=') {
-                letterEnum = EQUALS;
-            } else if (c == '!') {
-                letterEnum = EXCLAMATION;
-            } else if (c == '#') {
-                letterEnum = HASHTAG;
-            } else if (c == '+') {
-                letterEnum = PLUS;
-            } else if (c == '?') {
-                letterEnum = QUESTION;
-            } else if (c == '/') {
-                letterEnum = SLASH;
-            } else if (c == ';') {
-                letterEnum = SEMICOLON;
-            } else if (c == '%') {
-                letterEnum = PERCENTAGE;
-            } else if (c == '.') {
-                letterEnum = DOT;
-            } else if (c == ',') {
-                letterEnum = COMMA;
-            } else if (c == '*') {
-                letterEnum = STAR;
-            }
-
-            // Append the Unicode value or the original character if no mapping exists
-            if (letterEnum != null) {
-                result.append(letterEnum.getLetter());
-            } else {
-                result.append(c); // Keep non-mapped characters as is
-            }
-        }
-
-        return result.toString();
-    }
 
 
     private String parseTime() {

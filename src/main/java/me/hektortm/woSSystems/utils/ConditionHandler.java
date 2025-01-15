@@ -24,6 +24,7 @@ public class ConditionHandler {
     private final EcoManager ecoManager;
     private final CitemManager citemManager;
     private PlaceholderResolver resolver;
+    private final Parsers parsers = new Parsers();
 
     public ConditionHandler(UnlockableManager unlockableManager, StatsManager statsManager, EcoManager ecoManager, CitemManager citemManager) {
         this.unlockableManager = unlockableManager;
@@ -101,7 +102,19 @@ public class ConditionHandler {
                 if (trueOutcome.containsKey("hologram")) {
                     JSONArray hologram = (JSONArray) trueOutcome.get("hologram");
                     for (Object lineObj : hologram) {
-                        outcomes.holograms.add(lineObj.toString());
+                        String objString = lineObj.toString();
+                        String finalString = lineObj.toString();
+                        if (objString.contains("<unicode>")) {
+                            String colorCode = "";
+                            if (objString.startsWith("§") && objString.length() > 1) {
+                                colorCode = objString.substring(0, 2);
+                            }
+
+                            String toParse = objString.substring(objString.indexOf("<unicode>") + "<unicode>".length());
+                            String parsedUnicode = Parsers.parseUniStatic(toParse);
+                            finalString = colorCode + parsedUnicode;
+                        }
+                        outcomes.holograms.add(finalString);
                     }
                 }
 

@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.systems.interactions;
 
 import com.maximde.hologramlib.hologram.Hologram;
+import com.maximde.hologramlib.hologram.HologramManager;
 import com.maximde.hologramlib.hologram.RenderMode;
 import com.maximde.hologramlib.hologram.TextHologram;
 import me.hektortm.woSSystems.WoSSystems;
@@ -31,6 +32,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.*;
+import java.util.function.Consumer;
 
 public class InteractionManager {
 
@@ -41,12 +43,13 @@ public class InteractionManager {
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
     public final Map<String, InteractionData> interactionMap = new HashMap<>();
-    private final Map<Location, TextDisplay> textDisplayMap = new HashMap<>();
-    private final Map<Player, Map<Location, TextDisplay>> playerTextDisplays = new HashMap<>();
+    private final Map<String, TextHologram> hologramMap = new HashMap<>();
 
     public InteractionManager() {
         this.interactionFolder = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "interactions");
         if(!interactionFolder.exists()) interactionFolder.mkdirs();
+
+
     }
 
     // TODO: Particle Conditions
@@ -273,9 +276,9 @@ public class InteractionManager {
                                 NPC npc1 = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(id));
                                 Location location = npc1.getEntity().getLocation().getBlock().getLocation();
                                 particleHandler.spawnParticlesForPlayer(player, inter, location, true);
-
-
-                                createTextDisplay(location, inter, id,true);
+                                //updateTextDisplay(location, inter, id, true);
+                                createTextDisplay(location, inter, id, true);
+                                updateTextDisplay(location, inter, id, true);
                             }
                         }
                     }
@@ -283,10 +286,44 @@ public class InteractionManager {
             }
         }.runTaskTimer(plugin, 0L, 50L);
     }
+    public void spawnTextDisplays() {
+        for (InteractionData inter : interactionMap.values()) {
+            /*
+            for (Location location : inter.getLocations()) {
+                if (location != null) {
+                    for (Player player : Bukkit.getOnlinePlayers()) {
+                        particleHandler.spawnParticlesForPlayer(player, inter, location, false);
+
+                        List<String> lines = inter.getHologram();
+
+                        // createTextDisplay(player, location, lines, false);
+
+                    }
+                }
+            }*/
+            for (String id : inter.getNpcIDs()) {
+                if (id != null) {
+                    for (Player player : Bukkit.getOnlinePlayers()) {
+                        NPC npc1 = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(id));
+                        Location location = npc1.getEntity().getLocation().getBlock().getLocation();
+
+                        createTextDisplay(location, inter, id,true);
+                    }
+                }
+            }
+        }
+    }
+
+    public void removeTextDisplays() {
+        for (Hologram holo : hologramMap.values()) {
+            String id = holo.getId();
+            plugin.getHologramManager().remove(id);
+        }
+    }
 
     public void createTextDisplay(Location location, InteractionData inter, String npcID, boolean npc) {
 
-        Location newL = location.clone().add(0, 1.5, 0.5);
+        Location newL = location.clone().add(0, 1, 0.5);
 
         String interId = inter.getId();
         String id;
@@ -296,38 +333,50 @@ public class InteractionManager {
             //placeholder for now
             id = interId+":loc_"+location.toString();
         }
+        if (hologramMap.containsKey(id)) {
+            return;
+        }
+
 
         TextHologram textHologram = new TextHologram(id, RenderMode.ALL, (player1, textDisplayMeta) ->{
-            ConditionHandler.ConditionOutcomes outcomes = conditionHandler.getUnmetConditionOutcomes(player1, inter.getConditions());
-            List<String> lines = outcomes.holograms;
+            String[] parts = id.split(":");
+            String interactionID = parts[0];
+            InteractionData interaction = getInteractionByID(interactionID);
+            ConditionHandler.ConditionOutcomes outcomes = conditionHandler.getUnmetConditionOutcomes(player1, interaction.getConditions());
+            List<String> lines = interaction.getHologram();
+            if (outcomes.holograms != null) {
+                lines = outcomes.holograms;
+
+            }
+            //List<String> lines = outcomes.holograms;
             String combinedText = String.join("\n", lines);
+            Bukkit.getLogger().info(combinedText);
             Component component = Component.text(combinedText);
+            Component comp = Component.text(player1.getName());
             textDisplayMeta.setText(component);
             return textDisplayMeta;
         })
-                .setBackgroundColor(0)
-                .setTextOpacity((byte) 255)
                 .setBillboard(Display.Billboard.VERTICAL);
 
+
         plugin.getHologramManager().spawn(textHologram, newL);
+        hologramMap.put(id, textHologram);
     }
+    private void updateTextDisplay(Location location, InteractionData inter, String npcID, boolean npc) {
 
-
-    public Vector getCustomDirection(float yaw, float pitch) {
-        // Convert degrees to radians
-        double yawRad = Math.toRadians(yaw);
-        double pitchRad = Math.toRadians(pitch);
-
-        // Calculate x, y, z components
-        double x = -Math.cos(pitchRad) * Math.sin(yawRad);
-        double y = -Math.sin(pitchRad);
-        double z = Math.cos(pitchRad) * Math.cos(yawRad);
-
-        // Create and return the vector
-        return new Vector(x, y, z);
+        String interId = inter.getId();
+        String id;
+        if (npc) {
+            id = interId+":npc_"+npcID;
+        } else {
+            //placeholder for now
+            id = interId+":loc_"+location.toString();
+        }
+        if (hologramMap.containsKey(id)) {
+            TextHologram holo = hologramMap.get(id);
+            holo.update();
+        }
     }
-
-
 
     public Location getTargetBlock(Player p) {
         double distance = 5.0;
