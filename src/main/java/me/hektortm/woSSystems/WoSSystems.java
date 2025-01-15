@@ -165,7 +165,6 @@ public final class WoSSystems extends JavaPlugin {
         channelManager.loadChannels();
         recipeManager.loadRecipes();
         hologramManager.removeAll();
-        interactionManager.spawnTextDisplays();
         registerCommands();
         registerEvents();
         interactionManager.loadInteraction();

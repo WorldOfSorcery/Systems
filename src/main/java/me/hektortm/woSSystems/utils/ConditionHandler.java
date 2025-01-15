@@ -114,6 +114,23 @@ public class ConditionHandler {
                             String parsedUnicode = Parsers.parseUniStatic(toParse);
                             finalString = colorCode + parsedUnicode;
                         }
+                        if (objString.contains(":")) {
+                            String[] objParts = objString.split(":");
+                            String object = objParts[0];
+                            String value = objParts[1];
+                            switch (object) {
+                                case "icon":
+                                    String icon = Icons.getIconByName(value);
+                                    if (icon == null) {
+                                        finalString = "§cUNKNOWN ICON: '" + value+"'";
+                                    } else {
+                                        finalString = "§f" + icon;
+                                    }
+                                    break;
+                                default:
+                                    finalString = objString;
+                            }
+                        }
                         outcomes.holograms.add(finalString);
                     }
                 }

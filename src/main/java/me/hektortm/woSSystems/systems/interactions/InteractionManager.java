@@ -1,7 +1,6 @@
 package me.hektortm.woSSystems.systems.interactions;
 
 import com.maximde.hologramlib.hologram.Hologram;
-import com.maximde.hologramlib.hologram.HologramManager;
 import com.maximde.hologramlib.hologram.RenderMode;
 import com.maximde.hologramlib.hologram.TextHologram;
 import me.hektortm.woSSystems.WoSSystems;
@@ -19,20 +18,16 @@ import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.TextDisplay;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import org.bukkit.util.Vector;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.*;
-import java.util.function.Consumer;
 
 public class InteractionManager {
 
@@ -263,10 +258,8 @@ public class InteractionManager {
                             for (Player player : Bukkit.getOnlinePlayers()) {
                                 particleHandler.spawnParticlesForPlayer(player, inter, location, false);
 
-                                List<String> lines = inter.getHologram();
-
-                               // createTextDisplay(player, location, lines, false);
-
+                                spawnTextDisplay(location, inter, null, false);
+                                updateTextDisplay(location, inter, null, false);
                             }
                         }
                     }
@@ -275,43 +268,15 @@ public class InteractionManager {
                             for (Player player : Bukkit.getOnlinePlayers()) {
                                 NPC npc1 = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(id));
                                 Location location = npc1.getEntity().getLocation().getBlock().getLocation();
-                                particleHandler.spawnParticlesForPlayer(player, inter, location, true);
-                                //updateTextDisplay(location, inter, id, true);
-                                createTextDisplay(location, inter, id, true);
+                                particleHandler.spawnParticlesForPlayer(player, inter, npc1.getEntity().getLocation(), true);
+                                spawnTextDisplay(location, inter, id, true);
                                 updateTextDisplay(location, inter, id, true);
                             }
                         }
                     }
                 }
             }
-        }.runTaskTimer(plugin, 0L, 50L);
-    }
-    public void spawnTextDisplays() {
-        for (InteractionData inter : interactionMap.values()) {
-            /*
-            for (Location location : inter.getLocations()) {
-                if (location != null) {
-                    for (Player player : Bukkit.getOnlinePlayers()) {
-                        particleHandler.spawnParticlesForPlayer(player, inter, location, false);
-
-                        List<String> lines = inter.getHologram();
-
-                        // createTextDisplay(player, location, lines, false);
-
-                    }
-                }
-            }*/
-            for (String id : inter.getNpcIDs()) {
-                if (id != null) {
-                    for (Player player : Bukkit.getOnlinePlayers()) {
-                        NPC npc1 = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(id));
-                        Location location = npc1.getEntity().getLocation().getBlock().getLocation();
-
-                        createTextDisplay(location, inter, id,true);
-                    }
-                }
-            }
-        }
+        }.runTaskTimer(plugin, 0L, 10L);
     }
 
     public void removeTextDisplays() {
@@ -321,9 +286,9 @@ public class InteractionManager {
         }
     }
 
-    public void createTextDisplay(Location location, InteractionData inter, String npcID, boolean npc) {
+    public void spawnTextDisplay(Location location, InteractionData inter, String npcID, boolean npc) {
 
-        Location newL = location.clone().add(0, 1, 0.5);
+        Location newL = location.clone().add(0.5, 2, 0.5);
 
         String interId = inter.getId();
         String id;
@@ -332,12 +297,23 @@ public class InteractionManager {
         } else {
             //placeholder for now
             id = interId+":loc_"+location.toString();
+            newL = location.clone().add(0.5, 1.2, 0.5);
         }
-        if (hologramMap.containsKey(id)) {
-            return;
+        if (!hologramMap.containsKey(id)) {
+            createDisplay(id, newL);
+        } else {
+            Location loc = hologramMap.get(id).getLocation();
+            if (!Objects.equals(loc.toString(), newL.toString())) {
+                plugin.getHologramManager().remove(id);
+                hologramMap.remove(id);
+                createDisplay(id, newL);
+            }
+
         }
 
 
+    }
+    private void createDisplay(String id, Location loc) {
         TextHologram textHologram = new TextHologram(id, RenderMode.ALL, (player1, textDisplayMeta) ->{
             String[] parts = id.split(":");
             String interactionID = parts[0];
@@ -350,7 +326,6 @@ public class InteractionManager {
             }
             //List<String> lines = outcomes.holograms;
             String combinedText = String.join("\n", lines);
-            Bukkit.getLogger().info(combinedText);
             Component component = Component.text(combinedText);
             Component comp = Component.text(player1.getName());
             textDisplayMeta.setText(component);
@@ -359,7 +334,7 @@ public class InteractionManager {
                 .setBillboard(Display.Billboard.VERTICAL);
 
 
-        plugin.getHologramManager().spawn(textHologram, newL);
+        plugin.getHologramManager().spawn(textHologram, loc);
         hologramMap.put(id, textHologram);
     }
     private void updateTextDisplay(Location location, InteractionData inter, String npcID, boolean npc) {

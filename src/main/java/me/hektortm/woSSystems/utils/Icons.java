@@ -1,5 +1,7 @@
 package me.hektortm.woSSystems.utils;
 
+import org.bukkit.Bukkit;
+
 public enum Icons {
 
     MYTHIC("\uE000"),
@@ -48,6 +50,22 @@ public enum Icons {
 
     public String getIcon() {
         return icon;
+    }
+
+    public static String getIconByName(String name) {
+        if (name == null || name.isEmpty()) {
+            return null;
+        }
+
+        String trimmedName = name.trim();
+
+        for (Icons icon : Icons.values()) {
+            if (icon.name().equalsIgnoreCase(trimmedName)) {
+                return icon.getIcon();
+            }
+        }
+
+        return null;
     }
 
 }
