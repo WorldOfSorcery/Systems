@@ -1,38 +1,25 @@
-package me.hektortm.woSSystems.Database;
+package me.hektortm.woSSystems.database.dao;
 
+import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DatabaseManager;
 import me.hektortm.woSSystems.systems.unlockables.utils.Action;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
 
 import java.sql.*;
 import java.util.UUID;
+import java.util.logging.Level;
 
-import static me.hektortm.woSSystems.systems.unlockables.utils.Action.GIVE;
+public class UnlockableDAO {
+    private Connection connection;
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
-public class DatabaseManager {
-    private final Connection connection;
+    public UnlockableDAO(DatabaseManager databaseManager) {
+        this.connection = databaseManager.getConnection();
+        createTables();
+    }
 
-    public DatabaseManager(String path) throws SQLException {
-        connection = DriverManager.getConnection("jdbc:sqlite:" + path);
+    private void createTables() {
         try (Statement statement = connection.createStatement()) {
-            // playerdata table
-            statement.execute("CREATE TABLE IF NOT EXISTS playerdata (" +
-                    "uuid TEXT PRIMARY KEY, " +
-                    "username TEXT NOT NULL)");
-            // playerdata economy table
-            statement.execute("CREATE TABLE IF NOT EXISTS playerdata_economy(" +
-                    "uuid TEXT, " +
-                    "currency TEXT, " +
-                    "amount LONG NOT NULL DEFAULT 0, " +
-                    "PRIMARY KEY (uuid, currency), " +
-                    "FOREIGN KEY (uuid) REFERENCES playerdata(uuid))");
-            // economy currencies table
-            statement.execute("CREATE TABLE IF NOT EXISTS currencies(" +
-                    "id TEXT NOT NULL, " +
-                    "name TEXT NOT NULL, " +
-                    "short_name TEXT NOT NULL, " +
-                    "icon TEXT, "+ "color TEXT)");
-            // unlockables table
             statement.execute("CREATE TABLE IF NOT EXISTS unlockables (" +
                     "id TEXT PRIMARY KEY)");
             statement.execute("CREATE TABLE IF NOT EXISTS temp_unlockables (" +
@@ -49,53 +36,8 @@ public class DatabaseManager {
                     "PRIMARY KEY (uuid, id), " +
                     "FOREIGN KEY (uuid) REFERENCES playerdata(uuid), " +
                     "FOREIGN KEY (id) REFERENCES temp_unlockables(id))");
-        }
-    }
-
-    public void closeConnection() throws SQLException {
-        if (connection != null && !connection.isClosed()) {
-            connection.close();
-        }
-    }
-
-    public void addPlayer(Player player) throws SQLException {
-        try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO playerdata (uuid, username) VALUES (?, ?) ON CONFLICT(uuid) DO NOTHING")) {
-            preparedStatement.setString(1, player.getUniqueId().toString());
-            preparedStatement.setString(2, player.getName());
-            preparedStatement.executeUpdate();
-        }
-    }
-
-    public void ensurePlayerEconomyEntry(Player player, String currency) throws SQLException {
-        addPlayer(player);
-        try (PreparedStatement prepStmt = connection.prepareStatement("INSERT INTO playerdata_economy (uuid, currency, amount) VALUES (?, ?, 0) ON CONFLICT(uuid, currency) DO NOTHING")) {
-            prepStmt.setString(1, player.getUniqueId().toString());
-            prepStmt.setString(2, currency);
-            prepStmt.executeUpdate();
-        }
-    }
-
-    public void updatePlayerCurrency(Player player, String currency, long amount) throws SQLException {
-        ensurePlayerEconomyEntry(player, currency);
-        try (PreparedStatement prepStmt = connection.prepareStatement("UPDATE playerdata_economy SET amount = ? WHERE uuid = ? AND currency = ?")) {
-            prepStmt.setLong(1, amount);
-            prepStmt.setString(2, player.getUniqueId().toString());
-            prepStmt.setString(3, currency);
-            prepStmt.executeUpdate();
-        }
-    }
-
-    public long getPlayerCurrency(Player player, String currency) throws SQLException {
-        ensurePlayerEconomyEntry(player, currency);
-        try (PreparedStatement prepStmt = connection.prepareStatement("SELECT amount FROM playerdata_economy WHERE uuid = ? AND currency = ?")) {
-            prepStmt.setString(1, player.getUniqueId().toString());
-            prepStmt.setString(2, currency);
-            ResultSet resultSet = prepStmt.executeQuery();
-            if (resultSet.next()) {
-                return resultSet.getLong("amount");
-            } else {
-                return 0;
-            }
+        } catch (SQLException e) {
+            plugin.writeLog("UnlockableDAO", Level.SEVERE, "Could not create Tables: "+e.getMessage());
         }
     }
 
@@ -186,20 +128,6 @@ public class DatabaseManager {
             stmt.setString(2, id);
             ResultSet resultSet = stmt.executeQuery();
             return resultSet.next();
-        }
-    }
-
-
-
-
-    public void addCurrency(String currencyId, String name, String shortName, String icon, String color) throws SQLException {
-        try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO currencies (currency_id, name, short_name, icon, color) VALUES (?, ?, ?, ?, ?) ON CONFLICT(currency_id) DO NOTHING")) {
-            preparedStatement.setString(1, currencyId);
-            preparedStatement.setString(2, name);
-            preparedStatement.setString(3, shortName);
-            preparedStatement.setString(4, icon);
-            preparedStatement.setString(5, color);
-            preparedStatement.executeUpdate();
         }
     }
 
