@@ -8,7 +8,7 @@ import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
-import me.hektortm.woSSystems.Database.DatabaseManager;
+import me.hektortm.woSSystems.database.DatabaseManager;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.channels.cmd.ChannelCommand;
 import me.hektortm.woSSystems.channels.NicknameManager;
@@ -61,6 +61,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class WoSSystems extends JavaPlugin {
 
@@ -239,14 +241,9 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("loottable", new LoottableCommand(lootTableManager));
         cmdReg("sign", new SignCommand(citemManager, ecoManager));
         cmdReg("time", new TimeCommand(timeManager, this, lang));
-
-        //cmdReg("gui", new GUIcommand(new GUIHandler(guiManager)));
     }
 
     private void registerEvents() {
-
-
-        //eventReg(new InventoryCloseListener(guiManager));
         eventReg(new InterListener(interactionManager, citemManager));
         eventReg(new DropListener());
         eventReg(new HoverListener(citemManager));
@@ -256,8 +253,12 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new ChannelListener(channelManager, nickManager, unlockableManager));
         eventReg(new CustomHandler(regionBossBarManager));
 
-
         getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager), this);
+    }
+
+    public void writeLog(String name, Level level, String message) {
+        Logger LOGGER = Logger.getLogger(name);
+        LOGGER.log(level, message);
     }
 
     private void eventReg(Listener l) {

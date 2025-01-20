@@ -1,23 +1,17 @@
 package me.hektortm.woSSystems.listeners;
 
-import me.hektortm.woSSystems.Database.DatabaseManager;
+import me.hektortm.woSSystems.database.DatabaseManager;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
-import me.hektortm.woSSystems.time.TimeManager;
 import me.hektortm.wosCore.WoSCore;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import java.io.File;
-import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.logging.Level;
 
 public class QuitListener implements Listener {
