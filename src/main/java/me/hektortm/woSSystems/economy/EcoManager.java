@@ -1,6 +1,6 @@
 package me.hektortm.woSSystems.economy;
 
-import me.hektortm.woSSystems.Database.DatabaseManager;
+import me.hektortm.woSSystems.database.DatabaseManager;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.utils.dataclasses.Currency;
 import me.hektortm.wosCore.WoSCore;
@@ -10,20 +10,20 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.logging.Level;
 
 public class EcoManager {
     private final WoSCore core;
     private final WoSSystems plugin;
     private final DatabaseManager database;
-    public final File currencyDirectory;
     private final Map<String, me.hektortm.woSSystems.utils.dataclasses.Currency> currencies = new HashMap<>();
 
 
     public EcoManager(WoSSystems plugin, DatabaseManager database) {
         this.plugin = plugin;
-        this.currencyDirectory = new File(plugin.getDataFolder(), "currencies");
         this.core = (WoSCore) plugin.getServer().getPluginManager().getPlugin("WoSCore");
         this.database = database;
 
@@ -53,7 +53,7 @@ public class EcoManager {
                     newAmount = 0;
                     break;
             }
-            database.updatePlayerCurrency(player, currency, newAmount);
+            database.getEconomyDAO().updatePlayerCurrency(player, currency, newAmount);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -64,75 +64,47 @@ public class EcoManager {
         GIVE, TAKE, SET, RESET
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void loadCurrencies() {
-        if (!currencyDirectory.exists()) currencyDirectory.mkdir();
+        currencies.clear();
+        try {
+            ResultSet rs = database.getEconomyDAO().getCurrencies(); // Assume this method returns all currencies from the database
+            while (rs.next()) {
+                String id = rs.getString("id");
+                String name = rs.getString("name");
+                String shortName = rs.getString("short_name");
+                String icon = rs.getString("icon");
+                String color = rs.getString("color");
+                boolean hiddenIfZero = rs.getBoolean("hidden_if_zero");
 
-        File[] files = currencyDirectory.listFiles((dir, name) -> name.endsWith(".yml"));
-        if (files != null) {
-            for (File file : files) {
-                FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-
-                String id = file.getName().replace(".yml", "");
-                String name = config.getString("name");
-                String shortName = config.getString("short");
-                String icon = config.getString("icon");
-                String color = config.getString("color");
-
-                me.hektortm.woSSystems.utils.dataclasses.Currency currency = new me.hektortm.woSSystems.utils.dataclasses.Currency(name, shortName, icon, color);
-                assert name != null;
+                Currency currency = new Currency(name, shortName, icon, color, hiddenIfZero);
                 currencies.put(id, currency);
             }
+        } catch (SQLException e) {
+            plugin.writeLog("EcoManager", Level.SEVERE, "Error loading currencies from the database: " + e.getMessage());
+            e.printStackTrace();
         }
     }
+
 
     private void loadDefaultCurrencies() {
-        if (!currencyDirectory.exists()) currencyDirectory.mkdir();
-        File goldFile = new File(currencyDirectory, "gold.yml");
-        File signatureFile = new File(currencyDirectory, "signature_token.yml");
-        if (!goldFile.exists()) {
-            FileConfiguration config = YamlConfiguration.loadConfiguration(goldFile);
-            String id = goldFile.getName().replace(".yml", "");
-            String name = "Gold";
-            String shortName = "g";
-            String icon = "";
-            String color = "§6";
-
-            config.set("name", name);
-            config.set("short", shortName);
-            config.set("icon", icon);
-            config.set("color", color);
-            try {
-                config.save(goldFile);
-            } catch (IOException e) {
-                e.printStackTrace();
+        try {
+            if (!database.getEconomyDAO().currencyExists("gold")) { // Check if 'gold' currency exists
+                Currency gold = new Currency("Gold", "g", "", "§6", false);
+                database.getEconomyDAO().addCurrency("gold", gold); // Insert into the database
+                currencies.put("gold", gold);
             }
-            Currency currency = new Currency(name, shortName, icon, color);
-            currencies.put(id, currency);
-        }
-        if (!signatureFile.exists()) {
-            FileConfiguration config = YamlConfiguration.loadConfiguration(signatureFile);
-            String id = signatureFile.getName().replace(".yml", "");
-            String name = "Signature Token";
-            String shortName = "st";
-            String icon = "";
-            String color = "§e";
 
-            config.set("name", name);
-            config.set("short", shortName);
-            config.set("icon", icon);
-            config.set("color", color);
-            try {
-                config.save(signatureFile);
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (!database.getEconomyDAO().currencyExists("signature_token")) { // Check if 'signature_token' exists
+                Currency signature = new Currency("Signature Token", "st", "", "§e", true);
+                database.getEconomyDAO().addCurrency("signature_token", signature); // Insert into the database
+                currencies.put("signature_token", signature);
             }
-            Currency currency = new Currency(name, shortName, icon, color);
-            currencies.put(id, currency);
+        } catch (SQLException e) {
+            plugin.writeLog("EcoManager", Level.SEVERE, "Error loading default currencies: " + e.getMessage());
+            e.printStackTrace();
         }
-
-
     }
+
 
     public Map<String, Currency> getCurrencies() {
         return currencies;
@@ -143,7 +115,7 @@ public class EcoManager {
         if (player == null) return 0; // Default to 0 if player isn't found
 
         try {
-            return database.getPlayerCurrency(player, currency);
+            return database.getEconomyDAO().getPlayerCurrency(player, currency);
         } catch (SQLException e) {
             e.printStackTrace();
             return 0;

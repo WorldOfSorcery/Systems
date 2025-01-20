@@ -6,12 +6,14 @@ public class Currency {
     private final String shortName;
     private final String icon;
     private final String color;
+    private final boolean hiddenIfZero;
 
-    public Currency(String name, String shortName, String icon, String color){
+    public Currency(String name, String shortName, String icon, String color, boolean hiddenIfZero){
         this.name = name;
         this.shortName = shortName;
         this.icon = icon;
         this.color = color;
+        this.hiddenIfZero = hiddenIfZero;
     }
 
     public String getName() {
@@ -30,4 +32,7 @@ public class Currency {
         return color;
     }
 
+    public boolean isHiddenIfZero() {
+        return hiddenIfZero;
+    }
 }

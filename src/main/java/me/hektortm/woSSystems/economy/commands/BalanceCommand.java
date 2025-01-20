@@ -83,24 +83,29 @@ public class BalanceCommand implements CommandExecutor {
     }
 
     private void showBalance(CommandSender sender, UUID uuid, String playerName) {
-        FileConfiguration playerData = core.getPlayerData(uuid, playerName);
-
         Map<String, Currency> currencies = ecoManager.getCurrencies();
-        if(currencies.isEmpty()) {
+
+        if (currencies.isEmpty()) {
             error(sender, "economy", "error.currencies");
             return;
         }
 
         WoSSystems.ecoMsg1Value(sender, "economy", "balance", "%player%", playerName);
-        for (File file : ecoManager.currencyDirectory.listFiles()) {
-            String id = file.getName().replace(".yml", "");
-            Currency currency = currencies.get(id);
-            String currencyName = currency.getName();
-            String color = currency.getColor();
-            long balance = ecoManager.getCurrencyBalance(uuid, id);
-            sender.sendMessage(color+currencyName+": §7" + balance);
-        }
 
+        for (Map.Entry<String, Currency> entry : currencies.entrySet()) {
+            String id = entry.getKey();
+            Currency currency = entry.getValue();
+
+            long balance = ecoManager.getCurrencyBalance(uuid, id);
+
+            // Skip if balance is 0 and currency is marked as hidden
+            if (currency.isHiddenIfZero() && balance == 0) {
+                continue;
+            }
+
+            sender.sendMessage(currency.getColor() + currency.getName() + ": §7" + balance);
+        }
     }
+
 
 }
