@@ -43,7 +43,7 @@ public class QuitListener implements Listener {
 
         plugin.getBossBarManager().removeBossBar(p);
         try {
-            database.removeAllTemps(p.getUniqueId());
+            database.getUnlockableDAO().removeAllTemps(p.getUniqueId());
         } catch (SQLException e) {
             Bukkit.getLogger().log(Level.SEVERE, "Could not clear Temp unlockables", e);
         }
