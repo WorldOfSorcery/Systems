@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.listeners;
 
+import me.hektortm.woSSystems.Database.DatabaseManager;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
@@ -15,18 +16,22 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.logging.Level;
 
 public class QuitListener implements Listener {
 
     private final UnlockableManager manager;
+    private final DatabaseManager database;
     private final WoSCore core;
     private final Coinflip coinflip;
     private final WoSSystems plugin;
 
-    public QuitListener(WoSCore core, UnlockableManager manager, Coinflip coinflip, WoSSystems plugin) {
+    public QuitListener(WoSCore core, UnlockableManager manager, DatabaseManager database, Coinflip coinflip, WoSSystems plugin) {
         this.core = core;
         this.manager = manager;
+        this.database = database;
         this.coinflip = coinflip;
         this.plugin = plugin;
     }
@@ -43,24 +48,12 @@ public class QuitListener implements Listener {
         }
 
         plugin.getBossBarManager().removeBossBar(p);
-
-        File playerFile = new File(core.getDataFolder() + File.separator + "playerdata" + File.separator + p.getUniqueId() + ".yml");
-        FileConfiguration playerData = YamlConfiguration.loadConfiguration(playerFile);
-
-        // Get the temp unlockables list and clear it
-        List<String> tempUnlockables = playerData.getStringList("tempunlockables");
-        tempUnlockables.clear();
-
-        // Set the cleared list back to the player data
-        playerData.set("tempunlockables", tempUnlockables);
-
         try {
-            // Save the updated player data file
-            playerData.save(playerFile);
-            Bukkit.getLogger().info("Cleared temp unlockables for player: " + p.getUniqueId());
-        } catch (IOException e) {
-            Bukkit.getLogger().severe("Could not save player file: " + p.getUniqueId() + ".yml");
+            database.removeAllTemps(p.getUniqueId());
+        } catch (SQLException e) {
+            Bukkit.getLogger().log(Level.SEVERE, "Could not clear Temp unlockables", e);
         }
+
 
 
     }

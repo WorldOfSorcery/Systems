@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.systems.interactions;
 
 import com.maximde.hologramlib.hologram.Hologram;
+import com.maximde.hologramlib.hologram.ItemHologram;
 import com.maximde.hologramlib.hologram.RenderMode;
 import com.maximde.hologramlib.hologram.TextHologram;
 import me.hektortm.woSSystems.WoSSystems;
@@ -17,6 +18,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Display;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -169,22 +171,6 @@ public class InteractionManager {
         }
     }
 
-    public void loadAllInteractions() {
-        if (interactionFolder.listFiles() == null) {
-            plugin.getLogger().info("No Interactions found in " + interactionFolder.getPath());
-            return;
-        }
-        for (File file : Objects.requireNonNull(interactionFolder.listFiles())) {
-            if (file.isFile() && file.getName().endsWith(".json")) {
-                String id = file.getName().replace(".json", "");
-                InteractionData inter = interactionMap.get(id);
-                if (inter != null) {
-                    interactionMap.put(id, inter);
-                }
-            }
-        }
-    }
-
     public void reloadInter(String id) {
         if(interactionMap.containsKey(id)) {
             interactionMap.put(id, interactionMap.get(id));
@@ -192,9 +178,6 @@ public class InteractionManager {
             plugin.getLogger().warning("Failed to reload interaction: " + id);
         }
     }
-
-
-
 
     public void triggerInteraction(Player p, String id) {
         InteractionData inter = getInteractionByID(id);
@@ -310,9 +293,8 @@ public class InteractionManager {
             }
 
         }
-
-
     }
+
     private void createDisplay(String id, Location loc) {
         TextHologram textHologram = new TextHologram(id, RenderMode.ALL, (player1, textDisplayMeta) ->{
             String[] parts = id.split(":");
@@ -324,10 +306,8 @@ public class InteractionManager {
                 lines = outcomes.holograms;
 
             }
-            //List<String> lines = outcomes.holograms;
             String combinedText = String.join("\n", lines);
             Component component = Component.text(combinedText);
-            Component comp = Component.text(player1.getName());
             textDisplayMeta.setText(component);
             return textDisplayMeta;
         })

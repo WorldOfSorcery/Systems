@@ -15,11 +15,12 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 public class ChannelListener implements Listener {
     private final ChannelManager channelManager;
     private final NicknameManager nickManager;
-    private final UnlockableManager unlockableManager = new UnlockableManager();
+    private final UnlockableManager unlockableManager;
 
-    public ChannelListener(ChannelManager channelManager, NicknameManager nickManager) {
+    public ChannelListener(ChannelManager channelManager, NicknameManager nickManager, UnlockableManager unlockableManager) {
         this.channelManager = channelManager;
         this.nickManager = nickManager;
+        this.unlockableManager = unlockableManager;
     }
 
     @EventHandler
