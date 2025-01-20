@@ -37,7 +37,7 @@ public class UnlockableDAO {
                     "FOREIGN KEY (uuid) REFERENCES playerdata(uuid), " +
                     "FOREIGN KEY (id) REFERENCES temp_unlockables(id))");
         } catch (SQLException e) {
-            plugin.writeLog("UnlockableDAO", Level.SEVERE, "Could not create Tables: "+e.getMessage());
+            plugin.writeLog("UnlockableDAO", Level.SEVERE, "Error creating Tables: "+e.getMessage());
         }
     }
 

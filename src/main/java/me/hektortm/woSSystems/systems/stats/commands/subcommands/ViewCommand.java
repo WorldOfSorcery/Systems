@@ -40,8 +40,7 @@ public class ViewCommand extends SubCommand {
         OfflinePlayer p = Bukkit.getOfflinePlayer(args[0]);
         String id = args[1];
 
-        File statFile = new File(manager.statsFolder, id + ".yml");
-        if (!statFile.exists()) {
+        if (!manager.getStats().containsKey(id)) {
             Utils.error(sender, "stats", "error.not-found");
             return;
         }

@@ -42,8 +42,7 @@ public class TakeCommand extends SubCommand {
         String id = args[1].toLowerCase();
         long amount = 0L;
 
-        File statFile = new File(manager.statsFolder, id + ".yml");
-        if (!statFile.exists()) {
+        if (!manager.getStats().containsKey(id)) {
             Utils.error(sender, "stats", "error.not-found");
             return;
         }

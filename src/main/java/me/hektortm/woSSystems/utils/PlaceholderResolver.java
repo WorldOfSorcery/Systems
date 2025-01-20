@@ -46,7 +46,7 @@ public class PlaceholderResolver {
                 String maxPlaceholder = "{global_stats." + statId + "_max}";
 
                 if (text.contains(amountPlaceholder)) {
-                    long statAmount = statsManager.getGlobalStat(statId);
+                    long statAmount = statsManager.getGlobalStatValue(statId);
                     text = text.replace(amountPlaceholder, String.valueOf(statAmount));
                 }
                 if (text.contains(maxPlaceholder)) {

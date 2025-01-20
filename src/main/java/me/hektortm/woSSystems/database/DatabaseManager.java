@@ -2,6 +2,8 @@ package me.hektortm.woSSystems.database;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.dao.EconomyDAO;
+import me.hektortm.woSSystems.database.dao.PlayerDAO;
+import me.hektortm.woSSystems.database.dao.StatsDAO;
 import me.hektortm.woSSystems.database.dao.UnlockableDAO;
 import me.hektortm.woSSystems.systems.unlockables.utils.Action;
 import me.hektortm.woSSystems.utils.dataclasses.Currency;
@@ -16,6 +18,8 @@ public class DatabaseManager {
     private Connection connection;
     private EconomyDAO economyDAO;
     private UnlockableDAO unlockableDAO;
+    private PlayerDAO playerDAO;
+    private StatsDAO statsDAO;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
     public DatabaseManager(String path) throws SQLException {
@@ -23,12 +27,8 @@ public class DatabaseManager {
 
         this.economyDAO = new EconomyDAO(this);
         this.unlockableDAO = new UnlockableDAO(this);
-
-        try (Statement statement = connection.createStatement()) {
-            statement.execute("CREATE TABLE IF NOT EXISTS playerdata (" +
-                    "uuid TEXT PRIMARY KEY, " +
-                    "username TEXT NOT NULL)");
-        }
+        this.playerDAO = new PlayerDAO(this);
+        this.statsDAO = new StatsDAO(this);
 
         plugin.writeLog("DatabaseManager", Level.INFO, "Database initialized.");
     }
@@ -36,27 +36,24 @@ public class DatabaseManager {
     public void closeConnection() throws SQLException {
         if (connection != null && !connection.isClosed()) {
             connection.close();
-        }
-    }
-
-    public void addPlayer(Player player) throws SQLException {
-        try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO playerdata (uuid, username) VALUES (?, ?) ON CONFLICT(uuid) DO NOTHING")) {
-            preparedStatement.setString(1, player.getUniqueId().toString());
-            preparedStatement.setString(2, player.getName());
-            preparedStatement.executeUpdate();
+            plugin.writeLog("DatabaseManager", Level.INFO, "Database closed.");
         }
     }
 
     public Connection getConnection() {
         return connection;
     }
-
     public EconomyDAO getEconomyDAO() {
         return economyDAO;
     }
-
     public UnlockableDAO getUnlockableDAO() {
         return unlockableDAO;
+    }
+    public PlayerDAO getPlayerDAO() {
+        return playerDAO;
+    }
+    public StatsDAO getStatsDAO() {
+        return statsDAO;
     }
 
 }

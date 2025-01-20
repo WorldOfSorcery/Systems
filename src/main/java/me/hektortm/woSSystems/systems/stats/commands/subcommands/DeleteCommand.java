@@ -34,8 +34,7 @@ public class DeleteCommand extends SubCommand {
         Player p = (Player) sender;
         String id = args[0].toLowerCase();
 
-        File statFile = new File(manager.statsFolder, id + ".yml");
-        if (!statFile.exists()) {
+        if (!manager.getGlobalStats().containsKey(id)) {
             Utils.error(p, "stats", "error.not-found");
             return;
         }

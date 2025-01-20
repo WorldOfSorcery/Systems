@@ -39,8 +39,7 @@ public class GlobalGiveCommand extends SubCommand {
         String id = args[0].toLowerCase();
         long amount = 0L;
 
-        File statFile = new File(manager.globalStatsFolder, id + ".yml");
-        if (!statFile.exists()) {
+        if (!manager.getGlobalStats().containsKey(id)) {
             Utils.error(sender, "stats", "error.not-found");
             return;
         }

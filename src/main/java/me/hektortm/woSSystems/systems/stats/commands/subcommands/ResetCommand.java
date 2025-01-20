@@ -44,8 +44,7 @@ public class ResetCommand extends SubCommand {
         OfflinePlayer p = Bukkit.getOfflinePlayer(args[0]);
         String id = args[1].toLowerCase();
 
-        File statFile = new File(manager.statsFolder, id + ".yml");
-        if (!statFile.exists()) {
+        if (!manager.getStats().containsKey(id)) {
             Utils.error(sender, "stats", "error.not-found");
             return;
         }

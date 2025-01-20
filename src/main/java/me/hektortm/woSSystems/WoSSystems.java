@@ -120,7 +120,7 @@ public final class WoSSystems extends JavaPlugin {
         lang = new LangManager(core);
         log = new LogManager(lang, core);
 
-        statsManager = new StatsManager();
+        statsManager = new StatsManager(dbManager);
         ecoManager = new EcoManager(this, dbManager);
         unlockableManager = new UnlockableManager(dbManager);
         fishingManager = new FishingManager(fishingItemsFolder);

@@ -46,8 +46,6 @@ public final Map<String, Unlockable> unlockables = new HashMap<>();
                 plugin.writeLog("UnlockableManager", Level.SEVERE, "Delete Unlockable error: " + e.getMessage());
             }
         }
-
-
     }
 
     public void createUnlockable(Unlockable unlockable) {
