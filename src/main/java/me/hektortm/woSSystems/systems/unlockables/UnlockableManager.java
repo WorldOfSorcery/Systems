@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.systems.unlockables;
 
+import me.hektortm.woSSystems.Database.DatabaseManager;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.unlockables.utils.Action;
 import me.hektortm.woSSystems.utils.dataclasses.TempUnlockable;
@@ -16,10 +17,12 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class UnlockableManager {
 
@@ -32,231 +35,98 @@ public class UnlockableManager {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final WoSCore core = plugin.getCore();
     private final LogManager logManager = plugin.getLogManager();
+    private final DatabaseManager database;
+
+    public UnlockableManager(DatabaseManager database) {
+        this.database = database;
+    }
 
     public void deleteUnlockable(String id, boolean isTemp) {
-        FileConfiguration config;
-        File fileToUse;
-
-        // Check if we're deleting a regular unlockable or a temp unlockable
         if (isTemp) {
-            config = YamlConfiguration.loadConfiguration(tempUnlockableFile);
-            fileToUse = tempUnlockableFile;
-        } else {
-            config = YamlConfiguration.loadConfiguration(unlockableFile);
-            fileToUse = unlockableFile;
-        }
-
-        // Remove the unlockable from the YAML configuration
-        if (config.contains(isTemp ? "tempunlockables." + id : "unlockables." + id)) {
-            config.set(isTemp ? "tempunlockables." + id : "unlockables." + id, null);
-
             try {
-                // Save the updated YAML file
-                config.save(fileToUse);
-            } catch (IOException e) {
-                Bukkit.getLogger().severe("Could not save after deleting unlockable: " + fileToUse);
+                database.deleteTempUnlockable(id);
+            } catch (SQLException e) {
+                Bukkit.getLogger().log(Level.SEVERE, "Delete Temp Unlockable error: ", e);
             }
         } else {
-            Bukkit.getLogger().warning("Unlockable with ID " + id + " not found.");
+            try {
+                database.deleteUnlockable(id);
+            } catch (SQLException e) {
+                Bukkit.getLogger().log(Level.SEVERE, "Delete Unlockable error: ", e);
+            }
         }
-    }
 
+
+    }
 
     public void createUnlockable(Unlockable unlockable) {
-        FileConfiguration config = YamlConfiguration.loadConfiguration(unlockableFile);
-
-        // Retrieve the existing unlockables list or create a new one
-        List<String> unlockableList = config.getStringList("unlockables");
-
-        // Add the new unlockable ID if it's not already in the list
-        if (!unlockableList.contains(unlockable.getId())) {
-            unlockableList.add(unlockable.getId());
-        }
-
-        // Save the updated unlockables list back to the configuration
-        config.set("unlockables", unlockableList);
-
         try {
-            config.save(unlockableFile);
-        } catch (IOException e) {
-            Bukkit.getLogger().severe("Could not save Unlockable file: " + unlockableFile);
+            database.addUnlockable(unlockable.getId());
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
-
 
     public void createTempUnlockable(TempUnlockable unlockable) {
-        FileConfiguration config = YamlConfiguration.loadConfiguration(tempUnlockableFile);
-
-        // Retrieve the existing temp unlockables list or create a new one
-        List<String> tempUnlockableList = config.getStringList("tempunlockables");
-
-        // Add the new temp unlockable ID if it's not already in the list
-        if (!tempUnlockableList.contains(unlockable.getId())) {
-            tempUnlockableList.add(unlockable.getId());
-        }
-
-        // Save the updated temp unlockables list back to the configuration
-        config.set("tempunlockables", tempUnlockableList);
-
         try {
-            config.save(tempUnlockableFile);
-        } catch (IOException e) {
-            Bukkit.getLogger().severe("Could not save Temp Unlockable file: " + tempUnlockableFile);
+            database.addTempUnlockable(unlockable.getId());
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
-
 
     public void addUnlockable(CommandSender sender, String id) {
         if (unlockables.containsKey(id)) {
             sender.sendMessage("Already exists");
-            Utils.error(sender, "unlockables", "error.exists");
             return;
         }
-
         Unlockable unlockable = new Unlockable(id);
         unlockables.put(id, unlockable);
-
         createUnlockable(unlockable);
-        logManager.writeLog((Player) sender, "Unlockable added: "+id);
-        Utils.successMsg1Value(sender, "unlockables", "create.perm", "%id%", id);
+        logManager.writeLog((Player) sender, "Unlockable added: " + id);
     }
 
     public void addTempUnlockable(CommandSender sender, String id) {
         if (tempUnlockables.containsKey(id)) {
-            Utils.error(sender, "unlockables", "error.exists");
             return;
         }
-
         TempUnlockable unlockable = new TempUnlockable(id);
         tempUnlockables.put(id, unlockable);
-
         createTempUnlockable(unlockable);
-        Utils.successMsg1Value(sender, "unlockables", "create.perm", "%id%", id);
     }
 
     public void modifyUnlockable(UUID uuid, String id, Action action) {
-        OfflinePlayer p = Bukkit.getOfflinePlayer(uuid);
-        FileConfiguration playerData = core.getPlayerData(uuid, p.getName());
-        File playerFile = new File(core.getDataFolder(), "playerdata" + File.separator + uuid + ".yml");
-
-        if(!unlockables.containsKey(id)) {
-            return;
+        try {
+            database.modifyUnlockable(uuid, id, action);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-
-        String path = "unlockables";
-        List<String> unlockablesList = playerData.getStringList(path);
-
-        // Modify the list based on the action
-        switch (action) {
-            case GIVE:
-                // Add the unlockable if it's not already in the list
-                if (!unlockablesList.contains(id)) {
-                    unlockablesList.add(id);
-                }
-                break;
-            case TAKE:
-                // Remove the unlockable if it's in the list
-                unlockablesList.remove(id);
-                break;
-        }
-
-        // Save the updated list back to the player file
-        playerData.set(path, unlockablesList);
-        core.savePlayerData(playerData, playerFile);
     }
 
     public void modifyTempUnlockable(UUID uuid, String id, Action action) {
-        OfflinePlayer p = Bukkit.getOfflinePlayer(uuid);
-        FileConfiguration playerData = core.getPlayerData(uuid, p.getName());
-        File playerFile = new File(core.getDataFolder(), "playerdata" + File.separator + uuid + ".yml");
-
-        if (!tempUnlockables.containsKey(id)) {
-            return;
+        try {
+            database.modifyTempUnlockable(uuid, id, action);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-
-        String path = "tempunlockables";
-        List<String> tempUnlockableList = playerData.getStringList(path);
-
-        // Modify the list based on the action
-        switch (action) {
-            case GIVE:
-                // Add the unlockable if it's not already in the list
-                if (!tempUnlockableList.contains(id)) {
-                    tempUnlockableList.add(id);
-                }
-                break;
-            case TAKE:
-                // Remove the unlockable if it's in the list
-                tempUnlockableList.remove(id);
-                break;
-        }
-
-        // Save the updated list back to the player file
-        playerData.set(path, tempUnlockableList);
-        core.savePlayerData(playerData, playerFile);
     }
 
     public boolean getPlayerUnlockable(OfflinePlayer p, String id) {
-        File playerFile = new File(core.getDataFolder(), "playerdata" + File.separator + p.getUniqueId() + ".yml");
-        FileConfiguration playerData = YamlConfiguration.loadConfiguration(playerFile);
-
-        String path = "unlockables";
-        List<String> unlockableList = playerData.getStringList(path);
-        if (unlockableList.contains(id)) {
-
-            return true;
+        try {
+            return database.getPlayerUnlockable(p, id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
-        return false;
     }
+
     public boolean getPlayerTempUnlockable(OfflinePlayer p, String id) {
-        File playerFile = new File(core.getDataFolder(), "playerdata" + File.separator + p.getUniqueId() + ".yml");
-        FileConfiguration playerData = YamlConfiguration.loadConfiguration(playerFile);
-
-        String path = "tempunlockables";
-        List<String> tempUnlockableList = playerData.getStringList(path);
-        if (tempUnlockableList.contains(id)) {
-            return true;
+        try {
+            return database.getPlayerTempUnlockable(p, id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
-        return false;
-    }
-
-    public List<String> getAllPlayerTempUnlockables(OfflinePlayer p) {
-        File playerFile = new File(core.getDataFolder(), "playerdata" + File.separator + p.getName() + ".yml");
-        FileConfiguration playerData = YamlConfiguration.loadConfiguration(playerFile);
-        String path = "tempunlockables";
-        List<String> tempUnlockableList = playerData.getStringList(path);
-
-        return tempUnlockableList;
-    }
-
-    public void loadUnlockables() {
-        FileConfiguration config = YamlConfiguration.loadConfiguration(unlockableFile);
-
-        List<String> unlockableIds = config.getStringList("unlockables");
-
-        // Ensure the unlockables map is populated correctly
-        for (String id : unlockableIds) {
-            Unlockable unlockable = new Unlockable(id);
-            unlockables.put(id, unlockable);
-        }
-
-        Bukkit.getLogger().info("Loaded unlockables: " + unlockableIds);
-    }
-
-
-
-    public void loadTempUnlockables() {
-        FileConfiguration config = YamlConfiguration.loadConfiguration(tempUnlockableFile);
-
-        List<String> tempUnlockableIds = config.getStringList("tempunlockables");
-
-        // Ensure the tempUnlockables map is populated correctly
-        for (String id : tempUnlockableIds) {
-            TempUnlockable tempUnlockable = new TempUnlockable(id);
-            tempUnlockables.put(id, tempUnlockable);
-        }
-
-        Bukkit.getLogger().info("Loaded temp unlockables: " + tempUnlockableIds);
     }
 
 

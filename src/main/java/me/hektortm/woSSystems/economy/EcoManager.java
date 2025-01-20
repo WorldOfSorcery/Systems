@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.economy;
 
+import me.hektortm.woSSystems.Database.DatabaseManager;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.utils.dataclasses.Currency;
 import me.hektortm.wosCore.WoSCore;
@@ -9,52 +10,53 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.*;
 
 public class EcoManager {
     private final WoSCore core;
     private final WoSSystems plugin;
+    private final DatabaseManager database;
     public final File currencyDirectory;
     private final Map<String, me.hektortm.woSSystems.utils.dataclasses.Currency> currencies = new HashMap<>();
 
 
-    public EcoManager(WoSSystems plugin) {
+    public EcoManager(WoSSystems plugin, DatabaseManager database) {
         this.plugin = plugin;
         this.currencyDirectory = new File(plugin.getDataFolder(), "currencies");
         this.core = (WoSCore) plugin.getServer().getPluginManager().getPlugin("WoSCore");
+        this.database = database;
 
         loadDefaultCurrencies();
         loadCurrencies();
     }
 
-    public void modifyCurrency(UUID uuid, String currencyID, long amount, Operation operation) {
+    public void modifyCurrency(UUID uuid, String currency, long amount, Operation operation) {
         Player player = plugin.getServer().getPlayer(uuid);
+        if (player == null) return; // Ensure player is online
 
+        try {
+            long currentAmount = getCurrencyBalance(uuid, currency);
+            long newAmount = currentAmount;
 
-        assert player != null;
-        FileConfiguration playerData = core.getPlayerData(uuid, player.getName());
-        File playerFile = new File(core.getDataFolder() ,"playerdata" + File.separator + uuid + ".yml");
-
-        String path = "economy." + currencyID;
-        long currentAmount = playerData.getLong(path, 0);
-
-        switch (operation) {
-            case GIVE:
-                playerData.set(path, currentAmount + amount);
-                break;
-            case TAKE:
-                playerData.set(path, currentAmount - amount);
-                break;
-            case SET:
-                playerData.set(path, amount);
-                break;
-            case RESET:
-                playerData.set(path, 0);
-                break;
-
+            switch (operation) {
+                case GIVE:
+                    newAmount += amount;
+                    break;
+                case TAKE:
+                    newAmount = Math.max(0, currentAmount - amount);
+                    break;
+                case SET:
+                    newAmount = amount;
+                    break;
+                case RESET:
+                    newAmount = 0;
+                    break;
+            }
+            database.updatePlayerCurrency(player, currency, newAmount);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        core.savePlayerData(playerData, playerFile);
-
     }
 
 
@@ -136,18 +138,20 @@ public class EcoManager {
         return currencies;
     }
 
-    public long getCurrencyBalance(UUID uuid, String currencyName) {
-        File playerFile = new File(core.getDataFolder(), "playerdata" + File.separator + uuid.toString() + ".yml");
-        FileConfiguration playerData = YamlConfiguration.loadConfiguration(playerFile);
+    public long getCurrencyBalance(UUID uuid, String currency) {
+        Player player = plugin.getServer().getPlayer(uuid);
+        if (player == null) return 0; // Default to 0 if player isn't found
 
-        String path = "economy."+currencyName;
-
-        return playerData.getLong(path, 0);
+        try {
+            return database.getPlayerCurrency(player, currency);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
-    public boolean hasEnoughCurrency(UUID uuid, String currencyName, long amount) {
-        long currentBalance = getCurrencyBalance(uuid, currencyName);
-        return currentBalance >= amount;
+    public boolean hasEnoughCurrency(UUID uuid, String currency, long amount) {
+        return getCurrencyBalance(uuid, currency) >= amount;
     }
 
 }

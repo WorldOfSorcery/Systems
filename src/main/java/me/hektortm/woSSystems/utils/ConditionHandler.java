@@ -69,9 +69,41 @@ public class ConditionHandler {
                     }
 
                     if (falseOutcome.containsKey("hologram")) {
+                        if (!outcomes.holograms.isEmpty()) {
+                            continue;
+                        }
                         JSONArray hologram = (JSONArray) falseOutcome.get("hologram");
                         for (Object lineObj : hologram) {
-                            outcomes.holograms.add(lineObj.toString());
+                            String objString = lineObj.toString();
+                            String finalString = lineObj.toString();
+                            if (objString.contains("<unicode>")) {
+                                String colorCode = "";
+                                if (objString.startsWith("§") && objString.length() > 1) {
+                                    colorCode = objString.substring(0, 2);
+                                }
+
+                                String toParse = objString.substring(objString.indexOf("<unicode>") + "<unicode>".length());
+                                String parsedUnicode = Parsers.parseUniStatic(toParse);
+                                finalString = colorCode + parsedUnicode;
+                            }
+                            if (objString.contains(":")) {
+                                String[] objParts = objString.split(":");
+                                String object = objParts[0];
+                                String value = objParts[1];
+                                switch (object) {
+                                    case "icon":
+                                        String icon = Icons.getIconByName(value);
+                                        if (icon == null) {
+                                            finalString = "§cUNKNOWN ICON: '" + value+"'";
+                                        } else {
+                                            finalString = "§f" + icon;
+                                        }
+                                        break;
+                                    default:
+                                        finalString = objString;
+                                }
+                            }
+                            outcomes.holograms.add(finalString);
                         }
                     }
 
@@ -100,6 +132,9 @@ public class ConditionHandler {
                 }
 
                 if (trueOutcome.containsKey("hologram")) {
+                    if (!outcomes.holograms.isEmpty()) {
+                        continue;
+                    }
                     JSONArray hologram = (JSONArray) trueOutcome.get("hologram");
                     for (Object lineObj : hologram) {
                         String objString = lineObj.toString();

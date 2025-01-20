@@ -8,6 +8,7 @@ import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
+import me.hektortm.woSSystems.Database.DatabaseManager;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.channels.cmd.ChannelCommand;
 import me.hektortm.woSSystems.channels.NicknameManager;
@@ -59,18 +60,22 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.sql.SQLException;
 
 public final class WoSSystems extends JavaPlugin {
+
     private HologramManager hologramManager;
     private WoSCore core;
+    private DatabaseManager dbManager;
     private static LangManager lang;
     public File fishingItemsFolder = new File(getDataFolder(), "professions/fishing/items");
     private LogManager log;
-    private InteractionManager interactionManager;
+
     private CitemManager citemManager;
     private EcoManager ecoManager;
     private StatsManager statsManager;
     private UnlockableManager unlockableManager;
+    private InteractionManager interactionManager;
     private FishingManager fishingManager;
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
@@ -95,11 +100,18 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onEnable() {
+
         HologramLib.getManager().ifPresentOrElse(
                 manager -> hologramManager = manager,
                 () -> getLogger().severe("Failed to initialize HologramLib manager.")
         );
         core = WoSCore.getPlugin(WoSCore.class);
+        try {
+            dbManager = new DatabaseManager(core.getDataFolder().getAbsolutePath() + "/WoS.db");
+        } catch (SQLException e) {
+            System.out.println("Failed to connect to Database"+ e.getMessage());
+            Bukkit.getPluginManager().disablePlugin(this);
+        }
         bossBarManager = new BossBarManager();
         regionBossBarManager = new RegionBossBar();
         timeManager = new TimeManager(this, bossBarManager);
@@ -107,8 +119,8 @@ public final class WoSSystems extends JavaPlugin {
         log = new LogManager(lang, core);
 
         statsManager = new StatsManager();
-        ecoManager = new EcoManager(this);
-        unlockableManager = new UnlockableManager();
+        ecoManager = new EcoManager(this, dbManager);
+        unlockableManager = new UnlockableManager(dbManager);
         fishingManager = new FishingManager(fishingItemsFolder);
 
         guiManager = new GUIManager();
@@ -169,8 +181,6 @@ public final class WoSSystems extends JavaPlugin {
         registerEvents();
         interactionManager.loadInteraction();
         interactionManager.particleTask();
-        unlockableManager.loadUnlockables();
-        unlockableManager.loadTempUnlockables();
     }
 
     @Override
@@ -182,7 +192,11 @@ public final class WoSSystems extends JavaPlugin {
             regionBossBarManager.removeBossBar(p);
         }
         timeManager.saveGameState();
-
+         try {
+             dbManager.closeConnection();
+         } catch (SQLException e) {
+             System.out.println("Failed to close database connection " + e.getMessage());
+         }
     }
 
     @Override
@@ -236,10 +250,10 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new InterListener(interactionManager, citemManager));
         eventReg(new DropListener());
         eventReg(new HoverListener(citemManager));
-        eventReg(new QuitListener(core, unlockableManager, coinflipCommand, this));
+        eventReg(new QuitListener(core, unlockableManager, dbManager, coinflipCommand, this));
         eventReg(new FishingListener());
         eventReg(new JoinListener(this));
-        eventReg(new ChannelListener(channelManager, nickManager));
+        eventReg(new ChannelListener(channelManager, nickManager, unlockableManager));
         eventReg(new CustomHandler(regionBossBarManager));
 
 
