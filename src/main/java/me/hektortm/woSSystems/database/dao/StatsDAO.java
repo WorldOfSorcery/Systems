@@ -18,7 +18,6 @@ public class StatsDAO {
         createTables();
     }
 
-    /** Creates necessary tables if they do not exist */
     private void createTables() {
         String createStatsTable = """
             CREATE TABLE IF NOT EXISTS player_stats (

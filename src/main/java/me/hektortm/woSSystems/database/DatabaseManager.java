@@ -15,11 +15,11 @@ import java.util.UUID;
 import java.util.logging.Level;
 
 public class DatabaseManager {
-    private Connection connection;
-    private EconomyDAO economyDAO;
-    private UnlockableDAO unlockableDAO;
-    private PlayerDAO playerDAO;
-    private StatsDAO statsDAO;
+    private final Connection connection;
+    private final EconomyDAO economyDAO;
+    private final UnlockableDAO unlockableDAO;
+    private final PlayerDAO playerDAO;
+    private final StatsDAO statsDAO;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
     public DatabaseManager(String path) throws SQLException {

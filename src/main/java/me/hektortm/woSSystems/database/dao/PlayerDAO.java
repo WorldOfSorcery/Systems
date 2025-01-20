@@ -11,7 +11,7 @@ import java.sql.Statement;
 import java.util.logging.Level;
 
 public class PlayerDAO {
-    private Connection connection;
+    private final Connection connection;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
     public PlayerDAO(DatabaseManager databaseManager) {

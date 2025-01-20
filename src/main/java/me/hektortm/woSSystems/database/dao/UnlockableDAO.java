@@ -10,7 +10,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 
 public class UnlockableDAO {
-    private Connection connection;
+    private final Connection connection;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
     public UnlockableDAO(DatabaseManager databaseManager) {
