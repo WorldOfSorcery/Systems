@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.Icons;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
@@ -12,6 +13,12 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.List;
 
 public class Tag extends SubCommand {
+    private final CitemManager manager;
+
+    public Tag(CitemManager manager) {
+        this.manager = manager;
+    }
+
     @Override
     public String getName() {
         return "tag";
@@ -37,10 +44,7 @@ public class Tag extends SubCommand {
 
         ItemStack item = p.getInventory().getItemInMainHand();
 
-        if (item == null || !item.hasItemMeta()) {
-            Utils.error(p, "citems", "error.no-meta");
-            return;
-        }
+        if (manager.getErrorHandler().handleCitemErrors(item, p)) return;
 
         Icons firstIcon = parseIcon(args[0]);
         Icons secondIcon = args.length > 1 ? parseIcon(args[1]) : null;

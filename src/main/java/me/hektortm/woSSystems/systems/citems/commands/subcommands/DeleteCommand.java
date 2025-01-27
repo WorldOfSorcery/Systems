@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
@@ -15,10 +16,12 @@ public class DeleteCommand extends SubCommand {
 
     private final CitemCommand citem;
     private final LogManager log;
+    private final CitemManager data;
 
-    public DeleteCommand(CitemCommand citem, LogManager log) {
+    public DeleteCommand(CitemCommand citem, LogManager log, CitemManager data) {
         this.citem = citem;
         this.log = log;
+        this.data = data;
     }
 
     @Override
@@ -38,8 +41,7 @@ public class DeleteCommand extends SubCommand {
         Player p = (Player) sender;
         String id = args[0];
 
-        File itemFile = new File(citem.citemsFolder, id + ".json");
-        if (!itemFile.exists()) {
+        if (!data.getCitemDAO().citemExists(id)) {
             Utils.error(p, "citems", "error.not-found");
             return;
         }
@@ -49,19 +51,10 @@ public class DeleteCommand extends SubCommand {
         }
 
         if(args.length == 2 && args[1].equals("confirm")) {
-            deleteCitem(id);
+            data.getCitemDAO().deleteCitem(id);
             Utils.successMsg1Value(p, "citems", "delete.success", "%id%", id);
             log.sendWarning(p.getName()+ "-> deleted Citem: "+id);
             log.writeLog(p, "deleted Citem: "+id);
         }
     }
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    private void deleteCitem(String id) {
-        File itemFile = new File(citem.citemsFolder, id + ".json");
-        itemFile.delete();
-
-    }
-
-
-
 }

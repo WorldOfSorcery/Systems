@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems;
 
+import com.github.retrooper.packetevents.PacketEvents;
 import com.maximde.hologramlib.HologramLib;
 import com.maximde.hologramlib.hologram.HologramManager;
 import com.sk89q.worldguard.WorldGuard;
@@ -8,6 +9,7 @@ import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
+import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import me.hektortm.woSSystems.database.DatabaseManager;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.channels.cmd.ChannelCommand;
@@ -102,7 +104,7 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onEnable() {
-
+        PacketEvents.getAPI().init();
         HologramLib.getManager().ifPresentOrElse(
                 manager -> hologramManager = manager,
                 () -> getLogger().severe("Failed to initialize HologramLib manager.")
@@ -126,7 +128,7 @@ public final class WoSSystems extends JavaPlugin {
         fishingManager = new FishingManager(fishingItemsFolder);
 
         guiManager = new GUIManager();
-        citemManager = new CitemManager(); // Ensure interactionManager is null-safe.
+        citemManager = new CitemManager(dbManager); // Ensure interactionManager is null-safe.
         resolver = new PlaceholderResolver(statsManager, citemManager);
 
         conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager, citemManager);
@@ -187,6 +189,7 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        PacketEvents.getAPI().terminate();
         interactionManager.removeTextDisplays();
         channelManager.saveChannels();
         for (Player p : Bukkit.getOnlinePlayers()) {
@@ -203,7 +206,8 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onLoad() {
-
+        PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
+        PacketEvents.getAPI().load();
         FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
         try {
             StringFlag flag = new StringFlag("display-name");

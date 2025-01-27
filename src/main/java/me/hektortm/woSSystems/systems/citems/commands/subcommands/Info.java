@@ -13,10 +13,10 @@ import org.bukkit.persistence.PersistentDataType;
 
 public class Info extends SubCommand {
 
-    private final CitemManager citemManager;
+    private final CitemManager manager;
 
     public Info(CitemManager citemManager) {
-        this.citemManager = citemManager;
+        this.manager = citemManager;
     }
 
     @Override
@@ -32,56 +32,37 @@ public class Info extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
         Player p = (Player) sender;
-        handleInfoCommand(p);
-    }
+        ItemStack item = p.getItemInHand();
 
-
-    private boolean handleInfoCommand(Player player) {
-        ItemStack item = player.getItemInHand();
-
-        if (item == null || !item.hasItemMeta()) {
-            Utils.error(player, "citems", "error.not-citem");
-            return true;
-        }
+        if (manager.getErrorHandler().handleCitemErrors(item, p)) return;
 
         ItemMeta meta = item.getItemMeta();
-        if (meta == null) {
-            Utils.error(player, "citems", "error.no-meta");
-            return true;
-        }
-
         PersistentDataContainer data = meta.getPersistentDataContainer();
-        String itemId = data.get(citemManager.getIdKey(), PersistentDataType.STRING);
+        String itemId = data.get(manager.getIdKey(), PersistentDataType.STRING);
 
-        if (itemId == null || itemId.isEmpty()) {
-            Utils.error(player, "citems", "error.not-citem");
-            return true;
-        }
-
-        // Display basic Citem information
-        player.sendMessage("§aCitem Information:");
-        player.sendMessage("§7ID: §f" + itemId);
+        p.sendMessage("§aCitem Information:");
+        p.sendMessage("§7ID: §f" + itemId);
 
         // Display custom flags
-        boolean undroppable = data.has(citemManager.getUndroppableKey(), PersistentDataType.BYTE) &&
-                data.get(citemManager.getUndroppableKey(), PersistentDataType.BYTE) == 1;
-        boolean unusable = data.has(citemManager.getUnusableKey(), PersistentDataType.BYTE) &&
-                data.get(citemManager.getUnusableKey(), PersistentDataType.BYTE) == 1;
+        boolean undroppable = data.has(manager.getUndroppableKey(), PersistentDataType.BYTE) &&
+                data.get(manager.getUndroppableKey(), PersistentDataType.BYTE) == 1;
+        boolean unusable = data.has(manager.getUnusableKey(), PersistentDataType.BYTE) &&
+                data.get(manager.getUnusableKey(), PersistentDataType.BYTE) == 1;
 
-        player.sendMessage("§7Flags:");
-        player.sendMessage(" §7- §eUndroppable: §f" + (undroppable ? "Yes" : "No"));
-        player.sendMessage(" §7- §eUnusable: §f" + (unusable ? "Yes" : "No"));
+        p.sendMessage("§7Flags:");
+        p.sendMessage(" §7- §eUndroppable: §f" + (undroppable ? "Yes" : "No"));
+        p.sendMessage(" §7- §eUnusable: §f" + (unusable ? "Yes" : "No"));
         boolean hasHideFlags = !meta.getItemFlags().isEmpty();
-        player.sendMessage(" §7- §eHide Flags: §f" + (hasHideFlags ? "Yes" : "No"));
+        p.sendMessage(" §7- §eHide Flags: §f" + (hasHideFlags ? "Yes" : "No"));
 
         // Display actions
-        String leftAction = data.get(citemManager.getLeftActionKey(), PersistentDataType.STRING);
-        String rightAction = data.get(citemManager.getRightActionKey(), PersistentDataType.STRING);
+        String leftAction = data.get(manager.getLeftActionKey(), PersistentDataType.STRING);
+        String rightAction = data.get(manager.getRightActionKey(), PersistentDataType.STRING);
 
-        player.sendMessage("§7Actions:");
-        player.sendMessage(" §7- §eLeft-Click Action: §f" + (leftAction != null ? leftAction : "None"));
-        player.sendMessage(" §7- §eRight-Click Action: §f" + (rightAction != null ? rightAction : "None"));
-
-        return true;
+        p.sendMessage("§7Actions:");
+        p.sendMessage(" §7- §eLeft-Click Action: §f" + (leftAction != null ? leftAction : "None"));
+        p.sendMessage(" §7- §eRight-Click Action: §f" + (rightAction != null ? rightAction : "None"));
     }
+
+
 }

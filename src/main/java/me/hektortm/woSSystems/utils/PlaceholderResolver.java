@@ -56,7 +56,8 @@ public class PlaceholderResolver {
             }
         }
         if(text.contains("{citems.")) {
-            // TODO
+            // BIG TODO
+            /*
             for (File file : citemsManager.citemFolder.listFiles()) {
                 String id = file.getName().replace(".json", "");
                 String namePlaceholder = "{citems."+id+"_name}";
@@ -78,6 +79,7 @@ public class PlaceholderResolver {
                 }
 
             }
+             */
         }
         return text;
     }

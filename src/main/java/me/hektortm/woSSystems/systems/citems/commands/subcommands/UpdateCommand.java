@@ -39,38 +39,23 @@ public class UpdateCommand extends SubCommand {
         if(!PermissionUtil.isPlayer(sender)) return;
 
         Player p = (Player) sender;
-
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
-        ItemMeta meta = itemInHand.getItemMeta();
 
         if (args.length != 1) {
             Utils.error(p, "citems", "error.usage.update");
             return;
         }
 
-        if (itemInHand == null || itemInHand.getType() == Material.AIR) {
-            Utils.error(p, "citems", "error.holding-item");
-            return;
-        }
-
-        if (meta == null) {
-            Utils.error(p, "citems", "error.no-meta");
-            return;
-        }
+        if (!data.getErrorHandler().handleCitemErrors(itemInHand, p)) return;
 
         String id = args[0];
-        if (!citem.citemsFolder.exists()) {
-            Utils.error(p, "citems", "error.no-items");
-            return;
-        }
 
-        File itemFile = new File(citem.citemsFolder, id + ".json");
-        if (!itemFile.exists()) {
+        if (data.getCitemDAO().citemExists(id)) {
             Utils.error(p, "citems", "error.not-found");
             return;
         }
 
-        data.updateItemInFile(itemInHand, itemFile);
+        data.getCitemDAO().updateCitem(id, itemInHand);
         Utils.successMsg(p, "citems", "updated");
     }
 }

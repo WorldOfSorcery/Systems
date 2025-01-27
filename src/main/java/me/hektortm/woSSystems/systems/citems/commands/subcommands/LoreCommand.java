@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
@@ -16,6 +17,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LoreCommand extends SubCommand {
+    private final CitemManager manager;
+
+    public LoreCommand(CitemManager manager) {
+        this.manager = manager;
+    }
+
     @Override
     public String getName() {
         return "lore";
@@ -33,22 +40,15 @@ public class LoreCommand extends SubCommand {
         Player p = (Player) sender;
 
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
-        if (itemInHand == null || itemInHand.getType() == Material.AIR) {
-            Utils.error(sender, "citems", "error.holding-item");
-            return;
-        }
 
-        ItemMeta meta = itemInHand.getItemMeta();
-        if (meta == null) {
-            Utils.error(sender, "citems", "error.no-meta");
-            return;
-        }
+        if (!manager.getErrorHandler().handleCitemErrors(itemInHand, p)) return;
 
         if (args.length < 1) {
             Utils.error(sender, "citems", "error.usage.lore");
             return;
         }
 
+        ItemMeta meta = itemInHand.getItemMeta();
         String loreCmd = args[0];
         List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
 

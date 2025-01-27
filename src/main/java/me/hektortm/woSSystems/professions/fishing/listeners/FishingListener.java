@@ -35,10 +35,10 @@ public class FishingListener implements Listener {
             if (fishingItem != null) {
 
                 Item caughtItemEntity = (Item) event.getCaught();
-                File file = new File(Bukkit.getServer().getPluginManager().getPlugin("WoSSystems").getDataFolder(), "citems/" + fishingItem.getCitem() + ".json");
+                String id = fishingItem.getCitem();
 
-                if (file.exists()) {
-                    ItemStack citem = citemManager.loadItemFromFile(file);
+                if (citemManager.getCitemDAO().citemExists(id)) {
+                    ItemStack citem = citemManager.getCitemDAO().getCitem(id);
 
                     if (citem != null) {
 
@@ -53,7 +53,7 @@ public class FishingListener implements Listener {
                         Bukkit.getLogger().severe("["+player.getName()+"] Failed to load custom item.");
                     }
                 } else {
-                    Bukkit.getLogger().severe("["+player.getName()+"] File does not exist: " + file.getPath());
+                    Bukkit.getLogger().severe("["+player.getName()+"] Citem does not exist: " + id);
                 }
             } else {
                 Bukkit.getLogger().severe("["+player.getName()+"] FishingItem is null!");

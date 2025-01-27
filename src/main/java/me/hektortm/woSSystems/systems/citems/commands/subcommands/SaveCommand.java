@@ -41,34 +41,17 @@ public class SaveCommand extends SubCommand {
         Player p = (Player) sender;
 
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
-        ItemMeta meta = itemInHand.getItemMeta();
 
         if (args.length != 1) {
             Utils.error(p, "citems", "error.usage.save");
             return;
         }
 
-        if (itemInHand == null || itemInHand.getType() == Material.AIR) {
-            Utils.error(p, "citems", "error.holding-item");
-            return;
-        }
-
-        if (meta == null) {
-            Utils.error(p, "citems", "error.no-meta");
-            return;
-        }
+        if(!data.getErrorHandler().handleCitemErrors(itemInHand, p)) return;
 
         String id = args[0];
 
-        if (!cmd.citemsFolder.exists()) {
-            cmd.citemsFolder.mkdirs();
-        }
-        File itemFile = new File(cmd.citemsFolder, id + ".json");
-        if (itemFile.exists()) {
-            Utils.error(p, "citems", "error.exists");
-            return;
-        }
-        data.saveItemToFile(itemInHand, itemFile, id);
+        data.getCitemDAO().saveCitem(id, itemInHand);
         Utils.successMsg1Value(p, "citems", "saved", "%id%", id);
     }
 }

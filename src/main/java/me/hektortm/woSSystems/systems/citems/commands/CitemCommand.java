@@ -27,7 +27,7 @@ public class CitemCommand implements CommandExecutor {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final CitemManager data = plugin.getCitemManager();
     private final StatsManager statsManager = plugin.getStatsManager();
-    private InteractionManager interactionManager;
+    private final InteractionManager interactionManager;
     private final LangManager lang = plugin.getLangManager();
     private final LogManager log = plugin.getLogManager();
     public File citemsFolder = new File(Bukkit.getServer().getPluginManager().getPlugin("WoSSystems").getDataFolder(), "citems");
@@ -36,13 +36,13 @@ public class CitemCommand implements CommandExecutor {
 
         this.interactionManager = interactionManager;
         subCommands.put("save", new SaveCommand(this, data));
-        subCommands.put("rename", new NameCommand());
+        subCommands.put("rename", new NameCommand(data));
         subCommands.put("update", new UpdateCommand(this, data));
-        subCommands.put("lore", new LoreCommand());
+        subCommands.put("lore", new LoreCommand(data));
         subCommands.put("flag", new FlagCommand(data));
-        subCommands.put("delete", new DeleteCommand(this, log));
-        subCommands.put("action", new ActionCommand(interactionManager));
-        subCommands.put("tag", new Tag());
+        subCommands.put("delete", new DeleteCommand(this, log, data));
+        subCommands.put("action", new ActionCommand(data, interactionManager));
+        subCommands.put("tag", new Tag(data));
         subCommands.put("info", new Info(data));
     }
 

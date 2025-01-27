@@ -47,18 +47,8 @@ public class CremoveCommand implements CommandExecutor {
                 }
             }
 
-            File dir = new File(Bukkit.getServer().getPluginManager().getPlugin("WoSSystems").getDataFolder(), "citems");
-            if (!dir.exists()) {
-                Utils.error(sender, "citems", "error.no-items");
-                return true;
-            }
 
-            File itemFile = new File(dir, id + ".json");
-            if (!itemFile.exists()) {
-                Utils.error(sender, "citems", "error.no-items");
-                return true;
-            }
-            ItemStack savedItem = data.loadItemFromFile(itemFile);
+            ItemStack savedItem = data.getCitemDAO().getCitem(id);
             ItemStack item = savedItem.clone();
 
             item.setAmount(amount);

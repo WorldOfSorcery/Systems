@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
@@ -14,6 +15,11 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 public class NameCommand extends SubCommand {
 
+    private final CitemManager manager;
+
+    public NameCommand(CitemManager manager) {
+        this.manager = manager;
+    }
 
     @Override
     public String getName() {
@@ -39,15 +45,8 @@ public class NameCommand extends SubCommand {
             return;
         }
 
-        if (itemInHand == null || itemInHand.getType() == Material.AIR) {
-            Utils.error(p, "citems", "error.holding-item");
-            return;
-        }
-        if (meta == null) {
-            Utils.error(p, "citems", "error.no-meta");
-            return;
-        }
-        // Concatenate all arguments from index 1 to the end to form the name
+        if (!manager.getErrorHandler().handleCitemErrors(itemInHand, p)) return;
+
         StringBuilder nameBuilder = new StringBuilder();
         for (int i = 0; i < args.length; i++) {
             if (i > 0) {

@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
@@ -24,11 +25,13 @@ public class ActionCommand extends SubCommand {
     private final NamespacedKey leftActionKey;
     private final NamespacedKey rightActionKey;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final CitemManager citemManager;
     private final InteractionManager manager;
     private final LangManager lang = plugin.getLangManager();
 
 
-    public ActionCommand(InteractionManager manager) {
+    public ActionCommand(CitemManager citemManager, InteractionManager manager) {
+        this.citemManager = citemManager;
         this.manager = manager;
         leftActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-left");
         rightActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-right");
@@ -52,10 +55,7 @@ public class ActionCommand extends SubCommand {
         Player p = (Player) sender;
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
 
-        if (itemInHand.getType() == Material.AIR) {
-            Utils.error(p, "citems", "error.holding-item");
-            return;
-        }
+        if (!citemManager.getErrorHandler().handleCitemErrors(itemInHand, p)) return;
 
         String action = args[0].toLowerCase();
         String actionID = args[1].toLowerCase();
@@ -70,7 +70,6 @@ public class ActionCommand extends SubCommand {
 
         ItemMeta meta = itemInHand.getItemMeta();
 
-        if (meta == null) return;
 
         PersistentDataContainer data = meta.getPersistentDataContainer();
 

@@ -1,7 +1,5 @@
 package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
-
-import com.google.common.collect.Multimap;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
@@ -9,7 +7,6 @@ import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
@@ -21,21 +18,20 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.Collection;
 import java.util.UUID;
 
 public class FlagCommand extends SubCommand {
-
+    private final CitemManager data;
     private final NamespacedKey undroppableKey;
     private final NamespacedKey unusableKey;
     private final NamespacedKey ownerKey;
 
     public FlagCommand(CitemManager data) {
+        this.data = data;
         ownerKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "owner");
         undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
         unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
     }
-
 
     @Override
     public String getName() {
@@ -61,14 +57,8 @@ public class FlagCommand extends SubCommand {
             return;
         }
 
-        if (itemInHand == null || itemInHand.getType() == Material.AIR) {
-            Utils.error(p, "citems", "error.holding-item");
-            return;
-        }
-        if (meta == null) {
-            Utils.error(p, "citems", "error.no-meta");
-            return;
-        }
+        if(!data.getErrorHandler().handleCitemErrors(itemInHand, p)) return;
+
         String flagCmd = args[0];
         String flag = args[1].toLowerCase();
         switch (flagCmd.toLowerCase()) {

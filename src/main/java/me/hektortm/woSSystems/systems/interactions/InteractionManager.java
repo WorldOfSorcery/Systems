@@ -241,8 +241,8 @@ public class InteractionManager {
                             for (Player player : Bukkit.getOnlinePlayers()) {
                                 particleHandler.spawnParticlesForPlayer(player, inter, location, false);
 
-                                spawnTextDisplay(location, inter, null, false);
-                                updateTextDisplay(location, inter, null, false);
+                                //spawnTextDisplay(location, inter, null, false);
+                                //updateTextDisplay(location, inter, null, false);
                             }
                         }
                     }
@@ -252,8 +252,8 @@ public class InteractionManager {
                                 NPC npc1 = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(id));
                                 Location location = npc1.getEntity().getLocation().getBlock().getLocation();
                                 particleHandler.spawnParticlesForPlayer(player, inter, npc1.getEntity().getLocation(), true);
-                                spawnTextDisplay(location, inter, id, true);
-                                updateTextDisplay(location, inter, id, true);
+                                //spawnTextDisplay(location, inter, id, true);
+                                //updateTextDisplay(location, inter, id, true);
                             }
                         }
                     }
@@ -297,6 +297,7 @@ public class InteractionManager {
 
     private void createDisplay(String id, Location loc) {
         TextHologram textHologram = new TextHologram(id, RenderMode.ALL, (player1, textDisplayMeta) ->{
+            /*
             String[] parts = id.split(":");
             String interactionID = parts[0];
             InteractionData interaction = getInteractionByID(interactionID);
@@ -309,6 +310,8 @@ public class InteractionManager {
             String combinedText = String.join("\n", lines);
             Component component = Component.text(combinedText);
             textDisplayMeta.setText(component);
+
+             */
             return textDisplayMeta;
         })
                 .setBillboard(Display.Billboard.VERTICAL);

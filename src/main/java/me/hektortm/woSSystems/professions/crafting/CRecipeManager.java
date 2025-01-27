@@ -65,7 +65,7 @@ public class CRecipeManager {
                 // Load the success ID
                 String successId = (String) resultJson.get("success");
 
-                ItemStack resultItem = citemManager.loadItemFromFile(new File(cmd.citemsFolder, resultJson.get("id") + ".json"));
+                ItemStack resultItem = citemManager.getCitemDAO().getCitem(resultJson.get("id").toString());
                 if (resultItem == null) {
                     //Bukkit.getLogger().warning("Failed to load result item for recipe: " + recipeId);
                     logManager.sendWarning("Failed to load result item("+resultJson.get("id")+") for recipe: \"" + recipeId+"\"");
@@ -114,7 +114,7 @@ public class CRecipeManager {
         for (List<String> row : ingredients) {
             for (String itemId : row) {
                 if (itemId != null && !itemId.equals("null")) {
-                    ItemStack ingredient = citemManager.loadItemFromFile(new File(cmd.citemsFolder, itemId + ".json"));
+                    ItemStack ingredient = citemManager.getCitemDAO().getCitem(itemId);
                     if (ingredient != null) {
                         recipe.setIngredient(rows[index], new RecipeChoice.ExactChoice(ingredient));
                     }
@@ -139,7 +139,7 @@ public class CRecipeManager {
         List<String> ingredients = (List<String>) json.get("ingredients");
         for (String itemId : ingredients) {
             if (itemId != null && !itemId.equals("null")) {
-                ItemStack ingredient = citemManager.loadItemFromFile(new File(cmd.citemsFolder, itemId + ".json"));
+                ItemStack ingredient = citemManager.getCitemDAO().getCitem(itemId);
                 if (ingredient != null) {
                     recipe.addIngredient(new RecipeChoice.ExactChoice(ingredient));
                 }

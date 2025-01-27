@@ -1,10 +1,7 @@
 package me.hektortm.woSSystems.database;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.dao.EconomyDAO;
-import me.hektortm.woSSystems.database.dao.PlayerDAO;
-import me.hektortm.woSSystems.database.dao.StatsDAO;
-import me.hektortm.woSSystems.database.dao.UnlockableDAO;
+import me.hektortm.woSSystems.database.dao.*;
 import me.hektortm.woSSystems.systems.unlockables.utils.Action;
 import me.hektortm.woSSystems.utils.dataclasses.Currency;
 import org.bukkit.OfflinePlayer;
@@ -20,6 +17,7 @@ public class DatabaseManager {
     private final UnlockableDAO unlockableDAO;
     private final PlayerDAO playerDAO;
     private final StatsDAO statsDAO;
+    private final CitemDAO citemDAO;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
     public DatabaseManager(String path) throws SQLException {
@@ -29,6 +27,7 @@ public class DatabaseManager {
         this.unlockableDAO = new UnlockableDAO(this);
         this.playerDAO = new PlayerDAO(this);
         this.statsDAO = new StatsDAO(this);
+        this.citemDAO = new CitemDAO(this);
 
         plugin.writeLog("DatabaseManager", Level.INFO, "Database initialized.");
     }
@@ -54,6 +53,9 @@ public class DatabaseManager {
     }
     public StatsDAO getStatsDAO() {
         return statsDAO;
+    }
+    public CitemDAO getCitemDAO() {
+        return citemDAO;
     }
 
 }
