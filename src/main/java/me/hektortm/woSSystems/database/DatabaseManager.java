@@ -18,6 +18,7 @@ public class DatabaseManager {
     private final PlayerDAO playerDAO;
     private final StatsDAO statsDAO;
     private final CitemDAO citemDAO;
+    private final ChannelDAO channelDAO;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
     public DatabaseManager(String path) throws SQLException {
@@ -28,6 +29,7 @@ public class DatabaseManager {
         this.playerDAO = new PlayerDAO(this);
         this.statsDAO = new StatsDAO(this);
         this.citemDAO = new CitemDAO(this);
+        this.channelDAO = new ChannelDAO(this);
 
         plugin.writeLog("DatabaseManager", Level.INFO, "Database initialized.");
     }
@@ -56,6 +58,9 @@ public class DatabaseManager {
     }
     public CitemDAO getCitemDAO() {
         return citemDAO;
+    }
+    public ChannelDAO getChannelDAO() {
+        return channelDAO;
     }
 
 }

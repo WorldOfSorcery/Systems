@@ -136,7 +136,7 @@ public final class WoSSystems extends JavaPlugin {
         interactionManager.setConditionHandler(conditionHandler);
         interactionManager.setPlaceholderResolver(resolver);
         citemManager.setInteractionManager(interactionManager);
-        channelManager = new ChannelManager(this);
+        channelManager = new ChannelManager(this, dbManager);
         nickManager = new NicknameManager();
 
         lootTableManager = new LoottableManager(interactionManager, citemManager);

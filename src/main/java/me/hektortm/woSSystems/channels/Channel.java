@@ -1,50 +1,30 @@
 package me.hektortm.woSSystems.channels;
 
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
-
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class Channel {
     private final String name;
     private final String shortName;
-    private final String format;
-    private List<String> recipients = new ArrayList<>();
-    private final boolean autoJoin;
-    private final boolean forceJoin;
-    private final int radius;
+    private String format;
+    private final List<String> recipients;
+    private boolean autoJoin;
+    private boolean forceJoin;
+    private boolean hidden;
+    private int radius;
 
-    public Channel(String name, String shortName, String format, List<String> recipients, boolean autoJoin, boolean forceJoin, int radius) {
+    public Channel(String name, String shortName, String format, List<String> recipients, boolean autoJoin, boolean forceJoin, boolean hidden, int radius) {
         this.name = name;
         this.shortName = shortName;
         this.format = format;
-        if (recipients != null) {
-            this.recipients.addAll(recipients);
-        } else {
-            this.recipients = new ArrayList<>();
-        }
+        this.recipients = recipients;
         this.autoJoin = autoJoin;
         this.forceJoin = forceJoin;
+        this.hidden = hidden;
         this.radius = radius;
     }
 
     public String getName() {
         return name;
-    }
-
-    public List<String> getRecipients() {
-        return recipients;
-    }
-    public List<String> addRecipient(String recipient) {
-        recipients.add(recipient);
-        return recipients;
-    }
-
-    public List<String> removeRecipient(String recipient) {
-        recipients.remove(recipient);
-        return recipients;
     }
 
     public String getShortName() {
@@ -54,16 +34,53 @@ public class Channel {
     public String getFormat() {
         return format;
     }
+    public void setFormat(String format) {
+        this.format = format;
+    }
+
+    public List<String> getRecipients() {
+        return recipients;
+    }
 
     public boolean isAutoJoin() {
         return autoJoin;
+    }
+
+    public void setAutoJoin(boolean autoJoin) {
+        this.autoJoin = autoJoin;
     }
 
     public boolean isForceJoin() {
         return forceJoin;
     }
 
+    public void setForceJoin(boolean forceJoin) {
+        this.forceJoin = forceJoin;
+    }
+
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
+    }
+
     public int getRadius() {
         return radius;
+    }
+
+    public void setRadius(int radius) {
+        this.radius = radius;
+    }
+
+    public void addRecipient(String playerName) {
+        if (!recipients.contains(playerName)) {
+            recipients.add(playerName);
+        }
+    }
+
+    public void removeRecipient(String playerName) {
+        recipients.remove(playerName);
     }
 }

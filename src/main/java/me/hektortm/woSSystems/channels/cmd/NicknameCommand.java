@@ -1,9 +1,9 @@
 package me.hektortm.woSSystems.channels.cmd;
 
-import me.hektortm.woSSystems.channels.cmd.subcmd.Request;
-import me.hektortm.woSSystems.channels.cmd.subcmd.Requests;
-import me.hektortm.woSSystems.channels.cmd.subcmd.Reserve;
-import me.hektortm.woSSystems.channels.cmd.subcmd.Unreserve;
+import me.hektortm.woSSystems.channels.cmd.subcmd.nick.Request;
+import me.hektortm.woSSystems.channels.cmd.subcmd.nick.Requests;
+import me.hektortm.woSSystems.channels.cmd.subcmd.nick.Reserve;
+import me.hektortm.woSSystems.channels.cmd.subcmd.nick.Unreserve;
 import me.hektortm.woSSystems.channels.NicknameManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.SubCommand;

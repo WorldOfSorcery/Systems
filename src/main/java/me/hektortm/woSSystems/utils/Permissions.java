@@ -81,6 +81,14 @@ public enum Permissions {
     CHAT_CHANNEL_LEAVE("chat.channel.leave"),
     CHAT_RELOAD("chat.reload"),
 
+    CHANNEL_CREATE("channel.create"),
+    CHANNEL_DELETE("channel.delete"),
+    CHANNEL_JOIN("channel.join"),
+    CHANNEL_LEAVE("channel.leave"),
+    CHANNEL_FOCUS("channel.focus"),
+    CHANNEL_UNFOCUS("channel.unfocus"),
+    CHANNEL_SET_FORMAT("channel.setformat"),
+
     LOOTTABLE_GIVE("loottable.give"),
     LOOTTABLE_RELOAD("loottable.reload");
 
