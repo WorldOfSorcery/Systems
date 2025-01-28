@@ -19,6 +19,7 @@ import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -350,24 +351,22 @@ public class CitemManager {
         return now.format(formatter);
     }
 
+    public void placeItemDisplay(String itemDisplayId, Location location) {
 
 
+    }
     public NamespacedKey getIdKey() {
         return idKey;
     }
-
     public NamespacedKey getUndroppableKey() {
         return undroppableKey;
     }
-
     public NamespacedKey getUnusableKey() {
         return unusableKey;
     }
-
     public NamespacedKey getLeftActionKey() {
         return leftActionKey;
     }
-
     public NamespacedKey getRightActionKey() {
         return rightActionKey;
     }
@@ -377,5 +376,4 @@ public class CitemManager {
     public ErrorHandler getErrorHandler() {
         return errorHandler;
     }
-
 }

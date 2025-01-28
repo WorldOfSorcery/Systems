@@ -77,6 +77,17 @@ public class InterListener implements Listener {
         Player p = e.getPlayer();
 
         if (citemManager.isCitem(item)) {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer data = meta.getPersistentDataContainer();
+            if (data.has(placeKey, PersistentDataType.STRING)) {
+                if (action.isRightClick()) {
+                    if (e.getClickedBlock() != null) {
+                        Block targetBlock = e.getClickedBlock();
+
+                    }
+                }
+            }
+
             switch (action) {
                 case RIGHT_CLICK_AIR:
                 case RIGHT_CLICK_BLOCK:
