@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.channels.cmd.subcmd;
+package me.hektortm.woSSystems.channels.cmd.subcmd.nick;
 
 import me.hektortm.woSSystems.channels.NicknameManager;
 import me.hektortm.woSSystems.utils.Permissions;
