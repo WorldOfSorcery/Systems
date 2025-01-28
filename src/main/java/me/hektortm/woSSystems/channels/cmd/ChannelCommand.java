@@ -29,7 +29,7 @@ public class ChannelCommand implements CommandExecutor {
         subCommands.put("list", new list(channelManager));
         subCommands.put("setformat", new setFormat(channelManager));
         //subCommands.put("setattribute", new setAttribute(channelManager));
-        //subCommands.put("setradius", new setRadius(channelManager));
+        subCommands.put("setradius", new setRadius(channelManager));
     }
 
     @Override

@@ -26,6 +26,11 @@ public class setRadius extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
+        if (args.length == 0) {
+            sender.sendMessage("Usage: /ch setradius <Channel> <Radius>");
+            return;
+        }
+
         String name = args[0];
         int radius;
         try {

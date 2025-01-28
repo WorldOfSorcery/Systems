@@ -41,6 +41,9 @@ public class setFormat extends SubCommand {
         String channelName = args[0];
         String format = String.join(" ", args).substring(args[0].length()).trim(); // Combine all arguments after the channel name
 
+        // Replace '&' with '§' to support Minecraft color codes
+        format = format.replace('&', '§');
+
         // Get the channel from the ChannelManager
         Channel channel = channelManager.getChannel(channelName);
 
@@ -54,6 +57,6 @@ public class setFormat extends SubCommand {
         channelManager.saveChannels(); // Save the updated channel data
 
         player.sendMessage("§aFormat for channel §f" + channelName + " §ahas been updated to:");
-        player.sendMessage("§7" + format);
+        player.sendMessage(format); // Send the formatted message to the player
     }
 }
