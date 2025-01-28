@@ -2,112 +2,53 @@ package me.hektortm.woSSystems.channels.cmd;
 
 import me.hektortm.woSSystems.channels.Channel;
 import me.hektortm.woSSystems.channels.ChannelManager;
+import me.hektortm.woSSystems.channels.cmd.subcmd.channel.*;
+import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ChannelCommand implements CommandExecutor {
     private final ChannelManager channelManager;
+    private final Map<String, SubCommand> subCommands = new HashMap<>();
+
 
     public ChannelCommand(ChannelManager channelManager) {
         this.channelManager = channelManager;
+
+        subCommands.put("create", new create(channelManager));
+        subCommands.put("focus", new focus(channelManager));
+        subCommands.put("join", new join(channelManager));
+        subCommands.put("leave", new leave(channelManager));
+        subCommands.put("list", new list(channelManager));
+        subCommands.put("setformat", new setFormat(channelManager));
+        //subCommands.put("setattribute", new setAttribute(channelManager));
+        //subCommands.put("setradius", new setRadius(channelManager));
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage("Only players can use this command.");
+        if (args.length == 0) {
             return true;
         }
 
-        Player player = (Player) sender;
+        String subCommandName = args[0].toLowerCase();
+        SubCommand subCommand = subCommands.get(subCommandName);
 
-        if (args.length < 1) {
-            player.sendMessage("Usage: /ch <subcommand> [arguments]");
-            return true;
-        }
-
-        String subcommand = args[0].toLowerCase();
-
-        switch (subcommand) {
-            case "create":
-                if (args.length < 3) {
-                    player.sendMessage("Usage: /ch create <name> <shortName> <settings>");
-                    player.sendMessage("Settings:");
-                    player.sendMessage("-f: force join");
-                    player.sendMessage("-a: auto join");
-                    return true;
-                }
-
-                String name = args[1];
-                String shortName = args[2];
-                channelManager.createChannel(name, shortName, "{player}: {message}", null, false, false, -1);
-                player.sendMessage("Channel " + name + " created.");
-                channelManager.saveChannels();
-                break;
-
-            case "join":
-                if (args.length < 2) {
-                    player.sendMessage("Usage: /ch join <name>");
-                    return true;
-                }
-
-                Channel joinChannel = channelManager.getChannel(args[1]);
-                if (joinChannel == null) {
-                    player.sendMessage("Channel not found.");
-                } else {
-                    channelManager.joinChannel(player, joinChannel.getName());
-                    player.sendMessage("Joined channel: " + joinChannel.getName());
-                }
-                break;
-
-            case "leave":
-                if (args.length < 2) {
-                    player.sendMessage("Usage: /ch leave <name>");
-                    return true;
-                }
-
-                Channel leaveChannel = channelManager.getChannel(args[1]);
-                if (leaveChannel == null) {
-                    player.sendMessage("Channel not found.");
-                } else if (leaveChannel.isForceJoin()) {
-                    player.sendMessage("You cannot leave this channel.");
-                } else {
-                    channelManager.leaveChannel(player, leaveChannel.getName());
-                    player.sendMessage("Left channel: " + leaveChannel.getName());
-                }
-                break;
-
-            case "list":
-                player.sendMessage("Available channels:");
-                for (Channel channel : channelManager.getChannels()) {
-                    player.sendMessage("- " + channel.getName() + " (Short: " + channel.getShortName() + ")");
-                }
-                break;
-
-            case "focus":
-                if (args.length < 2) {
-                    player.sendMessage("Usage: /ch focus <name>");
-                    return true;
-                }
-
-                Channel focusChannel = channelManager.getChannel(args[1]);
-                if (focusChannel == null) {
-                    player.sendMessage("Channel not found.");
-                } else {
-                    channelManager.setFocus(player, focusChannel);
-                    player.sendMessage("Now focused on channel: " + focusChannel.getName());
-                }
-                break;
-            case "reload":
-                channelManager.loadChannels();
-                player.sendMessage("Reloaded channels.");
-            default:
-                player.sendMessage("Unknown subcommand.");
-                break;
+        if (subCommand != null) {
+            if(PermissionUtil.hasPermission(sender, subCommand.getPermission())) {
+                subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));
+            } else {
+                return true;
+            }
+        } else {
+            sender.sendMessage("Unknown subcommand: " + subCommandName);
         }
 
         return true;

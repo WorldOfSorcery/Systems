@@ -20,6 +20,7 @@ public class JoinListener implements Listener {
         Player player = event.getPlayer();
         if (!player.hasPlayedBefore()) {
             event.setJoinMessage("§7(New) §x§7§a§9§9§7§2§o"+player.getName()+" joined");
+            plugin.getChannelManager().autoJoin(player);
         } else {
             event.setJoinMessage("§x§7§a§9§9§7§2§o"+player.getName()+" joined");
         }

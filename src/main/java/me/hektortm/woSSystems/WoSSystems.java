@@ -343,5 +343,8 @@ public final class WoSSystems extends JavaPlugin {
     public HologramManager getHologramManager() {
         return hologramManager;
     }
+    public ChannelManager getChannelManager() {
+        return channelManager;
+    }
 
 }

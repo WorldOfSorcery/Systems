@@ -63,6 +63,15 @@ public class ChannelManager {
         db.getChannelDAO().insertChannel(channel);
     }
 
+    public void autoJoin(Player player) {
+        for (Channel channel : getChannels()) {
+            if (channel.isAutoJoin()) {
+                String name = channel.getName();
+                joinChannel(player, name);
+            }
+        }
+    }
+
     public void deleteChannel(String name) {
         channels.remove(name.toLowerCase());
         db.getChannelDAO().deleteChannel(name);
