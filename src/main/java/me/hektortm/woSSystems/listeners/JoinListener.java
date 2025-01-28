@@ -24,7 +24,8 @@ public class JoinListener implements Listener {
         } else {
             event.setJoinMessage("§x§7§a§9§9§7§2§o"+player.getName()+" joined");
         }
-
+        plugin.getChannelManager().forceJoin(player);
+        plugin.getChannelManager().joinDefault(player);
         plugin.getBossBarManager().createBossBar(player);
         plugin.getRegionBossBarManager().createBossBar(player);
 

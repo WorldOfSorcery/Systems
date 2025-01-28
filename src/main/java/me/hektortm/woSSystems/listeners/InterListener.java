@@ -79,6 +79,7 @@ public class InterListener implements Listener {
         if (citemManager.isCitem(item)) {
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer data = meta.getPersistentDataContainer();
+            /*
             if (data.has(placeKey, PersistentDataType.STRING)) {
                 if (action.isRightClick()) {
                     if (e.getClickedBlock() != null) {
@@ -87,6 +88,8 @@ public class InterListener implements Listener {
                     }
                 }
             }
+
+             */
 
             switch (action) {
                 case RIGHT_CLICK_AIR:
@@ -100,9 +103,9 @@ public class InterListener implements Listener {
             }
 
 
-            ItemMeta meta = item.getItemMeta();
+
             if (meta != null) {
-                PersistentDataContainer data = meta.getPersistentDataContainer();
+
                 if (data.has(unusableKey, PersistentDataType.BOOLEAN)) {
                     e.setCancelled(true); // Prevent the item from being dropped
                 }

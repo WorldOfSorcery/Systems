@@ -28,12 +28,16 @@ public class join extends SubCommand {
     public void execute(CommandSender sender, String[] args) {
         Player player = (Player) sender;
 
-        if (args.length < 2) {
+        if (args.length < 1) {
             player.sendMessage("Usage: /ch join <name>");
             return;
         }
 
-        Channel joinChannel = channelManager.getChannel(args[1]);
+        Channel joinChannel = channelManager.getChannel(args[0]);
+        if (joinChannel.getPermission() != null && !player.hasPermission(joinChannel.getPermission())) {
+            player.sendMessage("You do not have permission to join this channel.");
+            return;
+        }
         if (joinChannel == null) {
             player.sendMessage("Channel not found.");
         } else {

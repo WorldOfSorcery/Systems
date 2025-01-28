@@ -28,12 +28,12 @@ public class focus extends SubCommand {
     public void execute(CommandSender sender, String[] args) {
         Player player = (Player) sender;
 
-        if (args.length < 2) {
+        if (args.length < 1) {
             player.sendMessage("Usage: /ch focus <name>");
             return;
         }
 
-        Channel focusChannel = channelManager.getChannel(args[1]);
+        Channel focusChannel = channelManager.getChannel(args[0]);
         if (focusChannel == null) {
             player.sendMessage("Channel not found.");
         } else {

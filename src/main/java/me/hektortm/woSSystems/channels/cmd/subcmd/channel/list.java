@@ -6,6 +6,7 @@ import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.Permission;
 
 public class list extends SubCommand {
     private final ChannelManager channelManager;
@@ -31,7 +32,13 @@ public class list extends SubCommand {
         player.sendMessage("Available channels:");
         for (Channel channel : channelManager.getChannels()) {
             if (!channel.isHidden()) {
-                player.sendMessage("- " + channel.getName() + " (Short: " + channel.getShortName() + ")");
+                player.sendMessage("- " + channel.getName() + "[" + channel.getShortName() + "]");
+            } else {
+                if (channel.getPermission() != null) {
+                    if(player.hasPermission(channel.getPermission())) {
+                        player.sendMessage("- " + channel.getName() + "[" + channel.getShortName() + "] (hidden)");
+                    }
+                }
             }
         }
     }

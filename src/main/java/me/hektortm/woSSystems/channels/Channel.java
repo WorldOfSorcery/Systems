@@ -7,19 +7,27 @@ public class Channel {
     private final String shortName;
     private String format;
     private final List<String> recipients;
+    private boolean defaultChannel;
     private boolean autoJoin;
     private boolean forceJoin;
     private boolean hidden;
+    private String permission;
+    private boolean broadcastable;
     private int radius;
 
-    public Channel(String name, String shortName, String format, List<String> recipients, boolean autoJoin, boolean forceJoin, boolean hidden, int radius) {
+    public Channel(String name, String shortName, String format, List<String> recipients,
+                   boolean defaultChannel, boolean autoJoin, boolean forceJoin, boolean hidden,
+                   String permission, boolean broadcastable, int radius) {
         this.name = name;
         this.shortName = shortName;
         this.format = format;
         this.recipients = recipients;
+        this.defaultChannel = defaultChannel;
         this.autoJoin = autoJoin;
         this.forceJoin = forceJoin;
         this.hidden = hidden;
+        this.permission = permission;
+        this.broadcastable = broadcastable;
         this.radius = radius;
     }
 
@@ -40,6 +48,14 @@ public class Channel {
 
     public List<String> getRecipients() {
         return recipients;
+    }
+
+    public boolean isDefaultChannel() {
+        return defaultChannel;
+    }
+
+    public void setDefaultChannel(boolean defaultChannel) {
+        this.defaultChannel = defaultChannel;
     }
 
     public boolean isAutoJoin() {
@@ -64,6 +80,22 @@ public class Channel {
 
     public void setHidden(boolean hidden) {
         this.hidden = hidden;
+    }
+
+    public String getPermission() {
+        return permission;
+    }
+
+    public void setPermission(String permission) {
+        this.permission = permission;
+    }
+
+    public boolean isBroadcastable() {
+        return broadcastable;
+    }
+
+    public void setBroadcastable(boolean broadcastable) {
+        this.broadcastable = broadcastable;
     }
 
     public int getRadius() {

@@ -57,8 +57,10 @@ public class ChannelManager {
         return channels.values();
     }
 
-    public void createChannel(String name, String shortName, String format, List<String> recipients, boolean autoJoin, boolean forceJoin, boolean hidden, int radius) {
-        Channel channel = new Channel(name, shortName, format, recipients, autoJoin, forceJoin, hidden, radius);
+    public void createChannel(String name, String shortName, String format, List<String> recipients,
+                              boolean defaultChannel, boolean autoJoin, boolean forceJoin, boolean hidden,
+                              String permission, boolean broadcastable, int radius) {
+        Channel channel = new Channel(name, shortName, format, recipients, defaultChannel, autoJoin, forceJoin, hidden, permission, broadcastable, radius);
         channels.put(name.toLowerCase(), channel);
         db.getChannelDAO().insertChannel(channel);
     }
@@ -70,6 +72,26 @@ public class ChannelManager {
                 joinChannel(player, name);
             }
         }
+    }
+
+    public void forceJoin(Player player) {
+        for (Channel channel : getChannels()) {
+            if (channel.isForceJoin()) {
+                String name = channel.getName();
+                joinChannel(player, name);
+            }
+        }
+    }
+
+    public void joinDefault(Player player) {
+        if (getChannelDAO().getFocusedChannel(player.getUniqueId()) == null) {
+            for (Channel channel : getChannels()) {
+                if (channel.isDefaultChannel()) {
+                    setFocus(player, channel);
+                }
+            }
+        }
+
     }
 
     public void deleteChannel(String name) {
@@ -86,4 +108,9 @@ public class ChannelManager {
         String channelName = db.getChannelDAO().getFocusedChannel(player.getUniqueId());
         return channelName != null ? getChannel(channelName) : null;
     }
+
+    public ChannelDAO getChannelDAO() {
+        return db.getChannelDAO();
+    }
+
 }
