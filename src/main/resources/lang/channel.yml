@@ -1,0 +1,6 @@
+error:
+  not-in-channel: "You are not in this channel."
+  already-in-channel: "You are already in this channel."
+
+joined: "§7You have joined %channel%§7."
+left: "§7You have left %channel%§7."

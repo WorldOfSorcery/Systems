@@ -158,7 +158,8 @@ public final class WoSSystems extends JavaPlugin {
             lang.loadLangFileExternal(this, "unlockables", core);
             lang.loadLangFileExternal(this, "economy", core);
             lang.loadLangFileExternal(this, "crecipes", core);
-            lang.loadLangFileExternal(this, "chat", core);
+            lang.loadLangFileExternal(this, "nicknames", core);
+            lang.loadLangFileExternal(this, "channel", core);
             lang.loadLangFileExternal(this, "loottables", core);
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
