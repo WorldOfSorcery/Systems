@@ -9,21 +9,21 @@ import org.bukkit.entity.Player;
 
 import java.util.Arrays;
 
-public class setAttribute extends SubCommand {
+public class modify extends SubCommand {
     private final ChannelManager channelManager;
 
-    public setAttribute(ChannelManager channelManager) {
+    public modify(ChannelManager channelManager) {
         this.channelManager = channelManager;
     }
 
     @Override
     public String getName() {
-        return "setattribute";
+        return "modify";
     }
 
     @Override
     public Permissions getPermission() {
-        return null;
+        return Permissions.CHANNEL_MODIFY;
     }
 
     @Override
