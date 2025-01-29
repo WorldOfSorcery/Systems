@@ -2,22 +2,25 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.channels.Channel;
+import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.database.DatabaseManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.io.FileInputStream;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
 
 public class ChannelDAO {
     private final Connection conn;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final ChannelManager channelManager;
 
     public ChannelDAO(DatabaseManager db) {
         this.conn = db.getConnection();
+        channelManager = new ChannelManager(plugin,db);
         createTables();
     }
 
@@ -145,6 +148,11 @@ public class ChannelDAO {
 
     public void addRecipient(String channelName, UUID playerUUID) {
         Player p = Bukkit.getPlayer(playerUUID);
+        if (isInChannel(playerUUID, channelName)) {
+            p.sendMessage("You are already in this Channel.");
+            return;
+        }
+
 
         String sql = "INSERT INTO playerdata_channels(uuid, channel_name, joined, focused) VALUES(?,?,?,?)";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -161,13 +169,23 @@ public class ChannelDAO {
 
     public void removeRecipient(String channelName, UUID playerUUID) {
         Player p = Bukkit.getPlayer(playerUUID);
-
+        if (!isInChannel(playerUUID, channelName)) {
+            p.sendMessage("You are not in this channel.");
+            return;
+        }
         String sql = "DELETE FROM playerdata_channels WHERE uuid = ? AND channel_name = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, playerUUID.toString());
             pstmt.setString(2, channelName);
             pstmt.executeUpdate();
             p.sendMessage("§7You have §cleft §7channel §e" + channelName);
+            if (isFocusedChannel(playerUUID, channelName)) {
+                for (Channel channel : getAllChannels()) {
+                    if (channel.isDefaultChannel()) {
+                        setFocusedChannel(playerUUID, channel.getName());
+                    }
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -175,7 +193,16 @@ public class ChannelDAO {
 
     public void setFocusedChannel(UUID playerUUID, String channelName) {
         Player p = Bukkit.getPlayer(playerUUID);
+        if(!isInChannel(playerUUID, channelName)) {
 
+            Channel channel = channelManager.getChannel(channelName);
+            if (channel.getPermission() != null && p.hasPermission(channel.getPermission())) {
+                addRecipient(channelName, playerUUID); // if not in channel, add player to channel
+            } else {
+                p.sendMessage("you cannot join this channel.");
+                return;
+            }
+        }
         unfocusChannel(playerUUID, getFocusedChannel(playerUUID));
         String sql = "UPDATE playerdata_channels SET focused = ? WHERE uuid = ? AND channel_name = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -217,13 +244,13 @@ public class ChannelDAO {
         return null;
     }
 
-    public boolean isJoinedChannel(UUID playerUUID, String channelName) {
+    public boolean isInChannel(UUID playerUUID, String channelName) {
         String sql = "SELECT joined FROM playerdata_channels WHERE uuid = ? AND channel_name = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, playerUUID.toString());
             pstmt.setString(2, channelName);
             ResultSet rs = pstmt.executeQuery();
-            return rs.next();
+            return rs.getBoolean("joined");
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -231,16 +258,10 @@ public class ChannelDAO {
     }
 
     public boolean isFocusedChannel(UUID uuid, String channelName) {
-        String sql = "SELECT 1 FROM playerdata_channels WHERE uuid = ? AND channel_name = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, uuid.toString());
-            pstmt.setString(2, channelName);
-            ResultSet rs = pstmt.executeQuery();
-            return rs.next();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+        if (channelName == getFocusedChannel(uuid)) {
+            return true;
         }
+        return false;
     }
 
 
