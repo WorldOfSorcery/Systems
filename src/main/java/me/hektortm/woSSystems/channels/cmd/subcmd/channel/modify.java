@@ -43,6 +43,7 @@ public class modify extends SubCommand {
             sender.sendMessage("§f-p / permission§7: String");
             sender.sendMessage("§eExample: chat.channel.staff");
             sender.sendMessage("§f-b / broadcastable§7: Boolean");
+            sender.sendMessage("§f-c / color§7: Colorcode");
 
         }
 
@@ -131,6 +132,17 @@ public class modify extends SubCommand {
                 channelManager.saveChannels();
                 player.sendMessage("§aSet Broadcastable Value for '" + channelName + "' to " + broadcastable);
                 break;
+            case "-c":
+            case "color":
+                if (!args[2].contains("&")) {
+                    sender.sendMessage("Not a valid colorcode. Use atleast one '&'");
+                    return;
+                }
+                String color = args[2].replace("&", "§");
+                channel.setColor(color);
+                channelManager.saveChannels();
+                player.sendMessage("§aSet Color Value for '" + channelName + "' to " + color + "color");
+                break;
             default:
                 sender.sendMessage("§cUsage: /ch setattribute <channel> <attribute> <value>");
                 sender.sendMessage("§7Attributes:");
@@ -145,8 +157,7 @@ public class modify extends SubCommand {
                 sender.sendMessage("§f-p / permission§7: String");
                 sender.sendMessage("§eExample: chat.channel.staff");
                 sender.sendMessage("§f-b / broadcastable§7: Boolean");
-
-
+                sender.sendMessage("§f-c / color§7: Colorcode");
         }
     }
 }

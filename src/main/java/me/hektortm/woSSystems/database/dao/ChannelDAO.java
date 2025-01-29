@@ -4,6 +4,7 @@ import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.channels.Channel;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.database.DatabaseManager;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -16,11 +17,9 @@ import java.util.UUID;
 public class ChannelDAO {
     private final Connection conn;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final ChannelManager channelManager;
 
     public ChannelDAO(DatabaseManager db) {
         this.conn = db.getConnection();
-        channelManager = new ChannelManager(plugin,db);
         createTables();
     }
 
@@ -30,6 +29,7 @@ public class ChannelDAO {
                 CREATE TABLE IF NOT EXISTS channels (
                     name TEXT PRIMARY KEY NOT NULL,
                     short_name TEXT NOT NULL,
+                    color TEXT NOT NULL,
                     format TEXT NOT NULL,
                     default_channel BOOLEAN NOT NULL,
                     autojoin BOOLEAN NOT NULL,
@@ -56,18 +56,19 @@ public class ChannelDAO {
     }
 
     public void insertChannel(Channel channel) {
-        String sql = "INSERT INTO channels(name, short_name, format, default_channel, autojoin, forcejoin, hidden, broadcastable, permission,  radius) VALUES(?,?,?,?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO channels(name, short_name, color, format, default_channel, autojoin, forcejoin, hidden, broadcastable, permission,  radius) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, channel.getName());
             pstmt.setString(2, channel.getShortName());
-            pstmt.setString(3, channel.getFormat());
-            pstmt.setBoolean(4, channel.isDefaultChannel());
-            pstmt.setBoolean(5, channel.isAutoJoin());
-            pstmt.setBoolean(6, channel.isForceJoin());
-            pstmt.setBoolean(7, channel.isHidden());
-            pstmt.setBoolean(8, channel.isBroadcastable());
-            pstmt.setString(9, channel.getPermission());
-            pstmt.setInt(10, channel.getRadius());
+            pstmt.setString(3, channel.getColor());
+            pstmt.setString(4, channel.getFormat());
+            pstmt.setBoolean(5, channel.isDefaultChannel());
+            pstmt.setBoolean(6, channel.isAutoJoin());
+            pstmt.setBoolean(7, channel.isForceJoin());
+            pstmt.setBoolean(8, channel.isHidden());
+            pstmt.setBoolean(9, channel.isBroadcastable());
+            pstmt.setString(10, channel.getPermission());
+            pstmt.setInt(11, channel.getRadius());
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -75,18 +76,19 @@ public class ChannelDAO {
     }
 
     public void updateChannel(Channel channel) {
-        String sql = "UPDATE channels SET short_name = ?, format = ?, default_channel = ?, autojoin = ?, forcejoin = ?, hidden = ?, permission = ?, broadcastable = ?, radius = ? WHERE name = ?";
+        String sql = "UPDATE channels SET short_name = ?, color = ?, format = ?, default_channel = ?, autojoin = ?, forcejoin = ?, hidden = ?, permission = ?, broadcastable = ?, radius = ? WHERE name = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, channel.getShortName());
-            pstmt.setString(2, channel.getFormat());
-            pstmt.setBoolean(3, channel.isDefaultChannel());
-            pstmt.setBoolean(4, channel.isAutoJoin());
-            pstmt.setBoolean(5, channel.isForceJoin());
-            pstmt.setBoolean(6, channel.isHidden());
-            pstmt.setString(7, channel.getPermission());
-            pstmt.setBoolean(8, channel.isBroadcastable());
-            pstmt.setInt(9, channel.getRadius());
-            pstmt.setString(10, channel.getName());
+            pstmt.setString(2, channel.getColor());
+            pstmt.setString(3, channel.getFormat());
+            pstmt.setBoolean(4, channel.isDefaultChannel());
+            pstmt.setBoolean(5, channel.isAutoJoin());
+            pstmt.setBoolean(6, channel.isForceJoin());
+            pstmt.setBoolean(7, channel.isHidden());
+            pstmt.setString(8, channel.getPermission());
+            pstmt.setBoolean(9, channel.isBroadcastable());
+            pstmt.setInt(10, channel.getRadius());
+            pstmt.setString(11, channel.getName());
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -111,6 +113,7 @@ public class ChannelDAO {
                 Channel channel = new Channel(
                         rs.getString("name"),
                         rs.getString("short_name"),
+                        rs.getString("color"),
                         rs.getString("format"),
                         new ArrayList<>(),
                         rs.getBoolean("default_channel"),
@@ -150,6 +153,7 @@ public class ChannelDAO {
         Player p = Bukkit.getPlayer(playerUUID);
         if (isInChannel(playerUUID, channelName)) {
             p.sendMessage("You are already in this Channel.");
+            Utils.error(p, "channel", "error.arleady-in-channel");
             return;
         }
 
@@ -161,16 +165,28 @@ public class ChannelDAO {
             pstmt.setBoolean(3, true);
             pstmt.setBoolean(4, false);
             pstmt.executeUpdate();
-            p.sendMessage("§7You have §ajoined §7channel §e" + channelName);
+            Utils.successMsg1Value(p, "channel", "joined", "%channel%", getChannelColor(channelName) + channelName);
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    private String getChannelColor(String channelName) {
+        String sql = "SELECT color FROM channels WHERE name = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, channelName);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.getString("color");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
     public void removeRecipient(String channelName, UUID playerUUID) {
         Player p = Bukkit.getPlayer(playerUUID);
         if (!isInChannel(playerUUID, channelName)) {
-            p.sendMessage("You are not in this channel.");
+            Utils.error(p, "channel", "error.not-in-channel");
             return;
         }
         String sql = "DELETE FROM playerdata_channels WHERE uuid = ? AND channel_name = ?";
@@ -178,7 +194,7 @@ public class ChannelDAO {
             pstmt.setString(1, playerUUID.toString());
             pstmt.setString(2, channelName);
             pstmt.executeUpdate();
-            p.sendMessage("§7You have §cleft §7channel §e" + channelName);
+            Utils.successMsg1Value(p, "channel", "left", "%channel%", getChannelColor(channelName) + channelName);
             if (isFocusedChannel(playerUUID, channelName)) {
                 for (Channel channel : getAllChannels()) {
                     if (channel.isDefaultChannel()) {
@@ -191,16 +207,29 @@ public class ChannelDAO {
         }
     }
 
+    public String getChannelPermission(String channelName) {
+        String sql = "SELECT permission FROM channels WHERE name = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, channelName);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.next() ? rs.getString("permission") : null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public void setFocusedChannel(UUID playerUUID, String channelName) {
         Player p = Bukkit.getPlayer(playerUUID);
         if(!isInChannel(playerUUID, channelName)) {
 
-            Channel channel = channelManager.getChannel(channelName);
-            if (channel.getPermission() != null && p.hasPermission(channel.getPermission())) {
-                addRecipient(channelName, playerUUID); // if not in channel, add player to channel
-            } else {
+            String permission = getChannelPermission(channelName);
+            if (permission != null && !p.hasPermission(permission)) {
                 p.sendMessage("you cannot join this channel.");
                 return;
+            } else if (permission == null || p.hasPermission(permission)) {
+                addRecipient(channelName, playerUUID); // if not in channel, add player to channel
+
             }
         }
         unfocusChannel(playerUUID, getFocusedChannel(playerUUID));

@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.channels;
 import java.util.List;
 
 public class Channel {
+    private String color;
     private final String name;
     private final String shortName;
     private String format;
@@ -15,9 +16,10 @@ public class Channel {
     private boolean broadcastable;
     private int radius;
 
-    public Channel(String name, String shortName, String format, List<String> recipients,
+    public Channel(String color, String name, String shortName, String format, List<String> recipients,
                    boolean defaultChannel, boolean autoJoin, boolean forceJoin, boolean hidden,
                    String permission, boolean broadcastable, int radius) {
+        this.color = color;
         this.name = name;
         this.shortName = shortName;
         this.format = format;
@@ -29,6 +31,14 @@ public class Channel {
         this.permission = permission;
         this.broadcastable = broadcastable;
         this.radius = radius;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 
     public String getName() {
