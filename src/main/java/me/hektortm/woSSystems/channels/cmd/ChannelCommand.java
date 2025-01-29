@@ -1,6 +1,5 @@
 package me.hektortm.woSSystems.channels.cmd;
 
-import me.hektortm.woSSystems.channels.Channel;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.channels.cmd.subcmd.channel.*;
 import me.hektortm.woSSystems.utils.PermissionUtil;
@@ -8,10 +7,8 @@ import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class ChannelCommand implements CommandExecutor {
@@ -28,7 +25,7 @@ public class ChannelCommand implements CommandExecutor {
         subCommands.put("join", new join(channelManager));
         subCommands.put("leave", new leave(channelManager));
         subCommands.put("list", new list(channelManager));
-        subCommands.put("setattribute", new setAttribute(channelManager));
+        subCommands.put("modify", new modify(channelManager));
         subCommands.put("broadcast", new broadcast(channelManager));
     }
 

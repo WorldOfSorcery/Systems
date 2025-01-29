@@ -22,7 +22,7 @@ public class list extends SubCommand {
 
     @Override
     public Permissions getPermission() {
-        return null;
+        return Permissions.CHANNEL_LIST;
     }
 
     @Override

@@ -21,7 +21,7 @@ public class join extends SubCommand {
 
     @Override
     public Permissions getPermission() {
-        return null;
+        return Permissions.CHANNEL_JOIN;
     }
 
     @Override

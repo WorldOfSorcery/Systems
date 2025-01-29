@@ -11,9 +11,6 @@ commands:
     usage: /<command> <reload|list|view|trigger>
     permission: interaction
     aliases: [ inter ]
-  opengui:
-    description: opengui
-    usage: /<command> <player> <id>
   # Citem Commands
   citem:
     description: citem
@@ -26,6 +23,10 @@ commands:
     description: remove a citem
     permission: citem.remove
     usage: /<command> <player> <ID> <amount>
+  sign:
+    description: sign item
+    permission: citem.sign
+    usage: /<command>
   # CRecipe Commands
   crecipe:
     description: crecipe
@@ -39,6 +40,7 @@ commands:
     description: global stats command
     permission: stats_global.create
     usage: /<command>
+  # Unlockable Commands
   tempunlockable:
     description: temp unlockable
     permission: unlockable_temp.create
@@ -66,11 +68,12 @@ commands:
     description: GAMBLING
     usage: /coinflip <amount> <heads|tails>
     permission: economy.coinflip
-
+  # Chat System Commands
   channel:
     aliases: [ch]
     description: chat
     usage: /ch <join|focus|leave>
+    permission: chat.channel.join
   nickname:
     aliases: [nick]
     description: nick
@@ -79,24 +82,58 @@ commands:
   realname:
     description: realname
     usage: /<command> <input>
+  # Loottable Commands
   loottable:
     aliases: [lt]
     description: loottable
     permission: loottable.give
     usage: /<command> give
-
-  gui:
-    description: gui
-    usage: /<command> open
-  sign:
-    description: sign item
-    usage: /<command>
-
+  # Time Commands
   time:
     description: View and manipulate the time
     usage: /<command> [date|reload|freeze]
 
 permissions:
+  # Citem Permissions
+  citem.modify:
+    description: grants access to all citem modify commands
+    default: op
+    children:
+      citem.modify.lore: true
+      citem.modify.rename: true
+      citem.modify.flags: true
+      citem.modify.actions: true
+  citem.modify.lore:
+    description: edit lore
+    default: op
+  citem.modify.rename:
+    description: edit name
+    default: op
+  citem.modify.flags:
+    description: put flags
+    default: op
+  citem.modify.actions:
+    description: put interactions on an item
+    default: op
+
+  citem.save:
+    description: save an item
+    default: op
+  citem.delete:
+    description: delete a citem
+    default: op
+  citem.update:
+    description: update a citem
+    default: op
+  citem.give:
+    description: give someone a citem
+    default: op
+  citem.remove:
+    description: remove a citem from someone
+    default: op
+  citem.sign:
+    description: sign a citem
+    default: true
 
   # Time Permissions
   time:
@@ -139,6 +176,31 @@ permissions:
     description: unreserve
     default: op
 
+  chat.channel.create:
+    description: create a channel
+    default: op
+  chat.channel.join:
+    description: join a channel
+    default: true
+  chat.channel.leave:
+    description: leave a channel
+    default: true
+  chat.channel.focus:
+    description: focus a channel
+    default: true
+  chat.channel.unfocus:
+    description: unfocus channels
+    default: true
+  chat.channel.list:
+    description: view all channels
+    default: true
+  chat.channel.broadcast:
+    description: broadcast to a channel
+    default: op
+  chat.channel.modify:
+    description: modify a channel
+    default: op
+
   # Interaction Permissions
   interaction:
     description: grants access to all Interaction commands
@@ -170,43 +232,7 @@ permissions:
   interaction.trigger:
     description: trigger an interaction for a player
     default: op
-  # Citem Permissions
-  citem.modify:
-    description: grants access to all citem modify commands
-    default: op
-    children:
-      citem.modify.lore: true
-      citem.modify.rename: true
-      citem.modify.flags: true
-      citem.modify.actions: true
-  citem.modify.lore:
-    description: edit lore
-    default: op
-  citem.modify.rename:
-    description: edit name
-    default: op
-  citem.modify.flags:
-    description: put flags
-    default: op
-  citem.modify.actions:
-    description: put interactions on an item
-    default: op
 
-  citem.save:
-    description: save an item
-    default: op
-  citem.delete:
-    description: delete a citem
-    default: op
-  citem.update:
-    description: update a citem
-    default: op
-  citem.give:
-    description: give someone a citem
-    default: op
-  citem.remove:
-    description: remove a citem from someone
-    default: op
   # Stats Permissions
   stats.modify:
     description: grants access to all stats commands

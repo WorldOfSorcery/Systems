@@ -13,6 +13,7 @@ public enum Permissions {
     CITEM_REMOVE("citem.remove"),
     CITEM_TAG("citem.tag"),
     CITEM_INFO("citem.info"),
+    CITEM_SIGN("citem.sign"),
 
     CRECIPE_CREATE("crecipe.create"),
     CRECIPE_DELETE("crecipe.delete"),
@@ -75,19 +76,15 @@ public enum Permissions {
     NICK_UNRESERVE("nick.unreserve"),
     NICK_RESET_SELF("nick.reset.self"),
     NICK_RESET_OTHERS("nick.reset.others"),
-
-    CHAT_CHANNEL_FOCUS("chat.channel.focus"),
-    CHAT_CHANNEL_JOIN("chat.channel.join"),
-    CHAT_CHANNEL_LEAVE("chat.channel.leave"),
-    CHAT_RELOAD("chat.reload"),
-
-    CHANNEL_CREATE("channel.create"),
-    CHANNEL_DELETE("channel.delete"),
-    CHANNEL_JOIN("channel.join"),
-    CHANNEL_LEAVE("channel.leave"),
-    CHANNEL_FOCUS("channel.focus"),
-    CHANNEL_UNFOCUS("channel.unfocus"),
-    CHANNEL_SET_FORMAT("channel.setformat"),
+    
+    CHANNEL_CREATE("chat.channel.create"),
+    CHANNEL_JOIN("chat.channel.join"),
+    CHANNEL_LEAVE("chat.channel.leave"),
+    CHANNEL_FOCUS("chat.channel.focus"),
+    CHANNEL_UNFOCUS("chat.channel.unfocus"),
+    CHANNEL_LIST("chat.channel.list"),
+    CHANNEL_BROADCAST("chat.channel.broadcast"),
+    CHANNEL_MODIFY("chat.channel.modify"),
 
     LOOTTABLE_GIVE("loottable.give"),
     LOOTTABLE_RELOAD("loottable.reload");
