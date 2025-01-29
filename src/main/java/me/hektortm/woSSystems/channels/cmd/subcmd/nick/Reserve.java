@@ -36,17 +36,17 @@ public class Reserve extends SubCommand {
         UUID uuid = p.getUniqueId();
         if (args.length == 0) {
             String reserved = manager.getPlayersReservedNick(uuid);
-            if (reserved != null) Utils.successMsg1Value(p, "chat", "nick.reserved-currently", "%nick%", reserved);
-            else Utils.error(p, "chat", "error.no-reserved");
+            if (reserved != null) Utils.successMsg1Value(p, "nicknames", "nick.reserved-currently", "%nick%", reserved);
+            else Utils.error(p, "nicknames", "error.no-reserved");
         }
         else if (args.length == 1) {
             String nick = args[0];
             if (manager.getPlayersReservedNick(uuid) != null) {
-                Utils.error(p, "chat", "error.reserved-limit");
+                Utils.error(p, "nicknames", "error.reserved-limit");
                 return;
             }
             manager.reserveNickname(uuid, nick);
-            Utils.successMsg1Value(p, "chat", "nick.reserved", "%nick%", nick);
+            Utils.successMsg1Value(p, "nicknames", "nick.reserved", "%nick%", nick);
         }
     }
 }

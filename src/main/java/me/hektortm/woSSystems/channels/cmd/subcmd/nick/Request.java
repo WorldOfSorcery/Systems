@@ -36,11 +36,11 @@ public class Request extends SubCommand {
 
         manager.requestNicknameChange(p, nick);
         if (nick.equals("reset")) {
-            Utils.successMsg(sender, "chat", "nick.request-reset-sent");
+            Utils.successMsg(sender, "nicknames", "nick.request-reset-sent");
             //chatManager.serverChat("Staff", lang.getMessage("chat", "nick.request-reset-receive").replace("%player%", p.getName()));
             return;
         }
-        Utils.successMsg(sender, "chat", "nick.request-sent");
+        Utils.successMsg(sender, "nicknames", "nick.request-sent");
         //chatManager.serverChat("Staff", lang.getMessage("chat", "nick.request-receive").replace("%player%", p.getName()));
     }
 }

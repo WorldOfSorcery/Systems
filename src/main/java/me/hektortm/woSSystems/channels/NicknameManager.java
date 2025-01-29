@@ -84,11 +84,11 @@ public class NicknameManager {
 
     public void openRequestMenu(Player p) {
         if (nickRequests.isEmpty()) {
-            Utils.error(p, "chat", "error.no-requests");
+            Utils.error(p, "nicknames", "error.no-requests");
             return;
         }
 
-        Inventory menu = Bukkit.createInventory(null, getInvSize(), lang.getMessage("chat", "nick.gui.title"));
+        Inventory menu = Bukkit.createInventory(null, getInvSize(), lang.getMessage("nicknames", "nick.gui.title"));
 
         nickRequests.forEach((uuid, nick) -> {
             OfflinePlayer requester = Bukkit.getOfflinePlayer(uuid);
@@ -98,8 +98,8 @@ public class NicknameManager {
             assert meta != null;
 
             String warning = "";
-            String accept = lang.getMessage("chat", "nick.gui.accept");
-            String decline = lang.getMessage("chat", "nick.gui.decline");
+            String accept = lang.getMessage("nicknames", "nick.gui.accept");
+            String decline = lang.getMessage("nicknames", "nick.gui.decline");
 
             // Check if the nickname is reserved
             boolean isReserved = reservedNicks.values().stream()
@@ -114,18 +114,18 @@ public class NicknameManager {
 
                 // If the nickname is reserved by someone else, show a warning
                 if (reservedBy != null && !reservedBy.equals(uuid)) {
-                    warning = lang.getMessage("chat", "nick.gui.warning")
+                    warning = lang.getMessage("nicknames", "nick.gui.warning")
                             .replace("%player%", Bukkit.getOfflinePlayer(reservedBy).getName());
                     accept = ""; // Clear the accept option
-                    decline = lang.getMessage("chat", "nick.gui.decline");
+                    decline = lang.getMessage("nicknames", "nick.gui.decline");
                 }
             }
 
             meta.setOwningPlayer(Bukkit.getOfflinePlayer(uuid));
-            meta.setDisplayName(lang.getMessage("chat", "nick.gui.name")
+            meta.setDisplayName(lang.getMessage("nicknames", "nick.gui.name")
                     .replace("%player%", requester.getName()));
             meta.setLore(List.of(
-                    lang.getMessage("chat", "nick.gui.nick").replace("%nick%", nick),
+                    lang.getMessage("nicknames", "nick.gui.nick").replace("%nick%", nick),
                     "§7", warning, accept, decline
             ));
             head.setItemMeta(meta);
@@ -188,17 +188,17 @@ public class NicknameManager {
             if (username != null && username.equalsIgnoreCase(input)) {
                 String nickname = currentNickname != null ? currentNickname : username;
                 if (nickname != username) {
-                    Utils.successMsg2Values(sender, "chat", "realname.success.nickname", "%result%", nickname.replace("_", " "), "%input%", username);
+                    Utils.successMsg2Values(sender, "nicknames", "realname.success.nickname", "%result%", nickname.replace("_", " "), "%input%", username);
                     return;
                 } else {
-                    Utils.error(sender, "chat", "error.realname-invalid");
+                    Utils.error(sender, "nicknames", "error.realname-invalid");
                     return;
                 }
             }
 
             // If input matches the current nickname, return the username
             if (currentNickname != null && currentNickname.equalsIgnoreCase(input)) {
-                Utils.successMsg2Values(sender, "chat", "realname.success.username", "%result%", username, "%input%", input.replace("_", " "));
+                Utils.successMsg2Values(sender, "nicknames", "realname.success.username", "%result%", username, "%input%", input.replace("_", " "));
                 return;
             }
         }

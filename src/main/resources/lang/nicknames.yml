@@ -1,0 +1,49 @@
+error:
+  no-requests: "There are no current Nickname requests."
+  no-reserved: "You have no reserved nickname."
+  no-nick: "You do not have a nickname."
+  reserved-limit: "You can only reserve one nickname."
+  realname-invalid: "This Player does not have a nickname."
+  invalid:
+    length: "Your nickname is too long."
+    null: "You cannot submit no nickname."
+    letter: "You can only use Characters A-Z, 0-9 and \"_\"."
+  usage:
+    realname: "Usage: /realname <nick|player>"
+
+nick:
+  reset: "§7You have reset your own nick"
+  reserved: "§7You have successfully reserved the nickname: §e%nick%"
+  reserved-currently: "§7You have reserved the nickname: §e%nick%"
+
+  request-sent: "§aSuccessfully submitted nickname request."
+  request-reset-sent: "§aSuccessfully requested a nickname reset."
+  request-receive: "§e%player%§a has submitted a nickname request."
+  request-reset-receive: "§e%player%§a has requested a nickname reset."
+
+  approved-staff: "§aYou have approved §e%player%'s§a nickname request."
+  approved-reset-staff: "§aYou have approved §e%player%'s§a nickname reset."
+  approved: "§aYour nickname request \"§e%nick%§a\" has been approved."
+  approved-reset: "§aYour nickname reset request has been approved."
+
+
+  declined-staff: "§cYou have declined §e%player%'s§c nickname request."
+  declined: "§cYour nickname request \"§e%nick%§c\" has been declined."
+  gui:
+    title: "§6Nickname Requests"
+    name: "§6%player%"
+    nick: "§7Requested Nickname: §e%nick%"
+    warning: "§cThis Nickname is reserved by: %player%"
+    accept: "§aAccept [Left Click]"
+    decline: "§cDecline [Right Click]"
+  info:
+    cmd: "§7/nick request <nickname>"
+    length: "§7Length: §eMaximum of 17 Characters"
+    characters: "§7Available Characters: §eA-Z, 0-9, _"
+    space: "§7Putting an \"_\" makes a space in your nickname."
+    example: "§7Example: §efirstname_lastname -> firstname lastname"
+
+realname:
+  success:
+    username: "§e%input%'s§7 username is: §e%result%"
+    nickname: "§e%input%'s§7 nickname is: §e%result%"
