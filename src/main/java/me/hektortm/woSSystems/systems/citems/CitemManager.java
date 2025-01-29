@@ -1,12 +1,8 @@
 package me.hektortm.woSSystems.systems.citems;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.channels.NicknameManager;
-import me.hektortm.woSSystems.database.DatabaseManager;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.CitemDAO;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
@@ -18,20 +14,15 @@ import me.hektortm.wosCore.WoSCore;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
-import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -55,7 +46,7 @@ public class CitemManager {
     public final File citemFolder;
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final DatabaseManager database;
+    private final DAOHub hub;
     private InteractionManager interactionManager;
     private final LogManager log = new LogManager(new LangManager(WoSCore.getPlugin(WoSCore.class)),WoSCore.getPlugin(WoSCore.class));
     private final LangManager lang = new LangManager(WoSCore.getPlugin(WoSCore.class));
@@ -65,8 +56,8 @@ public class CitemManager {
     private final ErrorHandler errorHandler = new ErrorHandler();
 
 
-    public CitemManager(DatabaseManager database) {
-        this.database = database;
+    public CitemManager(DAOHub hub) {
+        this.hub = hub;
         citemFolder = new File(plugin.getDataFolder(), "citems");
         cmd = new CitemCommand(interactionManager);
         undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
@@ -89,7 +80,7 @@ public class CitemManager {
 
 
     public void giveCitem(CommandSender s, Player t, String id, Integer amount) {
-        ItemStack itemToGive = database.getCitemDAO().getCitem(id);
+        ItemStack itemToGive = hub.getCitemDAO().getCitem(id);
 
         if (itemToGive == null) {
             s.sendMessage("[Database] Item is §onull");
@@ -212,7 +203,7 @@ public class CitemManager {
 
         if (itemId != null) {
 
-            if (!database.getCitemDAO().citemExists(itemId)) {
+            if (!hub.getCitemDAO().citemExists(itemId)) {
                 // Remove the item from the player's inventory if the file doesn't exist
                 p.getInventory().remove(item);
                 Utils.successMsg1Value(p, "citems", "update.removed", "%item%", item.getItemMeta().getDisplayName());
@@ -220,7 +211,7 @@ public class CitemManager {
             }
 
             // Load the item data from the file
-            ItemStack savedItem = database.getCitemDAO().getCitem(itemId);
+            ItemStack savedItem = hub.getCitemDAO().getCitem(itemId);
 
             // Compare the item meta and update if necessary
             if (savedItem != null && !item.isSimilar(savedItem)) {
@@ -382,7 +373,7 @@ public class CitemManager {
         return rightActionKey;
     }
     public CitemDAO getCitemDAO() {
-        return database.getCitemDAO();
+        return hub.getCitemDAO();
     }
     public ErrorHandler getErrorHandler() {
         return errorHandler;

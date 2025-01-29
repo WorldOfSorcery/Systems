@@ -1,21 +1,15 @@
 package me.hektortm.woSSystems.systems.stats;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DatabaseManager;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.dataclasses.GlobalStat;
 import me.hektortm.woSSystems.systems.stats.utils.Operation;
 import me.hektortm.woSSystems.utils.dataclasses.Stat;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
-import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -28,15 +22,15 @@ public class StatsManager {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final WoSCore core = plugin.getCore();
-    private final DatabaseManager database;
+    private final DAOHub hub;
 
-    public StatsManager(DatabaseManager database) {
-        this.database = database;
+    public StatsManager(DAOHub hub) {
+        this.hub = hub;
     }
 
     public void createStat(Stat stat) {
         try {
-            database.getStatsDAO().createStat(stat);
+            hub.getStatsDAO().createStat(stat);
         } catch (Exception e) {
             plugin.writeLog("StatsManager", Level.SEVERE, "Error creating Stat: " + e.getMessage());
         }
@@ -44,7 +38,7 @@ public class StatsManager {
 
     public void createGlobalStat(GlobalStat globalStat) {
         try {
-            database.getStatsDAO().createGlobalStat(globalStat);
+            hub.getStatsDAO().createGlobalStat(globalStat);
         } catch (Exception e) {
             plugin.writeLog("StatsManager", Level.SEVERE, "Error creating global Stat: " + e.getMessage());
         }
@@ -71,9 +65,9 @@ public class StatsManager {
     public void deleteStat(CommandSender sender, String id, boolean global) {
         try {
             if (global) {
-                database.getStatsDAO().deleteGlobalStat(id);
+                hub.getStatsDAO().deleteGlobalStat(id);
             } else {
-                database.getStatsDAO().deleteStat(id);
+                hub.getStatsDAO().deleteStat(id);
             }
         } catch (Exception e) {
             Utils.error(sender, "stats", "error.not-found");
@@ -82,7 +76,7 @@ public class StatsManager {
 
     public void modifyStat(UUID uuid, String id, long amount, Operation operation) {
         try {
-            database.getStatsDAO().modifyPlayerStat(uuid, id, amount, operation);
+            hub.getStatsDAO().modifyPlayerStat(uuid, id, amount, operation);
         } catch (Exception e) {
             plugin.writeLog("StatsManager", Level.SEVERE, "Error modifying stat: " + e.getMessage());
         }
@@ -90,7 +84,7 @@ public class StatsManager {
 
     public void modifyGlobalStat(String id, long amount, Operation operation) {
         try {
-            database.getStatsDAO().modifyGlobalStatValue(id, amount, operation);
+            hub.getStatsDAO().modifyGlobalStatValue(id, amount, operation);
         } catch (Exception e) {
             plugin.writeLog("StatsManager", Level.SEVERE, "Error modifying global stat: " + e.getMessage());
         }
@@ -107,11 +101,11 @@ public class StatsManager {
     }
 
     public Map<String, Stat> getStats() {
-        return database.getStatsDAO().getAllStats();
+        return hub.getStatsDAO().getAllStats();
     }
 
     public Map<String, GlobalStat> getGlobalStats() {
-        return database.getStatsDAO().getAllGlobalStats();
+        return hub.getStatsDAO().getAllGlobalStats();
     }
     /*
     public boolean isLimit(UUID uuid, String id, long amount) {
@@ -134,7 +128,7 @@ public class StatsManager {
      */
     public long getPlayerStat(UUID playerUUID, String statId) {
         try {
-            return database.getStatsDAO().getPlayerStatValue(playerUUID, statId);
+            return hub.getStatsDAO().getPlayerStatValue(playerUUID, statId);
         } catch (Exception e) {
             plugin.writeLog("StatsManager", Level.SEVERE, "Error fetching player stat value: " + e.getMessage());
             return 0;
@@ -143,7 +137,7 @@ public class StatsManager {
 
     public long getGlobalStatValue(String id) {
         try {
-            return database.getStatsDAO().getGlobalStatValue(id);
+            return hub.getStatsDAO().getGlobalStatValue(id);
         } catch (Exception e) {
             plugin.writeLog("StatsManager", Level.SEVERE, "Error fetching global stat value: " + e.getMessage());
             return 0;

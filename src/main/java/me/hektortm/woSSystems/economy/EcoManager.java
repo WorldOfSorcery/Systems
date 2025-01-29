@@ -1,15 +1,11 @@
 package me.hektortm.woSSystems.economy;
 
-import me.hektortm.woSSystems.database.DatabaseManager;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.utils.dataclasses.Currency;
 import me.hektortm.wosCore.WoSCore;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
-import java.io.File;
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -18,14 +14,14 @@ import java.util.logging.Level;
 public class EcoManager {
     private final WoSCore core;
     private final WoSSystems plugin;
-    private final DatabaseManager database;
+    private final DAOHub hub;
     private final Map<String, me.hektortm.woSSystems.utils.dataclasses.Currency> currencies = new HashMap<>();
 
 
-    public EcoManager(WoSSystems plugin, DatabaseManager database) {
+    public EcoManager(WoSSystems plugin, DAOHub hub) {
         this.plugin = plugin;
         this.core = (WoSCore) plugin.getServer().getPluginManager().getPlugin("WoSCore");
-        this.database = database;
+        this.hub = hub;
 
         loadDefaultCurrencies();
         loadCurrencies();
@@ -53,7 +49,7 @@ public class EcoManager {
                     newAmount = 0;
                     break;
             }
-            database.getEconomyDAO().updatePlayerCurrency(player, currency, newAmount);
+            hub.getEconomyDAO().updatePlayerCurrency(player, currency, newAmount);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -67,7 +63,7 @@ public class EcoManager {
     public void loadCurrencies() {
         currencies.clear();
         try {
-            ResultSet rs = database.getEconomyDAO().getCurrencies(); // Assume this method returns all currencies from the database
+            ResultSet rs = hub.getEconomyDAO().getCurrencies(); // Assume this method returns all currencies from the database
             while (rs.next()) {
                 String id = rs.getString("id");
                 String name = rs.getString("name");
@@ -88,15 +84,15 @@ public class EcoManager {
 
     private void loadDefaultCurrencies() {
         try {
-            if (!database.getEconomyDAO().currencyExists("gold")) { // Check if 'gold' currency exists
+            if (!hub.getEconomyDAO().currencyExists("gold")) { // Check if 'gold' currency exists
                 Currency gold = new Currency("Gold", "g", "", "§6", false);
-                database.getEconomyDAO().addCurrency("gold", gold); // Insert into the database
+                hub.getEconomyDAO().addCurrency("gold", gold); // Insert into the database
                 currencies.put("gold", gold);
             }
 
-            if (!database.getEconomyDAO().currencyExists("signature_token")) { // Check if 'signature_token' exists
+            if (!hub.getEconomyDAO().currencyExists("signature_token")) { // Check if 'signature_token' exists
                 Currency signature = new Currency("Signature Token", "st", "", "§e", true);
-                database.getEconomyDAO().addCurrency("signature_token", signature); // Insert into the database
+                hub.getEconomyDAO().addCurrency("signature_token", signature); // Insert into the database
                 currencies.put("signature_token", signature);
             }
         } catch (SQLException e) {
@@ -115,7 +111,7 @@ public class EcoManager {
         if (player == null) return 0; // Default to 0 if player isn't found
 
         try {
-            return database.getEconomyDAO().getPlayerCurrency(player, currency);
+            return hub.getEconomyDAO().getPlayerCurrency(player, currency);
         } catch (SQLException e) {
             e.printStackTrace();
             return 0;

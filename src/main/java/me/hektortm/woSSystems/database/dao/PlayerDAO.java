@@ -1,24 +1,30 @@
 package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DatabaseManager;
+import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.wosCore.database.DatabaseManager;
+import me.hektortm.wosCore.database.IDAO;
 import org.bukkit.entity.Player;
 
 import java.sql.*;
 import java.util.UUID;
 import java.util.logging.Level;
 
-public class PlayerDAO {
-    private final Connection connection;
+public class PlayerDAO implements IDAO {
+    private final Connection conn;
+    private final DatabaseManager db;
+    private final DAOHub daoHub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
-    public PlayerDAO(DatabaseManager databaseManager) {
-        this.connection = databaseManager.getConnection();
-        createTable();
+    public PlayerDAO(DatabaseManager db, DAOHub daoHub) {
+        this.db = db;
+        this.daoHub = daoHub;
+        this.conn = db.getConnection();
     }
 
-    private void createTable() {
-        try (Statement statement = connection.createStatement()) {
+    @Override
+    public void initializeTable() throws SQLException {
+        try (Statement statement = conn.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS playerdata (" +
                     "uuid TEXT PRIMARY KEY, " +
                     "username TEXT NOT NULL, "+
@@ -27,13 +33,13 @@ public class PlayerDAO {
                     "uuid TEXT PRIMARY KEY, "+
                     "username TEXT NOT NULL, "+
                     "reserved_nick TEXT NOT NULL)");
-        } catch (SQLException e) {
-            plugin.writeLog("PlayerDAO", Level.SEVERE, "Error creating Tables: " + e.getMessage());
         }
     }
 
+
+
     public void addPlayer(Player player) throws SQLException {
-        try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO playerdata (uuid, username) VALUES (?, ?) ON CONFLICT(uuid) DO NOTHING")) {
+        try (PreparedStatement preparedStatement = conn.prepareStatement("INSERT INTO playerdata (uuid, username) VALUES (?, ?) ON CONFLICT(uuid) DO NOTHING")) {
             preparedStatement.setString(1, player.getUniqueId().toString());
             preparedStatement.setString(2, player.getName());
             preparedStatement.executeUpdate();
@@ -46,7 +52,7 @@ public class PlayerDAO {
                 return;
             }
         }
-        try (PreparedStatement stmt = connection.prepareStatement("UPDATE playerdata SET nickname = ? WHERE uuid = ?")) {
+        try (PreparedStatement stmt = conn.prepareStatement("UPDATE playerdata SET nickname = ? WHERE uuid = ?")) {
             stmt.setString(1, nickname);
             stmt.setString(2, player.getUniqueId().toString());
             stmt.executeUpdate();
@@ -56,7 +62,7 @@ public class PlayerDAO {
     }
 
     public String getNickname(Player player) {
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT nickname FROM playerdata WHERE uuid = ?")) {
+        try (PreparedStatement stmt = conn.prepareStatement("SELECT nickname FROM playerdata WHERE uuid = ?")) {
             stmt.setString(1, player.getUniqueId().toString());
             ResultSet rs = stmt.executeQuery();
             if (rs.getString("nickname") == null) return null;
@@ -71,7 +77,7 @@ public class PlayerDAO {
         if (isNickReserved(nickname)) {
             return;
         }
-        try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO reserved_nicknames (uuid, username, reserved_nick) VALUES (?,?,?)")) {
+        try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO reserved_nicknames (uuid, username, reserved_nick) VALUES (?,?,?)")) {
             stmt.setString(1, p.getUniqueId().toString());
             stmt.setString(2, p.getDisplayName());
             stmt.setString(3, nickname);
@@ -81,7 +87,7 @@ public class PlayerDAO {
     }
 
     public boolean isNickReserved(String nickname) {
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT 1 from reserved_nicknames WHERE reserved_nick = ?")) {
+        try (PreparedStatement stmt = conn.prepareStatement("SELECT 1 from reserved_nicknames WHERE reserved_nick = ?")) {
             stmt.setString(1, nickname);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) return true;
@@ -93,7 +99,7 @@ public class PlayerDAO {
     }
 
     public UUID getWhoReservedNick(String nickname) {
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT uuid FROM reserved_nicknames WHERE reserved_nick = ?")) {
+        try (PreparedStatement stmt = conn.prepareStatement("SELECT uuid FROM reserved_nicknames WHERE reserved_nick = ?")) {
             stmt.setString(1, nickname);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) return UUID.fromString(rs.getString("uuid"));

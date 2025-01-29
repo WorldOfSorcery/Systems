@@ -1,6 +1,6 @@
 package me.hektortm.woSSystems.listeners;
 
-import me.hektortm.woSSystems.database.DatabaseManager;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
@@ -17,15 +17,15 @@ import java.util.logging.Level;
 public class QuitListener implements Listener {
 
     private final UnlockableManager manager;
-    private final DatabaseManager database;
+    private final DAOHub hub;
     private final WoSCore core;
     private final Coinflip coinflip;
     private final WoSSystems plugin;
 
-    public QuitListener(WoSCore core, UnlockableManager manager, DatabaseManager database, Coinflip coinflip, WoSSystems plugin) {
+    public QuitListener(WoSCore core, UnlockableManager manager, DAOHub hub, Coinflip coinflip, WoSSystems plugin) {
         this.core = core;
         this.manager = manager;
-        this.database = database;
+        this.hub = hub;
         this.coinflip = coinflip;
         this.plugin = plugin;
     }
@@ -43,7 +43,7 @@ public class QuitListener implements Listener {
 
         plugin.getBossBarManager().removeBossBar(p);
         try {
-            database.getUnlockableDAO().removeAllTemps(p.getUniqueId());
+            hub.getUnlockableDAO().removeAllTemps(p.getUniqueId());
         } catch (SQLException e) {
             Bukkit.getLogger().log(Level.SEVERE, "Could not clear Temp unlockables", e);
         }

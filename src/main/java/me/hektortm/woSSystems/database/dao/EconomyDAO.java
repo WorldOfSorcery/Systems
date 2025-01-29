@@ -1,26 +1,30 @@
 package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DatabaseManager;
+
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.dataclasses.Currency;
+import me.hektortm.wosCore.database.DatabaseManager;
+import me.hektortm.wosCore.database.IDAO;
 import org.bukkit.entity.Player;
 
 import java.sql.*;
 import java.util.logging.Level;
 
-public class EconomyDAO {
+public class EconomyDAO implements IDAO {
     private final Connection connection;
     private final DatabaseManager databaseManager;
+    private final DAOHub hub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
-    public EconomyDAO(DatabaseManager databaseManager) {
+    public EconomyDAO(DatabaseManager databaseManager, DAOHub hub) {
         this.databaseManager = databaseManager;
         this.connection = databaseManager.getConnection();
-        createTables();
+        this.hub = hub;
     }
 
-
-    private void createTables() {
+    @Override
+    public void initializeTable() throws SQLException {
         try (Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS playerdata_economy(" +
                     "uuid TEXT, " +
@@ -36,13 +40,12 @@ public class EconomyDAO {
                     "icon TEXT, "+
                     "color TEXT, "+
                     "hidden_if_zero BOOLEAN NOT NULL DEFAULT false)");
-        } catch (SQLException e) {
-            plugin.writeLog("EconomyDAO", Level.SEVERE, "Error creating Tables: " + e.getMessage());
         }
     }
 
+
     public void ensurePlayerEconomyEntry(Player player, String currency) throws SQLException {
-        databaseManager.getPlayerDAO().addPlayer(player);
+        hub.getPlayerDAO().addPlayer(player);
         try (PreparedStatement prepStmt = connection.prepareStatement("INSERT INTO playerdata_economy (uuid, currency, amount) VALUES (?, ?, 0) ON CONFLICT(uuid, currency) DO NOTHING")) {
             prepStmt.setString(1, player.getUniqueId().toString());
             prepStmt.setString(2, currency);
@@ -98,6 +101,7 @@ public class EconomyDAO {
         ResultSet rs = stmt.executeQuery();
         return rs.next() && rs.getInt(1) > 0;
     }
+
 
 
 }

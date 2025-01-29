@@ -2,9 +2,10 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.channels.Channel;
-import me.hektortm.woSSystems.channels.ChannelManager;
-import me.hektortm.woSSystems.database.DatabaseManager;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.wosCore.Utils;
+import me.hektortm.wosCore.database.DatabaseManager;
+import me.hektortm.wosCore.database.IDAO;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -14,16 +15,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class ChannelDAO {
+public class ChannelDAO implements IDAO {
     private final Connection conn;
+    private final DatabaseManager db;
+    private final DAOHub daoHub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
-    public ChannelDAO(DatabaseManager db) {
+    public ChannelDAO(DatabaseManager db, DAOHub daoHub) {
+        this.db = db;
+        this.daoHub = daoHub;
         this.conn = db.getConnection();
-        createTables();
     }
 
-    private void createTables() {
+    @Override
+    public void initializeTable() throws SQLException {
         try (Statement stmt = conn.createStatement()) {
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS channels (
@@ -50,8 +55,6 @@ public class ChannelDAO {
                     PRIMARY KEY (uuid, channel_name)
                 )
             """);
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -111,9 +114,9 @@ public class ChannelDAO {
         try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 Channel channel = new Channel(
+                        rs.getString("color"),
                         rs.getString("name"),
                         rs.getString("short_name"),
-                        rs.getString("color"),
                         rs.getString("format"),
                         new ArrayList<>(),
                         rs.getBoolean("default_channel"),
@@ -152,8 +155,7 @@ public class ChannelDAO {
     public void addRecipient(String channelName, UUID playerUUID) {
         Player p = Bukkit.getPlayer(playerUUID);
         if (isInChannel(playerUUID, channelName)) {
-            p.sendMessage("You are already in this Channel.");
-            Utils.error(p, "channel", "error.arleady-in-channel");
+            Utils.info(p, "channel", "info.already-in-channel");
             return;
         }
 
@@ -165,7 +167,7 @@ public class ChannelDAO {
             pstmt.setBoolean(3, true);
             pstmt.setBoolean(4, false);
             pstmt.executeUpdate();
-            Utils.successMsg1Value(p, "channel", "joined", "%channel%", getChannelColor(channelName) + channelName);
+            Utils.success(p, "channel", "joined", "%channel%", getChannelColor(channelName) + channelName);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -186,7 +188,7 @@ public class ChannelDAO {
     public void removeRecipient(String channelName, UUID playerUUID) {
         Player p = Bukkit.getPlayer(playerUUID);
         if (!isInChannel(playerUUID, channelName)) {
-            Utils.error(p, "channel", "error.not-in-channel");
+            Utils.info(p, "channel", "error.not-in-channel");
             return;
         }
         String sql = "DELETE FROM playerdata_channels WHERE uuid = ? AND channel_name = ?";
@@ -225,7 +227,7 @@ public class ChannelDAO {
 
             String permission = getChannelPermission(channelName);
             if (permission != null && !p.hasPermission(permission)) {
-                p.sendMessage("you cannot join this channel.");
+                Utils.error(p, "channel", "error.no-perms");
                 return;
             } else if (permission == null || p.hasPermission(permission)) {
                 addRecipient(channelName, playerUUID); // if not in channel, add player to channel
@@ -239,7 +241,7 @@ public class ChannelDAO {
             pstmt.setString(2, playerUUID.toString());
             pstmt.setString(3, channelName);
             pstmt.executeUpdate();
-            p.sendMessage("§7You are now §afocused§7 on channel §e" + channelName);
+            Utils.success(p, "channel", "focused", "%channel%", getChannelColor(channelName) + channelName);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -292,6 +294,7 @@ public class ChannelDAO {
         }
         return false;
     }
+
 
 
 }

@@ -10,11 +10,12 @@ import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
-import me.hektortm.woSSystems.database.DatabaseManager;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.channels.cmd.ChannelCommand;
 import me.hektortm.woSSystems.channels.NicknameManager;
 import me.hektortm.woSSystems.channels.cmd.NicknameCommand;
+import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.database.dao.EconomyDAO;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.BalanceCommand;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
@@ -53,6 +54,7 @@ import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
 
+import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
@@ -69,8 +71,9 @@ import java.util.logging.Logger;
 public final class WoSSystems extends JavaPlugin {
 
     private HologramManager hologramManager;
+    private static WoSSystems instance;
+    private DAOHub daoHub;
     private WoSCore core;
-    private DatabaseManager dbManager;
     private static LangManager lang;
     public File fishingItemsFolder = new File(getDataFolder(), "professions/fishing/items");
     private LogManager log;
@@ -109,9 +112,21 @@ public final class WoSSystems extends JavaPlugin {
                 manager -> hologramManager = manager,
                 () -> getLogger().severe("Failed to initialize HologramLib manager.")
         );
-        core = WoSCore.getPlugin(WoSCore.class);
+        instance = this;
         try {
-            dbManager = new DatabaseManager(core.getDataFolder().getAbsolutePath() + "/WoS.db");
+            core = WoSCore.getPlugin(WoSCore.class);
+            DatabaseManager databaseManager = core.getDatabaseManager();
+
+            daoHub = new DAOHub(databaseManager);
+
+            databaseManager.registerDAO(daoHub.getPlayerDAO());
+            databaseManager.registerDAO(daoHub.getEconomyDAO());
+            databaseManager.registerDAO(daoHub.getChannelDAO());
+            databaseManager.registerDAO(daoHub.getUnlockableDAO());
+            databaseManager.registerDAO(daoHub.getCitemDAO());
+            databaseManager.registerDAO(daoHub.getStatsDAO());
+
+            databaseManager.initializeAllDAOs();
         } catch (SQLException e) {
             System.out.println("Failed to connect to Database"+ e.getMessage());
             Bukkit.getPluginManager().disablePlugin(this);
@@ -122,13 +137,13 @@ public final class WoSSystems extends JavaPlugin {
         lang = new LangManager(core);
         log = new LogManager(lang, core);
 
-        statsManager = new StatsManager(dbManager);
-        ecoManager = new EcoManager(this, dbManager);
-        unlockableManager = new UnlockableManager(dbManager);
+        statsManager = new StatsManager(daoHub);
+        ecoManager = new EcoManager(this, daoHub);
+        unlockableManager = new UnlockableManager(daoHub);
         fishingManager = new FishingManager(fishingItemsFolder);
 
         guiManager = new GUIManager();
-        citemManager = new CitemManager(dbManager); // Ensure interactionManager is null-safe.
+        citemManager = new CitemManager(daoHub); // Ensure interactionManager is null-safe.
         resolver = new PlaceholderResolver(statsManager, citemManager);
 
         conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager, citemManager);
@@ -136,7 +151,7 @@ public final class WoSSystems extends JavaPlugin {
         interactionManager.setConditionHandler(conditionHandler);
         interactionManager.setPlaceholderResolver(resolver);
         citemManager.setInteractionManager(interactionManager);
-        channelManager = new ChannelManager(this, dbManager);
+        channelManager = new ChannelManager(this, daoHub);
         nickManager = new NicknameManager();
 
         lootTableManager = new LoottableManager(interactionManager, citemManager);
@@ -198,11 +213,6 @@ public final class WoSSystems extends JavaPlugin {
             regionBossBarManager.removeBossBar(p);
         }
         timeManager.saveGameState();
-         try {
-             dbManager.closeConnection();
-         } catch (SQLException e) {
-             System.out.println("Failed to close database connection " + e.getMessage());
-         }
     }
 
     @Override
@@ -252,7 +262,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new InterListener(interactionManager, citemManager));
         eventReg(new DropListener());
         eventReg(new HoverListener(citemManager));
-        eventReg(new QuitListener(core, unlockableManager, dbManager, coinflipCommand, this));
+        eventReg(new QuitListener(core, unlockableManager, daoHub, coinflipCommand, this));
         eventReg(new FishingListener());
         eventReg(new JoinListener(this));
         eventReg(new ChannelListener(channelManager, nickManager, unlockableManager));

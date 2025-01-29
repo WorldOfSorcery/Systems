@@ -1,24 +1,32 @@
 package me.hektortm.woSSystems.database.dao;
 
-import me.hektortm.woSSystems.database.DatabaseManager;
+import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.stats.utils.Operation;
 import me.hektortm.woSSystems.utils.dataclasses.GlobalStat;
 import me.hektortm.woSSystems.utils.dataclasses.Stat;
+import me.hektortm.wosCore.database.DatabaseManager;
+import me.hektortm.wosCore.database.IDAO;
 
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class StatsDAO {
-    private Connection connection;
+public class StatsDAO implements IDAO {
+    private final Connection conn;
+    private final DatabaseManager db;
+    private final DAOHub daoHub;
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
-    public StatsDAO(DatabaseManager database) {
-        this.connection = database.getConnection();
-        createTables();
+    public StatsDAO(DatabaseManager db, DAOHub daoHub) {
+        this.db = db;
+        this.daoHub = daoHub;
+        this.conn = db.getConnection();
     }
 
-    private void createTables() {
+    @Override
+    public void initializeTable() throws SQLException {
         String createStatsTable = """
             CREATE TABLE IF NOT EXISTS player_stats (
                 uuid TEXT NOT NULL,
@@ -46,18 +54,16 @@ public class StatsDAO {
         """;
 
         try (
-             Statement stmt = connection.createStatement()) {
+                Statement stmt = conn.createStatement()) {
             stmt.execute(createStatsTable);
             stmt.execute(createGlobalStatsTable);
             stmt.execute(createStatDefinitionsTable);
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
     /** Creates a new player stat definition */
     public void createStat(Stat stat) {
-        try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO stats (stat_id, max, capped) VALUES (?, ?, ?) ON CONFLICT(stat_id) DO NOTHING;")) {
+        try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO stats (stat_id, max, capped) VALUES (?, ?, ?) ON CONFLICT(stat_id) DO NOTHING;")) {
             stmt.setString(1, stat.getId());
             stmt.setLong(2, stat.getMax());
             stmt.setBoolean(3, stat.getCapped());
@@ -70,7 +76,7 @@ public class StatsDAO {
     /** Creates a new global stat definition */
     public void createGlobalStat(GlobalStat globalStat) {
         String sql = "INSERT INTO global_stats (stat_id, value, max, capped) VALUES (?, 0, ?, ?) ON CONFLICT(stat_id) DO NOTHING;";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, globalStat.getId());
             stmt.setLong(2, globalStat.getMax());
             stmt.setBoolean(3, globalStat.getCapped());
@@ -83,7 +89,7 @@ public class StatsDAO {
     /** Deletes a player stat definition */
     public void deleteStat(String statId) {
         String sql = "DELETE FROM stats WHERE stat_id = ?;";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, statId);
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -94,7 +100,7 @@ public class StatsDAO {
     /** Deletes a global stat */
     public void deleteGlobalStat(String statId) {
         String sql = "DELETE FROM global_stats WHERE stat_id = ?;";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, statId);
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -121,7 +127,7 @@ public class StatsDAO {
             }
         }
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, statId);
             stmt.setLong(3, amount);
@@ -151,7 +157,7 @@ public class StatsDAO {
         }
 
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, amount);
             stmt.setString(2, statId);
             stmt.executeUpdate();
@@ -164,7 +170,7 @@ public class StatsDAO {
     public Map<String, Stat> getAllStats() {
         Map<String, Stat> stats = new HashMap<>();
         String sql = "SELECT stat_id, max, capped FROM stats;";
-        try (Statement stmt = connection.createStatement();
+        try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 stats.put(rs.getString("stat_id"), new Stat(
@@ -183,7 +189,7 @@ public class StatsDAO {
     public Map<String, GlobalStat> getAllGlobalStats() {
         Map<String, GlobalStat> stats = new HashMap<>();
         String sql = "SELECT * FROM global_stats;";
-        try (Statement stmt = connection.createStatement();
+        try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 stats.put(rs.getString("stat_id"), new GlobalStat(
@@ -201,7 +207,7 @@ public class StatsDAO {
     /** Retrieves a single player's stat value */
     public long getPlayerStatValue(UUID uuid, String statId) {
         String sql = "SELECT value FROM player_stats WHERE uuid = ? AND stat_id = ?;";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, statId);
             ResultSet rs = stmt.executeQuery();
@@ -217,7 +223,7 @@ public class StatsDAO {
     /** Retrieves a global stat value */
     public long getGlobalStatValue(String statId) {
         String sql = "SELECT value FROM global_stats WHERE stat_id = ?;";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, statId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {

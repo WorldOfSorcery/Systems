@@ -1,18 +1,15 @@
 package me.hektortm.woSSystems.systems.unlockables;
 
-import me.hektortm.woSSystems.database.DatabaseManager;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.unlockables.utils.Action;
 import me.hektortm.woSSystems.utils.dataclasses.TempUnlockable;
 import me.hektortm.woSSystems.utils.dataclasses.Unlockable;
-import me.hektortm.wosCore.WoSCore;
 import me.hektortm.wosCore.logging.LogManager;
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.io.File;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,22 +23,22 @@ public final Map<String, Unlockable> unlockables = new HashMap<>();
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final LogManager logManager = plugin.getLogManager();
-    private final DatabaseManager database;
+    private final DAOHub hub;
 
-    public UnlockableManager(DatabaseManager database) {
-        this.database = database;
+    public UnlockableManager(DAOHub hub) {
+        this.hub = hub;
     }
 
     public void deleteUnlockable(String id, boolean isTemp) {
         if (isTemp) {
             try {
-                database.getUnlockableDAO().deleteTempUnlockable(id);
+                hub.getUnlockableDAO().deleteTempUnlockable(id);
             } catch (SQLException e) {
                 plugin.writeLog("UnlockableManager", Level.SEVERE, "Delete Temporary Unlockable error: " + e.getMessage());
             }
         } else {
             try {
-                database.getUnlockableDAO().deleteUnlockable(id);
+                hub.getUnlockableDAO().deleteUnlockable(id);
             } catch (SQLException e) {
                 plugin.writeLog("UnlockableManager", Level.SEVERE, "Delete Unlockable error: " + e.getMessage());
             }
@@ -50,7 +47,7 @@ public final Map<String, Unlockable> unlockables = new HashMap<>();
 
     public void createUnlockable(Unlockable unlockable) {
         try {
-            database.getUnlockableDAO().addUnlockable(unlockable.getId());
+            hub.getUnlockableDAO().addUnlockable(unlockable.getId());
         } catch (SQLException e) {
             plugin.writeLog("UnlockableManager", Level.SEVERE, "Could not create Unlockable '"+unlockable.getId()+"': " + e.getMessage());
         }
@@ -58,7 +55,7 @@ public final Map<String, Unlockable> unlockables = new HashMap<>();
 
     public void createTempUnlockable(TempUnlockable unlockable) {
         try {
-            database.getUnlockableDAO().addTempUnlockable(unlockable.getId());
+            hub.getUnlockableDAO().addTempUnlockable(unlockable.getId());
         } catch (SQLException e) {
             plugin.writeLog("UnlockableManager", Level.SEVERE, "Could not create Temp Unlockable '"+unlockable.getId()+"': " + e.getMessage());
         }
@@ -86,7 +83,7 @@ public final Map<String, Unlockable> unlockables = new HashMap<>();
 
     public void modifyUnlockable(UUID uuid, String id, Action action) {
         try {
-            database.getUnlockableDAO().modifyUnlockable(uuid, id, action);
+            hub.getUnlockableDAO().modifyUnlockable(uuid, id, action);
         } catch (SQLException e) {
             plugin.writeLog("UnlockableManager", Level.SEVERE, "Could not modify Unlockable '"+id+"': " + e.getMessage());
         }
@@ -94,7 +91,7 @@ public final Map<String, Unlockable> unlockables = new HashMap<>();
 
     public void modifyTempUnlockable(UUID uuid, String id, Action action) {
         try {
-            database.getUnlockableDAO().modifyTempUnlockable(uuid, id, action);
+            hub.getUnlockableDAO().modifyTempUnlockable(uuid, id, action);
         } catch (SQLException e) {
             plugin.writeLog("UnlockableManager", Level.SEVERE, "Could not modify Temp Unlockable '"+id+"': " + e.getMessage());
         }
@@ -102,7 +99,7 @@ public final Map<String, Unlockable> unlockables = new HashMap<>();
 
     public boolean getPlayerUnlockable(OfflinePlayer p, String id) {
         try {
-            return database.getUnlockableDAO().getPlayerUnlockable(p, id);
+            return hub.getUnlockableDAO().getPlayerUnlockable(p, id);
         } catch (SQLException e) {
             plugin.writeLog("UnlockableManager", Level.SEVERE, "Could not get Unlockable '"+id+"': " + e.getMessage());
             return false;
@@ -111,7 +108,7 @@ public final Map<String, Unlockable> unlockables = new HashMap<>();
 
     public boolean getPlayerTempUnlockable(OfflinePlayer p, String id) {
         try {
-            return database.getUnlockableDAO().getPlayerTempUnlockable(p, id);
+            return hub.getUnlockableDAO().getPlayerTempUnlockable(p, id);
         } catch (SQLException e) {
             plugin.writeLog("UnlockableManager", Level.SEVERE, "Could not get Temp Unlockable '"+id+"': " + e.getMessage());
             return false;

@@ -1,7 +1,10 @@
 package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DatabaseManager;
+import me.hektortm.woSSystems.database.DAOHub;
+
+import me.hektortm.wosCore.database.DatabaseManager;
+import me.hektortm.wosCore.database.IDAO;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -15,17 +18,20 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.Level;
 
-public class CitemDAO {
-
+public class CitemDAO implements IDAO {
     private final Connection conn;
+    private final me.hektortm.wosCore.database.DatabaseManager db;
+    private final DAOHub daoHub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
-    public CitemDAO(DatabaseManager db) {
+    public CitemDAO(DatabaseManager db, DAOHub daoHub) {
+        this.db = db;
+        this.daoHub = daoHub;
         this.conn = db.getConnection();
-        createTable();
     }
 
-    private void createTable() {
+    @Override
+    public void initializeTable() throws SQLException {
         try (Statement stmt = conn.createStatement()) {
             stmt.execute("CREATE TABLE IF NOT EXISTS citems(" +
                     "id TEXT, " +
@@ -39,8 +45,6 @@ public class CitemDAO {
                     "flag_unusable BOOLEAN, "+
                     "action_left TEXT, " +
                     "action_right TEXT)");
-        } catch (SQLException e) {
-            plugin.writeLog("CitemDAO", Level.SEVERE, "Error creating Tables: " + e.getMessage());
         }
     }
 
