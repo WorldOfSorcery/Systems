@@ -38,7 +38,6 @@ public class focus extends SubCommand {
             player.sendMessage("Channel not found.");
         } else {
             channelManager.setFocus(player, focusChannel);
-            player.sendMessage("Now focused on channel: " + focusChannel.getName());
         }
     }
 }

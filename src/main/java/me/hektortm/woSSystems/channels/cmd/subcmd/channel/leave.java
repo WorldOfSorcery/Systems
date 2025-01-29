@@ -40,7 +40,6 @@ public class leave extends SubCommand {
             player.sendMessage("You cannot leave this channel.");
         } else {
             channelManager.leaveChannel(player, leaveChannel.getName());
-            player.sendMessage("Left channel: " + leaveChannel.getName());
         }
     }
 }

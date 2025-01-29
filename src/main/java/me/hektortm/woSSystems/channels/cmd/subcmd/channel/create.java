@@ -79,7 +79,7 @@ public class create extends SubCommand {
         }
 
         // Create the channel
-        channelManager.createChannel(name, shortName, "{player}: {message}", new ArrayList<>(), defaultChannel, autoJoin, forceJoin, hiddenFromList, null, broadcastable, -1);
+        channelManager.createChannel("§7", name, shortName, "{player}: {message}", new ArrayList<>(), defaultChannel, autoJoin, forceJoin, hiddenFromList, null, broadcastable, -1);
         player.sendMessage("§aChannel §f" + name + " §acreated successfully.");
         player.sendMessage("§7Settings:");
         player.sendMessage("§7- Force Join: " + (forceJoin ? "§aEnabled" : "§cDisabled"));

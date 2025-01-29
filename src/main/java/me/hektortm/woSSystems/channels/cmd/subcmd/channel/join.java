@@ -42,7 +42,6 @@ public class join extends SubCommand {
             player.sendMessage("Channel not found.");
         } else {
             channelManager.joinChannel(player, joinChannel.getName());
-            player.sendMessage("Joined channel: " + joinChannel.getName());
         }
     }
 }
