@@ -4,6 +4,7 @@ import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -34,13 +35,13 @@ public class create extends SubCommand {
 
         // Check for minimum required arguments
         if (args.length < 2) {
-            player.sendMessage("§cUsage: /ch create <name> <shortName> [-f] [-a]");
-            player.sendMessage("§7Options:");
-            player.sendMessage("§7- §f-f§7: Force join (players are automatically added to the channel)");
-            player.sendMessage("§7- §f-a§7: Auto join (players join the channel automatically when they log in)");
-            player.sendMessage("§7- §f-h§7: Hidden (hides the channel from the channel list)");
-            player.sendMessage("§7- §f-d§7: Default Channel (when joining this channel gets focused)");
-            player.sendMessage("§7- §f-b§7: Broadcastable (adds the ability to broadcast in this channel)");
+            Utils.info(player, "channel", "info.usage.create.usage");
+            Utils.noPrefix(player, "channel", "info.usage.create.options");
+            Utils.noPrefix(player, "channel", "info.usage.create.forcejoin");
+            Utils.noPrefix(player, "channel", "info.usage.create.autojoin");
+            Utils.noPrefix(player, "channel", "info.usage.create.hidden");
+            Utils.noPrefix(player, "channel", "info.usage.create.default");
+            Utils.noPrefix(player, "channel", "info.usage.create.broadcast");
             return;
         }
 
@@ -72,21 +73,20 @@ public class create extends SubCommand {
                     broadcastable = true;
                     break;
                 default:
-                    player.sendMessage("§cUnknown option: " + args[i]);
-                    player.sendMessage("§7Valid options: §f-f§7, §f-a");
+                    Utils.error(player, "channel", "error.unknown-option");
                     return;
             }
         }
 
         // Create the channel
         channelManager.createChannel("§7", name, shortName, "{player}: {message}", new ArrayList<>(), defaultChannel, autoJoin, forceJoin, hiddenFromList, null, broadcastable, -1);
-        player.sendMessage("§aChannel §f" + name + " §acreated successfully.");
-        player.sendMessage("§7Settings:");
-        player.sendMessage("§7- Force Join: " + (forceJoin ? "§aEnabled" : "§cDisabled"));
-        player.sendMessage("§7- Auto Join: " + (autoJoin ? "§aEnabled" : "§cDisabled"));
-        player.sendMessage("§7- Hidden: " + (hiddenFromList ? "§aEnabled" : "§cDisabled"));
-        player.sendMessage("§7- Default Channel: "+ (defaultChannel ? "§aEnabled" : "§cDisabled"));
-        player.sendMessage("§7- Broadcastable: " + (broadcastable ? "§aEnabled" : "§cDisabled"));
+        Utils.success(player, "channel", "created.success", "%channelName%", name);
+        Utils.noPrefix(player, "channel", "created.settings");
+        Utils.noPrefix(player, "channel", "created.forcejoin", "%status%", (forceJoin ? "§aEnabled" : "§cDisabled"));
+        Utils.noPrefix(player, "channel", "created.autojoin", "%status%", (autoJoin ? "§aEnabled" : "§cDisabled"));
+        Utils.noPrefix(player, "channel", "created.hidden", "%status%", (hiddenFromList ? "§aEnabled" : "§cDisabled"));
+        Utils.noPrefix(player, "channel", "created.default", "%status%", (defaultChannel ? "§aEnabled" : "§cDisabled"));
+        Utils.noPrefix(player, "channel", "created.broadcast", "%status%", (broadcastable ? "§aEnabled" : "§cDisabled"));
         channelManager.saveChannels();
     }
 }

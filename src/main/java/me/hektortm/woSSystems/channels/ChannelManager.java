@@ -1,33 +1,36 @@
 package me.hektortm.woSSystems.channels;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DatabaseManager;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.ChannelDAO;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.logging.Level;
 
 public class ChannelManager {
     public final WoSSystems plugin;
     private final Map<String, Channel> channels = new HashMap<>();
-    private final DatabaseManager db;
+    private final DAOHub hub;
 
-    public ChannelManager(WoSSystems plugin, DatabaseManager db) {
+    public ChannelManager(WoSSystems plugin, DAOHub hub) {
         this.plugin = plugin;
-        this.db = db;
+        this.hub = hub;
         loadChannels();
     }
 
     public void loadChannels() {
-        List<Channel> loadedChannels = db.getChannelDAO().getAllChannels();
+        List<Channel> loadedChannels = hub.getChannelDAO().getAllChannels();
         for (Channel channel : loadedChannels) {
+            plugin.writeLog("ChannelManager", Level.INFO, "loaded Channel: " + channel.getName());
+            plugin.writeLog("ChannelManager", Level.INFO, "short name: " + channel.getShortName());
             channels.put(channel.getName().toLowerCase(), channel);
         }
     }
 
     public void saveChannels() {
         for (Channel channel : channels.values()) {
-            db.getChannelDAO().updateChannel(channel);
+            hub.getChannelDAO().updateChannel(channel);
         }
     }
 
@@ -36,7 +39,7 @@ public class ChannelManager {
         Channel channel = getChannel(channelName);
         if (channel != null) {
             channel.addRecipient(player.getName());
-            db.getChannelDAO().addRecipient(channelName, playerUUID);
+            hub.getChannelDAO().addRecipient(channelName, playerUUID);
         }
     }
 
@@ -45,7 +48,7 @@ public class ChannelManager {
         Channel channel = getChannel(channelName);
         if (channel != null) {
             channel.removeRecipient(player.getName());
-            db.getChannelDAO().removeRecipient(channelName, playerUUID);
+            hub.getChannelDAO().removeRecipient(channelName, playerUUID);
         }
     }
 
@@ -62,7 +65,7 @@ public class ChannelManager {
                               String permission, boolean broadcastable, int radius) {
         Channel channel = new Channel(color, name, shortName, format, recipients, defaultChannel, autoJoin, forceJoin, hidden, permission, broadcastable, radius);
         channels.put(name.toLowerCase(), channel);
-        db.getChannelDAO().insertChannel(channel);
+        hub.getChannelDAO().insertChannel(channel);
     }
 
     public void autoJoin(Player player) {
@@ -78,7 +81,10 @@ public class ChannelManager {
         for (Channel channel : getChannels()) {
             if (channel.isForceJoin()) {
                 String name = channel.getName();
-                joinChannel(player, name);
+                if (!hub.getChannelDAO().isInChannel(player.getUniqueId(), name)) {
+                    joinChannel(player, name);
+                }
+
             }
         }
     }
@@ -96,21 +102,21 @@ public class ChannelManager {
 
     public void deleteChannel(String name) {
         channels.remove(name.toLowerCase());
-        db.getChannelDAO().deleteChannel(name);
+        hub.getChannelDAO().deleteChannel(name);
     }
 
     public void setFocus(Player player, Channel channel) {
         UUID playerUUID = player.getUniqueId();
-        db.getChannelDAO().setFocusedChannel(playerUUID, channel.getName());
+        hub.getChannelDAO().setFocusedChannel(playerUUID, channel.getName());
     }
 
     public Channel getFocusedChannel(Player player) {
-        String channelName = db.getChannelDAO().getFocusedChannel(player.getUniqueId());
+        String channelName = hub.getChannelDAO().getFocusedChannel(player.getUniqueId());
         return channelName != null ? getChannel(channelName) : null;
     }
 
     public ChannelDAO getChannelDAO() {
-        return db.getChannelDAO();
+        return hub.getChannelDAO();
     }
 
 }

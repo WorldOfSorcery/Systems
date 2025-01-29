@@ -1,6 +1,66 @@
 error:
-  not-in-channel: "You are not in this channel."
+  no-perms: "You do not have permission to join this channel."
+  not-found: "Channel not found."
+  broadcast: "This channel is not broadcastable."
+  unknown-option: "Unknown option."
+  colorcode: "Invalid Colorcode. Use '&'."
+info:
   already-in-channel: "You are already in this channel."
+  not-in-channel: "You are not in this channel."
+  force-join: "You cannot leave this channel."
+  usage:
+    join: "Usage: /ch join <channel>"
+    leave: "Usage: /ch leave <channel>"
+    focus: "Usage: /ch focus <channel>"
+    create:
+      usage: "Usage: /ch create <name> <shortname> [-f] [-a] [...]"
+      options: "§7Options:"
+      forcejoin: "%cyan_300%-f: §7Force Join (players are automatically added to the channel)"
+      autojoin: "%cyan_300%-a: §7Auto Join (players join the channel when they first log in)"
+      hidden: "%cyan_300%-h: §7Hidden (hides the channel from the channel list)"
+      default: "%cyan_300%-d: §7Default Channel (players cannot leave this channel)"
+      broadcast: "%cyan_300%-b: §7Broadcastable (adds the ability to broadcast into this channel)"
+    modify:
+      usage: "Usage: /ch modify <channel> <attribute> <value>"
+      attributes: "§7short / Attribute: [Type] EXAMPLE"
+      format: "%cyan_300%-fm / format: §7[String] &7{player}: &f{message}"
+      radius: "%cyan_300%-r / radius: §7[Integer] 30"
+      default: "%cyan_300%-d / defaultchannel: §7[Boolean] true/false"
+      forcejoin: "%cyan_300%-f / forcejoin: §7[Boolean] true/false"
+      autojoin: "%cyan_300%-a / autojoin: §7[Boolean] true/false"
+      hidden: "%cyan_300%-h / hidden: §7[Boolean] true/false"
+      permission: "%cyan_300%-p / permission: §7[String] chat.staff"
+      broadcast: "%cyan_300%-b / broadcastable: §7[Boolean] true/false"
+      color: "%cyan_300%-c / color: §7[Colorcode] &6"
 
 joined: "§7You have joined %channel%§7."
 left: "§7You have left %channel%§7."
+focused: "§7You have focused %channel%§7."
+created:
+  success: "§aChannel §e'%channelName%' §acreated successfully."
+  settings: "§7Settings:"
+  forcejoin: "§7- Force Join: %status%"
+  autojoin: "§7- Auto Join: %status%"
+  hidden: "§7- Hidden: %status%"
+  default: "§7- Default Channel: %status%"
+  broadcast: "§7- Broadcastable: %status%"
+
+list:
+  header: "§7Available Channels:"
+  entry: "%channel%: §7%short% [%status%§7]"
+  entry-hidden: "%channel%: §7%short% [%status%§7] §f§ohidden"
+  status:
+    focused: "§bFocused"
+    joined: "§aJoined"
+    left: "§cLeft"
+
+modify:
+  format: "§aFormat for %channel% §aupdated to: %format%"
+  radius: "§aRadius for %channel% §aupdated to: §e%radius%"
+  default: "§aDefault Channel value for %channel% §aupdated to: §e%value%"
+  forcejoin: "§aForce Join value for %channel% §aupdated to: §e%value%"
+  autojoin: "§aAuto Join value for %channel% §aupdated to: §e%value%"
+  hidden: "§aHidden value for %channel% §aupdated to: §e%value%"
+  permission: "§aPermission for %channel% §aupdated to: §e%permission%"
+  broadcast: "§aBroadcastable value for %channel% §aupdated to: §e%value%"
+  color: "§aColor for %channel% §aupdated to: %color%"

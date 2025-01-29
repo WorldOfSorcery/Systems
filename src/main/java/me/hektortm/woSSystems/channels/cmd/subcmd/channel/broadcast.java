@@ -5,6 +5,7 @@ import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -38,12 +39,13 @@ public class broadcast extends SubCommand {
         Channel channel = channelManager.getChannel(channelName);
 
         if (channel == null) {
-            player.sendMessage("This channel does not exist.");
+            Utils.error(player, "channel", "error.not-found");
             return;
         }
 
         if (!channel.isBroadcastable()) {
-            player.sendMessage("This channel is not broadcastable");
+            Utils.error(player, "channel", "channel.broadcast");
+            return;
         }
 
         String message = String.join(" ", args).substring(args[0].length()).trim();

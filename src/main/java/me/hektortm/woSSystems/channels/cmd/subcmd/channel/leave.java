@@ -4,6 +4,7 @@ import me.hektortm.woSSystems.channels.Channel;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -29,15 +30,15 @@ public class leave extends SubCommand {
         Player player = (Player) sender;
 
         if (args.length < 1) {
-            player.sendMessage("Usage: /ch leave <name>");
+            Utils.info(player, "channel", "info.usage.leave");
             return;
         }
 
         Channel leaveChannel = channelManager.getChannel(args[0]);
         if (leaveChannel == null) {
-            player.sendMessage("Channel not found.");
+            Utils.error(player, "channel", "error.not-found");
         } else if (leaveChannel.isForceJoin()) {
-            player.sendMessage("You cannot leave this channel.");
+            Utils.info(player, "channel", "info.force-join");
         } else {
             channelManager.leaveChannel(player, leaveChannel.getName());
         }

@@ -4,6 +4,7 @@ import me.hektortm.woSSystems.channels.Channel;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -29,19 +30,19 @@ public class join extends SubCommand {
         Player player = (Player) sender;
 
         if (args.length < 1) {
-            player.sendMessage("Usage: /ch join <name>");
+            Utils.info(player, "channel", "info.usage.join");
             return;
         }
 
         Channel joinChannel = channelManager.getChannel(args[0]);
-        if (joinChannel.getPermission() != null && !player.hasPermission(joinChannel.getPermission())) {
-            player.sendMessage("You do not have permission to join this channel.");
+        if (joinChannel == null) {
+            Utils.error(player, "channel", "error.not-found");
             return;
         }
-        if (joinChannel == null) {
-            player.sendMessage("Channel not found.");
-        } else {
-            channelManager.joinChannel(player, joinChannel.getName());
-        }
+        if (joinChannel.getPermission() != null && !player.hasPermission(joinChannel.getPermission()))
+            Utils.error(player, "channel", "error.no-perms");
+
+        else channelManager.joinChannel(player, joinChannel.getName());
+
     }
 }

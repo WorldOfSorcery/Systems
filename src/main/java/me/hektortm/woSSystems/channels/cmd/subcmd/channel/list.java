@@ -4,11 +4,16 @@ import me.hektortm.woSSystems.channels.Channel;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
+import me.hektortm.wosCore.LangManager;
+import me.hektortm.wosCore.Utils;
+import me.hektortm.wosCore.WoSCore;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class list extends SubCommand {
     private final ChannelManager channelManager;
+    private final WoSCore core = WoSCore.getPlugin(WoSCore.class);
+    private final LangManager lang = core.getLang();
 
     public list(ChannelManager channelManager) {
         this.channelManager = channelManager;
@@ -28,26 +33,26 @@ public class list extends SubCommand {
     public void execute(CommandSender sender, String[] args) {
         Player player = (Player) sender;
 
-        player.sendMessage("Available channels:");
+        Utils.success(player, "channel", "list.header");
         for (Channel channel : channelManager.getChannels()) {
 
             String status;
             if (channelManager.getChannelDAO().isInChannel(player.getUniqueId(), channel.getName())) {
                 if (channelManager.getFocusedChannel(player) == channel) {
-                    status = "§bFocused";
+                    status = lang.getMessage("channel", "list.status.focused");
                 } else {
-                    status = "§aJoined";
+                    status = lang.getMessage("channel", "list.status.joined");
                 }
             } else {
-                status = "§cLeft";
+                status = lang.getMessage("channel", "list.status.left");
             }
 
             if (!channel.isHidden()) {
-                player.sendMessage(channel.getColor() + channel.getName()+": §7"+channel.getShortName() + " §7["+status+"§7]");
+                Utils.noPrefix(player, "channel", "list.entry", "%channel%", channel.getColor()+channel.getName(), "%short%", channel.getShortName(), "%status%", status);
             } else {
                 if (channel.getPermission() != null) {
                     if(player.hasPermission(channel.getPermission())) {
-                        player.sendMessage(channel.getColor() + channel.getName()+": §7"+channel.getShortName() + " §7["+status+"§7] §f§ohidden");
+                        Utils.noPrefix(player, "channel", "list.entry-hidden", "%channel%", channel.getColor()+channel.getName(), "%short%", channel.getShortName(), "%status%", status);;
                     }
                 }
             }

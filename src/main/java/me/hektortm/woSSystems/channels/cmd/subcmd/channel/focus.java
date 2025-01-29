@@ -4,6 +4,7 @@ import me.hektortm.woSSystems.channels.Channel;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -29,13 +30,13 @@ public class focus extends SubCommand {
         Player player = (Player) sender;
 
         if (args.length < 1) {
-            player.sendMessage("Usage: /ch focus <name>");
+            Utils.info(player, "channel", "info.usage.focus");
             return;
         }
 
         Channel focusChannel = channelManager.getChannel(args[0]);
         if (focusChannel == null) {
-            player.sendMessage("Channel not found.");
+            Utils.error(player, "channel", "error.not-found");
         } else {
             channelManager.setFocus(player, focusChannel);
         }
