@@ -151,9 +151,12 @@ public class CitemManager {
         }
         ItemMeta meta = item.getItemMeta();
 
-        if (meta == null || !meta.hasLore()) return;
+        if (meta == null) return;
 
-        List<String> copyLore = meta.getLore();
+        // Check if lore is null (for items without lore)
+        List<String> copyLore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
+
+        // Proceed if there is lore or an empty list
         int length = copyLore.size();
 
         String nameKey2 = "null";
@@ -201,8 +204,8 @@ public class CitemManager {
             item.setItemMeta(meta);
         }
 
-        if (item == null || !item.hasItemMeta()) return;
-        if (meta == null) return;
+        // Check if item has valid meta and persistent data
+        if (!item.hasItemMeta() || meta == null) return;
 
         PersistentDataContainer data = meta.getPersistentDataContainer();
         String itemId = data.get(idKey, PersistentDataType.STRING);
@@ -225,6 +228,10 @@ public class CitemManager {
                 if (newMeta != null) {
                     // Keep the "Time" and "Obtained by" intact, but update other lore entries
                     List<String> newLore = newMeta.getLore();
+                    if (newLore == null) {
+                        newLore = new ArrayList<>();
+                    }
+
                     // Re-attach "Time" and "Obtained by" to the new lore
                     if (nameKey2 != null && !nameKey2.equals("null")) {
                         newLore.add("§7");
@@ -238,7 +245,10 @@ public class CitemManager {
                         }
                     }
 
-                    newMeta.setLore(newLore);
+                    // Only set lore if it's not null or empty
+                    if (!newLore.isEmpty()) {
+                        newMeta.setLore(newLore);
+                    }
                     savedItem.setItemMeta(newMeta);
 
                     // Update the player's item to match the saved data
@@ -252,6 +262,7 @@ public class CitemManager {
             log.sendWarning(p.getName() + ": Item \"" + item.getItemMeta().getDisplayName() + "%red_300%\" -> no valid ID");
         }
     }
+
 
     public void leftClickAction(Player p) {
         ItemStack item = p.getItemInHand();

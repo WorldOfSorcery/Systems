@@ -50,7 +50,7 @@ public class UpdateCommand extends SubCommand {
 
         String id = args[0];
 
-        if (data.getCitemDAO().citemExists(id)) {
+        if (!data.getCitemDAO().citemExists(id)) {
             Utils.error(p, "citems", "error.not-found");
             return;
         }

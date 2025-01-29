@@ -49,6 +49,7 @@ public class CitemDAO {
         String material = item.getType().toString();
         String display_name = meta.getDisplayName() != null ? meta.getDisplayName() : "";
         List<String> lore = meta.hasLore() ? meta.getLore() : null;
+        String loreString = lore != null ? lore.toString() : "";
         String enchants = meta.hasEnchants() ? meta.getEnchants().toString() : null;
         int damage = meta instanceof Damageable ? ((Damageable) meta).getDamage() : 0;
         int custom_model_data = meta.hasCustomModelData() ? meta.getCustomModelData() : 0;
@@ -68,7 +69,7 @@ public class CitemDAO {
             stmt.setString(1, id);
             stmt.setString(2, material);
             stmt.setString(3, display_name);
-            stmt.setString(4, lore.toString());
+            stmt.setString(4, loreString);
             stmt.setString(5, enchants);
             stmt.setInt(6, damage);
             stmt.setInt(7, custom_model_data);
@@ -87,6 +88,7 @@ public class CitemDAO {
         String material = item.getType().toString();
         String display_name = meta.getDisplayName() != null ? meta.getDisplayName() : "";
         List<String> lore = meta.hasLore() ? meta.getLore() : null;
+        String loreString = lore != null ? lore.toString() : "";
         String enchants = meta.hasEnchants() ? meta.getEnchants().toString() : null;
         int damage = meta instanceof Damageable ? ((Damageable) meta).getDamage() : 0;
         int custom_model_data = meta.hasCustomModelData() ? meta.getCustomModelData() : 0;
@@ -105,7 +107,7 @@ public class CitemDAO {
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, material);
             stmt.setString(2, display_name);
-            stmt.setString(3, lore.toString());
+            stmt.setString(3, loreString);
             stmt.setString(4, enchants);
             stmt.setInt(5, damage);
             stmt.setInt(6, custom_model_data);
