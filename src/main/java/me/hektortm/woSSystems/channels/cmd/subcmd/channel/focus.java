@@ -33,12 +33,7 @@ public class focus extends SubCommand {
             Utils.info(player, "channel", "info.usage.focus");
             return;
         }
+            channelManager.setFocus(player, args[0]);
 
-        Channel focusChannel = channelManager.getChannel(args[0]);
-        if (focusChannel == null) {
-            Utils.error(player, "channel", "error.not-found");
-        } else {
-            channelManager.setFocus(player, focusChannel);
-        }
     }
 }

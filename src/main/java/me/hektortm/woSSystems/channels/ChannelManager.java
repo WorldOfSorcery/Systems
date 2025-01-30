@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.channels;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.ChannelDAO;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -34,21 +35,38 @@ public class ChannelManager {
         }
     }
 
-    public void joinChannel(Player player, String channelName) {
+
+    public void joinChannel(Player player, String channelIdentifier) {
         UUID playerUUID = player.getUniqueId();
-        Channel channel = getChannel(channelName);
+        Channel channel = getChannel(channelIdentifier); // Try to get by normal name
+        if (channel == null) {
+            channel = getChannelByShortName(channelIdentifier); // Try to get by short name
+        }
+
         if (channel != null) {
+            if (channel.getPermission() != null && !player.hasPermission(channel.getPermission())) {
+                Utils.error(player, "channel", "error.no-perms");
+                return;
+            }
             channel.addRecipient(player.getName());
-            hub.getChannelDAO().addRecipient(channelName, playerUUID);
+            hub.getChannelDAO().addRecipient(channel.getName(), playerUUID);
+        } else {
+            Utils.error(player, "channel", "error.not-found");
         }
     }
 
-    public void leaveChannel(Player player, String channelName) {
+    public void leaveChannel(Player player, String channelIdentifier) {
         UUID playerUUID = player.getUniqueId();
-        Channel channel = getChannel(channelName);
+        Channel channel = getChannel(channelIdentifier); // Try to get by normal name
+        if (channel == null) {
+            channel = getChannelByShortName(channelIdentifier); // Try to get by short name
+        }
+
         if (channel != null) {
             channel.removeRecipient(player.getName());
-            hub.getChannelDAO().removeRecipient(channelName, playerUUID);
+            hub.getChannelDAO().removeRecipient(channel.getName(), playerUUID);
+        } else {
+            Utils.error(player, "channel", "error.not-found");
         }
     }
 
@@ -93,7 +111,7 @@ public class ChannelManager {
         if (getChannelDAO().getFocusedChannel(player.getUniqueId()) == null) {
             for (Channel channel : getChannels()) {
                 if (channel.isDefaultChannel()) {
-                    setFocus(player, channel);
+                    setFocus(player, channel.getName());
                 }
             }
         }
@@ -105,14 +123,32 @@ public class ChannelManager {
         hub.getChannelDAO().deleteChannel(name);
     }
 
-    public void setFocus(Player player, Channel channel) {
+    public void setFocus(Player player, String channelIdentifier) {
         UUID playerUUID = player.getUniqueId();
-        hub.getChannelDAO().setFocusedChannel(playerUUID, channel.getName());
+        Channel channel = getChannel(channelIdentifier); // Try to get by normal name
+        if (channel == null) {
+            channel = getChannelByShortName(channelIdentifier); // Try to get by short name
+        }
+
+        if (channel != null) {
+            hub.getChannelDAO().setFocusedChannel(playerUUID, channel.getName());
+        } else {
+            Utils.error(player, "channel", "error.not-found");
+        }
     }
 
     public Channel getFocusedChannel(Player player) {
         String channelName = hub.getChannelDAO().getFocusedChannel(player.getUniqueId());
         return channelName != null ? getChannel(channelName) : null;
+    }
+
+    public Channel getChannelByShortName(String shortName) {
+        for (Channel channel : channels.values()) {
+            if (channel.getShortName().equalsIgnoreCase(shortName)) {
+                return channel;
+            }
+        }
+        return null; // No channel found with the given short name
     }
 
     public ChannelDAO getChannelDAO() {

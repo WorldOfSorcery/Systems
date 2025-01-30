@@ -21,7 +21,7 @@ public class ChannelCommand implements CommandExecutor {
 
         subCommands.put("create", new create(channelManager));
         subCommands.put("focus", new focus(channelManager));
-        subCommands.put("unfocus", new unfocus(channelManager));
+        //subCommands.put("unfocus", new unfocus(channelManager));
         subCommands.put("join", new join(channelManager));
         subCommands.put("leave", new leave(channelManager));
         subCommands.put("list", new list(channelManager));

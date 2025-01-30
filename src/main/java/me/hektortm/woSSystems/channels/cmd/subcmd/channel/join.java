@@ -34,15 +34,7 @@ public class join extends SubCommand {
             return;
         }
 
-        Channel joinChannel = channelManager.getChannel(args[0]);
-        if (joinChannel == null) {
-            Utils.error(player, "channel", "error.not-found");
-            return;
-        }
-        if (joinChannel.getPermission() != null && !player.hasPermission(joinChannel.getPermission()))
-            Utils.error(player, "channel", "error.no-perms");
-
-        else channelManager.joinChannel(player, joinChannel.getName());
+        channelManager.joinChannel(player, args[0]);
 
     }
 }

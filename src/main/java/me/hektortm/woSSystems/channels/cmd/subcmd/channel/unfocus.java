@@ -34,7 +34,7 @@ public class unfocus extends SubCommand {
         } else {
             for (Channel channel : channelManager.getChannels()) {
                 if (channel.isDefaultChannel()) {
-                    channelManager.setFocus(player, channel);
+                    //channelManager.setFocus(player, channel);
                 }
             }
 
