@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.listeners;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.channels.NicknameManager;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
@@ -33,6 +34,7 @@ public class InventoryClickListener implements Listener {
     private final LangManager lang;
     private final NicknameManager nickManager;
     private final Map<UUID, String> nickRequests;
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
 
     public InventoryClickListener(EcoManager ecoManager, Coinflip coinflipCommand, LangManager lang, Map<UUID, String> nickRequests, NicknameManager nickManager) {
@@ -147,6 +149,9 @@ public class InventoryClickListener implements Listener {
 
             // Close the player's inventory after the action
             player.closeInventory();
+        }
+        if (event.getInventory() == plugin.getChannelManager().itemPreview) {
+            event.setCancelled(true);
         }
     }
 }

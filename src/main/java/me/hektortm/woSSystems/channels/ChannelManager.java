@@ -1,26 +1,36 @@
 package me.hektortm.woSSystems.channels;
 
+import com.github.retrooper.packetevents.protocol.nbt.NBTCompound;
+import com.sk89q.jnbt.CompoundTag;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.ChannelDAO;
 import me.hektortm.woSSystems.utils.Icons;
 import me.hektortm.wosCore.Utils;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
 import java.util.logging.Level;
 
 public class ChannelManager {
+    public Inventory itemPreview = Bukkit.createInventory(null, InventoryType.DISPENSER, "");
     public final WoSSystems plugin;
     private final Map<String, Channel> channels = new HashMap<>();
+    public final Map<UUID, Runnable> clickActions = new HashMap<>();
     private final DAOHub hub;
 
     public ChannelManager(WoSSystems plugin, DAOHub hub) {
@@ -169,7 +179,7 @@ public class ChannelManager {
             Location senderLocation = player.getLocation();
 
             // Create the chat component for the message
-            BaseComponent[] chatComponent = TextComponent.fromLegacyText(getFormattedMessage(focusedChannel, player, message));
+            BaseComponent[] chatComponent = getFormattedMessage(focusedChannel, player, message);
 
             // Send the message to recipients based on the channel's radius
             for (UUID recipientUUID : getChannelDAO().getRecipients(focusedChannel.getName())) {
@@ -187,11 +197,12 @@ public class ChannelManager {
     public void sendMessagePerCommand(Player player, String channel, String message) {
         Channel focusedChannel = getChannel(channel);
         if (focusedChannel != null) {
+
             // Get the sender's location
             Location senderLocation = player.getLocation();
 
             // Create the chat component for the message
-            BaseComponent[] chatComponent = TextComponent.fromLegacyText(getFormattedMessage(focusedChannel, player, message));
+            BaseComponent[] chatComponent = getFormattedMessage(focusedChannel, player, message);
 
             // Send the message to recipients based on the channel's radius
             for (UUID recipientUUID : getChannelDAO().getRecipients(focusedChannel.getName())) {
@@ -220,73 +231,124 @@ public class ChannelManager {
         return senderLocation.distanceSquared(recipientLocation) <= (radius * radius);
     }
 
-    public String getFormattedMessage(Channel channel, Player sender, String message) {
+    public BaseComponent[] getFormattedMessage(Channel channel, Player sender, String message) {
         String format = channel.getFormat();
+
         NicknameManager nickManager = new NicknameManager();
         // Use the player's nickname if available, otherwise use their username
         String name = nickManager.getNickname(sender) != null ?
                 nickManager.getNickname(sender).replace("_", " ") :
                 sender.getName();
 
-        // Replace {player} with a hoverable player name component
+        // Create a hoverable player name component
         TextComponent playerComponent = new TextComponent(name);
         playerComponent.setHoverEvent(new HoverEvent(
                 HoverEvent.Action.SHOW_TEXT,
                 new ComponentBuilder(getPlayerStats(sender)).create()
         ));
 
-        // Replace {player} and {message} placeholders
-        format = format
-                .replace("{player}", "%player%") // Placeholder for the player component
-                .replace("{message}", message);
+        ItemStack item = sender.getInventory().getItemInMainHand();
+        TextComponent itemComponent = new TextComponent();
 
-        // Replace [item] with the item's name and hover text
-        if (format.contains("[item]")) {
-            ItemStack item = sender.getInventory().getItemInMainHand();
-            if (item != null && !item.getType().isAir()) {
-                TextComponent itemComponent = createItemComponent(item);
-                format = format.replace("[item]", "%item%"); // Placeholder for the item component
-                return format.replace("%player%", "").replace("%item%", ""); // Replace with the actual components
+        if (item != null && !item.getType().isAir()) {
+            ItemMeta meta = item.getItemMeta();
+            PersistentDataContainer data = meta.getPersistentDataContainer();
+            String id = data.get(plugin.getCitemManager().getIdKey(), PersistentDataType.STRING);
+
+            if (id != null) {
+                ItemStack citem = plugin.getCitemManager().getCitemDAO().getCitem(id);
+
+                if (citem != null) {
+                    // Get display name and lore from the custom item
+                    String displayName = hub.getCitemDAO().getDisplayName(id);
+                    List<String> lore = hub.getCitemDAO().getLore(id);
+
+                    // Build the lore into a single string with line breaks
+                    StringBuilder loreBuilder = new StringBuilder();
+                    for (int i = 0; i < lore.size(); i++) {
+                        loreBuilder.append(lore.get(i));
+                        if (i < lore.size() - 1) {
+                            loreBuilder.append("\n");
+                        }
+                    }
+                    String formattedLore = loreBuilder.toString();
+
+                    // Create the item component with display name
+                    itemComponent = new TextComponent("§7[" + displayName + "§7]");
+
+                    // Add hover text for the item
+                    itemComponent.setHoverEvent(new HoverEvent(
+                            HoverEvent.Action.SHOW_TEXT,
+                            new ComponentBuilder(formattedLore).create()
+                    ));
+                } else {
+                    itemComponent = new TextComponent("§c[Invalid Custom Item]");
+                }
             } else {
-                format = format.replace("[item]", "nothing"); // If the player is not holding an item
+                itemComponent = new TextComponent("§7[" + item.getType().name() + "§7]");
+            }
+        } else {
+            itemComponent = new TextComponent("§7[Air]");
+        }
+
+        // Start building the formatted message
+        ComponentBuilder builder = new ComponentBuilder();
+
+        // Split the format into parts to correctly insert components
+        String[] parts = format.split("\\{player\\}", 2);
+        builder.append(TextComponent.fromLegacyText(parts[0])); // Part before {player}
+        builder.append(playerComponent); // Player component
+
+        if (parts.length > 1) {
+            String remaining = parts[1];
+            String[] msgParts = remaining.split("\\{message\\}", 2);
+
+            if (msgParts.length > 0) {
+                builder.append(TextComponent.fromLegacyText(msgParts[0])); // Part before {message}
+            }
+
+            // Handle [item] replacement
+            if (message.contains("[item]")) {
+                String[] messageParts = message.split("\\[item\\]", 2);
+                String beforeItem = messageParts[0];
+                String afterItem = messageParts.length > 1 ? messageParts[1] : "";
+
+                // Append text before [item]
+                if (!beforeItem.isEmpty()) {
+                    builder.append(TextComponent.fromLegacyText(beforeItem));
+                }
+
+
+                builder.append(itemComponent);
+
+                // Append text after [item]
+                if (!afterItem.isEmpty()) {
+                    // Create a new TextComponent for the text after [item] to avoid hover text
+                    builder.append(TextComponent.fromLegacyText(afterItem));
+                }
+            } else {
+                // If no [item], just append the message
+                builder.append(TextComponent.fromLegacyText(message));
+            }
+
+            // Append the final message text (message placeholder replacement)
+            if (msgParts.length > 1) {
+                builder.append(TextComponent.fromLegacyText(msgParts[1])); // Append text after {message}
             }
         }
 
-        return format.replace("%player%", ""); // Replace with the actual player component
+        return builder.create();
     }
 
-    private TextComponent createItemComponent(ItemStack item) {
-        TextComponent itemComponent = new TextComponent(getItemName(item));
-        itemComponent.setHoverEvent(new HoverEvent(
-                HoverEvent.Action.SHOW_ITEM,
-                new ComponentBuilder(getItemHoverText(item)).create()
-        ));
-        return itemComponent;
-    }
-
-    private String getItemName(ItemStack item) {
-        if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
-            return item.getItemMeta().getDisplayName();
-        }
-        return item.getType().toString().toLowerCase().replace("_", " ");
-    }
-
-    private String getItemHoverText(ItemStack item) {
-        StringBuilder hoverText = new StringBuilder();
-        hoverText.append(getItemName(item)).append("\n");
-
-        if (item.hasItemMeta() && item.getItemMeta().hasLore()) {
-            for (String line : item.getItemMeta().getLore()) {
-                hoverText.append(line).append("\n");
-            }
-        }
-
-        return hoverText.toString().trim();
-    }
     private String getPlayerStats(Player player) {
-        return  "§eRank: " + Icons.RANK_HEADSTAFF.getIcon() + "\n" +
+        return  "§eRank: §f" + Icons.RANK_HEADSTAFF.getIcon() + "\n" +
                 "§6Gold: §f" + hub.getEconomyDAO().getPlayerCurrency(player, "gold") + "\n" +
                 "§aLevel: §f" + player.getLevel();
+    }
+
+    public void viewItem(Player p, ItemStack item) {
+        itemPreview.setItem(4, item);
+        p.openInventory(itemPreview);
     }
 
     public ChannelDAO getChannelDAO() {

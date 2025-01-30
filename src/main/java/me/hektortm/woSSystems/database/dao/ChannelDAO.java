@@ -13,6 +13,7 @@ import java.io.FileInputStream;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class ChannelDAO implements IDAO {
@@ -289,10 +290,7 @@ public class ChannelDAO implements IDAO {
     }
 
     public boolean isFocusedChannel(UUID uuid, String channelName) {
-        if (channelName == getFocusedChannel(uuid)) {
-            return true;
-        }
-        return false;
+        return Objects.equals(channelName, getFocusedChannel(uuid));
     }
 
 

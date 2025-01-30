@@ -137,6 +137,35 @@ public class CitemDAO implements IDAO {
         }
     }
 
+    public List<String> getLore(String id) {
+        String sql = "SELECT lore FROM citems WHERE id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, id);
+            ResultSet resultSet = pstmt.executeQuery();
+            String loreString = resultSet.getString("lore");
+            List<String> lore = (loreString != null && !loreString.isEmpty())
+                    ? Arrays.asList(loreString.replace("[", "").replace("]", "").split(", "))
+                    : null;
+            return lore;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public String getDisplayName(String id) {
+        String sql = "SELECT display_name FROM citems WHERE id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, id);
+            ResultSet resultSet = pstmt.executeQuery();
+            String displayName = resultSet.getString("display_name");
+            return displayName;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public ItemStack getCitem(String id) {
         String query = "SELECT * FROM citems WHERE id = ?";
 

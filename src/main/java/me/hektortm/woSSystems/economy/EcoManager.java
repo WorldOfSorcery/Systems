@@ -110,12 +110,9 @@ public class EcoManager {
         Player player = plugin.getServer().getPlayer(uuid);
         if (player == null) return 0; // Default to 0 if player isn't found
 
-        try {
-            return hub.getEconomyDAO().getPlayerCurrency(player, currency);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return 0;
-        }
+
+        return hub.getEconomyDAO().getPlayerCurrency(player, currency);
+
     }
 
     public boolean hasEnoughCurrency(UUID uuid, String currency, long amount) {
