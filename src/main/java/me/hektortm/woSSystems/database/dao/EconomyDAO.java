@@ -44,12 +44,14 @@ public class EconomyDAO implements IDAO {
     }
 
 
-    public void ensurePlayerEconomyEntry(Player player, String currency) throws SQLException {
+    public void ensurePlayerEconomyEntry(Player player, String currency) {
         hub.getPlayerDAO().addPlayer(player);
         try (PreparedStatement prepStmt = connection.prepareStatement("INSERT INTO playerdata_economy (uuid, currency, amount) VALUES (?, ?, 0) ON CONFLICT(uuid, currency) DO NOTHING")) {
             prepStmt.setString(1, player.getUniqueId().toString());
             prepStmt.setString(2, currency);
             prepStmt.executeUpdate();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -63,7 +65,7 @@ public class EconomyDAO implements IDAO {
         }
     }
 
-    public long getPlayerCurrency(Player player, String currency) throws SQLException {
+    public long getPlayerCurrency(Player player, String currency) {
         ensurePlayerEconomyEntry(player, currency);
         try (PreparedStatement prepStmt = connection.prepareStatement("SELECT amount FROM playerdata_economy WHERE uuid = ? AND currency = ?")) {
             prepStmt.setString(1, player.getUniqueId().toString());
@@ -74,6 +76,9 @@ public class EconomyDAO implements IDAO {
             } else {
                 return 0;
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
         }
     }
 

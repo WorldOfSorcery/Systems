@@ -10,9 +10,11 @@ import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
+import me.hektortm.woSSystems.channels.Channel;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.channels.cmd.ChannelCommand;
 import me.hektortm.woSSystems.channels.NicknameManager;
+import me.hektortm.woSSystems.channels.cmd.ChannelCommandExecutor;
 import me.hektortm.woSSystems.channels.cmd.NicknameCommand;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.EconomyDAO;
@@ -58,12 +60,17 @@ import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -195,6 +202,7 @@ public final class WoSSystems extends JavaPlugin {
             regionBossBarManager.createBossBar(p);
         }
         channelManager.loadChannels();
+        registerChannelCommands();
         recipeManager.loadRecipes();
         hologramManager.removeAll();
         registerCommands();
@@ -235,6 +243,35 @@ public final class WoSSystems extends JavaPlugin {
     }
 
 
+    private void registerChannelCommands() {
+        for (Channel channel : channelManager.getChannels()) {
+            registerCommand(channel.getShortName(), new ChannelCommandExecutor(channelManager, channel));
+        }
+    }
+
+    private void registerCommand(String commandName, CommandExecutor executor) {
+        try {
+            // Get the server's command map
+            Field commandMapField = Bukkit.getServer().getClass().getDeclaredField("commandMap");
+            commandMapField.setAccessible(true);
+            CommandMap commandMap = (CommandMap) commandMapField.get(Bukkit.getServer());
+
+            // Create a new PluginCommand
+            Constructor<PluginCommand> constructor = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
+            constructor.setAccessible(true);
+            PluginCommand command = constructor.newInstance(commandName, this);
+
+            // Set the executor
+            command.setExecutor(executor);
+
+            // Register the command
+            commandMap.register(commandName, command);
+        } catch (Exception e) {
+            getLogger().severe("Failed to register command: " + commandName);
+            e.printStackTrace();
+        }
+    }
+
     private void registerCommands() {
 
         //cmdReg("opengui", new GUIcommand(guiManager, interactionManager));
@@ -265,7 +302,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new QuitListener(core, unlockableManager, daoHub, coinflipCommand, this));
         eventReg(new FishingListener());
         eventReg(new JoinListener(this));
-        eventReg(new ChannelListener(channelManager, nickManager, unlockableManager));
+        eventReg(new ChannelListener(channelManager, nickManager, unlockableManager, daoHub));
         eventReg(new CustomHandler(regionBossBarManager));
 
         getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager), this);

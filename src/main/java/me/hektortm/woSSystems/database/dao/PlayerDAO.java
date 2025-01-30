@@ -38,11 +38,13 @@ public class PlayerDAO implements IDAO {
 
 
 
-    public void addPlayer(Player player) throws SQLException {
+    public void addPlayer(Player player) {
         try (PreparedStatement preparedStatement = conn.prepareStatement("INSERT INTO playerdata (uuid, username) VALUES (?, ?) ON CONFLICT(uuid) DO NOTHING")) {
             preparedStatement.setString(1, player.getUniqueId().toString());
             preparedStatement.setString(2, player.getName());
             preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
