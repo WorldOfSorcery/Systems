@@ -214,8 +214,6 @@ public final class WoSSystems extends JavaPlugin {
         hologramManager.removeAll();
         registerCommands();
         registerEvents();
-        PacketEvents.getAPI().getEventManager().registerListener(new ChatClickListener());
-        PacketEvents.getAPI().load();
         interactionManager.loadInteraction();
         interactionManager.particleTask();
     }
