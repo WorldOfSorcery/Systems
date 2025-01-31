@@ -25,6 +25,11 @@ public class ChannelCommandExecutor implements CommandExecutor {
 
         Player player = (Player) sender;
 
+        if (channel.getPermission() != null && !sender.hasPermission(channel.getPermission())) {
+            player.sendMessage("No permission");
+            return true;
+        }
+
         // Check if the player is joined to the channel
         if (!channelManager.getChannelDAO().isInChannel(player.getUniqueId(), channel.getName())) {
             player.sendMessage("§cYou are not joined to the channel: " + channel.getName());

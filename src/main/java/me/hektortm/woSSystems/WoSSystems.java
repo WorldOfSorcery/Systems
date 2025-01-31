@@ -15,6 +15,7 @@ import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.channels.cmd.ChannelCommand;
 import me.hektortm.woSSystems.channels.NicknameManager;
 import me.hektortm.woSSystems.channels.cmd.ChannelCommandExecutor;
+import me.hektortm.woSSystems.channels.cmd.InternalViewItemCommand;
 import me.hektortm.woSSystems.channels.cmd.NicknameCommand;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.EconomyDAO;
@@ -65,6 +66,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -72,6 +74,9 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -104,6 +109,8 @@ public final class WoSSystems extends JavaPlugin {
     private RegionBossBar regionBossBarManager;
 
     public static StringFlag DISPLAY_NAME;
+    private final Map<UUID, Inventory> clickActions = new HashMap<>();
+
 
     // TODO:
     //  - Interactions
@@ -207,6 +214,8 @@ public final class WoSSystems extends JavaPlugin {
         hologramManager.removeAll();
         registerCommands();
         registerEvents();
+        PacketEvents.getAPI().getEventManager().registerListener(new ChatClickListener());
+        PacketEvents.getAPI().load();
         interactionManager.loadInteraction();
         interactionManager.particleTask();
     }
@@ -293,6 +302,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("loottable", new LoottableCommand(lootTableManager));
         cmdReg("sign", new SignCommand(citemManager, ecoManager));
         cmdReg("time", new TimeCommand(timeManager, this, lang));
+        cmdReg("internalviewitem", new InternalViewItemCommand(this));
     }
 
     private void registerEvents() {
@@ -393,6 +403,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public ChannelManager getChannelManager() {
         return channelManager;
+    }
+    public Map<UUID, Inventory> getClickActions() {
+        return clickActions;
     }
 
 }

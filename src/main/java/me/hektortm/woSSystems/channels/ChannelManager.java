@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.channels;
 
+import com.maximde.hologramlib.utils.MiniMessage;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.ChannelDAO;
@@ -7,11 +8,14 @@ import me.hektortm.woSSystems.utils.Icons;
 import me.hektortm.wosCore.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.md_5.bungee.api.chat.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
@@ -26,7 +30,7 @@ import java.util.*;
 import java.util.logging.Level;
 
 public class ChannelManager {
-    public Inventory itemPreview = Bukkit.createInventory(null, InventoryType.DISPENSER, "");
+    public Inventory itemPreview = Bukkit.createInventory(null, InventoryType.DISPENSER, "Viewing Item");
     public final WoSSystems plugin;
     private final Map<String, Channel> channels = new HashMap<>();
     public final Map<UUID, Runnable> clickActions = new HashMap<>();
@@ -246,64 +250,69 @@ public class ChannelManager {
 
         // Handle the item in the player's main hand
         ItemStack item = sender.getInventory().getItemInMainHand();
-        String itemName = "air";
-        String loreString = "";
-        if (item != null && !item.getType().isAir()) {
-            ItemMeta meta = item.getItemMeta();
-            PersistentDataContainer data = meta.getPersistentDataContainer();
-            String id = data.get(plugin.getCitemManager().getIdKey(), PersistentDataType.STRING);
-
-            if (id != null) {
-                ItemStack citem = plugin.getCitemManager().getCitemDAO().getCitem(id);
-
-                if (citem != null) {
-                    // Get display name and lore from the custom item
-                    itemName = hub.getCitemDAO().getDisplayName(id);
-                    List<String> lore = hub.getCitemDAO().getLore(id);
-
-                    // Build the lore into a single string with line breaks
-                    StringBuilder loreBuilder = new StringBuilder();
-                    for (int i = 0; i < lore.size(); i++) {
-                        loreBuilder.append(lore.get(i));
-                        if (i < lore.size() - 1) {
-                            loreBuilder.append("\n");
-                        }
-                    }
-                    loreString = loreBuilder.toString();
-                } else {
-                    itemName = "§cInvalid CItem";
+        ItemMeta meta = item.getItemMeta();
+        String itemName;
+        if (item.hasItemMeta() && meta.hasDisplayName()) {
+            itemName = meta.getDisplayName();
+        } else {
+            String typeName = item.getType().name().toLowerCase().replace("_", " ");
+            String[] parts = typeName.split(" ");
+            StringBuilder result = new StringBuilder();
+            for (String part : parts) {
+                if (!part.isEmpty()) {
+                    result.append(Character.toUpperCase(part.charAt(0)))
+                            .append(part.substring(1))
+                            .append(" ");
                 }
             }
+            itemName = result.toString().trim();
+        }
+
+        List<String> lore = item.hasItemMeta() ? meta.getLore() : null;
+        String loreString = "";
+        if (item.hasItemMeta()) {
+            if (lore != null) {
+                StringBuilder loreBuilder = new StringBuilder();
+                for (int i = 0; i < lore.size(); i++) {
+                    loreBuilder.append(lore.get(i));
+                    if (i < lore.size() - 1) {
+                        loreBuilder.append("\n");
+                    }
+                }
+                loreString = loreBuilder.toString();
+            }
+        }
+
+        if (item == null || item.getType() == Material.AIR) {
+            itemName = "Air";
+            loreString = "";
         }
 
         // Create the item component with hover text
-        Component itemComponent = Component.text("§7[" + itemName + "§7]")
-                .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(Component.text(loreString)));
+        UUID clickId = UUID.randomUUID();
+        Component itemComponent = LegacyComponentSerializer.legacySection().deserialize("§7[" + itemName + "§7]")
+                .hoverEvent(HoverEvent.showText(Component.text(loreString)))
+                .clickEvent(ClickEvent.runCommand("/internalviewitem " + clickId));
+
+        // Store the action in the clickActions map
+        plugin.getClickActions().put(clickId, viewItem(item));
 
         // Replace [item] in the message with the item component
-        Component messageComponent = Component.text(message)
+        Component messageComponent = LegacyComponentSerializer.legacySection().deserialize(message)
                 .replaceText(builder -> builder.matchLiteral("[item]").replacement(itemComponent));
 
-        // Split the format into parts and build the final message
-        String[] formatParts = format.split("\\{player\\}|\\{message\\}");
-        Component finalMessage = Component.empty();
+        // Parse the format into a Component using LegacyComponentSerializer
+        Component formatComponent = LegacyComponentSerializer.legacySection().deserialize(format);
 
-        for (int i = 0; i < formatParts.length; i++) {
-            finalMessage = finalMessage.append(Component.text(formatParts[i]));
+        // Replace {player} and {message} placeholders in the format
+        Component finalMessage = formatComponent
+                .replaceText(builder -> builder.matchLiteral("{player}").replacement(playerComponent))
+                .replaceText(builder -> builder.matchLiteral("{message}").replacement(messageComponent));
 
-            if (i == 0) {
-                // Insert the player component after the first part
-                finalMessage = finalMessage.append(playerComponent);
-            } else if (i == 1) {
-                // Insert the message component after the second part
-                finalMessage = finalMessage.append(messageComponent);
-            }
-        }
-
-        // Send the final message to the player
-
-        return finalMessage; // Return the message as a string (optional)
+        return finalMessage;
     }
+
+
 
     private @NotNull ComponentLike getPlayerStats(Player player) {
         return  Component.text("§eRank: §f" + Icons.RANK_HEADSTAFF.getIcon() + "\n" +
@@ -311,9 +320,9 @@ public class ChannelManager {
                 "§aLevel: §f" + player.getLevel());
     }
 
-    public void viewItem(Player p, ItemStack item) {
+    public Inventory viewItem(ItemStack item) {
         itemPreview.setItem(4, item);
-        p.openInventory(itemPreview);
+        return itemPreview;
     }
 
     public ChannelDAO getChannelDAO() {

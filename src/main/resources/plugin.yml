@@ -92,6 +92,10 @@ commands:
   time:
     description: View and manipulate the time
     usage: /<command> [date|reload|freeze]
+  internalviewitem:
+    description: Internal command for viewing items.
+    usage: /internalviewitem <clickId>
+
 
 permissions:
   # Citem Permissions

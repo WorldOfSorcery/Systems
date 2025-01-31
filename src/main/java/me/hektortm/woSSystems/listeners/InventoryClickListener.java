@@ -20,6 +20,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -49,7 +50,10 @@ public class InventoryClickListener implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
         Inventory inv = event.getClickedInventory();
-
+        if (inv == null) return;
+        if (inv.getType().equals(InventoryType.DISPENSER) && event.getView().getTitle().equals("Viewing Item")) {
+            event.setCancelled(true);
+        }
         if (event.getView().getTitle().equalsIgnoreCase(lang.getMessage("economy", "coinflip.gui.title"))) {
             event.setCancelled(true);
 
@@ -150,8 +154,6 @@ public class InventoryClickListener implements Listener {
             // Close the player's inventory after the action
             player.closeInventory();
         }
-        if (event.getInventory() == plugin.getChannelManager().itemPreview) {
-            event.setCancelled(true);
-        }
+
     }
 }
