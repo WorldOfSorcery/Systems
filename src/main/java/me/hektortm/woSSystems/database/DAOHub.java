@@ -10,6 +10,7 @@ public class DAOHub {
     private final StatsDAO statsDAO;
     private final CitemDAO citemDAO;
     private final ChannelDAO channelDAO;
+    private final NicknameDAO nicknameDAO;
 
     public DAOHub(DatabaseManager databaseManager) {
         this.economyDAO = new EconomyDAO(databaseManager, this);
@@ -18,6 +19,7 @@ public class DAOHub {
         this.statsDAO = new StatsDAO(databaseManager, this);
         this.citemDAO = new CitemDAO(databaseManager, this);
         this.channelDAO = new ChannelDAO(databaseManager, this);
+        this.nicknameDAO = new NicknameDAO(databaseManager, this);
     }
     public EconomyDAO getEconomyDAO() {
         return economyDAO;
@@ -36,5 +38,8 @@ public class DAOHub {
     }
     public ChannelDAO getChannelDAO() {
         return channelDAO;
+    }
+    public NicknameDAO getNicknameDAO() {
+        return nicknameDAO;
     }
 }

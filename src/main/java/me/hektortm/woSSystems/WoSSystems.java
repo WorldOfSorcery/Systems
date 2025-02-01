@@ -135,6 +135,7 @@ public final class WoSSystems extends JavaPlugin {
 
             databaseManager.registerDAO(daoHub.getPlayerDAO());
             databaseManager.registerDAO(daoHub.getEconomyDAO());
+            databaseManager.registerDAO(daoHub.getNicknameDAO());
             databaseManager.registerDAO(daoHub.getChannelDAO());
             databaseManager.registerDAO(daoHub.getUnlockableDAO());
             databaseManager.registerDAO(daoHub.getCitemDAO());
@@ -166,7 +167,7 @@ public final class WoSSystems extends JavaPlugin {
         interactionManager.setPlaceholderResolver(resolver);
         citemManager.setInteractionManager(interactionManager);
         channelManager = new ChannelManager(this, daoHub);
-        nickManager = new NicknameManager();
+        nickManager = new NicknameManager(daoHub);
 
         lootTableManager = new LoottableManager(interactionManager, citemManager);
         coinflipCommand = new Coinflip(ecoManager, this, lang);

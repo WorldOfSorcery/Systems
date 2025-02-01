@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.channels;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
@@ -21,65 +22,19 @@ import java.util.*;
 
 public class NicknameManager {
 
-    private final File nickFolder = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "channels" + File.separator + "nicknames");
-    private final File currentNickFile;
-    private final File reservedNickFile;
-    private final File nickRequestFile;
     private final WoSCore core = WoSCore.getPlugin(WoSCore.class);
     private final LangManager lang = new LangManager(core);
     private final Map<UUID, String> nickRequests = new HashMap<>();
     public final Map<UUID, String> reservedNicks = new HashMap<>();
+    private final DAOHub hub;
     static Inventory inv;
 
-    public NicknameManager() {
-        this.currentNickFile = new File(nickFolder, "current_nicks.yml");
-        this.reservedNickFile = new File(nickFolder, "reserved_nicks.yml");
-        this.nickRequestFile = new File(nickFolder, "nick_requests.yml");
+    public NicknameManager(DAOHub hub) {
+        this.hub = hub;
 
-        ensureFileExists(currentNickFile);
-        ensureFileExists(reservedNickFile);
-        ensureFileExists(nickRequestFile);
-
-        loadReservedNicknames();
-        loadNickRequests();
-    }
-
-    private void ensureFileExists(File file) {
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                Bukkit.getLogger().severe("Could not create file: " + file.getName());
-            }
-        }
-    }
-
-    private void loadReservedNicknames() {
-        FileConfiguration config = YamlConfiguration.loadConfiguration(reservedNickFile);
-        reservedNicks.clear();
-
-        config.getKeys(false).forEach(uuidString -> {
-            try {
-                UUID uuid = UUID.fromString(uuidString); // Parse the key as UUID
-                String nickname = config.getString(uuidString); // Get the nickname value
-                if (nickname != null) {
-                    reservedNicks.put(uuid, nickname); // Add to the map
-                } else {
-                    Bukkit.getLogger().warning("Missing nickname for UUID: " + uuidString);
-                }
-            } catch (IllegalArgumentException e) {
-                Bukkit.getLogger().warning("Invalid UUID format in reserved_nicks.yml: " + uuidString);
-            }
-        });
-    }
-
-
-    private void loadNickRequests() {
-        FileConfiguration config = YamlConfiguration.loadConfiguration(nickRequestFile);
-        nickRequests.clear();
-        config.getKeys(false).forEach(uuid -> {
-            nickRequests.put(UUID.fromString(uuid), config.getString(uuid));
-        });
+        // Load reserved nicknames and nickname requests from the database
+        this.reservedNicks.putAll(hub.getNicknameDAO().getReservedNicknames());
+        this.nickRequests.putAll(hub.getNicknameDAO().getNickRequests());
     }
 
     public void openRequestMenu(Player p) {
@@ -136,8 +91,6 @@ public class NicknameManager {
         p.openInventory(menu);
     }
 
-
-
     private int getInvSize() {
         int size = nickRequests.size();
         if (size <= 9) return 9;
@@ -147,133 +100,54 @@ public class NicknameManager {
     }
 
     public void saveNickname(UUID uuid, String nickname) {
-        FileConfiguration config = getNicknamesConfig();
-
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-        String realName = player.getName();
-
-        config.set(uuid + ".username", realName);
-        config.set(uuid + ".nickname", nickname);
-
-        List<String> previousNicks = config.getStringList(uuid + ".previous_nicks");
-        if (!previousNicks.contains(nickname)) {
-            previousNicks.add(nickname);
-        }
-        config.set(uuid + ".previous_nicks", previousNicks);
-
-        saveConfig(config);
+        hub.getNicknameDAO().saveNickname(uuid, player.getName(), nickname);
     }
 
     public void resetNickname(UUID uuid) {
-        FileConfiguration config = getNicknamesConfig();
-
-        config.set(uuid + ".nickname", null);
-        saveConfig(config);
+        hub.getNicknameDAO().resetNickname(uuid);
     }
 
     public String getNickname(OfflinePlayer player) {
-        UUID uuid = player.getUniqueId();
-        return getNicknamesConfig().getString(uuid + ".nickname", player.getName());
+        return hub.getNicknameDAO().getNickname(player.getUniqueId());
     }
 
     public void getRealNameOrNickname(CommandSender sender, String input) {
-        FileConfiguration config = getNicknamesConfig();
-
-        // Check if the input matches a username
-        for (String key : config.getKeys(false)) {
-            String username = config.getString(key + ".username");
-            String currentNickname = config.getString(key + ".nickname");
-
-            // If input matches the username, return the current nickname or username
-            if (username != null && username.equalsIgnoreCase(input)) {
-                String nickname = currentNickname != null ? currentNickname : username;
-                if (nickname != username) {
-                    Utils.successMsg2Values(sender, "nicknames", "realname.success.nickname", "%result%", nickname.replace("_", " "), "%input%", username);
-                    return;
-                } else {
-                    Utils.error(sender, "nicknames", "error.realname-invalid");
-                    return;
-                }
+        String result = hub.getNicknameDAO().getRealNameOrNickname(input);
+        if (result != null) {
+            if (result.equals(input)) {
+                Utils.error(sender, "nicknames", "error.realname-invalid");
+            } else {
+                Utils.successMsg2Values(sender, "nicknames", "realname.success.username", "%result%", result, "%input%", input.replace("_", " "));
             }
-
-            // If input matches the current nickname, return the username
-            if (currentNickname != null && currentNickname.equalsIgnoreCase(input)) {
-                Utils.successMsg2Values(sender, "nicknames", "realname.success.username", "%result%", username, "%input%", input.replace("_", " "));
-                return;
-            }
+        } else {
+            Utils.error(sender, "nicknames", "error.realname-invalid");
         }
-
-        return;
     }
-
-
 
     public void requestNicknameChange(OfflinePlayer player, String nickname) {
         UUID uuid = player.getUniqueId();
         nickRequests.put(uuid, nickname);
-        saveNickRequests();
+        hub.getNicknameDAO().requestNicknameChange(uuid, nickname);
         Bukkit.getLogger().info("Nickname request submitted for " + player.getName() + ": " + nickname);
     }
 
     public void approveNicknameChange(UUID uuid) {
-        OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-        String requestedNickname = nickRequests.remove(uuid);
-        if (Objects.equals(requestedNickname, "reset")) {
-            resetNickname(uuid);
-            return;
-        }
-
-        if (requestedNickname != null) {
-            saveNickname(uuid, requestedNickname);
-            saveNickRequests();
-            Bukkit.getLogger().info("Nickname approved for " + player.getName() + ": " + requestedNickname);
-        } else {
-            Bukkit.getLogger().warning("No nickname request found for " + player.getName());
-        }
+        hub.getNicknameDAO().approveNicknameChange(uuid);
+        nickRequests.remove(uuid);
+        Bukkit.getLogger().info("Nickname approved for " + Bukkit.getOfflinePlayer(uuid).getName());
     }
 
     public void denyNicknameChange(OfflinePlayer player) {
         UUID uuid = player.getUniqueId();
-        if (nickRequests.remove(uuid) != null) {
-            saveNickRequests();
-            Bukkit.getLogger().info("Nickname request denied for " + player.getName());
-        } else {
-            Bukkit.getLogger().warning("No nickname request found for " + player.getName());
-        }
-    }
-
-    private void saveNickRequests() {
-        FileConfiguration config = new YamlConfiguration();
-        nickRequests.forEach((uuid, nick) -> config.set(uuid.toString(), nick));
-        try {
-            config.save(nickRequestFile);
-        } catch (IOException e) {
-            Bukkit.getLogger().severe("Could not save nick_requests.yml");
-        }
-    }
-
-    private FileConfiguration getNicknamesConfig() {
-        return YamlConfiguration.loadConfiguration(currentNickFile);
-    }
-
-    private void saveConfig(FileConfiguration config) {
-        try {
-            config.save(currentNickFile);
-        } catch (IOException e) {
-            Bukkit.getLogger().severe("Could not save current_nicks.yml");
-        }
+        hub.getNicknameDAO().denyNicknameChange(uuid);
+        nickRequests.remove(uuid);
+        Bukkit.getLogger().info("Nickname request denied for " + player.getName());
     }
 
     public String getPlayersReservedNick(UUID playerUUID) {
-        String nick;
-        if (reservedNicks.containsKey(playerUUID)) {
-            nick = reservedNicks.get(playerUUID);
-            return nick;
-        }
-
-        return null; // No reserved nickname found
+        return reservedNicks.get(playerUUID);
     }
-
 
     public Map<UUID, String> getReservedNicknames() {
         return Collections.unmodifiableMap(reservedNicks);
@@ -281,27 +155,16 @@ public class NicknameManager {
 
     public void reserveNickname(UUID uuid, String nickname) {
         reservedNicks.put(uuid, nickname);
-        saveReservedNicknames();
+        hub.getNicknameDAO().reserveNickname(uuid, nickname);
     }
 
-    public void unreserveNickname(UUID uuid, String nickname) {
-        reservedNicks.remove(uuid, nickname);
-        saveReservedNicknames();
+    public void unreserveNickname(UUID uuid) {
+        reservedNicks.remove(uuid);
+        hub.getNicknameDAO().unreserveNickname(uuid);
     }
-
-    private void saveReservedNicknames() {
-        FileConfiguration config = new YamlConfiguration();
-        reservedNicks.forEach((uuid, nick) -> config.set(uuid.toString(), nick));
-        try {
-            config.save(reservedNickFile);
-        } catch (IOException e) {
-            Bukkit.getLogger().severe("Could not save nick_requests.yml");
-        }
-    }
-
 
     public boolean isNicknameReserved(String nickname) {
-        return reservedNicks.containsValue(nickname);
+        return hub.getNicknameDAO().isNicknameReserved(nickname);
     }
 
     public Map<UUID, String> getNickRequests() {

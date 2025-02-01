@@ -28,7 +28,7 @@ public class Unreserve extends SubCommand {
         Player p = (Player) sender;
         String nick = manager.getPlayersReservedNick(p.getUniqueId());
 
-        manager.unreserveNickname(p.getUniqueId(), nick);
+        manager.unreserveNickname(p.getUniqueId());
         p.sendMessage("Unreserved nickname: " + nick);
     }
 }

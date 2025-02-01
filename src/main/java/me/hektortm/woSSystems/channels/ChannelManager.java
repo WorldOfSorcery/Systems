@@ -1,6 +1,5 @@
 package me.hektortm.woSSystems.channels;
 
-import com.maximde.hologramlib.utils.MiniMessage;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.ChannelDAO;
@@ -10,9 +9,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.md_5.bungee.api.chat.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -22,8 +19,6 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -33,7 +28,6 @@ public class ChannelManager {
     public Inventory itemPreview = Bukkit.createInventory(null, InventoryType.DISPENSER, "Viewing Item");
     public final WoSSystems plugin;
     private final Map<String, Channel> channels = new HashMap<>();
-    public final Map<UUID, Runnable> clickActions = new HashMap<>();
     private final DAOHub hub;
 
     public ChannelManager(WoSSystems plugin, DAOHub hub) {
@@ -238,7 +232,7 @@ public class ChannelManager {
     public Component getFormattedMessage(Channel channel, Player sender, String message) {
         String format = channel.getFormat();
 
-        NicknameManager nickManager = new NicknameManager();
+        NicknameManager nickManager = new NicknameManager(hub);
         // Use the player's nickname if available, otherwise use their username
         String name = nickManager.getNickname(sender) != null ?
                 nickManager.getNickname(sender).replace("_", " ") :
@@ -287,7 +281,11 @@ public class ChannelManager {
             itemName = "Air";
             loreString = "";
         }
-
+        if (loreString.equals("")) {
+            loreString = "§bClick to view";
+        } else {
+            loreString = loreString + "\n \n§bClick to view";
+        }
         // Create the item component with hover text
         UUID clickId = UUID.randomUUID();
         Component itemComponent = LegacyComponentSerializer.legacySection().deserialize("§7[" + itemName + "§7]")
