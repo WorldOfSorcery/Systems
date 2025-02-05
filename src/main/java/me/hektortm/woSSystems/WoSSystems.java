@@ -17,6 +17,8 @@ import me.hektortm.woSSystems.channels.NicknameManager;
 import me.hektortm.woSSystems.channels.cmd.ChannelCommandExecutor;
 import me.hektortm.woSSystems.channels.cmd.InternalViewItemCommand;
 import me.hektortm.woSSystems.channels.cmd.NicknameCommand;
+import me.hektortm.woSSystems.cosmetic.CosmeticManager;
+import me.hektortm.woSSystems.cosmetic.cmd.CosmeticCommand;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.EconomyDAO;
 import me.hektortm.woSSystems.economy.EcoManager;
@@ -33,6 +35,7 @@ import me.hektortm.woSSystems.systems.guis.GUIManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.systems.loottables.LoottableManager;
 import me.hektortm.woSSystems.systems.loottables.commands.LoottableCommand;
+import me.hektortm.woSSystems.tablist.TablistManager;
 import me.hektortm.woSSystems.time.BossBarManager;
 import me.hektortm.woSSystems.time.TimeManager;
 import me.hektortm.woSSystems.time.cmd.TimeCommand;
@@ -107,6 +110,8 @@ public final class WoSSystems extends JavaPlugin {
     private BossBarManager bossBarManager;
     private TimeManager timeManager;
     private RegionBossBar regionBossBarManager;
+    private TablistManager tab;
+    private CosmeticManager cosmeticManager;
 
     public static StringFlag DISPLAY_NAME;
     private final Map<UUID, Inventory> clickActions = new HashMap<>();
@@ -140,6 +145,9 @@ public final class WoSSystems extends JavaPlugin {
             databaseManager.registerDAO(daoHub.getUnlockableDAO());
             databaseManager.registerDAO(daoHub.getCitemDAO());
             databaseManager.registerDAO(daoHub.getStatsDAO());
+            databaseManager.registerDAO(daoHub.getTitlesDAO());
+            databaseManager.registerDAO(daoHub.getPrefixDAO());
+            databaseManager.registerDAO(daoHub.getBadgeDAO());
 
             databaseManager.initializeAllDAOs();
         } catch (SQLException e) {
@@ -148,6 +156,7 @@ public final class WoSSystems extends JavaPlugin {
         }
         bossBarManager = new BossBarManager();
         regionBossBarManager = new RegionBossBar();
+        tab = new TablistManager();
         timeManager = new TimeManager(this, bossBarManager);
         lang = new LangManager(core);
         log = new LogManager(lang, core);
@@ -171,6 +180,7 @@ public final class WoSSystems extends JavaPlugin {
 
         lootTableManager = new LoottableManager(interactionManager, citemManager);
         coinflipCommand = new Coinflip(ecoManager, this, lang);
+        cosmeticManager = new CosmeticManager(daoHub);
 
 
 // Initialize the remaining managers
@@ -217,6 +227,7 @@ public final class WoSSystems extends JavaPlugin {
         registerEvents();
         interactionManager.loadInteraction();
         interactionManager.particleTask();
+        tab.runTablist();
     }
 
     @Override
@@ -302,6 +313,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("sign", new SignCommand(citemManager, ecoManager));
         cmdReg("time", new TimeCommand(timeManager, this, lang));
         cmdReg("internalviewitem", new InternalViewItemCommand(this));
+        cmdReg("cosmetic", new CosmeticCommand(cosmeticManager, daoHub));
     }
 
     private void registerEvents() {
@@ -314,7 +326,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new ChannelListener(channelManager, nickManager, unlockableManager, daoHub));
         eventReg(new CustomHandler(regionBossBarManager));
 
-        getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager), this);
+        getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager, daoHub), this);
     }
 
     public void writeLog(String name, Level level, String message) {
@@ -402,6 +414,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public ChannelManager getChannelManager() {
         return channelManager;
+    }
+    public CosmeticManager getCosmeticManager() {
+        return cosmeticManager;
     }
     public Map<UUID, Inventory> getClickActions() {
         return clickActions;

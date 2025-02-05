@@ -12,6 +12,10 @@ public class DAOHub {
     private final ChannelDAO channelDAO;
     private final NicknameDAO nicknameDAO;
 
+    private final TitlesDAO titlesDAO;
+    private final PrefixDAO prefixDAO;
+    private final BadgeDAO badgeDAO;
+
     public DAOHub(DatabaseManager databaseManager) {
         this.economyDAO = new EconomyDAO(databaseManager, this);
         this.unlockableDAO = new UnlockableDAO(databaseManager, this);
@@ -20,6 +24,9 @@ public class DAOHub {
         this.citemDAO = new CitemDAO(databaseManager, this);
         this.channelDAO = new ChannelDAO(databaseManager, this);
         this.nicknameDAO = new NicknameDAO(databaseManager, this);
+        this.titlesDAO = new TitlesDAO(databaseManager, this);
+        this.prefixDAO = new PrefixDAO(databaseManager, this);
+        this.badgeDAO = new BadgeDAO(databaseManager, this);
     }
     public EconomyDAO getEconomyDAO() {
         return economyDAO;
@@ -41,5 +48,14 @@ public class DAOHub {
     }
     public NicknameDAO getNicknameDAO() {
         return nicknameDAO;
+    }
+    public TitlesDAO getTitlesDAO() {
+        return titlesDAO;
+    }
+    public PrefixDAO getPrefixDAO() {
+        return prefixDAO;
+    }
+    public BadgeDAO getBadgeDAO() {
+        return badgeDAO;
     }
 }

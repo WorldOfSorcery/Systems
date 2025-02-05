@@ -3,7 +3,6 @@ package me.hektortm.woSSystems.channels;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.ChannelDAO;
-import me.hektortm.woSSystems.utils.Icons;
 import me.hektortm.wosCore.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
@@ -238,6 +237,35 @@ public class ChannelManager {
                 nickManager.getNickname(sender).replace("_", " ") :
                 sender.getName();
 
+        String badgeID = hub.getBadgeDAO().getCurrentBadgeID(sender);
+        String badge = hub.getBadgeDAO().getCurrentBadge(sender);
+        if (badge == null) {
+            badge = "";  // Set a default empty string if null
+        }
+
+        Component badgeComponent;
+        if (badgeID != null) {
+            badgeComponent = Component.text(badge)
+                    .hoverEvent(HoverEvent.showText(fromString(hub.getBadgeDAO().getBadgeDescription(badgeID))));
+        } else {
+            badgeComponent = Component.text("");
+        }
+
+        String prefixID = hub.getPrefixDAO().getCurrentPrefixID(sender);
+        String prefix = hub.getPrefixDAO().getCurrentPrefix(sender);
+        if (prefix == null) {
+            prefix = "";  // Set a default empty string if null
+        }
+
+        Component prefixComponent;
+        if (prefixID != null) {
+            prefixComponent = Component.text(prefix)
+                    .hoverEvent(HoverEvent.showText(fromString(hub.getPrefixDAO().getPrefixDescription(prefixID))));
+        } else {
+            prefixComponent = Component.text("");
+        }
+
+
         // Create a hoverable player name component
         Component playerComponent = Component.text(name)
                 .hoverEvent(HoverEvent.showText(getPlayerStats(sender)));
@@ -304,6 +332,8 @@ public class ChannelManager {
 
         // Replace {player} and {message} placeholders in the format
         Component finalMessage = formatComponent
+                .replaceText(builder -> builder.matchLiteral("{badge}").replacement(badgeComponent))
+                .replaceText(builder -> builder.matchLiteral("{prefix}").replacement(prefixComponent))
                 .replaceText(builder -> builder.matchLiteral("{player}").replacement(playerComponent))
                 .replaceText(builder -> builder.matchLiteral("{message}").replacement(messageComponent));
 
@@ -313,9 +343,28 @@ public class ChannelManager {
 
 
     private @NotNull ComponentLike getPlayerStats(Player player) {
-        return  Component.text("§eRank: §f" + Icons.RANK_HEADSTAFF.getIcon() + "\n" +
-                "§6Gold: §f" + hub.getEconomyDAO().getPlayerCurrency(player, "gold") + "\n" +
-                "§aLevel: §f" + player.getLevel());
+        String username = "§7Username: §f" + player.getName();
+        String nickname = hub.getNicknameDAO().getNickname(player.getUniqueId());
+        String title = "§eTitle: "+ (hub.getTitlesDAO().getCurrentTitle(player) != null ? hub.getTitlesDAO().getCurrentTitle(player) : "");
+        String gold =  "§6Gold: §f" + (hub.getEconomyDAO().getPlayerCurrency(player, "gold"));
+
+
+        return  Component.text(
+                (nickname != null ? username : "") + "\n" +
+                title + "\n" +
+                gold + "\n"
+                );
+    }
+
+    private ComponentLike fromString(String string) {
+        if (string == null) {
+            return Component.text("");
+        }
+        if (string.isEmpty()) {
+            return Component.text("");
+        }
+
+        return Component.text(string);
     }
 
     public Inventory viewItem(ItemStack item) {

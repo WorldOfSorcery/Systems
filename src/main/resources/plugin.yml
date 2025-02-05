@@ -96,6 +96,10 @@ commands:
     description: Internal command for viewing items.
     usage: /internalviewitem <clickId>
 
+  cosmetic:
+    description: cosmetic management
+    usage: /<command>
+
 
 permissions:
   # Citem Permissions
