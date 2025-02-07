@@ -3,33 +3,32 @@ package me.hektortm.woSSystems.channels;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.ChannelDAO;
-import me.hektortm.woSSystems.utils.Icons;
+import me.hektortm.woSSystems.utils.Parsers;
 import me.hektortm.wosCore.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.format.TextColor;
-import net.md_5.bungee.api.chat.*;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.logging.Level;
 
 public class ChannelManager {
-    public Inventory itemPreview = Bukkit.createInventory(null, InventoryType.DISPENSER, "");
+    public Inventory itemPreview = Bukkit.createInventory(null, InventoryType.DISPENSER, "Viewing Item");
     public final WoSSystems plugin;
     private final Map<String, Channel> channels = new HashMap<>();
-    public final Map<UUID, Runnable> clickActions = new HashMap<>();
     private final DAOHub hub;
 
     public ChannelManager(WoSSystems plugin, DAOHub hub) {
@@ -234,11 +233,40 @@ public class ChannelManager {
     public Component getFormattedMessage(Channel channel, Player sender, String message) {
         String format = channel.getFormat();
 
-        NicknameManager nickManager = new NicknameManager();
+        NicknameManager nickManager = new NicknameManager(hub);
         // Use the player's nickname if available, otherwise use their username
         String name = nickManager.getNickname(sender) != null ?
                 nickManager.getNickname(sender).replace("_", " ") :
                 sender.getName();
+
+        String badgeID = hub.getBadgeDAO().getCurrentBadgeID(sender);
+        String badge = hub.getBadgeDAO().getCurrentBadge(sender);
+        if (badge == null) {
+            badge = "";  // Set a default empty string if null
+        }
+
+        Component badgeComponent;
+        if (badgeID != null) {
+            badgeComponent = Component.text(badge)
+                    .hoverEvent(HoverEvent.showText(fromString(hub.getBadgeDAO().getBadgeDescription(badgeID))));
+        } else {
+            badgeComponent = Component.text("");
+        }
+
+        String prefixID = hub.getPrefixDAO().getCurrentPrefixID(sender);
+        String prefix = hub.getPrefixDAO().getCurrentPrefix(sender);
+        if (prefix == null) {
+            prefix = "";  // Set a default empty string if null
+        }
+
+        Component prefixComponent;
+        if (prefixID != null) {
+            prefixComponent = Component.text(prefix)
+                    .hoverEvent(HoverEvent.showText(fromString(hub.getPrefixDAO().getPrefixDescription(prefixID))));
+        } else {
+            prefixComponent = Component.text("");
+        }
+
 
         // Create a hoverable player name component
         Component playerComponent = Component.text(name)
@@ -246,74 +274,119 @@ public class ChannelManager {
 
         // Handle the item in the player's main hand
         ItemStack item = sender.getInventory().getItemInMainHand();
-        String itemName = "air";
-        String loreString = "";
-        if (item != null && !item.getType().isAir()) {
-            ItemMeta meta = item.getItemMeta();
-            PersistentDataContainer data = meta.getPersistentDataContainer();
-            String id = data.get(plugin.getCitemManager().getIdKey(), PersistentDataType.STRING);
-
-            if (id != null) {
-                ItemStack citem = plugin.getCitemManager().getCitemDAO().getCitem(id);
-
-                if (citem != null) {
-                    // Get display name and lore from the custom item
-                    itemName = hub.getCitemDAO().getDisplayName(id);
-                    List<String> lore = hub.getCitemDAO().getLore(id);
-
-                    // Build the lore into a single string with line breaks
-                    StringBuilder loreBuilder = new StringBuilder();
-                    for (int i = 0; i < lore.size(); i++) {
-                        loreBuilder.append(lore.get(i));
-                        if (i < lore.size() - 1) {
-                            loreBuilder.append("\n");
-                        }
-                    }
-                    loreString = loreBuilder.toString();
-                } else {
-                    itemName = "§cInvalid CItem";
+        ItemMeta meta = item.getItemMeta();
+        String itemName;
+        if (item.hasItemMeta() && meta.hasDisplayName()) {
+            itemName = meta.getDisplayName();
+        } else {
+            String typeName = item.getType().name().toLowerCase().replace("_", " ");
+            String[] parts = typeName.split(" ");
+            StringBuilder result = new StringBuilder();
+            for (String part : parts) {
+                if (!part.isEmpty()) {
+                    result.append(Character.toUpperCase(part.charAt(0)))
+                            .append(part.substring(1))
+                            .append(" ");
                 }
             }
+            itemName = result.toString().trim();
         }
 
-        // Create the item component with hover text
-        Component itemComponent = Component.text("§7[" + itemName + "§7]")
-                .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(Component.text(loreString)));
-
-        // Replace [item] in the message with the item component
-        Component messageComponent = Component.text(message)
-                .replaceText(builder -> builder.matchLiteral("[item]").replacement(itemComponent));
-
-        // Split the format into parts and build the final message
-        String[] formatParts = format.split("\\{player\\}|\\{message\\}");
-        Component finalMessage = Component.empty();
-
-        for (int i = 0; i < formatParts.length; i++) {
-            finalMessage = finalMessage.append(Component.text(formatParts[i]));
-
-            if (i == 0) {
-                // Insert the player component after the first part
-                finalMessage = finalMessage.append(playerComponent);
-            } else if (i == 1) {
-                // Insert the message component after the second part
-                finalMessage = finalMessage.append(messageComponent);
+        List<String> lore = item.hasItemMeta() ? meta.getLore() : null;
+        String loreString = "";
+        if (item.hasItemMeta()) {
+            if (lore != null) {
+                StringBuilder loreBuilder = new StringBuilder();
+                for (int i = 0; i < lore.size(); i++) {
+                    loreBuilder.append(lore.get(i));
+                    if (i < lore.size() - 1) {
+                        loreBuilder.append("\n");
+                    }
+                }
+                loreString = loreBuilder.toString();
             }
         }
 
-        // Send the final message to the player
+        if (item == null || item.getType() == Material.AIR) {
+            itemName = "Air";
+            loreString = "";
+        }
+        if (loreString.equals("")) {
+            loreString = "§bClick to view";
+        } else {
+            loreString = loreString + "\n \n§bClick to view";
+        }
+        loreString = itemName + "\n" + loreString;
+        // Create the item component with hover text
+        UUID clickId = UUID.randomUUID();
+        Component itemComponent = LegacyComponentSerializer.legacySection().deserialize("§7[" + itemName + "§7]")
+                .hoverEvent(HoverEvent.showText(Component.text("").append(fromString(loreString))))
+                .clickEvent(ClickEvent.runCommand("/internalviewitem " + clickId));
 
-        return finalMessage; // Return the message as a string (optional)
+        // Store the action in the clickActions map
+        plugin.getClickActions().put(clickId, viewItem(item));
+
+        // Replace [item] in the message with the item component
+        Component messageComponent = LegacyComponentSerializer.legacySection().deserialize(message)
+                .replaceText(builder -> builder.matchLiteral("[item]").replacement(itemComponent));
+
+        // Parse the format into a Component using LegacyComponentSerializer
+        Component formatComponent = LegacyComponentSerializer.legacySection().deserialize(format);
+
+        // Replace {player} and {message} placeholders in the format
+        Component finalMessage = formatComponent
+                .replaceText(builder -> builder.matchLiteral("{badge}").replacement(badgeComponent))
+                .replaceText(builder -> builder.matchLiteral("{prefix}").replacement(prefixComponent))
+                .replaceText(builder -> builder.matchLiteral("{player}").replacement(playerComponent))
+                .replaceText(builder -> builder.matchLiteral("{message}").replacement(messageComponent));
+
+        return finalMessage;
     }
 
-    private @NotNull ComponentLike getPlayerStats(Player player) {
-        return  Component.text("§eRank: §f" + Icons.RANK_HEADSTAFF.getIcon() + "\n" +
-                "§6Gold: §f" + hub.getEconomyDAO().getPlayerCurrency(player, "gold") + "\n" +
-                "§aLevel: §f" + player.getLevel());
+
+
+    private @NotNull Component getPlayerStats(Player player) {
+        String nickname = hub.getNicknameDAO().getNickname(player.getUniqueId());
+        String shownName = nickname != null ? nickname : player.getName();
+
+        // Build the player info line
+        Component playerInfo = Component.text("").append(fromString(hub.getPrefixDAO().getCurrentPrefix(player)+ " " + shownName));
+
+        // Build the username line
+        Component username = Component.text()
+                .append(Component.text("§7"+Parsers.parseUniStatic("Username:"+" ")))
+                .append(Component.text(player.getName()))
+                .build();
+
+        // Build the title line
+        String titleText = hub.getTitlesDAO().getCurrentTitle(player);
+        Component title = Component.text()
+                .append(Component.text("§7"+Parsers.parseUniStatic("Title:")+" "))
+                .append(titleText != null ? Component.text("").append(fromString(titleText)) : Component.text(""))
+                .build();
+
+        // Build the gold line
+        String goldAmount = String.valueOf(hub.getEconomyDAO().getPlayerCurrency(player, "gold"));
+        Component gold = Component.text()
+                .append(Component.text("§7"+Parsers.parseUniStatic("Gold:")+" "))
+                .append(Component.text("§e"+goldAmount))
+                .build();
+
+        // Combine all components into a single component
+        return Component.join(JoinConfiguration.newlines(), playerInfo, username, title, gold);
     }
 
-    public void viewItem(Player p, ItemStack item) {
+    private Component fromString(String string) {
+        if (string == null || string.isEmpty()) {
+            return Component.text("");
+        }
+        // Use LegacyComponentSerializer to parse legacy color codes, including hex colors
+        return LegacyComponentSerializer.legacySection().deserialize(string);
+    }
+
+    public Inventory viewItem(ItemStack item) {
         itemPreview.setItem(4, item);
-        p.openInventory(itemPreview);
+        return itemPreview;
     }
 
     public ChannelDAO getChannelDAO() {

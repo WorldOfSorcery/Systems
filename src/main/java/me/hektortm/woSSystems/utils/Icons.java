@@ -37,7 +37,9 @@ public enum Icons {
     RANK_STAFF("\uE302"),
     RANK_JR("\uE303"),
     RANK_DEV("\uE304"),
-    RANK_MOD("\uE305");
+    RANK_MOD("\uE305"),
+
+    BANNER("\uE600");
 
 
 

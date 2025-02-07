@@ -1,0 +1,39 @@
+error:
+  title:
+    exists: "This title does not exist."
+
+  prefix:
+    exists: "This prefix does not exist."
+
+  badge:
+    exists: "This badge does not exist."
+
+  invalid-type: "Invalid Type. Use 'prefix', 'title', 'badge'"
+
+info:
+  usage:
+    give: "Usage: /cosmetic give <Type> <Player> <ID>"
+    create: "Usage: /cosmetic create <Type> <ID> <Value>"
+    description: "Usage: /cosmetic desc <Type> <description>"
+
+  has-badge: "The Player already has this badge."
+  has-prefix: "The Player already has this prefix."
+  has-title: "The Player already has this title."
+
+titles:
+  given: "§aYou have given §e%player%§a the title: '%title%§a'."
+  received: "§aYou have received the title: '%title%§a'."
+  created: "§aCreated Title '%title%§a' (%id%§a)."
+  desc: "§aSet Title(§e%id%§a) description to: %desc%"
+
+prefix:
+  given: "§aYou have given §e%player%§a the prefix: '%prefix%§a'."
+  received: "§aYou have received the prefix: '%prefix%§a'."
+  created: "§aCreated Prefix '%prefix%§a' (%id%§a)."
+  desc: "§aSet Prefix(§e%id%§a) description to: %desc%"
+
+badge:
+  given: "§aYou have given §e%player%§a the badge: '%badge%§a'."
+  received: "§aYou have received the badge: '%badge%§a'."
+  created: "§aCreated Badge '%badge%§a' (%id%§a)."
+  desc: "§aSet Badge(§e%id%§a) description to: %desc%"

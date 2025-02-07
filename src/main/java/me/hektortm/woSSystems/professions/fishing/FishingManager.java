@@ -38,7 +38,6 @@ public class FishingManager {
 
             }
         }
-
     }
 
     public List<FishingItem> getItemByRarity(String rarity) {
