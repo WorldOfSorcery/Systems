@@ -89,7 +89,7 @@ public class InventoryClickListener implements Listener {
             player.closeInventory();
             coinflipCommand.acceptChallenge(player, challenger);
         }
-        if (event.getView().getTitle().equalsIgnoreCase(lang.getMessage("chat", "nick.gui.title"))) {
+        if (event.getView().getTitle().equalsIgnoreCase(lang.getMessage("nicknames", "nick.gui.title"))) {
             event.setCancelled(true); // Cancel all inventory actions in this GUI
 
             ItemStack item = event.getCurrentItem();
@@ -133,17 +133,17 @@ public class InventoryClickListener implements Listener {
             if (ct == ClickType.LEFT || ct == ClickType.SHIFT_LEFT) {
                 nickManager.approveNicknameChange(p.getUniqueId());
                 if (nick.equals("reset")) {
-                    Utils.successMsg1Value(p1, "chat", "nick.approved-reset", "%nick%", nick);
-                    Utils.successMsg1Value(player, "chat", "nick.approved-reset-staff", "%player%", p1.getName());
+                    Utils.successMsg1Value(p1, "nicknames", "nick.approved-reset", "%nick%", nick);
+                    Utils.successMsg1Value(player, "nicknames", "nick.approved-reset-staff", "%player%", p1.getName());
                     player.closeInventory();
                     return;
                 }
-                Utils.successMsg1Value(p1, "chat", "nick.approved", "%nick%", nick);
-                Utils.successMsg1Value(player, "chat", "nick.approved-staff", "%player%", p1.getName());
+                Utils.successMsg1Value(p1, "nicknames", "nick.approved", "%nick%", nick);
+                Utils.successMsg1Value(player, "nicknames", "nick.approved-staff", "%player%", p1.getName());
             } else if (ct == ClickType.RIGHT || ct == ClickType.SHIFT_RIGHT) {
                 nickManager.denyNicknameChange(p);
-                Utils.successMsg1Value(p1, "chat", "nick.declined", "%nick%", nick);
-                Utils.successMsg1Value(player, "chat", "nick.declined-staff", "%player%", p1.getName());
+                Utils.successMsg1Value(p1, "nicknames", "nick.declined", "%nick%", nick);
+                Utils.successMsg1Value(player, "nicknames", "nick.declined-staff", "%player%", p1.getName());
 
             }
 
