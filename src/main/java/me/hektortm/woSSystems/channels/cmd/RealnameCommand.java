@@ -21,7 +21,7 @@ public class RealnameCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
 
         if (args.length == 0) {
-            Utils.error(sender, "chat", "error.usage.realname");
+            Utils.error(sender, "nicknames", "error.usage.realname");
         }
 
         StringBuilder builder = new StringBuilder();
