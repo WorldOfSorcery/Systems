@@ -16,6 +16,10 @@ info:
     create: "Usage: /cosmetic create <Type> <ID> <Value>"
     description: "Usage: /cosmetic desc <Type> <description>"
 
+  has-badge: "The Player already has this badge."
+  has-prefix: "The Player already has this prefix."
+  has-title: "The Player already has this title."
+
 titles:
   given: "§aYou have given §e%player%§a the title: '%title%§a'."
   received: "§aYou have received the title: '%title%§a'."

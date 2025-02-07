@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class BadgeDAO implements IDAO {
     private final Connection conn;
@@ -58,10 +59,10 @@ public class BadgeDAO implements IDAO {
         }
     }
 
-    public void giveBadge(String id, Player p) {
+    public void giveBadge(String id, UUID uuid) {
         String sql = "INSERT INTO playerdata_badges (uuid, badge_id, equipped) VALUES (?, ?, ?)";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, p.getUniqueId().toString());
+            pstmt.setString(1, uuid.toString());
             pstmt.setString(2, id);
             pstmt.setBoolean(3, false); // Default to unequipped
             pstmt.executeUpdate();
@@ -195,5 +196,18 @@ public class BadgeDAO implements IDAO {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public boolean hasBadge(UUID uuid, String id) {
+        String sql = "SELECT 1 FROM playerdata_badges WHERE uuid = ? AND badge_id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, uuid.toString());
+            pstmt.setString(2, id);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

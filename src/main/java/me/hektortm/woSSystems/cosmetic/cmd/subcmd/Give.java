@@ -5,6 +5,7 @@ import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -32,7 +33,7 @@ public class Give extends SubCommand {
             return;
         }
         String type = args[0];
-        Player target = Bukkit.getPlayer(args[1]);
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
         String id = args[2];
 
         switch (type) {
@@ -41,9 +42,16 @@ public class Give extends SubCommand {
                     Utils.error(sender, "cosmetics", "error.title.exists");
                     return;
                 }
-                hub.getTitlesDAO().giveTitle(id, target);
+                if (hub.getTitlesDAO().hasTitle(target.getUniqueId(), id)) {
+                    Utils.info(sender, "cosmetics", "info.has-title");
+                    return;
+                }
+                hub.getTitlesDAO().giveTitle(id, target.getUniqueId());
                 Utils.success(sender, "cosmetics", "titles.given", "%player%", target.getName(), "%title%", hub.getTitlesDAO().getTitleText(id));
-                Utils.success(target, "cosmetics", "titles.received", "%title%", hub.getTitlesDAO().getTitleText(id));
+                if (target.isOnline()) {
+                    Utils.success((Player) target, "cosmetics", "titles.received", "%title%", hub.getTitlesDAO().getTitleText(id));
+                }
+
                 break;
 
             case "prefix":
@@ -51,10 +59,18 @@ public class Give extends SubCommand {
                     Utils.error(sender, "cosmetics", "error.prefix.exists");
                     return;
                 }
-                hub.getPrefixDAO().givePrefix(id, target);
+                if (hub.getPrefixDAO().hasPrefix(target.getUniqueId(), id)) {
+                    Utils.info(sender, "cosmetics", "info.has-prefix");
+                    return;
+                }
+
+                hub.getPrefixDAO().givePrefix(id, target.getUniqueId());
                 String prefix = hub.getPrefixDAO().getPrefixText(id);
                 Utils.success(sender, "cosmetics", "prefix.given", "%player%", target.getName(), "%prefix%", prefix);
-                Utils.success(target, "cosmetics", "prefix.received", "%prefix%", prefix);
+                if (target.isOnline()) {
+                    Utils.success((Player) target, "cosmetics", "prefix.received", "%prefix%", prefix);
+                }
+
                 break;
 
             case "badge":
@@ -62,10 +78,19 @@ public class Give extends SubCommand {
                     Utils.error(sender, "cosmetics", "error.badge.exists");
                     return;
                 }
-                hub.getBadgeDAO().giveBadge(id, target);
+
+                if (hub.getBadgeDAO().hasBadge(target.getUniqueId(), id)) {
+                    Utils.info(sender, "cosmetics", "info.has-badge");
+                    return;
+                }
+
+                hub.getBadgeDAO().giveBadge(id, target.getUniqueId());
                 String badge = hub.getBadgeDAO().getBadgeText(id);
                 Utils.success(sender, "cosmetics", "badge.given", "%player%", target.getName(), "%badge%", badge);
-                Utils.success(target, "cosmetics", "badge.received", "%badge%", badge);
+                if (target.isOnline()) {
+                    Utils.success((Player) target, "cosmetics", "badge.received", "%badge%", badge);
+                }
+
                 break;
             default:
                 Utils.success(sender, "cosmetics", "error.invalid-type");
