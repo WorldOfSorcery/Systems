@@ -7,6 +7,7 @@ import me.hektortm.woSSystems.utils.Parsers;
 import me.hektortm.wosCore.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -315,10 +316,11 @@ public class ChannelManager {
         } else {
             loreString = loreString + "\n \n§bClick to view";
         }
+        loreString = itemName + "\n" + loreString;
         // Create the item component with hover text
         UUID clickId = UUID.randomUUID();
         Component itemComponent = LegacyComponentSerializer.legacySection().deserialize("§7[" + itemName + "§7]")
-                .hoverEvent(HoverEvent.showText(Component.text(loreString)))
+                .hoverEvent(HoverEvent.showText(Component.text("").append(fromString(loreString))))
                 .clickEvent(ClickEvent.runCommand("/internalviewitem " + clickId));
 
         // Store the action in the clickActions map
@@ -343,38 +345,43 @@ public class ChannelManager {
 
 
 
-    private @NotNull ComponentLike getPlayerStats(Player player) {
+    private @NotNull Component getPlayerStats(Player player) {
         String nickname = hub.getNicknameDAO().getNickname(player.getUniqueId());
-        String shownName;
-        if (nickname == null) {
-            shownName = player.getName();
-        } else {
-            shownName = nickname;
-        }
+        String shownName = nickname != null ? nickname : player.getName();
 
-        String playerInfo = hub.getPrefixDAO().getCurrentPrefix(player)+ " " + shownName;
-        String username = "§7"+ Parsers.parseUniStatic("Username:") + " §f" + player.getName() + "\n";
-        String title = "§7" + Parsers.parseUniStatic("Title:")+ " " + (hub.getTitlesDAO().getCurrentTitle(player) != null ? hub.getTitlesDAO().getCurrentTitle(player) : "");
-        String gold =  "§7"+Parsers.parseUniStatic("Gold:") +" §e" + (hub.getEconomyDAO().getPlayerCurrency(player, "gold"));
+        // Build the player info line
+        Component playerInfo = Component.text("").append(fromString(hub.getPrefixDAO().getCurrentPrefix(player)+ " " + shownName));
 
+        // Build the username line
+        Component username = Component.text()
+                .append(Component.text("§7"+Parsers.parseUniStatic("Username:"+" ")))
+                .append(Component.text(player.getName()))
+                .build();
 
-        return  Component.text(
-                playerInfo + "\n"+
-                (nickname != null ? username : "") +
-                title + "\n" +
-                gold + "\n"
-                );
+        // Build the title line
+        String titleText = hub.getTitlesDAO().getCurrentTitle(player);
+        Component title = Component.text()
+                .append(Component.text("§7"+Parsers.parseUniStatic("Title:")+" "))
+                .append(titleText != null ? Component.text("").append(fromString(titleText)) : Component.text(""))
+                .build();
+
+        // Build the gold line
+        String goldAmount = String.valueOf(hub.getEconomyDAO().getPlayerCurrency(player, "gold"));
+        Component gold = Component.text()
+                .append(Component.text("§7"+Parsers.parseUniStatic("Gold:")+" "))
+                .append(Component.text("§e"+goldAmount))
+                .build();
+
+        // Combine all components into a single component
+        return Component.join(JoinConfiguration.newlines(), playerInfo, username, title, gold);
     }
 
-    private ComponentLike fromString(String string) {
-        if (string == null) {
+    private Component fromString(String string) {
+        if (string == null || string.isEmpty()) {
             return Component.text("");
         }
-        if (string.isEmpty()) {
-            return Component.text("");
-        }
-
-        return Component.text(string);
+        // Use LegacyComponentSerializer to parse legacy color codes, including hex colors
+        return LegacyComponentSerializer.legacySection().deserialize(string);
     }
 
     public Inventory viewItem(ItemStack item) {
