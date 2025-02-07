@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.cosmetic.cmd.subcmd;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -22,11 +23,16 @@ public class Description extends SubCommand {
 
     @Override
     public Permissions getPermission() {
-        return null;
+        return Permissions.COSMETIC_DESC;
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
+        Player p = (Player) sender;
+        if (args.length < 3) {
+            Utils.info(p, "cosmetics", "info.usage.description");
+            return;
+        }
         String type = args[0];
         String id = args[1];
         String desc;
@@ -40,18 +46,18 @@ public class Description extends SubCommand {
         switch (type) {
             case "badge":
                 hub.getBadgeDAO().setBadgeDescription(id, desc);
-                sender.sendMessage("Set Badge description to: "+ desc);
+                Utils.success(p, "cosmetics", "badge.desc", "%id%", id, "%desc%", desc);
                 break;
             case "prefix":
                 hub.getPrefixDAO().setPrefixDescription(id, desc);
-                sender.sendMessage("Set Prefix description to: "+ desc);
+                Utils.success(p, "cosmetics", "prefix.desc", "%id%", id, "%desc%", desc);
                 break;
             case "title":
                 hub.getTitlesDAO().setTitleDescription(id, desc);
-                sender.sendMessage("Set Title description to: "+ desc);
+                Utils.success(p, "cosmetics", "titles.desc", "%id%", id, "%desc%", desc);
                 break;
             default:
-                sender.sendMessage("Use: Badge, Prefix, Title");
+                Utils.error(p, "cosmetics", "error.invalid-type");
                 break;
         }
     }

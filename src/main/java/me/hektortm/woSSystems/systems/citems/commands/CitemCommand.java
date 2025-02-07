@@ -30,7 +30,6 @@ public class CitemCommand implements CommandExecutor {
     private final InteractionManager interactionManager;
     private final LangManager lang = plugin.getLangManager();
     private final LogManager log = plugin.getLogManager();
-    public File citemsFolder = new File(Bukkit.getServer().getPluginManager().getPlugin("WoSSystems").getDataFolder(), "citems");
 
     public CitemCommand(InteractionManager interactionManager) {
 

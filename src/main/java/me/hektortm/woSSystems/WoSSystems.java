@@ -138,7 +138,6 @@ public final class WoSSystems extends JavaPlugin {
 
             daoHub = new DAOHub(databaseManager);
 
-            databaseManager.registerDAO(daoHub.getPlayerDAO());
             databaseManager.registerDAO(daoHub.getEconomyDAO());
             databaseManager.registerDAO(daoHub.getNicknameDAO());
             databaseManager.registerDAO(daoHub.getChannelDAO());
@@ -201,6 +200,7 @@ public final class WoSSystems extends JavaPlugin {
             lang.loadLangFileExternal(this, "nicknames", core);
             lang.loadLangFileExternal(this, "channel", core);
             lang.loadLangFileExternal(this, "loottables", core);
+            lang.loadLangFileExternal(this, "cosmetics", core);
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }

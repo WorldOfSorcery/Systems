@@ -79,7 +79,7 @@ public class InventoryClickListener implements Listener {
             PersistentDataContainer data = clickedItemMeta.getPersistentDataContainer();
             String titleID = data.get(new NamespacedKey(plugin, "titleID"), PersistentDataType.STRING);
 
-            if (Objects.equals(hub.getTitlesDAO().getCurrentTitleID(player), titleID)) {
+            if (hub.getTitlesDAO().getCurrentTitleID(player) != null && Objects.equals(hub.getTitlesDAO().getCurrentTitleID(player), titleID)) {
                 event.setCancelled(true);
                 return;
             }
@@ -96,7 +96,7 @@ public class InventoryClickListener implements Listener {
             PersistentDataContainer data = clickedItemMeta.getPersistentDataContainer();
             String prefixID = data.get(new NamespacedKey(plugin, "prefixID"), PersistentDataType.STRING);
 
-            if (hub.getPrefixDAO().getCurrentPrefixID(player).equals(prefixID)) {
+            if (hub.getPrefixDAO().getCurrentPrefixID(player) != null && hub.getPrefixDAO().getCurrentPrefixID(player).equals(prefixID)) {
                 event.setCancelled(true);
                 return;
             }
@@ -165,7 +165,7 @@ public class InventoryClickListener implements Listener {
             player.closeInventory();
             coinflipCommand.acceptChallenge(player, challenger);
         }
-        if (event.getView().getTitle().equalsIgnoreCase(lang.getMessage("chat", "nick.gui.title"))) {
+        if (event.getView().getTitle().equalsIgnoreCase(lang.getMessage("nicknames", "nick.gui.title"))) {
             event.setCancelled(true); // Cancel all inventory actions in this GUI
 
             ItemStack item = event.getCurrentItem();

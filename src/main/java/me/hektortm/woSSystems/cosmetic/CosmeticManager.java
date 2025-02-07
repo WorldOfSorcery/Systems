@@ -21,9 +21,9 @@ public class CosmeticManager {
     private final DAOHub hub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     public Inventory mainPage = Bukkit.createInventory(null, 9, "§6Cosmetics");
-    public Inventory titlesPage = Bukkit.createInventory(null, 9*5, "§6Titles");
-    public Inventory prefixPage = Bukkit.createInventory(null, 9*5, "§6Prefixes");
-    public Inventory badgesPage = Bukkit.createInventory(null, 9*5, "§6Badges");
+    public static Inventory titlesPage;
+    public static Inventory prefixPage;
+    public static Inventory badgesPage;
 
     public CosmeticManager(DAOHub hub) {
         this.hub = hub;
@@ -38,6 +38,7 @@ public class CosmeticManager {
     }
 
     public void openTitlesPage(Player p) {
+        titlesPage = Bukkit.createInventory(null, 9*5, "§6Titles");
         List<String> titles = hub.getTitlesDAO().getPlayerTitles(p);
 
         for (int i = 0; i < titles.size(); i++) {
@@ -63,6 +64,7 @@ public class CosmeticManager {
     }
 
     public void openPrefixPage(Player p) {
+        prefixPage  = Bukkit.createInventory(null, 9*5, "§6Prefixes");
         List<String> prefixes = hub.getPrefixDAO().getPlayerPrefixes(p);
 
         for (int i = 0; i < prefixes.size(); i++) {
@@ -87,6 +89,7 @@ public class CosmeticManager {
     }
 
     public void openBadgePage(Player p) {
+        badgesPage  = Bukkit.createInventory(null, 9*5, "§6Badges");
         List<String> badges = hub.getBadgeDAO().getPlayerBadges(p);
 
         for (int i = 0; i < badges.size(); i++) {

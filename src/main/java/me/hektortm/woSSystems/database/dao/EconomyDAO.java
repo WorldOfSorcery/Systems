@@ -45,7 +45,6 @@ public class EconomyDAO implements IDAO {
 
 
     public void ensurePlayerEconomyEntry(Player player, String currency) {
-        hub.getPlayerDAO().addPlayer(player);
         try (PreparedStatement prepStmt = connection.prepareStatement("INSERT INTO playerdata_economy (uuid, currency, amount) VALUES (?, ?, 0) ON CONFLICT(uuid, currency) DO NOTHING")) {
             prepStmt.setString(1, player.getUniqueId().toString());
             prepStmt.setString(2, currency);

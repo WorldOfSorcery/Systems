@@ -6,6 +6,7 @@ import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 public class Create extends SubCommand {
     private final DAOHub hub;
@@ -19,25 +20,43 @@ public class Create extends SubCommand {
 
     @Override
     public Permissions getPermission() {
-        return null;
+        return Permissions.COSMETIC_CREATE;
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
+
+        if (args.length < 3) {
+            Utils.info(sender, "cosmetics", "info.usage.create");
+            return;
+        }
         String type = args[0];
         String id = args[1];
         switch (type) {
             case "title":
+                if (hub.getTitlesDAO().titleExists(id)) {
+                    Utils.error(sender, "cosmetics", "error.title.exists");
+                    return;
+                }
                 String title;
                 StringBuilder builder = new StringBuilder();
                 for (int i = 2; i < args.length; i++) {
-                    builder.append(args[i] + " ");
+                    if (i == args.length - 1) {
+                        builder.append(args[i]);
+                    } else {
+                        builder.append(args[i] + " ");
+                    }
+
                 }
                 title = builder.toString();
                 hub.getTitlesDAO().createTitle(id, title);
-                sender.sendMessage("Created title '"+title+"' with id '"+id+"'");
+                Utils.success(sender, "cosmetics", "titles.created", "%title%", title, "%id%", id);
                 break;
             case "prefix":
+                if (hub.getPrefixDAO().prefixExists(id)) {
+                    Utils.error(sender, "cosmetics", "error.prefix.exists");
+                    return;
+                }
                 StringBuilder prefixBuilder = new StringBuilder();
                 for (int i = 2; i < args.length; i++) {
                     if (i == args.length - 1) {
@@ -48,9 +67,13 @@ public class Create extends SubCommand {
                 }
                 String prefix = prefixBuilder.toString();
                 hub.getPrefixDAO().createPrefix(id, prefix);
-                sender.sendMessage("Created Prefix '"+prefix+"' with id '"+id+"'");
+                Utils.success(sender, "cosmetics", "prefix.created", "%prefix%", prefix, "%id%", id);
                 break;
             case "badge":
+                if (hub.getBadgeDAO().badgeExists(id)) {
+                    Utils.error(sender, "cosmetics", "error.badge.exists");
+                    return;
+                }
                 StringBuilder badgeBuilder = new StringBuilder();
                 for (int i = 2; i < args.length; i++) {
                     if (i == args.length - 1) {
@@ -61,10 +84,10 @@ public class Create extends SubCommand {
                 }
                 String badge = badgeBuilder.toString();
                 hub.getBadgeDAO().createBadge(id, badge);
-                sender.sendMessage("Created Badge '"+badge+"' with id '"+id+"'");
+                Utils.success(sender, "cosmetics", "badge.created", "%badge%", badge, "%id%", id);
                 break;
             default:
-                sender.sendMessage("Use: title, prefix or badge");
+                Utils.error(sender, "cosmetics", "error.invalid-type");
 
         }
     }

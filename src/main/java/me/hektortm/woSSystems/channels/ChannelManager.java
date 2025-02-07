@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.channels;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.ChannelDAO;
+import me.hektortm.woSSystems.utils.Parsers;
 import me.hektortm.wosCore.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
@@ -343,14 +344,23 @@ public class ChannelManager {
 
 
     private @NotNull ComponentLike getPlayerStats(Player player) {
-        String username = "§7Username: §f" + player.getName();
         String nickname = hub.getNicknameDAO().getNickname(player.getUniqueId());
-        String title = "§eTitle: "+ (hub.getTitlesDAO().getCurrentTitle(player) != null ? hub.getTitlesDAO().getCurrentTitle(player) : "");
-        String gold =  "§6Gold: §f" + (hub.getEconomyDAO().getPlayerCurrency(player, "gold"));
+        String shownName;
+        if (nickname == null) {
+            shownName = player.getName();
+        } else {
+            shownName = nickname;
+        }
+
+        String playerInfo = hub.getPrefixDAO().getCurrentPrefix(player)+ " " + shownName;
+        String username = "§7"+ Parsers.parseUniStatic("Username:") + " §f" + player.getName() + "\n";
+        String title = "§7" + Parsers.parseUniStatic("Title:")+ " " + (hub.getTitlesDAO().getCurrentTitle(player) != null ? hub.getTitlesDAO().getCurrentTitle(player) : "");
+        String gold =  "§7"+Parsers.parseUniStatic("Gold:") +" §e" + (hub.getEconomyDAO().getPlayerCurrency(player, "gold"));
 
 
         return  Component.text(
-                (nickname != null ? username : "") + "\n" +
+                playerInfo + "\n"+
+                (nickname != null ? username : "") +
                 title + "\n" +
                 gold + "\n"
                 );

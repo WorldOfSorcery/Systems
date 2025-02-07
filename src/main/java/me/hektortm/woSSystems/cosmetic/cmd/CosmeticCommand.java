@@ -35,26 +35,33 @@ public class CosmeticCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
+
+        String subCommandName;
+        SubCommand subCommand;
         if (!(sender instanceof Player)) {
-            sender.sendMessage("You must be a player to use this command!");
-        }
-        assert sender instanceof Player;
-        Player p = (Player) sender;
-
-        if (args.length == 0) {
-            manager.openMainPage(p);
-            return true;
-        }
-
-        String subCommandName = args[0].toLowerCase();
-        SubCommand subCommand = subCommands.get(subCommandName);
-
-        if (subCommand != null) {
-            if(!(PermissionUtil.hasPermission(sender, subCommand.getPermission()))) return true;
+            subCommandName = args[0].toLowerCase();
+            subCommand = subCommands.get(subCommandName);
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));
         } else {
-            Utils.error(sender, "citems", "error.usage.citem");
+
+            if (args.length == 0) {
+                manager.openMainPage((Player) sender);
+                return true;
+            }
+            subCommandName = args[0].toLowerCase();
+            subCommand = subCommands.get(subCommandName);
+
+            if (subCommand != null) {
+                if(!(PermissionUtil.hasPermissionNoMsg(sender, subCommand.getPermission()))) {
+                    manager.openMainPage((Player) sender);
+                    return true;
+                }
+                subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));
+            } else {
+                manager.openMainPage((Player) sender);
+            }
         }
+
 
         return true;
     }

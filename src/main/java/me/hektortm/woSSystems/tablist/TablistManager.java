@@ -19,7 +19,7 @@ public class TablistManager {
     }
 
     private void setTablist(Player player) {
-        Component header = Component.text("\n \n"+ "§x§4§e§5§c§2§4"+Icons.BANNER.getIcon());
+        Component header = Component.text("\n \n \n"+ "§f"+Icons.BANNER.getIcon());
         Component footer = Component.text("Online Players: " + Bukkit.getOnlinePlayers().size());
 
         player.sendPlayerListHeaderAndFooter(header, footer);

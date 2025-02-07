@@ -306,14 +306,14 @@ public class CitemManager {
         if (lore == null) {
             lore = new ArrayList<>();
         }
-        name = parsers.parseUni(name);
-        time = parsers.parseUni(time);
+        name = Parsers.parseUniStatic(name);
+        time = Parsers.parseUniStatic(time);
         lore.add("§7");
         lore.add("§f"+ SIGNED_BY.getIcon() +" §e" + name);
         if (quote.equals("null") || quote == null) {
             lore.add("§f" + TIME.getIcon() + " §e" + time);
         } else {
-            lore.add("§e"+parsers.parseUni(quote));
+            lore.add("§e"+Parsers.parseUniStatic(quote));
         }
 
         meta.setLore(lore);
