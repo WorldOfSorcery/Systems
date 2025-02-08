@@ -43,6 +43,7 @@ public class CitemManager {
     private final NamespacedKey nameKey;
     private final NamespacedKey quoteKey;
     public final NamespacedKey ownerKey;
+    public final NamespacedKey placeableKey;
     public final File citemFolder;
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
@@ -69,6 +70,7 @@ public class CitemManager {
         nameKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "stamp-name");
         quoteKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "stamp-quote");
         ownerKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "owner");
+        placeableKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "placeable");
 
     }
 
@@ -372,6 +374,9 @@ public class CitemManager {
     }
     public NamespacedKey getRightActionKey() {
         return rightActionKey;
+    }
+    public NamespacedKey getPlaceableKey() {
+        return placeableKey;
     }
     public CitemDAO getCitemDAO() {
         return hub.getCitemDAO();

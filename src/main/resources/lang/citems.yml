@@ -38,11 +38,13 @@ flag:
     unbreakable: "§aUnbreakable flag added."
     unusable: "§aUnusable flag added."
     hide: "§aHide flags added."
+    placeable: "§aPlaceable flag added."
   remove:
     undroppable: "§cUndroppable flag removed."
     unbreakable: "§cUnbreakable flag removed."
     unusable: "§cUnusable flag removed."
     hide: "§cHide flags removed."
+    placeable: "§cPlaceable flag removed."
 
 lore:
   added: "§aLore added."

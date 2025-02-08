@@ -21,13 +21,13 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.UUID;
 
 public class FlagCommand extends SubCommand {
-    private final CitemManager data;
+    private final CitemManager data = WoSSystems.getPlugin(WoSSystems.class).getCitemManager();
     private final NamespacedKey undroppableKey;
     private final NamespacedKey unusableKey;
     private final NamespacedKey ownerKey;
+    private NamespacedKey placeableKey = data.getPlaceableKey();
 
-    public FlagCommand(CitemManager data) {
-        this.data = data;
+    public FlagCommand() {
         ownerKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "owner");
         undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
         unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
@@ -96,6 +96,11 @@ public class FlagCommand extends SubCommand {
                     PersistentDataContainer data = meta.getPersistentDataContainer();
                     data.set(ownerKey, PersistentDataType.STRING, "");
                 }
+                if(flag.equals("placeable")) {
+                    PersistentDataContainer data = meta.getPersistentDataContainer();
+                    data.set(placeableKey, PersistentDataType.BOOLEAN, true);
+                    Utils.success(p, "citems", "flag.add.placeable");
+                }
 
                 break;
 
@@ -103,16 +108,16 @@ public class FlagCommand extends SubCommand {
                 if (flag.equals("undroppable")) {
                     PersistentDataContainer data = meta.getPersistentDataContainer();
                     data.remove(undroppableKey);
-                    Utils.successMsg(p, "citems", "flag.remove.undroppable");
+                    Utils.success(p, "citems", "flag.remove.undroppable");
                 }
                 if (flag.equals("unbreakable")) {
                     meta.setUnbreakable(false);
-                    Utils.successMsg(p, "citems", "flag.remove.unbreakable");
+                    Utils.success(p, "citems", "flag.remove.unbreakable");
                 }
                 if (flag.equals("unusable")) {
                     PersistentDataContainer data = meta.getPersistentDataContainer();
                     data.remove(unusableKey);
-                    Utils.successMsg(p, "citems", "flag.remove.unusable");
+                    Utils.success(p, "citems", "flag.remove.unusable");
                 }
                 if (flag.equals("hide"))
                 {   //noinspection removal
@@ -129,7 +134,12 @@ public class FlagCommand extends SubCommand {
                     meta.removeItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
                     meta.removeItemFlags(ItemFlag.HIDE_DESTROYS);
                     meta.removeItemFlags(ItemFlag.HIDE_PLACED_ON);
-                    Utils.successMsg(p, "citems", "flag.remove.hide");
+                    Utils.success(p, "citems", "flag.remove.hide");
+                }
+                if (flag.equals("placeable")) {
+                    PersistentDataContainer data = meta.getPersistentDataContainer();
+                    data.remove(placeableKey);
+                    Utils.success(p, "citems", "flag.remove.placeable");
                 }
                 break;
 

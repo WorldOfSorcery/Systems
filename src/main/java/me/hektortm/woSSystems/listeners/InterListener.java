@@ -1,15 +1,16 @@
 package me.hektortm.woSSystems.listeners;
 
+import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemCustomModelData;
+import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import net.citizensnpcs.api.event.NPCClickEvent;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
+import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -19,6 +20,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.util.Transformation;
+import org.bukkit.util.Vector;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
 
 import java.io.File;
 import java.util.HashMap;
@@ -28,15 +33,17 @@ import java.util.Objects;
 
 public class InterListener implements Listener {
 
-    private final InteractionManager interManager;
-    private final CitemManager citemManager;
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final InteractionManager interManager = plugin.getInteractionManager();
+    private final CitemManager citemManager = plugin.getCitemManager();
+    private final DAOHub hub;
     private final Map<Location, Long> blockCooldowns = new HashMap<>();
     private final Map<String, Long> npcCooldowns = new HashMap<>();
     private final NamespacedKey unusableKey;
+    private NamespacedKey placeableKey = citemManager.getPlaceableKey();
 
-    public InterListener(InteractionManager manager, CitemManager citemManager) {
-        this.interManager = manager;
-        this.citemManager = citemManager;
+    public InterListener(DAOHub hub) {
+        this.hub = hub;
         unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
     }
 
@@ -75,21 +82,63 @@ public class InterListener implements Listener {
         ItemStack item = e.getItem();
         Action action = e.getAction();
         Player p = e.getPlayer();
+        Location locClicked = e.getClickedBlock().getLocation();
+
+        if(hub.getCitemDAO().isItemDisplay(locClicked)) {
+            if (p.isSneaking()) {
+                if (e.getClickedBlock().getType() == Material.BARRIER) {
+                    if (hub.getCitemDAO().isItemDisplayOwner(locClicked, p.getUniqueId()) || p.getGameMode() == GameMode.CREATIVE) {
+                        ItemStack giveCitem = hub.getCitemDAO().getCitem(hub.getCitemDAO().getItemDisplayID(locClicked));
+
+                        if (p.getGameMode() == GameMode.CREATIVE && !hub.getCitemDAO().isItemDisplayOwner(locClicked, p.getUniqueId())) {
+                            hub.getCitemDAO().removeItemDisplay(hub.getCitemDAO().getUUID(locClicked), locClicked);
+                        } else if (hub.getCitemDAO().isItemDisplayOwner(locClicked, p.getUniqueId())) {
+                            hub.getCitemDAO().removeItemDisplay(p.getUniqueId(), locClicked);
+                        } else {
+                            p.sendMessage("You are not the owner of this display.");
+                            return;
+                        }
+
+                        removeEntityAtLocation(locClicked);
+                        Block clickedBlock = e.getClickedBlock();
+                        clickedBlock.setType(null);
+                        p.getInventory().addItem(giveCitem);
+                    }
+                }
+            }
+        }
+
 
         if (citemManager.isCitem(item)) {
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer data = meta.getPersistentDataContainer();
-            /*
-            if (data.has(placeKey, PersistentDataType.STRING)) {
-                if (action.isRightClick()) {
-                    if (e.getClickedBlock() != null) {
-                        Block targetBlock = e.getClickedBlock();
+            String id = data.get(citemManager.getIdKey(), PersistentDataType.STRING);
 
+            if (data.has(placeableKey, PersistentDataType.BOOLEAN)) {
+                if (data.get(placeableKey, PersistentDataType.BOOLEAN).equals(Boolean.TRUE)) {
+                    if (action.isRightClick()) {
+
+                        if (e.getClickedBlock() != null) {
+                            Block targetBlock = e.getClickedBlock();
+                            Location spawnLocation = targetBlock.getLocation().add(0, 1, 0);
+
+
+                            // Spawn an ItemDisplay entity
+                            ItemDisplay itemDisplay = (ItemDisplay) spawnLocation.getWorld().spawnEntity(spawnLocation, EntityType.ITEM_DISPLAY);
+                            itemDisplay.setItemStack(item); // Set the item to display
+                            itemDisplay.setTransformation(new Transformation(new Vector3f(1), new AxisAngle4f(), new Vector3f(), new AxisAngle4f())); // Set the transformation (scale, rotation, etc.)
+
+                            // Spawn a Barrier block
+                            targetBlock.getWorld().getBlockAt(spawnLocation).setType(Material.BARRIER);
+
+                            // Optionally, consume the item in hand (e.g., remove one stick)
+                            p.getInventory().remove(hub.getCitemDAO().getCitem(id));
+                            hub.getCitemDAO().createItemDisplay(id, p.getUniqueId(), spawnLocation);
+                        }
                     }
                 }
-            }
 
-             */
+            }
 
             switch (action) {
                 case RIGHT_CLICK_AIR:
@@ -190,12 +239,27 @@ public class InterListener implements Listener {
             }
         }
     }
+
+    public void removeEntityAtLocation(Location location) {
+        // Get all entities in the world
+        for (Entity entity : location.getWorld().getEntities()) {
+            // Check if the entity is an ItemDisplay and is at the specified location
+            if (entity instanceof ItemDisplay && entity.getLocation().equals(location)) {
+                entity.remove(); // Remove the entity
+            }
+        }
+    }
+
     private boolean isSameLocation(Location loc1, Location loc2) {
         if (loc1 == null || loc2 == null) return false;
         return loc1.getWorld().equals(loc2.getWorld()) &&
                 Math.abs(loc1.getX() - loc2.getX()) < 0.5 &&  // Tolerance for x-coordinate
                 Math.abs(loc1.getY() - loc2.getY()) < 0.5 &&  // Tolerance for y-coordinate
                 Math.abs(loc1.getZ() - loc2.getZ()) < 0.5;    // Tolerance for z-coordinate
+    }
+
+    private void spawnItemDisplay(Location loc) {
+        
     }
 
 }

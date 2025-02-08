@@ -6,6 +6,7 @@ import com.maximde.hologramlib.hologram.RenderMode;
 import com.maximde.hologramlib.hologram.TextHologram;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.utils.ConditionHandler;
+import me.hektortm.woSSystems.utils.Parsers;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.wosCore.LangManager;
@@ -85,7 +86,7 @@ public class InteractionManager {
                 if (locationArray != null) {
                     for (Object location : locationArray) {
                         // Assuming there's a method to parse location strings into Location objects
-                        locations.add(parseLocation((String) location));
+                        locations.add(Parsers.parseLocation((String) location));
                     }
                 }
 
@@ -138,38 +139,7 @@ public class InteractionManager {
         }
     }
 
-    public static Location parseLocation(String locationString) {
-        try {
-            // Split the string by commas
-            String[] parts = locationString.split(",");
-            if (parts.length < 4) {
-                throw new IllegalArgumentException("Location string must have at least 4 parts: world,x,y,z");
-            }
 
-            // Extract world name and coordinates
-            String worldName = parts[0];
-            double x = Double.parseDouble(parts[1]);
-            double y = Double.parseDouble(parts[2]);
-            double z = Double.parseDouble(parts[3]);
-
-            // Optional: Parse yaw and pitch if present
-            float yaw = parts.length > 4 ? Float.parseFloat(parts[4]) : 0.0f;
-            float pitch = parts.length > 5 ? Float.parseFloat(parts[5]) : 0.0f;
-
-            // Get the world from the server
-            World world = Bukkit.getWorld(worldName);
-            if (world == null) {
-                throw new IllegalArgumentException("World '" + worldName + "' not found");
-            }
-
-            // Return the location object
-            return new Location(world, x, y, z, yaw, pitch);
-        } catch (Exception e) {
-            System.err.println("Failed to parse location string: " + locationString);
-            e.printStackTrace();
-            return null; // Return null if parsing fails
-        }
-    }
 
     public void reloadInter(String id) {
         if(interactionMap.containsKey(id)) {
@@ -291,7 +261,6 @@ public class InteractionManager {
                 hologramMap.remove(id);
                 createDisplay(id, newL);
             }
-
         }
     }
 
@@ -423,9 +392,7 @@ public class InteractionManager {
     }
 
 
-    public static String locationToString(Location loc) {
-        return loc.getWorld().getName() + "," + loc.getX() + "," + loc.getY() + "," + loc.getZ() + "," + loc.getYaw() + "," + loc.getPitch();
-    }
+
 
 
     public void saveInteractionToFile(String id, InteractionData interaction) {
@@ -441,7 +408,7 @@ public class InteractionManager {
             JSONObject bound = new JSONObject();
             JSONArray locationArray = new JSONArray();
             for (Location loc : interaction.getLocations()) {
-                locationArray.add(locationToString(loc)); // Convert each location to string
+                locationArray.add(Parsers.locationToString(loc)); // Convert each location to string
             }
             bound.put("location", locationArray);
 

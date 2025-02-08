@@ -1,5 +1,9 @@
 package me.hektortm.woSSystems.utils;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+
 import java.awt.*;
 
 import static me.hektortm.woSSystems.utils.Letters.*;
@@ -102,6 +106,43 @@ public class Parsers {
             }
         }
         return stylizedText.toString();
+    }
+
+    public static String locationToString(Location loc) {
+        return loc.getWorld().getName() + "," + loc.getX() + "," + loc.getY() + "," + loc.getZ() + "," + loc.getYaw() + "," + loc.getPitch();
+    }
+
+    public static Location parseLocation(String locationString) {
+        try {
+            // Split the string by commas
+            String[] parts = locationString.split(",");
+            if (parts.length < 4) {
+                throw new IllegalArgumentException("Location string must have at least 4 parts: world,x,y,z");
+            }
+
+            // Extract world name and coordinates
+            String worldName = parts[0];
+            double x = Double.parseDouble(parts[1]);
+            double y = Double.parseDouble(parts[2]);
+            double z = Double.parseDouble(parts[3]);
+
+            // Optional: Parse yaw and pitch if present
+            float yaw = parts.length > 4 ? Float.parseFloat(parts[4]) : 0.0f;
+            float pitch = parts.length > 5 ? Float.parseFloat(parts[5]) : 0.0f;
+
+            // Get the world from the server
+            World world = Bukkit.getWorld(worldName);
+            if (world == null) {
+                throw new IllegalArgumentException("World '" + worldName + "' not found");
+            }
+
+            // Return the location object
+            return new Location(world, x, y, z, yaw, pitch);
+        } catch (Exception e) {
+            System.err.println("Failed to parse location string: " + locationString);
+            e.printStackTrace();
+            return null; // Return null if parsing fails
+        }
     }
 
 }

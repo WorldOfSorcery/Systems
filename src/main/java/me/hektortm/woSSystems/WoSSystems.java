@@ -317,7 +317,7 @@ public final class WoSSystems extends JavaPlugin {
     }
 
     private void registerEvents() {
-        eventReg(new InterListener(interactionManager, citemManager));
+        eventReg(new InterListener(daoHub));
         eventReg(new DropListener());
         eventReg(new HoverListener(citemManager));
         eventReg(new QuitListener(core, unlockableManager, daoHub, coinflipCommand, this));
