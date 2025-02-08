@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.channels.cmd.subcmd.nick;
 
+import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.channels.NicknameManager;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
@@ -12,13 +13,11 @@ import org.bukkit.entity.Player;
 import java.util.UUID;
 
 public class Reserve extends SubCommand {
-    private final NicknameManager manager;
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final NicknameManager manager = plugin.getNickManager();
     private final WoSCore core = WoSCore.getPlugin(WoSCore.class);
     private final LangManager lang = new LangManager(core);
 
-    public Reserve(NicknameManager manager) {
-        this.manager = manager;
-    }
 
     @Override
     public String getName() {

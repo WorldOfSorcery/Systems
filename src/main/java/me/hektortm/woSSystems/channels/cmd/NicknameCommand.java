@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.channels.cmd;
 
+import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.channels.cmd.subcmd.nick.Request;
 import me.hektortm.woSSystems.channels.cmd.subcmd.nick.Requests;
 import me.hektortm.woSSystems.channels.cmd.subcmd.nick.Reserve;
@@ -18,15 +19,15 @@ import java.util.Map;
 public class NicknameCommand implements CommandExecutor {
 
     private final Map<String, SubCommand> subCommands = new HashMap<>();
-    private final NicknameManager manager;
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final NicknameManager manager = plugin.getNickManager();
 
-    public NicknameCommand(NicknameManager manager) {
-        this.manager = manager;
+    public NicknameCommand() {
 
-        subCommands.put("request", new Request(manager));
-        subCommands.put("requests", new Requests(manager));
-        subCommands.put("reserve", new Reserve(manager));
-        subCommands.put("unreserve", new Unreserve(manager));
+        subCommands.put("request", new Request());
+        subCommands.put("requests", new Requests());
+        subCommands.put("reserve", new Reserve());
+        subCommands.put("unreserve", new Unreserve());
 
     }
 

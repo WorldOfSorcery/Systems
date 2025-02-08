@@ -21,16 +21,15 @@ import java.io.IOException;
 import java.util.*;
 
 public class NicknameManager {
-
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final WoSCore core = WoSCore.getPlugin(WoSCore.class);
     private final LangManager lang = new LangManager(core);
     private final Map<UUID, String> nickRequests = new HashMap<>();
     public final Map<UUID, String> reservedNicks = new HashMap<>();
-    private final DAOHub hub;
+    private final DAOHub hub = plugin.getDaoHub();
     static Inventory inv;
 
-    public NicknameManager(DAOHub hub) {
-        this.hub = hub;
+    public NicknameManager() {
 
         // Load reserved nicknames and nickname requests from the database
         this.reservedNicks.putAll(hub.getNicknameDAO().getReservedNicknames());

@@ -12,11 +12,8 @@ import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import me.hektortm.woSSystems.channels.Channel;
 import me.hektortm.woSSystems.channels.ChannelManager;
-import me.hektortm.woSSystems.channels.cmd.ChannelCommand;
+import me.hektortm.woSSystems.channels.cmd.*;
 import me.hektortm.woSSystems.channels.NicknameManager;
-import me.hektortm.woSSystems.channels.cmd.ChannelCommandExecutor;
-import me.hektortm.woSSystems.channels.cmd.InternalViewItemCommand;
-import me.hektortm.woSSystems.channels.cmd.NicknameCommand;
 import me.hektortm.woSSystems.cosmetic.CosmeticManager;
 import me.hektortm.woSSystems.cosmetic.cmd.CosmeticCommand;
 import me.hektortm.woSSystems.database.DAOHub;
@@ -161,7 +158,7 @@ public final class WoSSystems extends JavaPlugin {
         log = new LogManager(lang, core);
 
         statsManager = new StatsManager(daoHub);
-        ecoManager = new EcoManager(this, daoHub);
+        ecoManager = new EcoManager(daoHub);
         unlockableManager = new UnlockableManager(daoHub);
         fishingManager = new FishingManager(fishingItemsFolder);
 
@@ -169,13 +166,13 @@ public final class WoSSystems extends JavaPlugin {
         citemManager = new CitemManager(daoHub); // Ensure interactionManager is null-safe.
         resolver = new PlaceholderResolver(statsManager, citemManager);
 
-        conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager, citemManager);
+        conditionHandler = new ConditionHandler();
         interactionManager = new InteractionManager();
         interactionManager.setConditionHandler(conditionHandler);
         interactionManager.setPlaceholderResolver(resolver);
         citemManager.setInteractionManager(interactionManager);
-        channelManager = new ChannelManager(this, daoHub);
-        nickManager = new NicknameManager(daoHub);
+        channelManager = new ChannelManager();
+        nickManager = new NicknameManager();
 
         lootTableManager = new LoottableManager(interactionManager, citemManager);
         coinflipCommand = new Coinflip(ecoManager, this, lang);
@@ -307,8 +304,9 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("pay", new PayCommand(ecoManager, lang));
         cmdReg("coinflip", coinflipCommand);
         cmdReg("crecipe", new CRecipeCommand(this, recipeManager, lang));
-        cmdReg("channel", new ChannelCommand(channelManager));
-        cmdReg("nickname", new NicknameCommand(nickManager));
+        cmdReg("channel", new ChannelCommand());
+        cmdReg("nickname", new NicknameCommand());
+        cmdReg("realname", new RealnameCommand());
         cmdReg("loottable", new LoottableCommand(lootTableManager));
         cmdReg("sign", new SignCommand(citemManager, ecoManager));
         cmdReg("time", new TimeCommand(timeManager, this, lang));
@@ -323,7 +321,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new QuitListener(core, unlockableManager, daoHub, coinflipCommand, this));
         eventReg(new FishingListener());
         eventReg(new JoinListener(this));
-        eventReg(new ChannelListener(channelManager, nickManager, unlockableManager, daoHub));
+        eventReg(new ChannelListener(daoHub));
         eventReg(new CustomHandler(regionBossBarManager));
 
         getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager, daoHub), this);
@@ -359,6 +357,10 @@ public final class WoSSystems extends JavaPlugin {
         String message = lang.getMessage(file, msg).replace(oldChar1, value1).replace(oldChar2, value2).replace(oldChar3, value3);
         String newMessage = lang.getMessage("general", "prefix.economy") + message;
         sender.sendMessage(Utils.replaceColorPlaceholders(newMessage));
+    }
+
+    public DAOHub getDaoHub() {
+        return daoHub;
     }
 
     public WoSCore getCore() {
@@ -414,6 +416,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public ChannelManager getChannelManager() {
         return channelManager;
+    }
+    public NicknameManager getNickManager() {
+        return nickManager;
     }
     public CosmeticManager getCosmeticManager() {
         return cosmeticManager;

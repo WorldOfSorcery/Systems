@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.channels.cmd.subcmd.nick;
 
+import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.channels.NicknameManager;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
@@ -7,11 +8,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class Unreserve extends SubCommand {
-    private final NicknameManager manager;
-
-    public Unreserve(NicknameManager manager) {
-        this.manager = manager;
-    }
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final NicknameManager manager = plugin.getNickManager();
 
     @Override
     public String getName() {
