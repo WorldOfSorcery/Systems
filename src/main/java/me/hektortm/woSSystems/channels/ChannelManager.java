@@ -27,11 +27,13 @@ import java.util.logging.Level;
 
 public class ChannelManager {
     public Inventory itemPreview = Bukkit.createInventory(null, InventoryType.DISPENSER, "Viewing Item");
-    public final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    public final WoSSystems plugin;
     private final Map<String, Channel> channels = new HashMap<>();
-    private final DAOHub hub = plugin.getDaoHub();
+    private final DAOHub hub;
 
-    public ChannelManager() {
+    public ChannelManager(WoSSystems plugin, DAOHub hub) {
+        this.plugin = plugin;
+        this.hub = hub;
         loadChannels();
     }
 
@@ -231,7 +233,7 @@ public class ChannelManager {
     public Component getFormattedMessage(Channel channel, Player sender, String message) {
         String format = channel.getFormat();
 
-        NicknameManager nickManager = plugin.getNickManager();
+        NicknameManager nickManager = new NicknameManager(hub);
         // Use the player's nickname if available, otherwise use their username
         String name = nickManager.getNickname(sender) != null ?
                 nickManager.getNickname(sender).replace("_", " ") :

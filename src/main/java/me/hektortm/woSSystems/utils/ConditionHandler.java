@@ -15,14 +15,18 @@ import java.util.List;
 public class ConditionHandler {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final UnlockableManager unlockableManager = plugin.getUnlockableManager();
-    private final StatsManager statsManager = plugin.getStatsManager();
-    private final EcoManager ecoManager = plugin.getEcoManager();
-    private final CitemManager citemManager = plugin.getCitemManager();
+    private final UnlockableManager unlockableManager;
+    private final StatsManager statsManager;
+    private final EcoManager ecoManager;
+    private final CitemManager citemManager;
     private PlaceholderResolver resolver;
     private final Parsers parsers = new Parsers();
 
-    public ConditionHandler() {
+    public ConditionHandler(UnlockableManager unlockableManager, StatsManager statsManager, EcoManager ecoManager, CitemManager citemManager) {
+        this.unlockableManager = unlockableManager;
+        this.statsManager = statsManager;
+        this.ecoManager = ecoManager;
+        this.citemManager = citemManager;
         resolver  = new PlaceholderResolver(statsManager, citemManager);
     }
 

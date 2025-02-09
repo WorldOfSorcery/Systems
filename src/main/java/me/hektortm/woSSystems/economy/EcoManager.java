@@ -12,14 +12,17 @@ import java.util.*;
 import java.util.logging.Level;
 
 public class EcoManager {
-    private final WoSCore core = WoSCore.getPlugin(WoSCore.class);
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final WoSCore core;
+    private final WoSSystems plugin;
     private final DAOHub hub;
     private final Map<String, me.hektortm.woSSystems.utils.dataclasses.Currency> currencies = new HashMap<>();
 
 
-    public EcoManager(DAOHub hub) {
+    public EcoManager(WoSSystems plugin, DAOHub hub) {
+        this.plugin = plugin;
+        this.core = (WoSCore) plugin.getServer().getPluginManager().getPlugin("WoSCore");
         this.hub = hub;
+
         loadDefaultCurrencies();
         loadCurrencies();
     }

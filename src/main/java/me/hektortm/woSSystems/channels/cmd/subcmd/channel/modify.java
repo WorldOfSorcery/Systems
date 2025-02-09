@@ -1,6 +1,5 @@
 package me.hektortm.woSSystems.channels.cmd.subcmd.channel;
 
-import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.channels.Channel;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.utils.Permissions;
@@ -12,8 +11,11 @@ import org.bukkit.entity.Player;
 import java.util.Arrays;
 
 public class modify extends SubCommand {
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final ChannelManager channelManager = plugin.getChannelManager();
+    private final ChannelManager channelManager;
+
+    public modify(ChannelManager channelManager) {
+        this.channelManager = channelManager;
+    }
 
     @Override
     public String getName() {

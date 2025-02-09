@@ -1,6 +1,5 @@
 package me.hektortm.woSSystems.channels.cmd.subcmd.channel;
 
-import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.channels.Channel;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.utils.Permissions;
@@ -10,8 +9,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class focus extends SubCommand {
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final ChannelManager channelManager = plugin.getChannelManager();
+    private final ChannelManager channelManager;
+
+    public focus(ChannelManager channelManager) {
+        this.channelManager = channelManager;
+    }
 
     @Override
     public String getName() {

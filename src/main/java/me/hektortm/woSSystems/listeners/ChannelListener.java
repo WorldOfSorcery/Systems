@@ -22,14 +22,16 @@ import java.util.UUID;
 import java.util.logging.Level;
 
 public class ChannelListener implements Listener {
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final ChannelManager channelManager = plugin.getChannelManager();
-    private final NicknameManager nickManager = plugin.getNickManager();
-    private final UnlockableManager unlockableManager = plugin.getUnlockableManager();
+    private final ChannelManager channelManager;
+    private final NicknameManager nickManager;
+    private final UnlockableManager unlockableManager;
     private final DAOHub hub;
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
-
-    public ChannelListener(DAOHub hub) {
+    public ChannelListener(ChannelManager channelManager, NicknameManager nickManager, UnlockableManager unlockableManager, DAOHub hub) {
+        this.channelManager = channelManager;
+        this.nickManager = nickManager;
+        this.unlockableManager = unlockableManager;
         this.hub = hub;
     }
 
