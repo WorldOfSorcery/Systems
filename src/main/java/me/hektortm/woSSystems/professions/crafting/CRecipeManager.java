@@ -29,7 +29,7 @@ public class CRecipeManager {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final CitemManager citemManager = plugin.getCitemManager();
     private InteractionManager interactionManager;
-    private final CitemCommand cmd = new CitemCommand(interactionManager);
+    private final CitemCommand cmd = new CitemCommand(citemManager, interactionManager);
     private final LogManager logManager = plugin.getLogManager();
     public final File recipesFolder;
     private final Map<NamespacedKey, RecipeData> recipeMap = new HashMap<>();

@@ -44,36 +44,27 @@ public class CitemDAO implements IDAO {
                     "damage INT, " +
                     "custom_model_data INT, " +
                     "flag_undroppable BOOLEAN, "+
-                    "flag_unusable BOOLEAN, "+
+                    "flag_unusable BOOLEAN, " +
+                    "flag_placeable INT, "+
                     "action_left TEXT, " +
                     "action_right TEXT)");
             stmt.execute("CREATE TABLE IF NOT EXISTS placed_citems("+
                     "citem_id TEXT PRIMARY_KEY NOT NULL, " +
                     "owner_uuid TEXT NOT NULL, " +
-                    "location TEXT NOT NULL)");
-            stmt.execute("UPDATE TABLE IF EXISTS citems("+
-                    "id TEXT, " +
-                    "material TEXT, " +
-                    "display_name TEXT, " +
-                    "lore TEXT, " +
-                    "enchantments TEXT, " +
-                    "damage INT, " +
-                    "custom_model_data INT, " +
-                    "flag_undroppable BOOLEAN, "+
-                    "flag_unusable BOOLEAN, "+
-                    "action_left TEXT, " +
-                    "action_right TEXT, "+
-                    "flag_placeable BOOLEAN)");
+                    "block_location TEXT NOT NULL, " +
+                    "display_location TEXT NOT NULL)");
         }
     }
 
-    public void createItemDisplay(String id, UUID ownerUUID, Location location) {
-        String loc = Parsers.locationToString(location);
-        String sql = "INSERT INTO placed_citems (citem_id, owner_uuid, location) VALUES (?, ?, ?)";
+    public void createItemDisplay(String id, UUID ownerUUID, Location blockLocation, Location displayLocation) {
+        String bLoc = Parsers.locationToString(blockLocation);
+        String dLoc = Parsers.locationToString(displayLocation);
+        String sql = "INSERT INTO placed_citems (citem_id, owner_uuid, block_location, display_location) VALUES (?, ?, ?, ?)";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
             pstmt.setString(2, ownerUUID.toString());
-            pstmt.setString(3, loc);
+            pstmt.setString(3, bLoc);
+            pstmt.setString(4, dLoc);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -82,7 +73,7 @@ public class CitemDAO implements IDAO {
 
     public void removeItemDisplay(UUID ownerUUID, Location location) {
         String loc = Parsers.locationToString(location);
-        String sql = "DELETE FROM placed_items WHERE owner_uuid = ? AND location = ?";
+        String sql = "DELETE FROM placed_citems WHERE owner_uuid = ? AND block_location = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, ownerUUID.toString());
             pstmt.setString(2, loc);
@@ -94,11 +85,40 @@ public class CitemDAO implements IDAO {
 
     public UUID getUUID(Location location) {
         String loc = Parsers.locationToString(location);
-        String sql = "SELECT owner_uuid FROM placed_citems WHERE location = ?";
+        String sql = "SELECT owner_uuid FROM placed_citems WHERE block_location = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, loc);
             ResultSet rs = pstmt.executeQuery();
-            return UUID.fromString(rs.getString("owner_uuid"));
+            if (rs.next()) { // Check if result exists
+                return UUID.fromString(rs.getString("owner_uuid"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // Return null if no result
+    }
+
+    public void changeDisplay(Location oldLocation, Location newLocation) {
+        String oldLoc = Parsers.locationToString(oldLocation);
+        String newLoc = Parsers.locationToString(newLocation);
+        String sql = "UPDATE placed_citems SET display_location = ? WHERE display_location = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, newLoc);
+            pstmt.setString(2, oldLoc);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Location getDisplayLocation(Location location) {
+        String loc = Parsers.locationToString(location);
+        String sql = "SELECT display_location FROM placed_citems WHERE block_location = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, loc);
+            ResultSet rs = pstmt.executeQuery();
+            Location returnLoc = Parsers.parseLocation(rs.getString("display_location"));
+            return returnLoc;
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
@@ -107,20 +127,23 @@ public class CitemDAO implements IDAO {
 
     public String getItemDisplayID(Location location) {
         String loc = Parsers.locationToString(location);
-        String sql = "SELECT citem_id FROM placed_citems WHERE location = ?";
+        String sql = "SELECT citem_id FROM placed_citems WHERE block_location = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, loc);
             ResultSet rs = pstmt.executeQuery();
-            return rs.getString("citem_id");
+            if (rs.next()) { // Check if result exists
+                return rs.getString("citem_id");
+            }
         } catch (SQLException e) {
             e.printStackTrace();
-            return null;
         }
+        return null; // Return null if not found
     }
+
 
     public boolean isItemDisplay(Location location) {
         String loc = Parsers.locationToString(location);
-        String sql = "SELECT  1 FROM placed_citems WHERE location = ?";
+        String sql = "SELECT  1 FROM placed_citems WHERE block_location = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, loc);
             ResultSet rs = pstmt.executeQuery();
@@ -132,17 +155,19 @@ public class CitemDAO implements IDAO {
     }
 
     public boolean isItemDisplayOwner(Location location, UUID uuid) {
-        String sql = "SELECT 1 FROM placed_citems WHERE location = ? AND owner_uuid = ?";
+        String loc = Parsers.locationToString(location); // Fix incorrect location format
+        String sql = "SELECT 1 FROM placed_citems WHERE block_location = ? AND owner_uuid = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, location.toString());
+            pstmt.setString(1, loc);
             pstmt.setString(2, uuid.toString());
             ResultSet rs = pstmt.executeQuery();
-            return rs.next();
+            return rs.next(); // If there's a result, return true
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
         }
+        return false;
     }
+
     public void saveCitem(String id, ItemStack item) {
         ItemMeta meta = item.getItemMeta();
         String material = item.getType().toString();
@@ -161,9 +186,10 @@ public class CitemDAO implements IDAO {
         String actionLeft = data.has(plugin.getCitemManager().getLeftActionKey(), PersistentDataType.STRING) ? data.get(plugin.getCitemManager().getLeftActionKey(), PersistentDataType.STRING) : null;
         String actionRight = data.has(plugin.getCitemManager().getRightActionKey(), PersistentDataType.STRING) ? data.get(plugin.getCitemManager().getRightActionKey(), PersistentDataType.STRING) : null;
 
-        Boolean placeable = data.has(plugin.getCitemManager().getPlaceableKey(), PersistentDataType.BOOLEAN) ? data.get(plugin.getCitemManager().getPlaceableKey(), PersistentDataType.BOOLEAN) : false;
+        Integer placeable = data.has(plugin.getCitemManager().getPlaceableKey(), PersistentDataType.INTEGER) ? data.get(plugin.getCitemManager().getPlaceableKey(), PersistentDataType.INTEGER) : null;
 
-        String query = "INSERT INTO citems (id, material, display_name, lore, enchantments, damage, custom_model_data, flag_undroppable, flag_unusable, action_left, action_right, flag_pleaceable) VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?)";
+
+        String query = "INSERT INTO citems (id, material, display_name, lore, enchantments, damage, custom_model_data, flag_undroppable, flag_unusable, action_left, action_right, flag_placeable) VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?)";
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, id);
             stmt.setString(2, material);
@@ -176,7 +202,7 @@ public class CitemDAO implements IDAO {
             stmt.setBoolean(9, unusable);
             stmt.setString(10, actionLeft);
             stmt.setString(11, actionRight);
-            stmt.setBoolean(12, placeable);
+            stmt.setInt(12, placeable);
             stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -201,7 +227,7 @@ public class CitemDAO implements IDAO {
         String actionLeft = data.has(plugin.getCitemManager().getLeftActionKey(), PersistentDataType.STRING) ? data.get(plugin.getCitemManager().getLeftActionKey(), PersistentDataType.STRING) : null;
         String actionRight = data.has(plugin.getCitemManager().getRightActionKey(), PersistentDataType.STRING) ? data.get(plugin.getCitemManager().getRightActionKey(), PersistentDataType.STRING) : null;
 
-        Boolean placeable = data.has(plugin.getCitemManager().getPlaceableKey(), PersistentDataType.BOOLEAN) ? data.get(plugin.getCitemManager().placeableKey, PersistentDataType.BOOLEAN) : false;
+        Integer placeable = data.has(plugin.getCitemManager().getPlaceableKey(), PersistentDataType.INTEGER) ? data.get(plugin.getCitemManager().placeableKey, PersistentDataType.INTEGER) : null;
 
 
         String query = "UPDATE citems SET material = ?, display_name = ?, lore = ?, enchantments = ?, damage = ?, custom_model_data = ?, flag_undroppable = ?, flag_unusable = ?, action_left = ?, action_right = ?, flag_placeable = ? WHERE id = ?";
@@ -216,7 +242,7 @@ public class CitemDAO implements IDAO {
             stmt.setBoolean(8, unusable);
             stmt.setString(9, actionLeft);
             stmt.setString(10, actionRight);
-            stmt.setBoolean(11, placeable);
+            stmt.setInt(11, placeable);
             stmt.setString(12, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -283,7 +309,7 @@ public class CitemDAO implements IDAO {
                 boolean unusable = rs.getBoolean("flag_unusable");
                 String actionLeft = rs.getString("action_left");
                 String actionRight = rs.getString("action_right");
-                boolean placeable = rs.getBoolean("flag_placeable");
+                int placeable = rs.getInt("flag_placeable");
 
                 // Convert lore from a string back to a list
                 List<String> lore = (loreString != null && !loreString.isEmpty())
@@ -348,7 +374,7 @@ public class CitemDAO implements IDAO {
                     data.set(idKey, PersistentDataType.STRING, id);
                     data.set(undroppableKey, PersistentDataType.BOOLEAN, undroppable);
                     data.set(unusableKey, PersistentDataType.BOOLEAN, unusable);
-                    data.set(placeableKey, PersistentDataType.BOOLEAN, placeable);
+                    data.set(placeableKey, PersistentDataType.INTEGER, placeable);
                     if (actionLeft != null) {
                         data.set(leftActionKey, PersistentDataType.STRING, actionLeft);
                     }

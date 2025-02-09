@@ -166,13 +166,15 @@ public final class WoSSystems extends JavaPlugin {
         fishingManager = new FishingManager(fishingItemsFolder);
 
         guiManager = new GUIManager();
-        citemManager = new CitemManager(daoHub); // Ensure interactionManager is null-safe.
+
         resolver = new PlaceholderResolver(statsManager, citemManager);
 
+        citemManager = new CitemManager(daoHub);
         conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager, citemManager);
         interactionManager = new InteractionManager();
         interactionManager.setConditionHandler(conditionHandler);
         interactionManager.setPlaceholderResolver(resolver);
+         // Ensure interactionManager is null-safe.
         citemManager.setInteractionManager(interactionManager);
         channelManager = new ChannelManager(this, daoHub);
         nickManager = new NicknameManager(daoHub);
@@ -295,7 +297,7 @@ public final class WoSSystems extends JavaPlugin {
 
         //cmdReg("opengui", new GUIcommand(guiManager, interactionManager));
         cmdReg("interaction", new InteractionCommand());
-        cmdReg("citem", new CitemCommand(interactionManager));
+        cmdReg("citem", new CitemCommand(citemManager, interactionManager));
         cmdReg("cgive", new CgiveCommand(citemManager));
         cmdReg("cremove", new CremoveCommand(citemManager, lang));
         cmdReg("stats", new StatsCommand(statsManager));

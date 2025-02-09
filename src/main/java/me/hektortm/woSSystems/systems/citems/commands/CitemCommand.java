@@ -25,20 +25,21 @@ public class CitemCommand implements CommandExecutor {
 
     private final Map<String, SubCommand> subCommands = new HashMap<>();
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final CitemManager data = plugin.getCitemManager();
+    private final CitemManager data;
     private final StatsManager statsManager = plugin.getStatsManager();
     private final InteractionManager interactionManager;
     private final LangManager lang = plugin.getLangManager();
     private final LogManager log = plugin.getLogManager();
 
-    public CitemCommand(InteractionManager interactionManager) {
+    public CitemCommand(CitemManager data, InteractionManager interactionManager) {
+        this.data = data;
 
         this.interactionManager = interactionManager;
         subCommands.put("save", new SaveCommand(this, data));
         subCommands.put("rename", new NameCommand(data));
         subCommands.put("update", new UpdateCommand(this, data));
         subCommands.put("lore", new LoreCommand(data));
-        subCommands.put("flag", new FlagCommand());
+        subCommands.put("flag", new FlagCommand(data));
         subCommands.put("delete", new DeleteCommand(this, log, data));
         subCommands.put("action", new ActionCommand(data, interactionManager));
         subCommands.put("tag", new Tag(data));

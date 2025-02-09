@@ -61,7 +61,7 @@ public class CitemManager {
         this.hub = hub;
         nickManager = new NicknameManager(hub);
         citemFolder = new File(plugin.getDataFolder(), "citems");
-        cmd = new CitemCommand(interactionManager);
+        cmd = new CitemCommand(this, interactionManager);
         undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
         unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
         leftActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-left");

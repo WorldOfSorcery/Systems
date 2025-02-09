@@ -21,13 +21,15 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.UUID;
 
 public class FlagCommand extends SubCommand {
-    private final CitemManager data = WoSSystems.getPlugin(WoSSystems.class).getCitemManager();
+    private final CitemManager data;
     private final NamespacedKey undroppableKey;
     private final NamespacedKey unusableKey;
     private final NamespacedKey ownerKey;
-    private NamespacedKey placeableKey = data.getPlaceableKey();
+    private NamespacedKey placeableKey;
 
-    public FlagCommand() {
+    public FlagCommand(CitemManager data) {
+        this.data = data;
+        placeableKey = data.getPlaceableKey();
         ownerKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "owner");
         undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
         unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
@@ -97,8 +99,22 @@ public class FlagCommand extends SubCommand {
                     data.set(ownerKey, PersistentDataType.STRING, "");
                 }
                 if(flag.equals("placeable")) {
+                    if (args.length < 3) {
+                        p.sendMessage("not enough arguments"); //TODO lang
+                        return;
+                    }
+                    String parameter = args[2];
                     PersistentDataContainer data = meta.getPersistentDataContainer();
-                    data.set(placeableKey, PersistentDataType.BOOLEAN, true);
+
+                    if (parameter.equals("small")) {
+                        data.set(placeableKey, PersistentDataType.INTEGER, 1);
+                    } else if (parameter.equals("normal")) {
+                        data.set(placeableKey, PersistentDataType.INTEGER, 2);
+                    } else {
+                        p.sendMessage("Use: /citem flag add placeable <small/normal>");
+                        return;
+                    }
+
                     Utils.success(p, "citems", "flag.add.placeable");
                 }
 

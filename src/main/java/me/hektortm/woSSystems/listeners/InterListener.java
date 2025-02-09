@@ -1,15 +1,21 @@
 package me.hektortm.woSSystems.listeners;
 
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemCustomModelData;
+import com.github.retrooper.packetevents.protocol.item.type.ItemTypes;
+import com.github.retrooper.packetevents.protocol.nbt.NBTCompound;
+import com.maximde.hologramlib.hologram.ItemHologram;
+import com.maximde.hologramlib.hologram.RenderMode;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
+import me.tofaa.entitylib.meta.display.ItemDisplayMeta;
 import net.citizensnpcs.api.event.NPCClickEvent;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.Waterlogged;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -26,10 +32,8 @@ import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.logging.Level;
 
 public class InterListener implements Listener {
 
@@ -39,6 +43,7 @@ public class InterListener implements Listener {
     private final DAOHub hub;
     private final Map<Location, Long> blockCooldowns = new HashMap<>();
     private final Map<String, Long> npcCooldowns = new HashMap<>();
+    private final Map<UUID, Long> displayCooldowns = new HashMap<>();
     private final NamespacedKey unusableKey;
     private NamespacedKey placeableKey = citemManager.getPlaceableKey();
 
@@ -82,15 +87,53 @@ public class InterListener implements Listener {
         ItemStack item = e.getItem();
         Action action = e.getAction();
         Player p = e.getPlayer();
-        Location locClicked = e.getClickedBlock().getLocation();
+        Location locClicked = Objects.requireNonNull(e.getClickedBlock()).getLocation();
 
-        if(hub.getCitemDAO().isItemDisplay(locClicked)) {
-            if (p.isSneaking()) {
-                if (e.getClickedBlock().getType() == Material.BARRIER) {
+        if ((e.getClickedBlock().getType() == Material.BARRIER || e.getClickedBlock().getType() == Material.DEAD_TUBE_CORAL_FAN) && p.getInventory().getItemInMainHand().isEmpty()) {
+            if (action.isRightClick() && !p.isSneaking()) {
+                if (hub.getCitemDAO().isItemDisplay(locClicked)) {
                     if (hub.getCitemDAO().isItemDisplayOwner(locClicked, p.getUniqueId()) || p.getGameMode() == GameMode.CREATIVE) {
+                        long currentTime = System.currentTimeMillis();
+                        long cooldownTime = 250; // 250 ms cooldown
+
+                        if (displayCooldowns.containsKey(p.getUniqueId())) {
+                            long lastInteractionTime = displayCooldowns.get(p.getUniqueId());
+                            long elapsedTime = currentTime - lastInteractionTime;
+
+                            if (elapsedTime < cooldownTime) {
+                                return; // Skip processing if block is on cooldown
+                            }
+                        }
+                        displayCooldowns.put(p.getUniqueId(), currentTime);
+
+                        rotateItemDisplay(locClicked);
+                        p.playSound(locClicked, Sound.ITEM_SPYGLASS_USE, 1L, 1L);
+                    }
+                }
+            }
+            if ((action.isRightClick() && p.isSneaking()) && p.getInventory().getItemInMainHand().isEmpty()) {
+                if (hub.getCitemDAO().isItemDisplay(locClicked)) {
+                    if (hub.getCitemDAO().isItemDisplayOwner(locClicked, p.getUniqueId()) || p.getGameMode() == GameMode.CREATIVE) {
+
+                        long currentTime = System.currentTimeMillis();
+                        long cooldownTime = 250; // 250 ms cooldown
+
+                        if (displayCooldowns.containsKey(p.getUniqueId())) {
+                            long lastInteractionTime = displayCooldowns.get(p.getUniqueId());
+                            long elapsedTime = currentTime - lastInteractionTime;
+
+                            if (elapsedTime < cooldownTime) {
+                                return; // Skip processing if block is on cooldown
+                            }
+                        }
+
+                        // Update cooldown
+                        displayCooldowns.put(p.getUniqueId(), currentTime);
+
                         ItemStack giveCitem = hub.getCitemDAO().getCitem(hub.getCitemDAO().getItemDisplayID(locClicked));
 
-                        if (p.getGameMode() == GameMode.CREATIVE && !hub.getCitemDAO().isItemDisplayOwner(locClicked, p.getUniqueId())) {
+                        removeEntityAtLocation(hub.getCitemDAO().getDisplayLocation(locClicked));
+                        if (p.getGameMode() == GameMode.CREATIVE) {
                             hub.getCitemDAO().removeItemDisplay(hub.getCitemDAO().getUUID(locClicked), locClicked);
                         } else if (hub.getCitemDAO().isItemDisplayOwner(locClicked, p.getUniqueId())) {
                             hub.getCitemDAO().removeItemDisplay(p.getUniqueId(), locClicked);
@@ -99,10 +142,15 @@ public class InterListener implements Listener {
                             return;
                         }
 
-                        removeEntityAtLocation(locClicked);
+
                         Block clickedBlock = e.getClickedBlock();
-                        clickedBlock.setType(null);
+                        p.playSound(locClicked, Sound.BLOCK_CHISELED_BOOKSHELF_PICKUP, 1L, 1L);
+                        spawnPickupParticle(locClicked);
+                        clickedBlock.setType(Material.AIR);
                         p.getInventory().addItem(giveCitem);
+                    } else {
+                        p.sendMessage("You are not the owner of this display.");
+                        return;
                     }
                 }
             }
@@ -114,29 +162,57 @@ public class InterListener implements Listener {
             PersistentDataContainer data = meta.getPersistentDataContainer();
             String id = data.get(citemManager.getIdKey(), PersistentDataType.STRING);
 
-            if (data.has(placeableKey, PersistentDataType.BOOLEAN)) {
-                if (data.get(placeableKey, PersistentDataType.BOOLEAN).equals(Boolean.TRUE)) {
+            if (data.has(placeableKey, PersistentDataType.INTEGER)) {
+
                     if (action.isRightClick()) {
 
                         if (e.getClickedBlock() != null) {
                             Block targetBlock = e.getClickedBlock();
                             Location spawnLocation = targetBlock.getLocation().add(0, 1, 0);
 
+                            long currentTime = System.currentTimeMillis();
+                            long cooldownTime = 250; // 250 ms cooldown
+
+                            if (displayCooldowns.containsKey(p.getUniqueId())) {
+                                long lastInteractionTime = displayCooldowns.get(p.getUniqueId());
+                                long elapsedTime = currentTime - lastInteractionTime;
+
+                                if (elapsedTime < cooldownTime) {
+                                    return; // Skip processing if block is on cooldown
+                                }
+                            }
+
+                            // Update cooldown
+                            displayCooldowns.put(p.getUniqueId(), currentTime);
 
                             // Spawn an ItemDisplay entity
-                            ItemDisplay itemDisplay = (ItemDisplay) spawnLocation.getWorld().spawnEntity(spawnLocation, EntityType.ITEM_DISPLAY);
-                            itemDisplay.setItemStack(item); // Set the item to display
-                            itemDisplay.setTransformation(new Transformation(new Vector3f(1), new AxisAngle4f(), new Vector3f(), new AxisAngle4f())); // Set the transformation (scale, rotation, etc.)
-
+                            spawnItemDisplay(spawnLocation, id, p.getUniqueId()); // Set the transformation (scale, rotation, etc.)
                             // Spawn a Barrier block
-                            targetBlock.getWorld().getBlockAt(spawnLocation).setType(Material.BARRIER);
+                            if (data.get(placeableKey, PersistentDataType.INTEGER) == 1) {
+                                Material setMat = Material.DEAD_TUBE_CORAL_FAN;
+
+                                Block tBlock = targetBlock.getWorld().getBlockAt(spawnLocation);
+                                tBlock.setType(setMat);
+                                if (tBlock.getBlockData() instanceof Waterlogged wL) {
+                                    wL.setWaterlogged(false);
+                                    tBlock.setBlockData(wL);
+                                }
+                            } else if (data.get(placeableKey, PersistentDataType.INTEGER) == 2) {
+                                targetBlock.getWorld().getBlockAt(spawnLocation).setType(Material.BARRIER);
+                            }
+                            p.playSound(locClicked, Sound.BLOCK_CANDLE_PLACE, 1L, 1L);
+
 
                             // Optionally, consume the item in hand (e.g., remove one stick)
-                            p.getInventory().remove(hub.getCitemDAO().getCitem(id));
-                            hub.getCitemDAO().createItemDisplay(id, p.getUniqueId(), spawnLocation);
+                            if (p.getGameMode() != GameMode.CREATIVE) {
+                                ItemStack itemToRemove = hub.getCitemDAO().getCitem(id);
+                                itemToRemove.setAmount(1);
+                                p.getInventory().removeItem(itemToRemove);
+                            }
+
                         }
                     }
-                }
+
 
             }
 
@@ -221,6 +297,11 @@ public class InterListener implements Listener {
     public void onBlockBreak(BlockBreakEvent event) {
         Block block = event.getBlock();
 
+        if (hub.getCitemDAO().isItemDisplay(block.getLocation())) {
+            event.setCancelled(true);
+            return;
+        }
+
         for (File file : interManager.interactionFolder.listFiles()) {
             if (file.isFile() && file.getName().endsWith(".json")) {
                 String id = file.getName().replace(".json", "");
@@ -250,6 +331,16 @@ public class InterListener implements Listener {
         }
     }
 
+    private void removeEntityAtLocationSafely(Location location) {
+        World world = location.getWorld();
+        if (world == null) return;
+
+        world.getNearbyEntities(location, 0.5, 0.5, 0.5).stream()
+                .filter(entity -> entity instanceof ItemDisplay)
+                .forEach(Entity::remove);
+    }
+
+
     private boolean isSameLocation(Location loc1, Location loc2) {
         if (loc1 == null || loc2 == null) return false;
         return loc1.getWorld().equals(loc2.getWorld()) &&
@@ -258,8 +349,93 @@ public class InterListener implements Listener {
                 Math.abs(loc1.getZ() - loc2.getZ()) < 0.5;    // Tolerance for z-coordinate
     }
 
-    private void spawnItemDisplay(Location loc) {
-        
+    private void rotateItemDisplay(Location blockLocation) {
+        Location displayLocation = hub.getCitemDAO().getDisplayLocation(blockLocation);
+        if (displayLocation == null) return; // Prevent null errors
+
+        // 🔹 Remove old display using a safer method
+        removeEntityAtLocationSafely(displayLocation);
+
+        // 🔹 Ensure yaw stays between 0-360 degrees
+        float oldYaw = displayLocation.getYaw();
+        float newYaw = (oldYaw + 45) % 360; // Keeps yaw in range
+
+        // 🔹 Create a new rotated location
+        Location newDisplayLocation = displayLocation.clone();
+        newDisplayLocation.setYaw(newYaw);
+
+        // 🔹 Get item & spawn the new display entity
+        ItemStack item = hub.getCitemDAO().getCitem(hub.getCitemDAO().getItemDisplayID(blockLocation));
+        ItemDisplay display = blockLocation.getWorld().spawn(newDisplayLocation, ItemDisplay.class, entity -> {
+            entity.setItemStack(item);
+            entity.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
+        });
+
+        // 🔹 Update database with the new location
+        hub.getCitemDAO().changeDisplay(displayLocation, newDisplayLocation);
     }
+
+
+    private void spawnItemDisplay(Location blockLocation, String id, UUID uuid) {
+        ItemStack item = hub.getCitemDAO().getCitem(id);
+        if (blockLocation == null || item == null) {
+            System.out.println("Spawn location or item is null!");
+            return;
+        }
+
+        World world = blockLocation.getWorld();
+        if (world == null) {
+            System.out.println("World is null!");
+            return;
+        }
+        Location displayLocation = blockLocation.clone().add(0.5, 0.51, 0.5);
+        // Spawn the ItemDisplay entity
+        ItemDisplay itemDisplay = blockLocation.getWorld().spawn(displayLocation, ItemDisplay.class, entity -> {
+            entity.setItemStack(item);
+            entity.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
+        });
+
+        itemDisplay.setTransformation(new Transformation(
+                new Vector3f(),
+                new AxisAngle4f(),
+                new Vector3f(1,1,1),
+                new AxisAngle4f()
+        ));
+
+        // Ensure item display spawned correctly
+        if (itemDisplay == null) {
+            System.out.println("Failed to spawn ItemDisplay!");
+            return;
+        }
+
+        hub.getCitemDAO().createItemDisplay(id, uuid, blockLocation, displayLocation);
+
+    }
+
+    private void spawnPickupParticle(Location location) {
+        World world = location.getWorld();
+        if (world == null) return;
+
+        // 🔹 Number of particles & effect radius
+        int particleCount = 30;
+        double radius = 0.7;
+
+        for (int i = 0; i < particleCount; i++) {
+            double angle = (2 * Math.PI * i) / particleCount;
+            double xOffset = Math.cos(angle) * radius + 0.5;
+            double zOffset = Math.sin(angle) * radius + 0.5;
+
+            Location particleLoc = location.clone().add(xOffset, i * 0.04, zOffset);
+
+            // 🔥 Use Redstone particle with color
+            Particle.DustOptions dustOptions = new Particle.DustOptions(Color.fromRGB(255, 215, 0), 1.2f); // Gold effect
+
+            world.spawnParticle(Particle.DUST, particleLoc, 1, dustOptions);
+        }
+
+        // 🌟 Extra sparkle effect
+        world.spawnParticle(Particle.CRIT, location.clone().add(0.5, 0.5, 0.5), 15, 0.3, 0.3, 0.3, 0.1);
+    }
+
 
 }
