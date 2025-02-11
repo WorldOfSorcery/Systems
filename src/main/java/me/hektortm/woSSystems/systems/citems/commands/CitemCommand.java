@@ -49,7 +49,7 @@ public class CitemCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if (args.length == 0) {
-            Utils.error(sender, "citems", "error.usage.citem");
+            Utils.info(sender, "citems", "info.usage.citem");
             return true;
         }
 
@@ -60,7 +60,7 @@ public class CitemCommand implements CommandExecutor {
             if(!(PermissionUtil.hasPermission(sender, subCommand.getPermission()))) return true;
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));
         } else {
-            Utils.error(sender, "citems", "error.usage.citem");
+            Utils.info(sender, "citems", "info.usage.citem");
         }
 
         return true;

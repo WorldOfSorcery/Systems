@@ -44,7 +44,7 @@ public class LoreCommand extends SubCommand {
         if (!manager.getErrorHandler().handleCitemErrors(itemInHand, p)) return;
 
         if (args.length < 1) {
-            Utils.error(sender, "citems", "error.usage.lore");
+            Utils.info(sender, "citems", "info.usage.lore");
             return;
         }
 
@@ -55,7 +55,7 @@ public class LoreCommand extends SubCommand {
         switch (loreCmd.toLowerCase()) {
             case "add":
                 if (args.length < 2) {
-                    Utils.error(sender, "citems", "error.usage.lore-add");
+                    Utils.info(sender, "citems", "info.usage.lore-add");
                     return;
                 }
 
@@ -75,7 +75,7 @@ public class LoreCommand extends SubCommand {
 
             case "edit":
                 if (args.length < 3) {
-                    Utils.error(sender, "citems", "error.usage.lore-edit");
+                    Utils.info(sender, "citems", "info.usage.lore-edit");
                     return;
                 }
 
@@ -108,7 +108,7 @@ public class LoreCommand extends SubCommand {
 
             case "remove":
                 if (args.length < 2) {
-                    Utils.error(sender, "citems", "error.usage.lore-remove");
+                    Utils.info(sender, "citems", "info.usage.lore-remove");
                     return;
                 }
 
@@ -131,7 +131,7 @@ public class LoreCommand extends SubCommand {
                 break;
 
             default:
-                Utils.successMsg(p, "citems", "error.usage.lore");
+                Utils.info(p, "citems", "info.usage.lore");
                 break;
         }
     }

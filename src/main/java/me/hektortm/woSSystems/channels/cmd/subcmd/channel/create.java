@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.channels.cmd.subcmd.channel;
 
+import me.hektortm.woSSystems.channels.Channel;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
@@ -47,6 +48,10 @@ public class create extends SubCommand {
 
         String name = args[0];
         String shortName = args[1];
+        if(channelManager.getChannels().contains(channelManager.getChannel(name)) || channelManager.getChannels().contains(channelManager.getChannelByShortName(shortName))) {
+            Utils.error(player, "channel", "error.exists");
+            return;
+        }
 
         // Parse optional flags
         boolean forceJoin = false;

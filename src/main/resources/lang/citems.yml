@@ -12,6 +12,7 @@ error:
   lore:
     invalid-row: "Invalid row number."
     out-of-bounds: "Lore row out of bounds."
+info:
   usage:
     citem: "Usage: /citem <save|rename|lore|flag|update>"
     flag: "Usage: /citem flag <add|remove> <FLAG>"
@@ -25,6 +26,7 @@ error:
     cgive: "Usage: /cgive <player> <id> [amount]"
     cremove: "Usage: /cremove <player> <id> [amount]"
     tag: "Usage: /citem tag <tag1> <tag2>"
+  placeable-flag: "Use: /citem flag add placeable <small/normal>"
 
 stamp: "§aSuccessfully signed the current item."
 
@@ -38,7 +40,8 @@ flag:
     unbreakable: "§aUnbreakable flag added."
     unusable: "§aUnusable flag added."
     hide: "§aHide flags added."
-    placeable: "§aPlaceable flag added."
+    placeable-small: "§aPlaceable flag(small) added."
+    placeable-normal: "§aPlaceable flag(normal) added."
   remove:
     undroppable: "§cUndroppable flag removed."
     unbreakable: "§cUnbreakable flag removed."

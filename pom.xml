@@ -91,7 +91,7 @@
         <dependency>
             <groupId>me.hektortm</groupId>
             <artifactId>woscore</artifactId>
-            <version>1.6.2</version>
+            <version>1.6.4</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

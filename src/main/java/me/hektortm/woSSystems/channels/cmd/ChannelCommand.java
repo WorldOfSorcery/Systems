@@ -29,6 +29,7 @@ public class ChannelCommand implements CommandExecutor {
         subCommands.put("list", new list(channelManager));
         subCommands.put("modify", new modify(channelManager));
         subCommands.put("broadcast", new broadcast(channelManager));
+        subCommands.put("help", new help());
     }
 
     @Override
@@ -42,27 +43,32 @@ public class ChannelCommand implements CommandExecutor {
             String shortN = channel.getShortName();
             if (args[0].equalsIgnoreCase(name) || args[0].equalsIgnoreCase(shortN)) {
                 if (args.length == 1) {
-                    if (sender.hasPermission(channel.getPermission())) {
-                        channelManager.joinChannel((Player) sender, name);
+                    if(channelManager.getChannelDAO().isInChannel(p.getUniqueId(), name)) {
+                        channelManager.setFocus(p, name);
                         return true;
-                    }  else  {
-                        if (sender.hasPermission(channel.getPermission())) {
-                            if (channelManager.getChannelDAO().isInChannel(p.getUniqueId(), name)) {
-                                StringBuilder builder = new StringBuilder();
-                                for (int i = 1; i < args.length; i++) {
-                                    if (i == args.length -1) {
-                                        builder.append(args[i]);
-                                    } else {
-                                        builder.append(args[i] + " ");
-                                    }
-                                }
-                                String message = builder.toString();
-                                channelManager.sendMessagePerCommand(p, channel.getName(), message);
+                    } else {
+                        channelManager.joinChannel(p, name);
+                        channelManager.setFocus(p, name);
+                        return true;
+                    }
+
+                } else if (args.length >= 2) {
+                    if (channelManager.getChannelDAO().isInChannel(p.getUniqueId(), name)) {
+                        StringBuilder builder = new StringBuilder();
+                        for (int i = 1; i < args.length; i++) {
+                            if (i == args.length - 1) {
+                                builder.append(args[i]);
+                            } else {
+                                builder.append(args[i] + " ");
                             }
-                        } else {
-                            p.sendMessage("no perms");
-                            return true;
                         }
+                        String message = builder.toString();
+                        channelManager.sendMessagePerCommand(p, channel.getName(), message);
+                        return true;
+                    } else {
+                        channelManager.joinChannel(p, name);
+                        channelManager.setFocus(p, name);
+                        return true;
                     }
                 }
             }

@@ -1,4 +1,6 @@
 error:
+  exists-name: "A channel with this name already exists."
+  exists-short: "A channel with this short name already exists."
   no-perms: "You do not have permission to join this channel."
   not-found: "Channel not found."
   broadcast: "This channel is not broadcastable."

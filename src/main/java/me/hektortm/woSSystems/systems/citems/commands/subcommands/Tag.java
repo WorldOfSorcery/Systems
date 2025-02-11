@@ -5,12 +5,14 @@ import me.hektortm.woSSystems.utils.Icons;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.List;
+import java.util.logging.Level;
 
 public class Tag extends SubCommand {
     private final CitemManager manager;
@@ -31,14 +33,12 @@ public class Tag extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
+        if (!(sender instanceof Player p)) {
             return;
         }
 
-        Player p = (Player) sender;
-
         if (args.length < 1) {
-            Utils.error(p, "citems", "error.usage.tag");
+            Utils.info(p, "citems", "info.usage.tag");
             return;
         }
 
@@ -64,6 +64,7 @@ public class Tag extends SubCommand {
         try {
             return Icons.valueOf(iconName.toUpperCase());
         } catch (IllegalArgumentException e) {
+            Bukkit.getLogger().log(Level.INFO, "Illegal Argument");
             return null; // Invalid icon name
         }
     }
@@ -76,7 +77,7 @@ public class Tag extends SubCommand {
         // Combine icons into one lore line
         String iconLine = "§f" + firstIcon.getIcon();
         if (secondIcon != null) {
-            iconLine += "" + secondIcon.getIcon();
+            iconLine += secondIcon.getIcon();
         }
         lore.add(iconLine);
 

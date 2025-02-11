@@ -12,6 +12,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.io.File;
 
@@ -43,14 +45,17 @@ public class SaveCommand extends SubCommand {
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
 
         if (args.length != 1) {
-            Utils.error(p, "citems", "error.usage.save");
+            Utils.info(p, "citems", "info.usage.save");
             return;
         }
 
         if(!data.getErrorHandler().handleCitemErrors(itemInHand, p)) return;
 
         String id = args[0];
-
+        ItemMeta meta = itemInHand.getItemMeta();
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+        container.set(data.getIdKey(), PersistentDataType.STRING, id);
+        itemInHand.setItemMeta(meta);
         data.getCitemDAO().saveCitem(id, itemInHand);
         Utils.successMsg1Value(p, "citems", "saved", "%id%", id);
     }

@@ -9,6 +9,7 @@ import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.ErrorHandler;
 import me.hektortm.woSSystems.utils.Parsers;
 import me.hektortm.wosCore.LangManager;
+import me.hektortm.wosCore.Sounds;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
 import me.hektortm.wosCore.logging.LogManager;
@@ -249,6 +250,7 @@ public class CitemManager {
                     if (!newMeta.equals(meta)) {  // Only update if the new meta is different
                         item.setItemMeta(newMeta);
                         Utils.successMsg1Value(p, "citems", "update.updated", "%item%", item.getItemMeta().getDisplayName());
+                        Sounds.sucess(p);
                     }
                 }
             }

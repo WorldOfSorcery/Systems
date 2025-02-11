@@ -21,6 +21,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.TextDisplay;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import org.json.simple.JSONArray;
@@ -266,7 +267,7 @@ public class InteractionManager {
 
     private void createDisplay(String id, Location loc) {
         TextHologram textHologram = new TextHologram(id, RenderMode.ALL, (player1, textDisplayMeta) ->{
-            /*
+
             String[] parts = id.split(":");
             String interactionID = parts[0];
             InteractionData interaction = getInteractionByID(interactionID);
@@ -280,7 +281,7 @@ public class InteractionManager {
             Component component = Component.text(combinedText);
             textDisplayMeta.setText(component);
 
-             */
+
             return textDisplayMeta;
         })
                 .setBillboard(Display.Billboard.VERTICAL);

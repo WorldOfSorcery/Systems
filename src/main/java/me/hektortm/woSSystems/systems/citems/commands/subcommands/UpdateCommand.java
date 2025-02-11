@@ -42,7 +42,7 @@ public class UpdateCommand extends SubCommand {
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
 
         if (args.length != 1) {
-            Utils.error(p, "citems", "error.usage.update");
+            Utils.info(p, "citems", "info.usage.update");
             return;
         }
 

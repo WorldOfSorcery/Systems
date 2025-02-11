@@ -55,7 +55,7 @@ public class FlagCommand extends SubCommand {
         ItemMeta meta = itemInHand.getItemMeta();
 
         if (args.length < 2) {
-            Utils.error(p, "citems", "error.usage.flag");
+            Utils.info(p, "citems", "info.usage.flag");
             return;
         }
 
@@ -100,7 +100,7 @@ public class FlagCommand extends SubCommand {
                 }
                 if(flag.equals("placeable")) {
                     if (args.length < 3) {
-                        p.sendMessage("not enough arguments"); //TODO lang
+                        Utils.info(p, "citems", "info.placeable-flag");
                         return;
                     }
                     String parameter = args[2];
@@ -108,14 +108,16 @@ public class FlagCommand extends SubCommand {
 
                     if (parameter.equals("small")) {
                         data.set(placeableKey, PersistentDataType.INTEGER, 1);
+                        Utils.success(p, "citems", "flag.add.placeable-small");
                     } else if (parameter.equals("normal")) {
                         data.set(placeableKey, PersistentDataType.INTEGER, 2);
+                        Utils.success(p, "citems", "flag.add.placeable-normal");
                     } else {
-                        p.sendMessage("Use: /citem flag add placeable <small/normal>");
+                        Utils.info(p, "citems", "info.placeable-flag");
                         return;
                     }
 
-                    Utils.success(p, "citems", "flag.add.placeable");
+
                 }
 
                 break;
@@ -160,7 +162,7 @@ public class FlagCommand extends SubCommand {
                 break;
 
             default:
-                Utils.error(p, "citems", "error.usage.flag");
+                Utils.info(p, "citems", "info.usage.flag");
                 return;
         }
         itemInHand.setItemMeta(meta);

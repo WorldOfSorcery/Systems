@@ -41,7 +41,7 @@ public class NameCommand extends SubCommand {
         ItemMeta meta = itemInHand.getItemMeta();
 
         if (args.length < 1) {
-            Utils.error(p, "citems", "error.usage.rename");
+            Utils.info(p, "citems", "info.usage.rename");
             return;
         }
 
