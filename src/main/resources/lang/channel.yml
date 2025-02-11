@@ -54,6 +54,19 @@ list:
     joined: "§aJoined"
     left: "§cLeft"
 
+help:
+  header: "Channel commands:"
+  create: "%cyan_300%/ch create <name> <short> [-a] §7- Create a channel."
+  modify: "%cyan_300%/ch modify <channel> <key> <value> §7- modify a channel."
+  broadcast: "%cyan_300%/ch broadcast <channel> <message> §7- broadcast into a channel."
+  join: "%cyan_300%/ch join <channel> §7- join a channel."
+  leave: "%cyan_300%/ch leave <channel> §7- leave a channel."
+  focus: "%cyan_300%/ch focus <channel> §7- focus a channel."
+  list: "%cyan_300%/ch list §7- Display a list of the available channels."
+  quick: "%cyan_300%/<channel or short> §7- Quick message into a channel"
+  quick2: "%cyan_300%/ch <channel or short> §7- Another way to quick message."
+  help: "%cyan_300%/ch help §7- Display this help message."
+
 modify:
   format: "§aFormat for %channel% §aupdated to: %format%"
   radius: "§aRadius for %channel% §aupdated to: §e%radius%"

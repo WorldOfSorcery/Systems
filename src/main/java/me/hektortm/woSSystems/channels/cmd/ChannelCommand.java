@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.channels.cmd;
 
+import me.hektortm.woSSystems.channels.Channel;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.channels.cmd.subcmd.channel.*;
 import me.hektortm.woSSystems.utils.PermissionUtil;
@@ -7,6 +8,7 @@ import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +35,37 @@ public class ChannelCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
             return true;
+        }
+        Player p = (Player) sender;
+        for (Channel channel  : channelManager.getChannels()) {
+            String name = channel.getName();
+            String shortN = channel.getShortName();
+            if (args[0].equalsIgnoreCase(name) || args[0].equalsIgnoreCase(shortN)) {
+                if (args.length == 1) {
+                    if (sender.hasPermission(channel.getPermission())) {
+                        channelManager.joinChannel((Player) sender, name);
+                        return true;
+                    }  else  {
+                        if (sender.hasPermission(channel.getPermission())) {
+                            if (channelManager.getChannelDAO().isInChannel(p.getUniqueId(), name)) {
+                                StringBuilder builder = new StringBuilder();
+                                for (int i = 1; i < args.length; i++) {
+                                    if (i == args.length -1) {
+                                        builder.append(args[i]);
+                                    } else {
+                                        builder.append(args[i] + " ");
+                                    }
+                                }
+                                String message = builder.toString();
+                                channelManager.sendMessagePerCommand(p, channel.getName(), message);
+                            }
+                        } else {
+                            p.sendMessage("no perms");
+                            return true;
+                        }
+                    }
+                }
+            }
         }
 
         String subCommandName = args[0].toLowerCase();
