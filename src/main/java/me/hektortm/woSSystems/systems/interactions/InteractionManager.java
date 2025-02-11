@@ -68,24 +68,24 @@ public class InteractionManager {
 
     public void loadInteraction() {
         File[] interactionFiles = interactionFolder.listFiles((dir, name) -> name.endsWith(".json"));
-        if (interactionFiles == null || interactionFiles.length == 0) {
+        if(interactionFiles == null || interactionFiles.length == 0) {
             log.sendWarning("No valid interactions loaded. Check JSON structure in " + interactionFolder.getPath());
             return;
         }
 
         for (File file : interactionFiles) {
-            String interactionId = file.getName().replace(".json", "");
+            String interactionId =  file.getName().replace(".json", "");
             try (FileReader reader = new FileReader(file)) {
                 JSONObject json = (JSONObject) new JSONParser().parse(reader);
 
-                // Parse bound locations and NPCs
                 JSONObject bound = (JSONObject) json.get("bound");
-                JSONArray locationArray = (JSONArray) bound.get("block");
+                JSONArray locationArray = (JSONArray) bound.get("location");
                 JSONArray npcArray = (JSONArray) bound.get("npc");
 
                 List<Location> locations = new ArrayList<>();
                 if (locationArray != null) {
                     for (Object location : locationArray) {
+                        // Assuming there's a method to parse location strings into Location objects
                         locations.add(Parsers.parseLocation((String) location));
                     }
                 }
@@ -97,31 +97,46 @@ public class InteractionManager {
                     }
                 }
 
-                // Parse particles, npc, hologram, and actions
-                Map<String, JSONObject> particles = parseSection(json, "particles");
-                Map<String, JSONObject> npc = parseSection(json, "npc");
-                Map<String, JSONObject> hologram = parseSection(json, "hologram");
-                Map<String, JSONObject> actions = parseSection(json, "actions");
+                JSONObject particlesJson = (JSONObject) json.get("particles");
+                String particleType = particlesJson != null ? (String) particlesJson.get("type") : "";
+                String particleColor = particlesJson != null ? (String) particlesJson.get("color") : "";
 
-                interactionMap.put(interactionId, new InteractionData(interactionId, particles, npc, hologram, actions, locations, validNpcIds));
+                JSONArray hologramJson = (JSONArray) json.get("hologram");
+                List<String> hologramDefault = new ArrayList<>();
+
+                if (hologramJson != null) {
+                    for (Object line : hologramJson) {
+                        hologramDefault.add((String) line);
+                    }
+                }
+
+
+
+                // Load the "conditions" section
+                JSONArray conditionsArray = (JSONArray) json.get("conditions");
+                List<JSONObject> orderedConditions = new ArrayList<>();
+                if (conditionsArray != null) {
+                    for (Object obj : conditionsArray) {
+                        orderedConditions.add((JSONObject) obj);
+                    }
+                }
+
+                // Load the "actions" section
+                JSONArray actionsArray = (JSONArray) json.get("actions");
+                List<String> actions = new ArrayList<>();
+                if (actionsArray != null) {
+                    for (Object action : actionsArray) {
+                        actions.add((String) action);
+                    }
+                }
+
+                interactionMap.put(interactionId, new InteractionData(interactionId, conditionsArray,actions,locations,validNpcIds,particleType,particleColor, hologramDefault));
 
             } catch (Exception e) {
                 Bukkit.getLogger().warning("Error loading interaction from file " + file.getName() + ": " + e.getMessage());
                 e.printStackTrace();
             }
         }
-    }
-
-    private Map<String, JSONObject> parseSection(JSONObject json, String sectionName) {
-        Map<String, JSONObject> sectionMap = new HashMap<>();
-        JSONObject section = (JSONObject) json.get(sectionName);
-        if (section != null) {
-            for (Object key : section.keySet()) {
-                String keyStr = (String) key;
-                sectionMap.put(keyStr, (JSONObject) section.get(keyStr));
-            }
-        }
-        return sectionMap;
     }
 
 
@@ -149,7 +164,7 @@ public class InteractionManager {
         if (unMetOutcomes != null) {
             actions = unMetOutcomes.actions;
         } else {
-             actions = inter.getActions();
+            actions = inter.getActions();
         }
 
         for (String action : actions) {
