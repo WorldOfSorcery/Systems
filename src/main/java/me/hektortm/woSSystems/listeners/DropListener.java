@@ -24,7 +24,7 @@ public class DropListener implements Listener {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             PersistentDataContainer data = meta.getPersistentDataContainer();
-            if (data.has(undroppableKey, PersistentDataType.BOOLEAN)) {
+            if (data.get(undroppableKey, PersistentDataType.BOOLEAN) == true) {
                 event.setCancelled(true); // Prevent the item from being dropped
             }
         }

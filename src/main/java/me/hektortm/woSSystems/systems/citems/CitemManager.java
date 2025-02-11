@@ -211,6 +211,7 @@ public class CitemManager {
                 // Remove the item from the player's inventory if the file doesn't exist
                 p.getInventory().remove(item);
                 Utils.successMsg1Value(p, "citems", "update.removed", "%item%", item.getItemMeta().getDisplayName());
+                p.playSound(p, Sound.ITEM_SHIELD_BREAK, 1F, 1F);
                 return;
             }
 

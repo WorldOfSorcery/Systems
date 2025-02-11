@@ -186,7 +186,7 @@ public class CitemDAO implements IDAO {
         String actionLeft = data.has(plugin.getCitemManager().getLeftActionKey(), PersistentDataType.STRING) ? data.get(plugin.getCitemManager().getLeftActionKey(), PersistentDataType.STRING) : null;
         String actionRight = data.has(plugin.getCitemManager().getRightActionKey(), PersistentDataType.STRING) ? data.get(plugin.getCitemManager().getRightActionKey(), PersistentDataType.STRING) : null;
 
-        Integer placeable = data.has(plugin.getCitemManager().getPlaceableKey(), PersistentDataType.INTEGER) ? data.get(plugin.getCitemManager().getPlaceableKey(), PersistentDataType.INTEGER) : null;
+        Integer placeable = data.has(plugin.getCitemManager().getPlaceableKey(), PersistentDataType.INTEGER) ? data.get(plugin.getCitemManager().getPlaceableKey(), PersistentDataType.INTEGER) : 0;
 
 
         String query = "INSERT INTO citems (id, material, display_name, lore, enchantments, damage, custom_model_data, flag_undroppable, flag_unusable, action_left, action_right, flag_placeable) VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?)";
