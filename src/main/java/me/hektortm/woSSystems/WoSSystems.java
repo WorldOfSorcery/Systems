@@ -5,7 +5,6 @@ import com.maximde.hologramlib.HologramLib;
 import com.maximde.hologramlib.hologram.HologramManager;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flag;
-import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
@@ -20,7 +19,6 @@ import me.hektortm.woSSystems.channels.cmd.NicknameCommand;
 import me.hektortm.woSSystems.cosmetic.CosmeticManager;
 import me.hektortm.woSSystems.cosmetic.cmd.CosmeticCommand;
 import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.database.dao.EconomyDAO;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.BalanceCommand;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
@@ -255,7 +253,7 @@ public final class WoSSystems extends JavaPlugin {
             DISPLAY_NAME = flag;
         } catch (FlagConflictException e) {
             Flag<?> existing = registry.get("display-name");
-            if (existing instanceof StateFlag) {
+            if (existing instanceof StringFlag) {
                 DISPLAY_NAME = (StringFlag) existing;
             } else {
                 Bukkit.getLogger().warning("wtf is happening");
