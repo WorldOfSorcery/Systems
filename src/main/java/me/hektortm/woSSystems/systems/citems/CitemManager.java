@@ -359,10 +359,6 @@ public class CitemManager {
         return now.format(formatter);
     }
 
-    public void placeItemDisplay(String itemDisplayId, Location location) {
-
-
-    }
     public NamespacedKey getIdKey() {
         return idKey;
     }
