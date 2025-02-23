@@ -239,8 +239,6 @@ public class InterListener implements Listener {
                     break;
             }
 
-
-
             if (meta != null) {
 
                 if (data.get(unusableKey, PersistentDataType.BOOLEAN) == true) {

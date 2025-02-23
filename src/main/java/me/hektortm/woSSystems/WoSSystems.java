@@ -26,6 +26,9 @@ import me.hektortm.woSSystems.economy.commands.EcoCommand;
 import me.hektortm.woSSystems.economy.commands.PayCommand;
 import me.hektortm.woSSystems.listeners.*;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
+import me.hektortm.woSSystems.profiles.ProfileCommand;
+import me.hektortm.woSSystems.profiles.ProfileListener;
+import me.hektortm.woSSystems.profiles.ProfileManager;
 import me.hektortm.woSSystems.regions.CustomHandler;
 import me.hektortm.woSSystems.regions.RegionBossBar;
 import me.hektortm.woSSystems.systems.citems.commands.SignCommand;
@@ -110,6 +113,7 @@ public final class WoSSystems extends JavaPlugin {
     private RegionBossBar regionBossBarManager;
     private TablistManager tab;
     private CosmeticManager cosmeticManager;
+    private ProfileManager profileManager;
 
     public static StringFlag DISPLAY_NAME;
     private final Map<UUID, Inventory> clickActions = new HashMap<>();
@@ -145,6 +149,7 @@ public final class WoSSystems extends JavaPlugin {
             databaseManager.registerDAO(daoHub.getTitlesDAO());
             databaseManager.registerDAO(daoHub.getPrefixDAO());
             databaseManager.registerDAO(daoHub.getBadgeDAO());
+            databaseManager.registerDAO(daoHub.getProfileDAO());
 
             databaseManager.initializeAllDAOs();
         } catch (SQLException e) {
@@ -180,7 +185,7 @@ public final class WoSSystems extends JavaPlugin {
         lootTableManager = new LoottableManager(interactionManager, citemManager);
         coinflipCommand = new Coinflip(ecoManager, this, lang);
         cosmeticManager = new CosmeticManager(daoHub);
-
+        profileManager = new ProfileManager(daoHub);
 
 // Initialize the remaining managers
         recipeManager = new CRecipeManager(interactionManager);
@@ -314,6 +319,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("time", new TimeCommand(timeManager, this, lang));
         cmdReg("internalviewitem", new InternalViewItemCommand(this));
         cmdReg("cosmetic", new CosmeticCommand(cosmeticManager, daoHub));
+        cmdReg("profile", new ProfileCommand());
     }
 
     private void registerEvents() {
@@ -325,6 +331,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new JoinListener(this));
         eventReg(new ChannelListener(channelManager, nickManager, unlockableManager, daoHub));
         eventReg(new CustomHandler(regionBossBarManager));
+        eventReg(new ProfileListener());
 
         getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager, daoHub), this);
     }
@@ -420,6 +427,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public Map<UUID, Inventory> getClickActions() {
         return clickActions;
+    }
+    public ProfileManager getProfileManager() {
+        return profileManager;
     }
 
 }

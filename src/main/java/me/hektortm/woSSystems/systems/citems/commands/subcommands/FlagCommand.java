@@ -21,18 +21,22 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.UUID;
 
 public class FlagCommand extends SubCommand {
-    private final CitemManager data;
+    private final CitemManager manager;
     private final NamespacedKey undroppableKey;
     private final NamespacedKey unusableKey;
     private final NamespacedKey ownerKey;
     private NamespacedKey placeableKey;
+    private NamespacedKey profileBgKey;
+    private NamespacedKey profilePicKey;
 
-    public FlagCommand(CitemManager data) {
-        this.data = data;
-        placeableKey = data.getPlaceableKey();
+    public FlagCommand(CitemManager manager) {
+        this.manager = manager;
+        placeableKey = manager.getPlaceableKey();
         ownerKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "owner");
         undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
         unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
+        profileBgKey = manager.getProfileBgKey();
+        profilePicKey = manager.getProfilePicKey();
     }
 
     @Override
@@ -59,7 +63,7 @@ public class FlagCommand extends SubCommand {
             return;
         }
 
-        if(!data.getErrorHandler().handleCitemErrors(itemInHand, p)) return;
+        if(!manager.getErrorHandler().handleCitemErrors(itemInHand, p)) return;
 
         String flagCmd = args[0];
         String flag = args[1].toLowerCase();
@@ -116,10 +120,31 @@ public class FlagCommand extends SubCommand {
                         Utils.info(p, "citems", "info.placeable-flag");
                         return;
                     }
+                }
+                if(flag.equals("profile_picture")) {
+                    if (args.length < 3) {
+                        Utils.info(p, "citems", "info.profile-picture-flag");
+                        return;
+                    }
+                    String parameter = args[2];
+                    PersistentDataContainer data = meta.getPersistentDataContainer();
 
+                    data.set(profilePicKey, PersistentDataType.STRING, parameter);
+                    Utils.success(p, "citems", "flag.add.profile-picture");
 
                 }
+                if (flag.equals("profile_background")) {
+                    if (args.length < 3) {
+                        Utils.info(p, "citems", "info.profile-background-flag");
+                        return;
+                    }
+                    String parameter = args[2];
+                    PersistentDataContainer data = meta.getPersistentDataContainer();
 
+                    data.set(profileBgKey, PersistentDataType.STRING, parameter);
+                    Utils.success(p, "citems", "flag.add.profile-background");
+
+                }
                 break;
 
             case "remove":
@@ -158,6 +183,16 @@ public class FlagCommand extends SubCommand {
                     PersistentDataContainer data = meta.getPersistentDataContainer();
                     data.remove(placeableKey);
                     Utils.success(p, "citems", "flag.remove.placeable");
+                }
+                if(flag.equals("profile_picture")) {
+                    PersistentDataContainer data = meta.getPersistentDataContainer();
+                    data.remove(profilePicKey);
+                    Utils.success(p, "citems", "flag.remove.profile-picture");
+                }
+                if (flag.equals("profile_background")) {
+                    PersistentDataContainer data = meta.getPersistentDataContainer();
+                    data.remove(profileBgKey);
+                    Utils.success(p, "citems", "flag.remove.profile-background");
                 }
                 break;
 

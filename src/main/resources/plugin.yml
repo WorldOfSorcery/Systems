@@ -100,6 +100,10 @@ commands:
     description: cosmetic management
     usage: /<command>
 
+  profile:
+    description: profile
+    usage: /<command> <player>
+
 
 permissions:
   # Citem Permissions

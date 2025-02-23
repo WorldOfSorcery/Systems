@@ -46,6 +46,8 @@ public class CitemDAO implements IDAO {
                     "flag_undroppable BOOLEAN, "+
                     "flag_unusable BOOLEAN, " +
                     "flag_placeable INT, "+
+                    "flag_profile_bg TEXT, " +
+                    "flag_profile_picture TEXT, " +
                     "action_left TEXT, " +
                     "action_right TEXT)");
             stmt.execute("CREATE TABLE IF NOT EXISTS placed_citems("+
@@ -180,16 +182,25 @@ public class CitemDAO implements IDAO {
 
         PersistentDataContainer data = meta.getPersistentDataContainer();
 
-        Boolean undroppable = data.has(plugin.getCitemManager().getUndroppableKey(), PersistentDataType.BOOLEAN) ? data.get(plugin.getCitemManager().getUndroppableKey(), PersistentDataType.BOOLEAN) : false;
-        Boolean unusable = data.has(plugin.getCitemManager().getUnusableKey(), PersistentDataType.BOOLEAN) ? data.get(plugin.getCitemManager().getUnusableKey(), PersistentDataType.BOOLEAN) : false;
+        Boolean undroppable = data.has(plugin.getCitemManager().getUndroppableKey(), PersistentDataType.BOOLEAN)
+                ? data.get(plugin.getCitemManager().getUndroppableKey(), PersistentDataType.BOOLEAN) : false;
+        Boolean unusable = data.has(plugin.getCitemManager().getUnusableKey(), PersistentDataType.BOOLEAN)
+                ? data.get(plugin.getCitemManager().getUnusableKey(), PersistentDataType.BOOLEAN) : false;
 
-        String actionLeft = data.has(plugin.getCitemManager().getLeftActionKey(), PersistentDataType.STRING) ? data.get(plugin.getCitemManager().getLeftActionKey(), PersistentDataType.STRING) : null;
-        String actionRight = data.has(plugin.getCitemManager().getRightActionKey(), PersistentDataType.STRING) ? data.get(plugin.getCitemManager().getRightActionKey(), PersistentDataType.STRING) : null;
+        String actionLeft = data.has(plugin.getCitemManager().getLeftActionKey(), PersistentDataType.STRING)
+                ? data.get(plugin.getCitemManager().getLeftActionKey(), PersistentDataType.STRING) : null;
+        String actionRight = data.has(plugin.getCitemManager().getRightActionKey(), PersistentDataType.STRING)
+                ? data.get(plugin.getCitemManager().getRightActionKey(), PersistentDataType.STRING) : null;
 
-        Integer placeable = data.has(plugin.getCitemManager().getPlaceableKey(), PersistentDataType.INTEGER) ? data.get(plugin.getCitemManager().getPlaceableKey(), PersistentDataType.INTEGER) : 0;
+        Integer placeable = data.has(plugin.getCitemManager().getPlaceableKey(), PersistentDataType.INTEGER)
+                ? data.get(plugin.getCitemManager().getPlaceableKey(), PersistentDataType.INTEGER) : 0;
 
+        String profilePicture = data.has(plugin.getCitemManager().getProfilePicKey(), PersistentDataType.STRING)
+                ? data.get(plugin.getCitemManager().getProfilePicKey(), PersistentDataType.STRING) : null;
+        String profileBackground = data.has(plugin.getCitemManager().getProfileBgKey(), PersistentDataType.STRING)
+                ? data.get(plugin.getCitemManager().getProfileBgKey(), PersistentDataType.STRING) : null;
 
-        String query = "INSERT INTO citems (id, material, display_name, lore, enchantments, damage, custom_model_data, flag_undroppable, flag_unusable, action_left, action_right, flag_placeable) VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?)";
+        String query = "INSERT INTO citems (id, material, display_name, lore, enchantments, damage, custom_model_data, flag_undroppable, flag_unusable, action_left, action_right, flag_placeable, flag_profile_bg, flag_profile_picture) VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, id);
             stmt.setString(2, material);
@@ -203,6 +214,8 @@ public class CitemDAO implements IDAO {
             stmt.setString(10, actionLeft);
             stmt.setString(11, actionRight);
             stmt.setInt(12, placeable);
+            stmt.setString(13, profileBackground);
+            stmt.setString(14, profilePicture);
             stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -221,16 +234,25 @@ public class CitemDAO implements IDAO {
 
         PersistentDataContainer data = meta.getPersistentDataContainer();
 
-        Boolean undroppable = data.has(plugin.getCitemManager().getUndroppableKey(), PersistentDataType.BOOLEAN) ? data.get(plugin.getCitemManager().getUndroppableKey(), PersistentDataType.BOOLEAN) : false;
-        Boolean unusable = data.has(plugin.getCitemManager().getUnusableKey(), PersistentDataType.BOOLEAN) ? data.get(plugin.getCitemManager().getUnusableKey(), PersistentDataType.BOOLEAN) : false;
+        Boolean undroppable = data.has(plugin.getCitemManager().getUndroppableKey(), PersistentDataType.BOOLEAN)
+                ? data.get(plugin.getCitemManager().getUndroppableKey(), PersistentDataType.BOOLEAN) : false;
+        Boolean unusable = data.has(plugin.getCitemManager().getUnusableKey(), PersistentDataType.BOOLEAN)
+                ? data.get(plugin.getCitemManager().getUnusableKey(), PersistentDataType.BOOLEAN) : false;
 
-        String actionLeft = data.has(plugin.getCitemManager().getLeftActionKey(), PersistentDataType.STRING) ? data.get(plugin.getCitemManager().getLeftActionKey(), PersistentDataType.STRING) : null;
-        String actionRight = data.has(plugin.getCitemManager().getRightActionKey(), PersistentDataType.STRING) ? data.get(plugin.getCitemManager().getRightActionKey(), PersistentDataType.STRING) : null;
+        String actionLeft = data.has(plugin.getCitemManager().getLeftActionKey(), PersistentDataType.STRING)
+                ? data.get(plugin.getCitemManager().getLeftActionKey(), PersistentDataType.STRING) : null;
+        String actionRight = data.has(plugin.getCitemManager().getRightActionKey(), PersistentDataType.STRING)
+                ? data.get(plugin.getCitemManager().getRightActionKey(), PersistentDataType.STRING) : null;
 
-        Integer placeable = data.has(plugin.getCitemManager().getPlaceableKey(), PersistentDataType.INTEGER) ? data.get(plugin.getCitemManager().placeableKey, PersistentDataType.INTEGER) : null;
+        Integer placeable = data.has(plugin.getCitemManager().getPlaceableKey(), PersistentDataType.INTEGER)
+                ? data.get(plugin.getCitemManager().placeableKey, PersistentDataType.INTEGER) : null;
 
+        String profilePicture = data.has(plugin.getCitemManager().getProfilePicKey(), PersistentDataType.STRING)
+                ? data.get(plugin.getCitemManager().getProfilePicKey(), PersistentDataType.STRING) : null;
+        String profileBackground = data.has(plugin.getCitemManager().getProfileBgKey(), PersistentDataType.STRING)
+                ? data.get(plugin.getCitemManager().getProfileBgKey(), PersistentDataType.STRING) : null;
 
-        String query = "UPDATE citems SET material = ?, display_name = ?, lore = ?, enchantments = ?, damage = ?, custom_model_data = ?, flag_undroppable = ?, flag_unusable = ?, action_left = ?, action_right = ?, flag_placeable = ? WHERE id = ?";
+        String query = "UPDATE citems SET material = ?, display_name = ?, lore = ?, enchantments = ?, damage = ?, custom_model_data = ?, flag_undroppable = ?, flag_unusable = ?, action_left = ?, action_right = ?, flag_placeable = ?, flag_profile_bg = ?, flag_profile_picture = ? WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, material);
             stmt.setString(2, display_name);
@@ -243,7 +265,9 @@ public class CitemDAO implements IDAO {
             stmt.setString(9, actionLeft);
             stmt.setString(10, actionRight);
             stmt.setInt(11, placeable);
-            stmt.setString(12, id);
+            stmt.setString(12, profileBackground);
+            stmt.setString(13, profilePicture);
+            stmt.setString(14, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
             plugin.writeLog("CitemDAO", Level.SEVERE, "Error updating Citem: " + e.getMessage());
@@ -310,6 +334,8 @@ public class CitemDAO implements IDAO {
                 String actionLeft = rs.getString("action_left");
                 String actionRight = rs.getString("action_right");
                 int placeable = rs.getInt("flag_placeable");
+                String profileBackground = rs.getString("flag_profile_bg");
+                String profilePicture = rs.getString("flag_profile_picture");
 
                 // Convert lore from a string back to a list
                 List<String> lore = (loreString != null && !loreString.isEmpty())
@@ -370,11 +396,19 @@ public class CitemDAO implements IDAO {
                     NamespacedKey leftActionKey = plugin.getCitemManager().getLeftActionKey();
                     NamespacedKey rightActionKey = plugin.getCitemManager().getRightActionKey();
                     NamespacedKey placeableKey = plugin.getCitemManager().getPlaceableKey();
+                    NamespacedKey profileBgKey = plugin.getCitemManager().getProfileBgKey();
+                    NamespacedKey profilePicKey = plugin.getCitemManager().getProfilePicKey();
 
                     data.set(idKey, PersistentDataType.STRING, id);
                     data.set(undroppableKey, PersistentDataType.BOOLEAN, undroppable);
                     data.set(unusableKey, PersistentDataType.BOOLEAN, unusable);
                     data.set(placeableKey, PersistentDataType.INTEGER, placeable);
+                    if (profileBackground != null) {
+                        data.set(profileBgKey, PersistentDataType.STRING, profileBackground);
+                    }
+                    if (profilePicture != null) {
+                        data.set(profilePicKey, PersistentDataType.STRING, profilePicture);
+                    }
                     if (actionLeft != null) {
                         data.set(leftActionKey, PersistentDataType.STRING, actionLeft);
                     }

@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.database;
 
 import me.hektortm.woSSystems.database.dao.*;
+import me.hektortm.woSSystems.database.links.FriendLink;
 import me.hektortm.wosCore.database.DatabaseManager;
 
 public class DAOHub {
@@ -10,10 +11,13 @@ public class DAOHub {
     private final CitemDAO citemDAO;
     private final ChannelDAO channelDAO;
     private final NicknameDAO nicknameDAO;
+    private final ProfileDAO profileDAO;
 
     private final TitlesDAO titlesDAO;
     private final PrefixDAO prefixDAO;
     private final BadgeDAO badgeDAO;
+
+    private final FriendLink friendLink;
 
     public DAOHub(DatabaseManager databaseManager) {
         this.economyDAO = new EconomyDAO(databaseManager, this);
@@ -25,6 +29,8 @@ public class DAOHub {
         this.titlesDAO = new TitlesDAO(databaseManager, this);
         this.prefixDAO = new PrefixDAO(databaseManager, this);
         this.badgeDAO = new BadgeDAO(databaseManager, this);
+        this.friendLink = new FriendLink(databaseManager, this);
+        this.profileDAO = new ProfileDAO(databaseManager, this);
     }
     public EconomyDAO getEconomyDAO() {
         return economyDAO;
@@ -52,5 +58,12 @@ public class DAOHub {
     }
     public BadgeDAO getBadgeDAO() {
         return badgeDAO;
+    }
+    public ProfileDAO getProfileDAO() {
+        return profileDAO;
+    }
+
+    public FriendLink getFriendLink() {
+        return friendLink;
     }
 }
