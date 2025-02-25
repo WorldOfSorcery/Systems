@@ -1,9 +1,11 @@
 package me.hektortm.woSSystems.profiles;
 
 import me.hektortm.woSSystems.WoSSystems;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -68,6 +70,22 @@ public class ProfileListener implements Listener {
 
             // Update the profile in the database
             manager.updateProfile(p, pictureUni, pictureID, backgroundUni, "e");
+        }
+    }
+
+    @EventHandler
+    public void onProfileClick(InventoryClickEvent e) {
+        Inventory inv = e.getInventory();
+        Player p = (Player) e.getWhoClicked();
+        if (inv.equals(manager.getViewProfile())) {
+            if (manager.friendButton.contains(e.getSlot())) {
+                ItemStack item = e.getCurrentItem();
+                ItemMeta meta = item.getItemMeta();
+                PersistentDataContainer data = meta.getPersistentDataContainer();
+                String cmd = data.get(manager.getCmdKey(), PersistentDataType.STRING);
+                Bukkit.dispatchCommand(p, cmd);
+            }
+            e.setCancelled(true);
         }
     }
 }
