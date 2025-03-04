@@ -166,7 +166,7 @@ public final class WoSSystems extends JavaPlugin {
         statsManager = new StatsManager(daoHub);
         ecoManager = new EcoManager(this, daoHub);
         unlockableManager = new UnlockableManager(daoHub);
-        fishingManager = new FishingManager(fishingItemsFolder);
+        fishingManager = new FishingManager(fishingItemsFolder, daoHub);
 
         guiManager = new GUIManager();
 
@@ -189,7 +189,7 @@ public final class WoSSystems extends JavaPlugin {
 
 // Initialize the remaining managers
         recipeManager = new CRecipeManager(interactionManager);
-        fishingManager = new FishingManager(fishingItemsFolder);
+        fishingManager = new FishingManager(fishingItemsFolder, daoHub);
         resolver = new PlaceholderResolver(statsManager, citemManager);
         new CraftingListener(this, recipeManager, conditionHandler, interactionManager);
 
