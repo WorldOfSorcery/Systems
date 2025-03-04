@@ -37,9 +37,9 @@ public class FishingManager {
                 String interaction = config.getString("interaction");
                 String rarity = config.getString("rarity");
 
-                FishingItem fishingItem = new FishingItem(citem, interaction, rarity);
+                //FishingItem fishingItem = new FishingItem(citem, interaction, rarity);
 
-                fishingItemsByRarity.computeIfAbsent(rarity, k -> new ArrayList<>()).add(fishingItem);
+                //fishingItemsByRarity.computeIfAbsent(rarity, k -> new ArrayList<>()).add(fishingItem);
 
             }
         }
