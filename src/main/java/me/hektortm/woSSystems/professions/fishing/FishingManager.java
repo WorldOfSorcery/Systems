@@ -1,5 +1,7 @@
 package me.hektortm.woSSystems.professions.fishing;
 
+import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.database.dao.FishingDAO;
 import me.hektortm.woSSystems.utils.dataclasses.FishingItem;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -13,8 +15,11 @@ import java.util.Map;
 public class FishingManager {
 
     private final Map<String, List<FishingItem>> fishingItemsByRarity = new HashMap<>();
+    private final DAOHub hub;
 
-    public FishingManager(File itemFolder) {
+
+    public FishingManager(File itemFolder, DAOHub hub) {
+        this.hub = hub;
         loadFishingItems(itemFolder);
     }
 
@@ -50,5 +55,8 @@ public class FishingManager {
         return items.get((int) (Math.random() * items.size()));
     }
 
+    public FishingDAO getDAO() {
+        return hub.getFishingDAO();
+    }
 
 }

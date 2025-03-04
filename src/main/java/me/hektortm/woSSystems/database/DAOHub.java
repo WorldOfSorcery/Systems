@@ -12,6 +12,7 @@ public class DAOHub {
     private final ChannelDAO channelDAO;
     private final NicknameDAO nicknameDAO;
     private final ProfileDAO profileDAO;
+    private final FishingDAO fishingDAO;
 
     private final TitlesDAO titlesDAO;
     private final PrefixDAO prefixDAO;
@@ -31,6 +32,7 @@ public class DAOHub {
         this.badgeDAO = new BadgeDAO(databaseManager, this);
         this.friendLink = new FriendLink(databaseManager, this);
         this.profileDAO = new ProfileDAO(databaseManager, this);
+        this.fishingDAO = new FishingDAO(databaseManager, this);
     }
     public EconomyDAO getEconomyDAO() {
         return economyDAO;
@@ -61,6 +63,9 @@ public class DAOHub {
     }
     public ProfileDAO getProfileDAO() {
         return profileDAO;
+    }
+    public FishingDAO getFishingDAO() {
+        return fishingDAO;
     }
 
     public FriendLink getFriendLink() {
