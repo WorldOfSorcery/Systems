@@ -5,6 +5,7 @@ import com.maximde.hologramlib.HologramLib;
 import com.maximde.hologramlib.hologram.HologramManager;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flag;
+import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
@@ -252,20 +253,40 @@ public final class WoSSystems extends JavaPlugin {
         PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
         PacketEvents.getAPI().load();
         FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
+
+        registerStringFlag("display-name", registry, DISPLAY_NAME);
+
+    }
+
+    private void registerStateFlag(String flagName, FlagRegistry registry) {
         try {
-            StringFlag flag = new StringFlag("display-name");
+            StateFlag flag = new StateFlag(flagName, false);
             registry.register(flag);
-            DISPLAY_NAME = flag;
         } catch (FlagConflictException e) {
-            Flag<?> existing = registry.get("display-name");
-            if (existing instanceof StringFlag) {
-                DISPLAY_NAME = (StringFlag) existing;
+            Flag<?> existing = registry.get(flagName);
+            if (existing instanceof StateFlag) {
+                Bukkit.getLogger().warning("Flag already exists");
             } else {
                 Bukkit.getLogger().warning("wtf is happening");
             }
         }
     }
 
+    private void registerStringFlag(String flagName, FlagRegistry registry, StringFlag var) {
+        try {
+            StringFlag flag = new StringFlag(flagName);
+            registry.register(flag);
+            var = flag;
+        } catch (FlagConflictException e) {
+            Flag<?> existing = registry.get(flagName);
+            if (existing instanceof StringFlag) {
+                var = (StringFlag) existing;
+                Bukkit.getLogger().warning("Flag already exists");
+            } else {
+                Bukkit.getLogger().warning("wtf is happening");
+            }
+        }
+    }
 
     private void registerChannelCommands() {
         for (Channel channel : channelManager.getChannels()) {
