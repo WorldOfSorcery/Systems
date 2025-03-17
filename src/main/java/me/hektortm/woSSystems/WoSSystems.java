@@ -353,7 +353,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new ChannelListener(channelManager, nickManager, unlockableManager, daoHub));
         eventReg(new CustomHandler(regionBossBarManager));
         eventReg(new ProfileListener());
-
+        eventReg(new BackpackListener());
         getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager, daoHub), this);
     }
 

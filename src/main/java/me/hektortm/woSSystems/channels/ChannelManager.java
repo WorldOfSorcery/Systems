@@ -311,7 +311,7 @@ public class ChannelManager {
             itemName = "Air";
             loreString = "";
         }
-        if (loreString.equals("")) {
+        if (loreString.isEmpty()) {
             loreString = "§bClick to view";
         } else {
             loreString = loreString + "\n \n§bClick to view";
