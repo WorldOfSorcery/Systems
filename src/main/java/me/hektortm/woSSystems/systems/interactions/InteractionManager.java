@@ -212,8 +212,8 @@ public class InteractionManager {
                             for (Player player : Bukkit.getOnlinePlayers()) {
                                 particleHandler.spawnParticlesForPlayer(player, inter, location, false);
 
-                                //spawnTextDisplay(location, inter, null, false);
-                                //updateTextDisplay(location, inter, null, false);
+                                spawnTextDisplay(location, inter, null, false);
+                                updateTextDisplay(location, inter, null, false);
                             }
                         }
                     }
@@ -223,8 +223,8 @@ public class InteractionManager {
                                 NPC npc1 = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(id));
                                 Location location = npc1.getEntity().getLocation().getBlock().getLocation();
                                 particleHandler.spawnParticlesForPlayer(player, inter, npc1.getEntity().getLocation(), true);
-                                //spawnTextDisplay(location, inter, id, true);
-                                //updateTextDisplay(location, inter, id, true);
+                                spawnTextDisplay(location, inter, id, true);
+                                updateTextDisplay(location, inter, id, true);
                             }
                         }
                     }
