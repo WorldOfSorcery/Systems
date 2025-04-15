@@ -27,21 +27,15 @@ public class UnlockableDAO implements IDAO {
     public void initializeTable() throws SQLException {
         try (Statement statement = conn.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS unlockables (" +
-                    "id TEXT PRIMARY KEY)");
-            statement.execute("CREATE TABLE IF NOT EXISTS temp_unlockables (" +
-                    "id TEXT PRIMARY KEY)");
-            statement.execute("CREATE TABLE IF NOT EXISTS player_unlockables (" +
+                    "id TEXT PRIMARY KEY," +
+                    "temp BOOLEAN)");
+            statement.execute("CREATE TABLE IF NOT EXISTS playerdata_unlockables (" +
                     "uuid TEXT, " +
                     "id TEXT, " +
+                    "temp BOOLEAN," +
                     "PRIMARY KEY (uuid, id), " +
                     "FOREIGN KEY (uuid) REFERENCES playerdata(uuid), " +
                     "FOREIGN KEY (id) REFERENCES unlockables(id))");
-            statement.execute("CREATE TABLE IF NOT EXISTS player_tempunlockables (" +
-                    "uuid TEXT, " +
-                    "id TEXT, " +
-                    "PRIMARY KEY (uuid, id), " +
-                    "FOREIGN KEY (uuid) REFERENCES playerdata(uuid), " +
-                    "FOREIGN KEY (id) REFERENCES temp_unlockables(id))");
         }
     }
 
@@ -60,50 +54,17 @@ public class UnlockableDAO implements IDAO {
         }
     }
 
-    public void addTempUnlockable(String id) throws SQLException {
-        try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO temp_unlockables (id) VALUES (?) ON CONFLICT(id) DO NOTHING")) {
-            stmt.setString(1, id);
-            stmt.executeUpdate();
-        }
-    }
-
-    public void deleteTempUnlockable(String id) throws SQLException {
-        try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM temp_unlockables WHERE id = ?")) {
-            stmt.setString(1, id);
-            stmt.executeUpdate();
-        }
-    }
-
     public void modifyUnlockable(UUID uuid, String id, Action action) throws SQLException {
         switch (action) {
             case GIVE:
-                try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO player_unlockables (uuid, id) VALUES (?, ?) ON CONFLICT(uuid, id) DO NOTHING")) {
+                try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO playerdata_unlockables (uuid, id) VALUES (?, ?) ON CONFLICT(uuid, id) DO NOTHING")) {
                     stmt.setString(1, uuid.toString());
                     stmt.setString(2, id);
                     stmt.executeUpdate();
                 }
                 break;
             case TAKE:
-                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM player_unlockables WHERE uuid = ? AND id = ?")) {
-                    stmt.setString(1, uuid.toString());
-                    stmt.setString(2, id);
-                    stmt.executeUpdate();
-                }
-                break;
-        }
-    }
-
-    public void modifyTempUnlockable(UUID uuid, String id, Action action) throws SQLException {
-        switch (action) {
-            case GIVE:
-                try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO player_tempunlockables (uuid, id) VALUES (?, ?) ON CONFLICT(uuid, id) DO NOTHING")) {
-                    stmt.setString(1, uuid.toString());
-                    stmt.setString(2, id);
-                    stmt.executeUpdate();
-                }
-                break;
-            case TAKE:
-                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM player_tempunlockables WHERE uuid = ? AND id = ?")) {
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM playerdata_unlockables WHERE uuid = ? AND id = ?")) {
                     stmt.setString(1, uuid.toString());
                     stmt.setString(2, id);
                     stmt.executeUpdate();
@@ -113,14 +74,14 @@ public class UnlockableDAO implements IDAO {
     }
 
     public void removeAllTemps(UUID uuid) throws SQLException {
-        try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM player_tempunlockables WHERE uuid = ?")) {
+        try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM playerdata_unlockables WHERE uuid = ? AND temp = 1")) {
             stmt.setString(1, uuid.toString());
             stmt.executeUpdate();
         }
     }
 
     public boolean getPlayerUnlockable(OfflinePlayer p, String id) throws SQLException {
-        try (PreparedStatement stmt = conn.prepareStatement("SELECT 1 FROM player_unlockables WHERE uuid = ? AND id = ?")) {
+        try (PreparedStatement stmt = conn.prepareStatement("SELECT 1 FROM player_unlockables WHERE uuid = ? AND id = ? AND temp = 0")) {
             stmt.setString(1, p.getUniqueId().toString());
             stmt.setString(2, id);
             ResultSet resultSet = stmt.executeQuery();
@@ -128,7 +89,7 @@ public class UnlockableDAO implements IDAO {
         }
     }
     public boolean getPlayerTempUnlockable(OfflinePlayer p, String id) throws SQLException {
-        try (PreparedStatement stmt = conn.prepareStatement("SELECT 1 FROM player_tempunlockables WHERE uuid = ? AND id = ?")) {
+        try (PreparedStatement stmt = conn.prepareStatement("SELECT 1 FROM playerdata_unlockables WHERE uuid = ? AND id = ? AND temp = 1")) {
             stmt.setString(1, p.getUniqueId().toString());
             stmt.setString(2, id);
             ResultSet resultSet = stmt.executeQuery();
