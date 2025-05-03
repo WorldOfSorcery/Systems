@@ -42,6 +42,5 @@ public class TempCreateCommand extends SubCommand {
             return;
         }
 
-        manager.addTempUnlockable(sender, id);
     }
 }

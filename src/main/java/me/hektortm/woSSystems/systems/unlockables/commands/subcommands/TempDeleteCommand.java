@@ -39,7 +39,7 @@ public class TempDeleteCommand extends SubCommand {
             return;
         }
 
-        manager.deleteUnlockable(id, true);
+        manager.deleteUnlockable(id);
         if (sender instanceof Player P) {
             Utils.successMsg1Value(P, "unlockables", "give.perm", "%id%", id);
         }

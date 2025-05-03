@@ -27,11 +27,11 @@ public class UnlockableDAO implements IDAO {
     public void initializeTable() throws SQLException {
         try (Statement statement = conn.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS unlockables (" +
-                    "id TEXT PRIMARY KEY," +
+                    "id VARCHAR(255) PRIMARY KEY," +
                     "temp BOOLEAN)");
             statement.execute("CREATE TABLE IF NOT EXISTS playerdata_unlockables (" +
-                    "uuid TEXT, " +
-                    "id TEXT, " +
+                    "uuid CHAR(36), " +
+                    "id VARCHAR(255), " +
                     "temp BOOLEAN," +
                     "PRIMARY KEY (uuid, id), " +
                     "FOREIGN KEY (uuid) REFERENCES playerdata(uuid), " +

@@ -28,11 +28,11 @@ public class FishingDAO implements IDAO {
     public void initializeTable() throws SQLException {
         try (Statement stmt = conn.createStatement()) {
             stmt.execute("CREATE TABLE IF NOT EXISTS fishing_items(" +
-                    "id TEXT UNIQUE NOT NULL, " +
-                    "item_id TEXT NOT NULL, " +
-                    "interaction_id TEXT, " +
-                    "rarity TEXT NOT NULL, " +
-                    "regions TEXT)");
+                    "id VARCHAR(255) UNIQUE NOT NULL, " +
+                    "item_id VARCHAR(255) NOT NULL, " +
+                    "interaction_id VARCHAR(255), " +
+                    "rarity VARCHAR(255) NOT NULL, " +
+                    "regions VARCHAR(255))");
         }
     }
 

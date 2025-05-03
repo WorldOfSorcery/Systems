@@ -11,13 +11,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class TitlesDAO implements IDAO {
+public class CosmeticsDAO implements IDAO {
+    public enum CosmeticType {
+        PREFIX, TITLE, BADGE
+    }
+
     private final Connection conn;
     private final DatabaseManager db;
     private final DAOHub daoHub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
-    public TitlesDAO(DatabaseManager db, DAOHub daoHub) {
+    public CosmeticsDAO(DatabaseManager db, DAOHub daoHub) {
         this.db = db;
         this.daoHub = daoHub;
         this.conn = db.getConnection();
@@ -26,64 +30,70 @@ public class TitlesDAO implements IDAO {
     @Override
     public void initializeTable() throws SQLException {
         try (Statement stmt = conn.createStatement()) {
-            // Create the titles table
+            // Create the cosmetics table
             stmt.execute("""
-                CREATE TABLE IF NOT EXISTS titles (
-                    id VARCHAR(255) PRIMARY KEY NOT NULL,
-                    title VARCHAR(255) NOT NULL,
-                    description VARCHAR(255)
+                CREATE TABLE IF NOT EXISTS cosmetics (
+                    id VARCHAR(255) NOT NULL,
+                    type VARCHAR(255) NOT NULL,
+                    display VARCHAR(255) NOT NULL,
+                    description VARCHAR(255),
+                    PRIMARY KEY (id, type)
                 )
             """);
 
-            // Create the playerdata_titles table
+            // Create the player_cosmetics table
             stmt.execute("""
-                CREATE TABLE IF NOT EXISTS playerdata_titles (
+                CREATE TABLE IF NOT EXISTS player_cosmetics (
                     uuid CHAR(36) NOT NULL,
-                    title_id VARCHAR(255) NOT NULL,
+                    cosmetic_id TEXT NOT NULL,
+                    cosmetic_type TEXT NOT NULL,
                     equipped BOOLEAN NOT NULL,
-                    PRIMARY KEY (uuid, title_id),
-                    FOREIGN KEY (title_id) REFERENCES titles(id)
+                    PRIMARY KEY (uuid, cosmetic_id, cosmetic_type),
+                    FOREIGN KEY (cosmetic_id, cosmetic_type) REFERENCES cosmetics(id, type)
                 )
             """);
         }
     }
 
-    public void createTitle(String id, String title) {
-        String sql = "INSERT INTO titles (id, title) VALUES (?, ?)";
+    public void createCosmetic(CosmeticType type, String id, String display) {
+        String sql = "INSERT INTO cosmetics (id, type, display) VALUES (?, ?, ?)";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
-            pstmt.setString(2, title.replace("&", "§"));
+            pstmt.setString(2, type.name());
+            pstmt.setString(3, display.replace("&", "§"));
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public void giveTitle(String id, UUID uuid) {
-        String sql = "INSERT INTO playerdata_titles (uuid, title_id, equipped) VALUES (?, ?, ?)";
+    public void giveCosmetic(CosmeticType type, String id, UUID uuid) {
+        String sql = "INSERT INTO player_cosmetics (uuid, cosmetic_id, cosmetic_type, equipped) VALUES (?, ?, ?, ?)";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             pstmt.setString(2, id);
-            pstmt.setBoolean(3, false); // Default to unequipped
+            pstmt.setString(3, type.name());
+            pstmt.setBoolean(4, false); // Default to unequipped
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public String getCurrentTitle(Player p) {
+    public String getCurrentCosmetic(Player p, CosmeticType type) {
         String uuid = p.getUniqueId().toString();
         String sql = """
-            SELECT t.title
-            FROM playerdata_titles pt
-            JOIN titles t ON pt.title_id = t.id
-            WHERE pt.uuid = ? AND pt.equipped = 1
+            SELECT c.display
+            FROM player_cosmetics pc
+            JOIN cosmetics c ON pc.cosmetic_id = c.id AND pc.cosmetic_type = c.type
+            WHERE pc.uuid = ? AND pc.equipped = 1 AND pc.cosmetic_type = ?
         """;
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid);
+            pstmt.setString(2, type.name());
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                return rs.getString("title");
+                return rs.getString("display");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -91,18 +101,19 @@ public class TitlesDAO implements IDAO {
         return null;
     }
 
-    public String getCurrentTitleID(Player p) {
+    public String getCurrentCosmeticId(Player p, CosmeticType type) {
         String uuid = p.getUniqueId().toString();
         String sql = """
-        SELECT pt.title_id
-        FROM playerdata_titles pt
-        WHERE pt.uuid = ? AND pt.equipped = 1
-    """;
+            SELECT pc.cosmetic_id
+            FROM player_cosmetics pc
+            WHERE pc.uuid = ? AND pc.equipped = 1 AND pc.cosmetic_type = ?
+        """;
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid);
+            pstmt.setString(2, type.name());
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                return rs.getString("title_id");
+                return rs.getString("cosmetic_id");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -110,72 +121,80 @@ public class TitlesDAO implements IDAO {
         return null;
     }
 
-    public void equipTitle(Player p, String id) {
+    public void equipCosmetic(Player p, CosmeticType type, String id) {
         String uuid = p.getUniqueId().toString();
 
-        // Unequip all other titles
-        String unequipSql = "UPDATE playerdata_titles SET equipped = 0 WHERE uuid = ?";
+        // Unequip all other cosmetics of the same type
+        String unequipSql = "UPDATE player_cosmetics SET equipped = 0 WHERE uuid = ? AND cosmetic_type = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(unequipSql)) {
             pstmt.setString(1, uuid);
+            pstmt.setString(2, type.name());
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        // Equip the selected title
-        String equipSql = "UPDATE playerdata_titles SET equipped = 1 WHERE uuid = ? AND title_id = ?";
+        // Equip the selected cosmetic
+        String equipSql = "UPDATE player_cosmetics SET equipped = 1 WHERE uuid = ? AND cosmetic_id = ? AND cosmetic_type = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(equipSql)) {
             pstmt.setString(1, uuid);
             pstmt.setString(2, id);
+            pstmt.setString(3, type.name());
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public List<String> getPlayerTitles(Player p) {
+    public List<String> getPlayerCosmetics(Player p, CosmeticType type) {
         String uuid = p.getUniqueId().toString();
-        List<String> titles = new ArrayList<>();
-        String sql = "SELECT title_id FROM playerdata_titles WHERE uuid = ?";
+        List<String> cosmetics = new ArrayList<>();
+        String sql = "SELECT cosmetic_id FROM player_cosmetics WHERE uuid = ? AND cosmetic_type = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid);
+            pstmt.setString(2, type.name());
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                titles.add(rs.getString("title_id"));
+                cosmetics.add(rs.getString("cosmetic_id"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return titles;
+        return cosmetics;
     }
 
-    public void setTitleDescription(String id, String desc) {
-        String sql = "UPDATE titles SET description = ? WHERE id = ?";
+    public void setCosmeticDescription(CosmeticType type, String id, String desc) {
+        String sql = "UPDATE cosmetics SET description = ? WHERE id = ? AND type = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, desc.replace("&", "§"));
             pstmt.setString(2, id);
+            pstmt.setString(3, type.name());
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public String getTitleDescription(String id) {
-        String sql = "SELECT description FROM titles WHERE id = ?";
+    public String getCosmeticDescription(CosmeticType type, String id) {
+        String sql = "SELECT description FROM cosmetics WHERE id = ? AND type = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
+            pstmt.setString(2, type.name());
             ResultSet rs = pstmt.executeQuery();
-            return rs.getString("description");
+            if (rs.next()) {
+                return rs.getString("description");
+            }
         } catch (SQLException e) {
             e.printStackTrace();
-            return "§7Default";
         }
+        return "§7Default";
     }
 
-    public boolean titleExists(String id) {
-        String sql = "SELECT id FROM titles WHERE id = ?";
+    public boolean cosmeticExists(CosmeticType type, String id) {
+        String sql = "SELECT 1 FROM cosmetics WHERE id = ? AND type = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
+            pstmt.setString(2, type.name());
             ResultSet rs = pstmt.executeQuery();
             return rs.next();
         } catch (SQLException e) {
@@ -184,13 +203,14 @@ public class TitlesDAO implements IDAO {
         return false;
     }
 
-    public String getTitleText(String id) {
-        String sql = "SELECT title FROM titles WHERE id = ?";
+    public String getCosmeticDisplay(CosmeticType type, String id) {
+        String sql = "SELECT display FROM cosmetics WHERE id = ? AND type = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
+            pstmt.setString(2, type.name());
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                return rs.getString("title");
+                return rs.getString("display");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -198,11 +218,12 @@ public class TitlesDAO implements IDAO {
         return null;
     }
 
-    public boolean hasTitle(UUID uuid, String id) {
-        String sql = "SELECT 1 FROM playerdata_titles WHERE uuid = ? AND title_id = ?";
+    public boolean hasCosmetic(UUID uuid, CosmeticType type, String id) {
+        String sql = "SELECT 1 FROM player_cosmetics WHERE uuid = ? AND cosmetic_id = ? AND cosmetic_type = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             pstmt.setString(2, id);
+            pstmt.setString(3, type.name());
             ResultSet rs = pstmt.executeQuery();
             return rs.next();
         } catch (SQLException e) {

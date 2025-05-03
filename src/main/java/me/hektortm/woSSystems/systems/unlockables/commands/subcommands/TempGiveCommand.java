@@ -43,7 +43,6 @@ public class TempGiveCommand extends SubCommand {
             return;
         }
 
-        manager.modifyTempUnlockable(p.getUniqueId(), id, Action.GIVE);
         if (sender instanceof Player P) {
             Utils.successMsg2Values(P, "unlockables", "give.temp", "%id%", id, "%player%", p.getName());
         }

@@ -36,9 +36,9 @@ public class CitemDAO implements IDAO {
     public void initializeTable() throws SQLException {
         try (Statement stmt = conn.createStatement()) {
             stmt.execute("CREATE TABLE IF NOT EXISTS citems(" +
-                    "id TEXT, " +
-                    "material TEXT, " +
-                    "display_name TEXT, " +
+                    "id VARCHAR(255), " +
+                    "material VARCHAR(255), " +
+                    "display_name VARCHAR(255), " +
                     "lore TEXT, " +
                     "enchantments TEXT, " +
                     "damage INT, " +
@@ -51,10 +51,11 @@ public class CitemDAO implements IDAO {
                     "action_left TEXT, " +
                     "action_right TEXT)");
             stmt.execute("CREATE TABLE IF NOT EXISTS placed_citems("+
-                    "citem_id TEXT PRIMARY_KEY NOT NULL, " +
-                    "owner_uuid TEXT NOT NULL, " +
-                    "block_location TEXT NOT NULL, " +
-                    "display_location TEXT NOT NULL)");
+                    "citem_id VARCHAR(255) NOT NULL, " +
+                    "owner_uuid CHAR(36) NOT NULL, " +
+                    "block_location VARCHAR(255) NOT NULL, " +
+                    "display_location VARCHAR(255) NOT NULL," +
+                    "PRIMARY KEY (citem_id))");
         }
     }
 

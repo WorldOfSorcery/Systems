@@ -45,7 +45,7 @@ public class DeleteCommand extends SubCommand {
             return;
         }
 
-        manager.deleteUnlockable(id, false);
+        manager.deleteUnlockable(id);
         Utils.successMsg1Value(sender, "unlockables", "delete.perm", "%id%", id);
         logManager.sendWarning("Unlockable "+id+" deleted.");
     }

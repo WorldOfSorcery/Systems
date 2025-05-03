@@ -29,7 +29,7 @@ public class PrefixDAO implements IDAO {
             // Create the titles table
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS prefixes (
-                    id TEXT PRIMARY KEY NOT NULL,
+                    id VARCHAR(255) PRIMARY KEY NOT NULL,
                     prefix TEXT NOT NULL,
                     description TEXT
                 )
@@ -38,8 +38,8 @@ public class PrefixDAO implements IDAO {
             // Create the playerdata_titles table
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS playerdata_prefixes (
-                    uuid TEXT NOT NULL,
-                    prefix_id TEXT NOT NULL,
+                    uuid CHAR(36) NOT NULL,
+                    prefix_id VARCHAR(255) NOT NULL,
                     equipped BOOLEAN NOT NULL,
                     PRIMARY KEY (uuid, prefix_id),
                     FOREIGN KEY (prefix_id) REFERENCES prefixes(id)

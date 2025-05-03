@@ -1,0 +1,12 @@
+economyDAO: true
+unlockableDAO: false
+statsDAO: false
+citemDAO: false
+channelDAO: false
+nicknameDAO: false
+titlesDAO: false
+prefixDAO: false
+badgeDAO: false
+friendLink: true
+profileDAO: false
+fishingDAO: false

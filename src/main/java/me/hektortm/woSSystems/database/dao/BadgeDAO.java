@@ -29,17 +29,18 @@ public class BadgeDAO implements IDAO {
             // Create the titles table
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS badges (
-                    id TEXT PRIMARY KEY NOT NULL,
-                    badge TEXT NOT NULL,
-                    description TEXT
+                    id VARCHAR(255) NOT NULL,
+                    badge VARCHAR(255) NOT NULL,
+                    description TEXT,
+                    PRIMARY KEY (id)
                 )
             """);
 
             // Create the playerdata_titles table
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS playerdata_badges (
-                    uuid TEXT NOT NULL,
-                    badge_id TEXT NOT NULL,
+                    uuid CHAR(36) NOT NULL,
+                    badge_id VARCHAR(255) NOT NULL,
                     equipped BOOLEAN NOT NULL,
                     PRIMARY KEY (uuid, badge_id),
                     FOREIGN KEY (badge_id) REFERENCES badges(id)

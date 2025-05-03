@@ -9,7 +9,6 @@ import me.hektortm.wosCore.database.IDAO;
 import org.bukkit.entity.Player;
 
 import java.sql.*;
-import java.util.logging.Level;
 
 public class EconomyDAO implements IDAO {
     private final Connection connection;
@@ -27,25 +26,27 @@ public class EconomyDAO implements IDAO {
     public void initializeTable() throws SQLException {
         try (Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS playerdata_economy(" +
-                    "uuid TEXT, " +
-                    "currency TEXT, " +
-                    "amount LONG NOT NULL DEFAULT 0, " +
+                    "uuid CHAR(36), " +
+                    "currency VARCHAR(200), " +
+                    "amount BIGINT NOT NULL DEFAULT 0, " +
                     "PRIMARY KEY (uuid, currency), " +
                     "FOREIGN KEY (uuid) REFERENCES playerdata(uuid))");
             // economy currencies table
             statement.execute("CREATE TABLE IF NOT EXISTS currencies(" +
-                    "id TEXT NOT NULL, " +
-                    "name TEXT NOT NULL, " +
-                    "short_name TEXT NOT NULL, " +
-                    "icon TEXT, "+
-                    "color TEXT, "+
+                    "id VARCHAR(255) NOT NULL, " +
+                    "name VARCHAR(255) NOT NULL, " +
+                    "short_name VARCHAR(255) NOT NULL, " +
+                    "icon VARCHAR(255), "+
+                    "color VARCHAR(255), "+
                     "hidden_if_zero BOOLEAN NOT NULL DEFAULT false)");
         }
     }
 
 
     public void ensurePlayerEconomyEntry(Player player, String currency) {
-        try (PreparedStatement prepStmt = connection.prepareStatement("INSERT INTO playerdata_economy (uuid, currency, amount) VALUES (?, ?, 0) ON CONFLICT(uuid, currency) DO NOTHING")) {
+        try (PreparedStatement prepStmt = connection.prepareStatement(
+                "INSERT IGNORE INTO playerdata_economy (uuid, currency, amount) VALUES (?, ?, 0)"
+        )) {
             prepStmt.setString(1, player.getUniqueId().toString());
             prepStmt.setString(2, currency);
             prepStmt.executeUpdate();
@@ -53,6 +54,7 @@ public class EconomyDAO implements IDAO {
             ex.printStackTrace();
         }
     }
+
 
     public void updatePlayerCurrency(Player player, String currency, long amount) throws SQLException {
         ensurePlayerEconomyEntry(player, currency);

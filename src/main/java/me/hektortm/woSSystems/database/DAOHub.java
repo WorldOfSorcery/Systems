@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.database;
 
+import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.dao.*;
 import me.hektortm.woSSystems.database.links.FriendLink;
 import me.hektortm.wosCore.database.DatabaseManager;
@@ -19,6 +20,8 @@ public class DAOHub {
     private final BadgeDAO badgeDAO;
 
     private final FriendLink friendLink;
+
+
 
     public DAOHub(DatabaseManager databaseManager) {
         this.economyDAO = new EconomyDAO(databaseManager, this);

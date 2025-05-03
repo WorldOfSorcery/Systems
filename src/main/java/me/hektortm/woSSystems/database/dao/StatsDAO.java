@@ -29,8 +29,8 @@ public class StatsDAO implements IDAO {
     public void initializeTable() throws SQLException {
         String createStatsTable = """
             CREATE TABLE IF NOT EXISTS player_stats (
-                uuid TEXT NOT NULL,
-                stat_id TEXT NOT NULL,
+                uuid CHAR(36) NOT NULL,
+                stat_id VARCHAR(255) NOT NULL,
                 value BIGINT DEFAULT 0,
                 PRIMARY KEY (uuid, stat_id)
             );
@@ -38,7 +38,7 @@ public class StatsDAO implements IDAO {
 
         String createGlobalStatsTable = """
             CREATE TABLE IF NOT EXISTS global_stats (
-                stat_id TEXT PRIMARY KEY,
+                stat_id VARCHAR(255) PRIMARY KEY,
                 value BIGINT DEFAULT 0,
                 max BIGINT DEFAULT 0,
                 capped BOOLEAN DEFAULT FALSE
@@ -47,7 +47,7 @@ public class StatsDAO implements IDAO {
 
         String createStatDefinitionsTable = """
             CREATE TABLE IF NOT EXISTS stats (
-                stat_id TEXT PRIMARY KEY,
+                stat_id VARCHAR(255) PRIMARY KEY,
                 max BIGINT DEFAULT 0,
                 capped BOOLEAN DEFAULT FALSE
             );
