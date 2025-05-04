@@ -9,6 +9,7 @@ import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
 import me.hektortm.woSSystems.systems.guis.GUIManager;
+import me.hektortm.woSSystems.utils.CosmeticType;
 import me.hektortm.woSSystems.utils.dataclasses.Challenge;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
@@ -79,13 +80,14 @@ public class InventoryClickListener implements Listener {
             PersistentDataContainer data = clickedItemMeta.getPersistentDataContainer();
             String titleID = data.get(new NamespacedKey(plugin, "titleID"), PersistentDataType.STRING);
 
-            if (hub.getTitlesDAO().getCurrentTitleID(player) != null && Objects.equals(hub.getTitlesDAO().getCurrentTitleID(player), titleID)) {
+            if (hub.getCosmeticsDAO().getCurrentCosmeticId(player, CosmeticType.TITLE) != null &&
+                    Objects.equals(hub.getCosmeticsDAO().getCurrentCosmeticId(player, CosmeticType.TITLE), titleID)) {
                 event.setCancelled(true);
                 return;
             }
 
-            hub.getTitlesDAO().equipTitle(player, titleID);
-            player.sendMessage("Equipped Title: " + hub.getTitlesDAO().getTitleText(titleID));
+            hub.getCosmeticsDAO().equipCosmetic(player,CosmeticType.TITLE, titleID);
+            player.sendMessage("Equipped Title: " + hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.TITLE, titleID));
             event.setCancelled(true);
             player.closeInventory();
         }
@@ -96,13 +98,13 @@ public class InventoryClickListener implements Listener {
             PersistentDataContainer data = clickedItemMeta.getPersistentDataContainer();
             String prefixID = data.get(new NamespacedKey(plugin, "prefixID"), PersistentDataType.STRING);
 
-            if (hub.getPrefixDAO().getCurrentPrefixID(player) != null && hub.getPrefixDAO().getCurrentPrefixID(player).equals(prefixID)) {
+            if (hub.getCosmeticsDAO().getCurrentCosmeticId(player, CosmeticType.PREFIX) != null && hub.getCosmeticsDAO().getCurrentCosmeticId(player, CosmeticType.PREFIX).equals(prefixID)) {
                 event.setCancelled(true);
                 return;
             }
 
-            hub.getPrefixDAO().equipPrefix(player, prefixID);
-            player.sendMessage("Equipped Prefix: " + hub.getPrefixDAO().getPrefixText(prefixID));
+            hub.getCosmeticsDAO().equipCosmetic(player, CosmeticType.PREFIX, prefixID);
+            player.sendMessage("Equipped Prefix: " + hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.PREFIX, prefixID));
             event.setCancelled(true);
             player.closeInventory();
         }
@@ -113,13 +115,14 @@ public class InventoryClickListener implements Listener {
             PersistentDataContainer data = clickedItemMeta.getPersistentDataContainer();
             String badgeID = data.get(new NamespacedKey(plugin, "badgeID"), PersistentDataType.STRING);
 
-            if (hub.getBadgeDAO().getCurrentBadgeID(player) != null && hub.getBadgeDAO().getCurrentBadgeID(player).equals(badgeID)) {
+            if (hub.getCosmeticsDAO().getCurrentCosmeticId(player, CosmeticType.BADGE) != null &&
+                    hub.getCosmeticsDAO().getCurrentCosmeticId(player, CosmeticType.BADGE).equals(badgeID)) {
                 event.setCancelled(true);
                 return;
             }
 
-            hub.getBadgeDAO().equipBadge(player, badgeID);
-            player.sendMessage("Equipped Badge: " + hub.getBadgeDAO().getBadgeText(badgeID));
+            hub.getCosmeticsDAO().equipCosmetic(player, CosmeticType.BADGE, badgeID);
+            player.sendMessage("Equipped Badge: " + hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.BADGE, badgeID));
             event.setCancelled(true);
             player.closeInventory();
         }

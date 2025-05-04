@@ -14,24 +14,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class ChannelDAO implements IDAO {
     private final DatabaseManager db;
     private final DAOHub daoHub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final String logName = "ChannelDAO";
 
     public ChannelDAO(DatabaseManager db, DAOHub daoHub) {
         this.db = db;
         this.daoHub = daoHub;
     }
 
-    private Connection getConnection() throws SQLException {
-        return db.getConnection();
-    }
-
     @Override
     public void initializeTable() throws SQLException {
-        try (Connection conn = getConnection(); Statement stmt = conn.createStatement()) {
+        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS channels (
                     name VARCHAR(255) PRIMARY KEY NOT NULL,
@@ -62,7 +60,7 @@ public class ChannelDAO implements IDAO {
 
     public void insertChannel(Channel channel) {
         String sql = "INSERT INTO channels(name, short_name, color, format, default_channel, autojoin, forcejoin, hidden, broadcastable, permission, radius) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, channel.getName());
             pstmt.setString(2, channel.getShortName());
             pstmt.setString(3, channel.getColor());
@@ -77,13 +75,13 @@ public class ChannelDAO implements IDAO {
             pstmt.executeUpdate();
         } catch (SQLException e) {
             plugin.getLogger().severe("Error inserting channel: " + e.getMessage());
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to insert Channel: " + e);
         }
     }
 
     public void updateChannel(Channel channel) {
         String sql = "UPDATE channels SET short_name = ?, color = ?, format = ?, default_channel = ?, autojoin = ?, forcejoin = ?, hidden = ?, permission = ?, broadcastable = ?, radius = ? WHERE name = ?";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, channel.getShortName());
             pstmt.setString(2, channel.getColor());
             pstmt.setString(3, channel.getFormat());
@@ -97,26 +95,24 @@ public class ChannelDAO implements IDAO {
             pstmt.setString(11, channel.getName());
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().severe("Error updating channel: " + e.getMessage());
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to update Channel: " + e);
         }
     }
 
     public void deleteChannel(String name) {
         String sql = "DELETE FROM channels WHERE name = ?";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, name);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().severe("Error deleting channel: " + e.getMessage());
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to delete Channel: " + e);
         }
     }
 
     public List<Channel> getAllChannels() {
         List<Channel> channels = new ArrayList<>();
         String sql = "SELECT * FROM channels";
-        try (Connection conn = getConnection(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 Channel channel = new Channel(
                         rs.getString("color"),
@@ -135,8 +131,7 @@ public class ChannelDAO implements IDAO {
                 channels.add(channel);
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Error getting all channels: " + e.getMessage());
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get all Channels: " + e);
         }
         return channels;
     }
@@ -144,15 +139,14 @@ public class ChannelDAO implements IDAO {
     public List<UUID> getRecipients(String channelName) {
         List<UUID> recipients = new ArrayList<>();
         String sql = "SELECT uuid FROM playerdata_channels WHERE channel_name = ? AND joined = TRUE";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, channelName);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 recipients.add(UUID.fromString(rs.getString("uuid")));
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Error getting recipients: " + e.getMessage());
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Recipients: " + e);
         }
         return recipients;
     }
@@ -165,7 +159,7 @@ public class ChannelDAO implements IDAO {
         }
 
         String sql = "INSERT INTO playerdata_channels(uuid, channel_name, joined, focused) VALUES(?,?,?,?)";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, playerUUID.toString());
             pstmt.setString(2, channelName);
             pstmt.setBoolean(3, true);
@@ -173,22 +167,20 @@ public class ChannelDAO implements IDAO {
             pstmt.executeUpdate();
             Utils.success(p, "channel", "joined", "%channel%", getChannelColor(channelName) + channelName);
         } catch (SQLException e) {
-            plugin.getLogger().severe("Error adding recipient: " + e.getMessage());
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to add Recipients: " + e);
         }
     }
 
     private String getChannelColor(String channelName) {
         String sql = "SELECT color FROM channels WHERE name = ?";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, channelName);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 return rs.getString("color");
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Error getting channel color: " + e.getMessage());
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Channel Color: " + e);
         }
         return "";
     }
@@ -200,7 +192,7 @@ public class ChannelDAO implements IDAO {
             return;
         }
         String sql = "DELETE FROM playerdata_channels WHERE uuid = ? AND channel_name = ?";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, playerUUID.toString());
             pstmt.setString(2, channelName);
             pstmt.executeUpdate();
@@ -213,20 +205,18 @@ public class ChannelDAO implements IDAO {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Error removing recipient: " + e.getMessage());
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to remove Recipients: " + e);
         }
     }
 
     public String getChannelPermission(String channelName) {
         String sql = "SELECT permission FROM channels WHERE name = ?";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, channelName);
             ResultSet rs = pstmt.executeQuery();
             return rs.next() ? rs.getString("permission") : null;
         } catch (SQLException e) {
-            plugin.getLogger().severe("Error getting channel permission: " + e.getMessage());
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Channel Permission: " + e);
             return null;
         }
     }
@@ -244,14 +234,13 @@ public class ChannelDAO implements IDAO {
         }
         unfocusChannel(playerUUID, getFocusedChannel(playerUUID));
         String sql = "UPDATE playerdata_channels SET focused = TRUE WHERE uuid = ? AND channel_name = ?";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, playerUUID.toString());
             pstmt.setString(2, channelName);
             pstmt.executeUpdate();
             Utils.success(p, "channel", "focused", "%channel%", getChannelColor(channelName) + channelName);
         } catch (SQLException e) {
-            plugin.getLogger().severe("Error setting focused channel: " + e.getMessage());
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to set focused Channel: " + e);
         }
     }
 
@@ -259,41 +248,38 @@ public class ChannelDAO implements IDAO {
         if (channelName == null) return;
 
         String sql = "UPDATE playerdata_channels SET focused = FALSE WHERE uuid = ? AND channel_name = ?";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, playerUUID.toString());
             pstmt.setString(2, channelName);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().severe("Error unfocusing channel: " + e.getMessage());
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to unfocus Channel: " + e);
         }
     }
 
     public String getFocusedChannel(UUID playerUUID) {
         String sql = "SELECT channel_name FROM playerdata_channels WHERE uuid = ? AND focused = TRUE LIMIT 1";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, playerUUID.toString());
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 return rs.getString("channel_name");
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Error getting focused channel: " + e.getMessage());
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get focused Channel: " + e);
         }
         return null;
     }
 
     public boolean isInChannel(UUID playerUUID, String channelName) {
         String sql = "SELECT 1 FROM playerdata_channels WHERE uuid = ? AND channel_name = ? AND joined = TRUE";
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, playerUUID.toString());
             pstmt.setString(2, channelName);
             ResultSet rs = pstmt.executeQuery();
             return rs.next();
         } catch (SQLException e) {
-            plugin.getLogger().severe("Error checking if player is in channel: " + e.getMessage());
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to check if player is in Channel: " + e);
             return false;
         }
     }

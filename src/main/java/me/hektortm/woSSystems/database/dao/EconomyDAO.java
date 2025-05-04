@@ -9,22 +9,22 @@ import me.hektortm.wosCore.database.IDAO;
 import org.bukkit.entity.Player;
 
 import java.sql.*;
+import java.util.logging.Level;
 
 public class EconomyDAO implements IDAO {
-    private final Connection connection;
-    private final DatabaseManager databaseManager;
+    private final DatabaseManager db;
     private final DAOHub hub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final String logName = "EconomyDAO";
 
-    public EconomyDAO(DatabaseManager databaseManager, DAOHub hub) {
-        this.databaseManager = databaseManager;
-        this.connection = databaseManager.getConnection();
+    public EconomyDAO(DatabaseManager db, DAOHub hub) throws SQLException {
+        this.db = db;
         this.hub = hub;
     }
 
     @Override
     public void initializeTable() throws SQLException {
-        try (Statement statement = connection.createStatement()) {
+        try (Connection conn = db.getConnection(); Statement statement = conn.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS playerdata_economy(" +
                     "uuid CHAR(36), " +
                     "currency VARCHAR(200), " +
@@ -44,31 +44,33 @@ public class EconomyDAO implements IDAO {
 
 
     public void ensurePlayerEconomyEntry(Player player, String currency) {
-        try (PreparedStatement prepStmt = connection.prepareStatement(
+        try (Connection conn = db.getConnection(); PreparedStatement prepStmt = conn.prepareStatement(
                 "INSERT IGNORE INTO playerdata_economy (uuid, currency, amount) VALUES (?, ?, 0)"
         )) {
             prepStmt.setString(1, player.getUniqueId().toString());
             prepStmt.setString(2, currency);
             prepStmt.executeUpdate();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
+        } catch (SQLException e) {
+            plugin.writeLog(logName, Level.SEVERE, "Failed to ensure DB Entry: " + e);
         }
     }
 
 
-    public void updatePlayerCurrency(Player player, String currency, long amount) throws SQLException {
+    public void updatePlayerCurrency(Player player, String currency, long amount) {
         ensurePlayerEconomyEntry(player, currency);
-        try (PreparedStatement prepStmt = connection.prepareStatement("UPDATE playerdata_economy SET amount = ? WHERE uuid = ? AND currency = ?")) {
+        try (Connection conn = db.getConnection(); PreparedStatement prepStmt = conn.prepareStatement("UPDATE playerdata_economy SET amount = ? WHERE uuid = ? AND currency = ?")) {
             prepStmt.setLong(1, amount);
             prepStmt.setString(2, player.getUniqueId().toString());
             prepStmt.setString(3, currency);
             prepStmt.executeUpdate();
+        } catch (SQLException e) {
+            plugin.writeLog(logName, Level.SEVERE, "Failed to update Player Currency: " + e);
         }
     }
 
     public long getPlayerCurrency(Player player, String currency) {
         ensurePlayerEconomyEntry(player, currency);
-        try (PreparedStatement prepStmt = connection.prepareStatement("SELECT amount FROM playerdata_economy WHERE uuid = ? AND currency = ?")) {
+        try (Connection conn = db.getConnection(); PreparedStatement prepStmt = conn.prepareStatement("SELECT amount FROM playerdata_economy WHERE uuid = ? AND currency = ?")) {
             prepStmt.setString(1, player.getUniqueId().toString());
             prepStmt.setString(2, currency);
             ResultSet resultSet = prepStmt.executeQuery();
@@ -78,34 +80,48 @@ public class EconomyDAO implements IDAO {
                 return 0;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Player Currency: " + e);
             return 0;
         }
     }
 
-    public void addCurrency(String id, Currency currency) throws SQLException {
-        PreparedStatement stmt = connection.prepareStatement(
+    public void addCurrency(String id, Currency currency) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(
                 "INSERT INTO currencies (id, name, short_name, icon, color, hidden_if_zero) VALUES (?, ?, ?, ?, ?, ?)"
-        );
-        stmt.setString(1, id);
-        stmt.setString(2, currency.getName());
-        stmt.setString(3, currency.getShortName());
-        stmt.setString(4, currency.getIcon());
-        stmt.setString(5, currency.getColor());
-        stmt.setBoolean(6, currency.isHiddenIfZero());
-        stmt.executeUpdate();
+        )) {
+            stmt.setString(1, id);
+            stmt.setString(2, currency.getName());
+            stmt.setString(3, currency.getShortName());
+            stmt.setString(4, currency.getIcon());
+            stmt.setString(5, currency.getColor());
+            stmt.setBoolean(6, currency.isHiddenIfZero());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            plugin.writeLog(logName, Level.SEVERE, "Failed to add Player Currency: " + e);
+        }
     }
 
-    public ResultSet getCurrencies() throws SQLException {
-        PreparedStatement stmt = connection.prepareStatement("SELECT * FROM currencies");
-        return stmt.executeQuery();
+    public ResultSet getCurrencies() {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement("SELECT * FROM currencies")) {
+            return stmt.executeQuery();
+        } catch (SQLException e) {
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Currencies: " + e);
+            return null;
+        }
     }
 
-    public boolean currencyExists(String id) throws SQLException {
-        PreparedStatement stmt = connection.prepareStatement("SELECT COUNT(*) FROM currencies WHERE id = ?");
-        stmt.setString(1, id);
-        ResultSet rs = stmt.executeQuery();
-        return rs.next() && rs.getInt(1) > 0;
+    public boolean currencyExists(String id) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM currencies WHERE id = ?")) {
+            stmt.setString(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            plugin.writeLog(logName, Level.SEVERE, "Failed to check if currency exists: " + e);
+            return false;
+        }
+        return false;
     }
 
 

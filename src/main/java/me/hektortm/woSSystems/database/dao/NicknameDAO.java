@@ -13,20 +13,18 @@ import java.util.Map;
 import java.util.UUID;
 
 public class NicknameDAO implements IDAO {
-    private final Connection conn;
     private final DatabaseManager db;
     private final DAOHub daoHub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
-    public NicknameDAO(DatabaseManager db, DAOHub daoHub) {
+    public NicknameDAO(DatabaseManager db, DAOHub daoHub) throws SQLException {
         this.db = db;
-        this.conn = db.getConnection();
         this.daoHub = daoHub;
     }
 
     @Override
     public void initializeTable() throws SQLException {
-        try (Statement stmt = conn.createStatement()) {
+        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS nicknames (" +
                     "uuid VARCHAR(36) PRIMARY KEY, " +
                     "username VARCHAR(16) NOT NULL, " +
@@ -51,7 +49,7 @@ public class NicknameDAO implements IDAO {
     // Save or update a player's nickname
     public void saveNickname(UUID uuid, String username, String nickname) {
         String query = "INSERT OR IGNORE INTO nicknames (uuid, username, nickname, previous_nicks) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, username);
             stmt.setString(3, nickname);
@@ -63,7 +61,7 @@ public class NicknameDAO implements IDAO {
 
         // Update the nickname if it already exists
         query = "UPDATE nicknames SET username = ?, nickname = ?, previous_nicks = previous_nicks || ? WHERE uuid = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, username);
             stmt.setString(2, nickname);
             stmt.setString(3, nickname + ",");
@@ -77,7 +75,7 @@ public class NicknameDAO implements IDAO {
     // Reset a player's nickname
     public void resetNickname(UUID uuid) {
         String query = "UPDATE nicknames SET nickname = NULL WHERE uuid = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, uuid.toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -88,7 +86,7 @@ public class NicknameDAO implements IDAO {
     // Get a player's nickname
     public String getNickname(UUID uuid) {
         String query = "SELECT nickname FROM nicknames WHERE uuid = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, uuid.toString());
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -103,7 +101,7 @@ public class NicknameDAO implements IDAO {
     // Get a player's real username or nickname
     public String getRealNameOrNickname(String input) {
         String query = "SELECT username, nickname FROM nicknames WHERE username = ? OR nickname = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, input);
             stmt.setString(2, input);
             ResultSet rs = stmt.executeQuery();
@@ -121,7 +119,7 @@ public class NicknameDAO implements IDAO {
     // Request a nickname change
     public void requestNicknameChange(UUID uuid, String nickname) {
         String query = "INSERT OR REPLACE INTO nick_requests (uuid, nickname) VALUES (?, ?)";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, nickname);
             stmt.executeUpdate();
@@ -133,7 +131,7 @@ public class NicknameDAO implements IDAO {
     // Approve a nickname change
     public void approveNicknameChange(UUID uuid) {
         String query = "SELECT nickname FROM nick_requests WHERE uuid = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, uuid.toString());
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -159,7 +157,7 @@ public class NicknameDAO implements IDAO {
     // Remove a nickname request
     private void removeNicknameRequest(UUID uuid) {
         String query = "DELETE FROM nick_requests WHERE uuid = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, uuid.toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -171,7 +169,7 @@ public class NicknameDAO implements IDAO {
     public Map<UUID, String> getNickRequests() {
         Map<UUID, String> requests = new HashMap<>();
         String query = "SELECT uuid, nickname FROM nick_requests";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 requests.put(UUID.fromString(rs.getString("uuid")), rs.getString("nickname"));
@@ -185,7 +183,7 @@ public class NicknameDAO implements IDAO {
     // Reserve a nickname
     public void reserveNickname(UUID uuid, String nickname) {
         String query = "INSERT OR REPLACE INTO reserved_nicks (uuid, nickname) VALUES (?, ?)";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, nickname);
             stmt.executeUpdate();
@@ -197,7 +195,7 @@ public class NicknameDAO implements IDAO {
     // Unreserve a nickname
     public void unreserveNickname(UUID uuid) {
         String query = "DELETE FROM reserved_nicks WHERE uuid = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, uuid.toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -208,7 +206,7 @@ public class NicknameDAO implements IDAO {
     // Check if a nickname is reserved
     public boolean isNicknameReserved(String nickname) {
         String query = "SELECT uuid FROM reserved_nicks WHERE nickname = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, nickname);
             ResultSet rs = stmt.executeQuery();
             return rs.next();
@@ -222,7 +220,7 @@ public class NicknameDAO implements IDAO {
     public Map<UUID, String> getReservedNicknames() {
         Map<UUID, String> reservedNicks = new HashMap<>();
         String query = "SELECT uuid, nickname FROM reserved_nicks";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 reservedNicks.put(UUID.fromString(rs.getString("uuid")), rs.getString("nickname"));

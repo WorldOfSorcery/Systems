@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.cosmetic;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.utils.CosmeticType;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -39,20 +40,20 @@ public class CosmeticManager {
 
     public void openTitlesPage(Player p) {
         titlesPage = Bukkit.createInventory(null, 9*5, "§6Titles");
-        List<String> titles = hub.getTitlesDAO().getPlayerTitles(p);
+        List<String> titles = hub.getCosmeticsDAO().getPlayerCosmetics(p, CosmeticType.TITLE);
 
         for (int i = 0; i < titles.size(); i++) {
             List<String> lore = new ArrayList<>();
-            plugin.writeLog("CosmeticManager", Level.INFO, hub.getTitlesDAO().getCurrentTitleID(p) + " | " + titles.get(i));
-            lore.add(hub.getTitlesDAO().getTitleDescription(titles.get(i)));
+            plugin.writeLog("CosmeticManager", Level.INFO, hub.getCosmeticsDAO().getCurrentCosmeticId(p, CosmeticType.TITLE) + " | " + titles.get(i));
+            lore.add(hub.getCosmeticsDAO().getCosmeticDescription(CosmeticType.TITLE, titles.get(i)));
             lore.add("§7");
-            if (Objects.equals(hub.getTitlesDAO().getCurrentTitleID(p), titles.get(i))) {
+            if (Objects.equals(hub.getCosmeticsDAO().getCurrentCosmeticId(p, CosmeticType.TITLE), titles.get(i))) {
                 lore.add("§cCurrently selected");
             } else {
                 lore.add("§bClick to select");
             }
 
-            ItemStack item = createItem(hub.getTitlesDAO().getTitleText(titles.get(i)), Material.NAME_TAG);
+            ItemStack item = createItem(hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.TITLE, titles.get(i)), Material.NAME_TAG);
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer container = meta.getPersistentDataContainer();
             container.set(new NamespacedKey(plugin, "titleID"), PersistentDataType.STRING, titles.get(i));
@@ -65,19 +66,19 @@ public class CosmeticManager {
 
     public void openPrefixPage(Player p) {
         prefixPage  = Bukkit.createInventory(null, 9*5, "§6Prefixes");
-        List<String> prefixes = hub.getPrefixDAO().getPlayerPrefixes(p);
+        List<String> prefixes = hub.getCosmeticsDAO().getPlayerCosmetics(p, CosmeticType.PREFIX);
 
         for (int i = 0; i < prefixes.size(); i++) {
             List<String> lore = new ArrayList<>();
-            lore.add(hub.getPrefixDAO().getPrefixDescription(prefixes.get(i)));
+            lore.add(hub.getCosmeticsDAO().getCosmeticDescription(CosmeticType.PREFIX, prefixes.get(i)));
             lore.add("§7");
-            if (Objects.equals(hub.getPrefixDAO().getCurrentPrefixID(p), prefixes.get(i))) {
+            if (Objects.equals(hub.getCosmeticsDAO().getCurrentCosmeticId(p, CosmeticType.PREFIX), prefixes.get(i))) {
                 lore.add("§cCurrently selected");
             } else {
                 lore.add("§bClick to select");
             }
 
-            ItemStack item = createItem(hub.getPrefixDAO().getPrefixText(prefixes.get(i)), Material.PAPER);
+            ItemStack item = createItem(hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.PREFIX, prefixes.get(i)), Material.PAPER);
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer container = meta.getPersistentDataContainer();
             container.set(new NamespacedKey(plugin, "prefixID"), PersistentDataType.STRING, prefixes.get(i));
@@ -90,19 +91,19 @@ public class CosmeticManager {
 
     public void openBadgePage(Player p) {
         badgesPage  = Bukkit.createInventory(null, 9*5, "§6Badges");
-        List<String> badges = hub.getBadgeDAO().getPlayerBadges(p);
+        List<String> badges = hub.getCosmeticsDAO().getPlayerCosmetics(p, CosmeticType.BADGE);
 
         for (int i = 0; i < badges.size(); i++) {
             List<String> lore = new ArrayList<>();
-            lore.add(hub.getBadgeDAO().getBadgeDescription(badges.get(i)));
+            lore.add(hub.getCosmeticsDAO().getCosmeticDescription(CosmeticType.BADGE, badges.get(i)));
             lore.add("§7");
-            if (Objects.equals(hub.getBadgeDAO().getCurrentBadgeID(p), badges.get(i))) {
+            if (Objects.equals(hub.getCosmeticsDAO().getCurrentCosmeticId(p, CosmeticType.BADGE), badges.get(i))) {
                 lore.add("§cCurrently selected");
             } else {
                 lore.add("§bClick to select");
             }
 
-            ItemStack item = createItem(hub.getBadgeDAO().getBadgeText(badges.get(i)), Material.FLOWER_BANNER_PATTERN);
+            ItemStack item = createItem(hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.BADGE, badges.get(i)), Material.FLOWER_BANNER_PATTERN);
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer container = meta.getPersistentDataContainer();
             container.set(new NamespacedKey(plugin, "badgeID"), PersistentDataType.STRING, badges.get(i));

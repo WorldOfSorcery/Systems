@@ -1,9 +1,9 @@
 package me.hektortm.woSSystems.cosmetic.cmd;
 
 import me.hektortm.woSSystems.cosmetic.CosmeticManager;
-import me.hektortm.woSSystems.cosmetic.cmd.subcmd.Create;
+
 import me.hektortm.woSSystems.cosmetic.cmd.subcmd.Give;
-import me.hektortm.woSSystems.cosmetic.cmd.subcmd.Description;
+
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.SubCommand;
@@ -26,9 +26,7 @@ public class CosmeticCommand implements CommandExecutor {
         this.manager = manager;
         this.hub = hub;
 
-        subCommands.put("create", new Create(hub));
         subCommands.put("give", new Give(hub));
-        subCommands.put("desc", new Description(hub));
 
 
     }

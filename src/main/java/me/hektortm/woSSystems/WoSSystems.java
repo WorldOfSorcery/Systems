@@ -63,6 +63,7 @@ import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
 
 import me.hektortm.wosCore.database.DatabaseManager;
+import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
@@ -137,20 +138,24 @@ public final class WoSSystems extends JavaPlugin {
         instance = this;
         try {
             core = WoSCore.getPlugin(WoSCore.class);
+            if (core == null) {
+                getLogger().severe("WoSCore not found. Disabling plugin.");
+                Bukkit.getPluginManager().disablePlugin(this);
+                return;
+            }
+
             DatabaseManager databaseManager = core.getDatabaseManager();
 
             daoHub = new DAOHub(databaseManager);
 
-            databaseManager.registerDAO(daoHub.getEconomyDAO());
-            databaseManager.registerDAO(daoHub.getNicknameDAO());
-            databaseManager.registerDAO(daoHub.getChannelDAO());
-            databaseManager.registerDAO(daoHub.getUnlockableDAO());
-            databaseManager.registerDAO(daoHub.getCitemDAO());
-            databaseManager.registerDAO(daoHub.getStatsDAO());
-            databaseManager.registerDAO(daoHub.getTitlesDAO());
-            databaseManager.registerDAO(daoHub.getPrefixDAO());
-            databaseManager.registerDAO(daoHub.getBadgeDAO());
-            databaseManager.registerDAO(daoHub.getProfileDAO());
+            registerAndInitDAO(databaseManager, daoHub.getEconomyDAO());
+            registerAndInitDAO(databaseManager, daoHub.getNicknameDAO());
+            registerAndInitDAO(databaseManager, daoHub.getChannelDAO());
+            registerAndInitDAO(databaseManager, daoHub.getUnlockableDAO());
+            registerAndInitDAO(databaseManager, daoHub.getCitemDAO());
+            registerAndInitDAO(databaseManager, daoHub.getStatsDAO());
+            registerAndInitDAO(databaseManager, daoHub.getCosmeticsDAO());
+            registerAndInitDAO(databaseManager, daoHub.getProfileDAO());
 
             databaseManager.initializeAllDAOs();
         } catch (SQLException e) {
@@ -256,6 +261,11 @@ public final class WoSSystems extends JavaPlugin {
 
         registerStringFlag("display-name", registry, DISPLAY_NAME);
 
+    }
+
+    private void registerAndInitDAO(DatabaseManager db, IDAO dao) throws SQLException {
+        db.registerDAO(dao);
+        dao.initializeTable();
     }
 
     private void registerStateFlag(String flagName, FlagRegistry registry) {

@@ -21,20 +21,19 @@ import java.util.*;
 import java.util.logging.Level;
 
 public class CitemDAO implements IDAO {
-    private final Connection conn;
     private final me.hektortm.wosCore.database.DatabaseManager db;
     private final DAOHub daoHub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final String logName = "CitemDAO";
 
-    public CitemDAO(DatabaseManager db, DAOHub daoHub) {
+    public CitemDAO(DatabaseManager db, DAOHub daoHub) throws SQLException {
         this.db = db;
         this.daoHub = daoHub;
-        this.conn = db.getConnection();
     }
 
     @Override
     public void initializeTable() throws SQLException {
-        try (Statement stmt = conn.createStatement()) {
+        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute("CREATE TABLE IF NOT EXISTS citems(" +
                     "id VARCHAR(255), " +
                     "material VARCHAR(255), " +
@@ -63,40 +62,40 @@ public class CitemDAO implements IDAO {
         String bLoc = Parsers.locationToString(blockLocation);
         String dLoc = Parsers.locationToString(displayLocation);
         String sql = "INSERT INTO placed_citems (citem_id, owner_uuid, block_location, display_location) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
             pstmt.setString(2, ownerUUID.toString());
             pstmt.setString(3, bLoc);
             pstmt.setString(4, dLoc);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to create Item Display: " + e);
         }
     }
 
     public void removeItemDisplay(UUID ownerUUID, Location location) {
         String loc = Parsers.locationToString(location);
         String sql = "DELETE FROM placed_citems WHERE owner_uuid = ? AND block_location = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, ownerUUID.toString());
             pstmt.setString(2, loc);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to remove Item Display: " + e);
         }
     }
 
     public UUID getUUID(Location location) {
         String loc = Parsers.locationToString(location);
         String sql = "SELECT owner_uuid FROM placed_citems WHERE block_location = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, loc);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) { // Check if result exists
                 return UUID.fromString(rs.getString("owner_uuid"));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Owner UUID: " + e);
         }
         return null; // Return null if no result
     }
@@ -105,25 +104,25 @@ public class CitemDAO implements IDAO {
         String oldLoc = Parsers.locationToString(oldLocation);
         String newLoc = Parsers.locationToString(newLocation);
         String sql = "UPDATE placed_citems SET display_location = ? WHERE display_location = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, newLoc);
             pstmt.setString(2, oldLoc);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to change Item Display: " + e);
         }
     }
 
     public Location getDisplayLocation(Location location) {
         String loc = Parsers.locationToString(location);
         String sql = "SELECT display_location FROM placed_citems WHERE block_location = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, loc);
             ResultSet rs = pstmt.executeQuery();
             Location returnLoc = Parsers.parseLocation(rs.getString("display_location"));
             return returnLoc;
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Item Display Location: " + e);
             return null;
         }
     }
@@ -131,14 +130,14 @@ public class CitemDAO implements IDAO {
     public String getItemDisplayID(Location location) {
         String loc = Parsers.locationToString(location);
         String sql = "SELECT citem_id FROM placed_citems WHERE block_location = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, loc);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) { // Check if result exists
                 return rs.getString("citem_id");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Item Display ID: " + e);
         }
         return null; // Return null if not found
     }
@@ -147,12 +146,12 @@ public class CitemDAO implements IDAO {
     public boolean isItemDisplay(Location location) {
         String loc = Parsers.locationToString(location);
         String sql = "SELECT  1 FROM placed_citems WHERE block_location = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, loc);
             ResultSet rs = pstmt.executeQuery();
             return rs.next();
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to check Item Display: " + e);
             return false;
         }
     }
@@ -160,13 +159,13 @@ public class CitemDAO implements IDAO {
     public boolean isItemDisplayOwner(Location location, UUID uuid) {
         String loc = Parsers.locationToString(location); // Fix incorrect location format
         String sql = "SELECT 1 FROM placed_citems WHERE block_location = ? AND owner_uuid = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, loc);
             pstmt.setString(2, uuid.toString());
             ResultSet rs = pstmt.executeQuery();
             return rs.next(); // If there's a result, return true
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to check Item Display Owner: " + e);
         }
         return false;
     }
@@ -202,7 +201,7 @@ public class CitemDAO implements IDAO {
                 ? data.get(plugin.getCitemManager().getProfileBgKey(), PersistentDataType.STRING) : null;
 
         String query = "INSERT INTO citems (id, material, display_name, lore, enchantments, damage, custom_model_data, flag_undroppable, flag_unusable, action_left, action_right, flag_placeable, flag_profile_bg, flag_profile_picture) VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?, ?, ?)";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, id);
             stmt.setString(2, material);
             stmt.setString(3, display_name);
@@ -219,7 +218,7 @@ public class CitemDAO implements IDAO {
             stmt.setString(14, profilePicture);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to save Citem: " + e);
         }
     }
 
@@ -254,7 +253,7 @@ public class CitemDAO implements IDAO {
                 ? data.get(plugin.getCitemManager().getProfileBgKey(), PersistentDataType.STRING) : null;
 
         String query = "UPDATE citems SET material = ?, display_name = ?, lore = ?, enchantments = ?, damage = ?, custom_model_data = ?, flag_undroppable = ?, flag_unusable = ?, action_left = ?, action_right = ?, flag_placeable = ?, flag_profile_bg = ?, flag_profile_picture = ? WHERE id = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, material);
             stmt.setString(2, display_name);
             stmt.setString(3, loreString);
@@ -271,24 +270,24 @@ public class CitemDAO implements IDAO {
             stmt.setString(14, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog("CitemDAO", Level.SEVERE, "Error updating Citem: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Failed to update Citem: " + e);
         }
     }
 
     public boolean citemExists(String id) {
-        try (PreparedStatement preparedStatement = conn.prepareStatement("SELECT 1 FROM citems WHERE id = ?")) {
+        try (Connection conn = db.getConnection(); PreparedStatement preparedStatement = conn.prepareStatement("SELECT 1 FROM citems WHERE id = ?")) {
             preparedStatement.setString(1, id);
             ResultSet resultSet = preparedStatement.executeQuery();
             return resultSet.next();
         } catch (SQLException e) {
-            plugin.writeLog("CitemDAO", Level.SEVERE, "Error retrieving data: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Failed to check existing Citem: " + e);
             return false;
         }
     }
 
     public List<String> getLore(String id) {
         String sql = "SELECT lore FROM citems WHERE id = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
             ResultSet resultSet = pstmt.executeQuery();
             String loreString = resultSet.getString("lore");
@@ -297,20 +296,20 @@ public class CitemDAO implements IDAO {
                     : null;
             return lore;
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Citem Lore: " + e);
             return null;
         }
     }
 
     public String getDisplayName(String id) {
         String sql = "SELECT display_name FROM citems WHERE id = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
             ResultSet resultSet = pstmt.executeQuery();
             String displayName = resultSet.getString("display_name");
             return displayName;
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Citem Display Name: " + e);
             return null;
         }
     }
@@ -318,7 +317,7 @@ public class CitemDAO implements IDAO {
     public ItemStack getCitem(String id) {
         String query = "SELECT * FROM citems WHERE id = ?";
 
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, id);
             ResultSet rs = stmt.executeQuery();
 
@@ -424,7 +423,7 @@ public class CitemDAO implements IDAO {
             }
 
         } catch (SQLException e) {
-            plugin.writeLog("CitemDAO", Level.SEVERE, "Error getting citem: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Citem: " + e);
         }
 
         return null; // Return null if no item was found
@@ -433,11 +432,11 @@ public class CitemDAO implements IDAO {
 
     public void deleteCitem(String id) {
         String query = "DELETE FROM citems WHERE id = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to delete Citem: " + e);
         }
     }
 }

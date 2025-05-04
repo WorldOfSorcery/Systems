@@ -13,12 +13,10 @@ import java.util.Random;
 
 public class FishingDAO implements IDAO {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final Connection conn;
     private final DatabaseManager db;
     private final DAOHub hub;
 
-    public FishingDAO(DatabaseManager db, DAOHub hub) {
-        conn = db.getConnection();
+    public FishingDAO(DatabaseManager db, DAOHub hub) throws SQLException {
         this.db = db;
         this.hub = hub;
     }
@@ -26,7 +24,7 @@ public class FishingDAO implements IDAO {
 
     @Override
     public void initializeTable() throws SQLException {
-        try (Statement stmt = conn.createStatement()) {
+        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute("CREATE TABLE IF NOT EXISTS fishing_items(" +
                     "id VARCHAR(255) UNIQUE NOT NULL, " +
                     "item_id VARCHAR(255) NOT NULL, " +
@@ -39,7 +37,7 @@ public class FishingDAO implements IDAO {
     // Create a new FishingItem in the database
     public void createFishingItem(FishingItem item) throws SQLException {
         String query = "INSERT INTO fishing_items (id, item_id, interaction_id, rarity, regions) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, item.getId());
             stmt.setString(2, item.getCitem());
             stmt.setString(3, item.getInteraction());
@@ -52,7 +50,7 @@ public class FishingDAO implements IDAO {
     // Get a random FishingItem by rarity and region
     public FishingItem getRandomItemByRarityAndRegion(String rarity, String region) throws SQLException {
         String query = "SELECT * FROM fishing_items WHERE rarity = ? AND (regions IS NULL OR regions LIKE ?)";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, rarity);
             stmt.setString(2, "%" + region + "%");
             ResultSet rs = stmt.executeQuery();
@@ -78,7 +76,7 @@ public class FishingDAO implements IDAO {
     // Get a random FishingItem by region
     public FishingItem getRandomItemByRegion(String region) throws SQLException {
         String query = "SELECT * FROM fishing_items WHERE regions LIKE ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, "%" + region + "%");
             ResultSet rs = stmt.executeQuery();
 

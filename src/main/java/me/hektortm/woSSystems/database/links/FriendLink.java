@@ -15,7 +15,7 @@ public class FriendLink {
     private final DatabaseManager db;
     private final DAOHub hub;
 
-    public FriendLink(DatabaseManager db, DAOHub hub) {
+    public FriendLink(DatabaseManager db, DAOHub hub) throws SQLException {
         this.conn = db.getConnection();
         this.db = db;
         this.hub = hub;

@@ -31,28 +31,26 @@ public class EcoManager {
         Player player = plugin.getServer().getPlayer(uuid);
         if (player == null) return; // Ensure player is online
 
-        try {
-            long currentAmount = getCurrencyBalance(uuid, currency);
-            long newAmount = currentAmount;
 
-            switch (operation) {
-                case GIVE:
-                    newAmount += amount;
-                    break;
-                case TAKE:
-                    newAmount = Math.max(0, currentAmount - amount);
-                    break;
-                case SET:
-                    newAmount = amount;
-                    break;
-                case RESET:
-                    newAmount = 0;
-                    break;
-            }
-            hub.getEconomyDAO().updatePlayerCurrency(player, currency, newAmount);
-        } catch (SQLException e) {
-            e.printStackTrace();
+        long currentAmount = getCurrencyBalance(uuid, currency);
+        long newAmount = currentAmount;
+
+        switch (operation) {
+            case GIVE:
+                newAmount += amount;
+                break;
+            case TAKE:
+                newAmount = Math.max(0, currentAmount - amount);
+                break;
+            case SET:
+                newAmount = amount;
+                break;
+            case RESET:
+                newAmount = 0;
+                break;
         }
+        hub.getEconomyDAO().updatePlayerCurrency(player, currency, newAmount);
+
     }
 
 
@@ -83,21 +81,16 @@ public class EcoManager {
 
 
     private void loadDefaultCurrencies() {
-        try {
-            if (!hub.getEconomyDAO().currencyExists("gold")) { // Check if 'gold' currency exists
-                Currency gold = new Currency("Gold", "g", "", "§6", false);
-                hub.getEconomyDAO().addCurrency("gold", gold); // Insert into the database
-                currencies.put("gold", gold);
-            }
+        if (!hub.getEconomyDAO().currencyExists("gold")) { // Check if 'gold' currency exists
+            Currency gold = new Currency("Gold", "g", "", "§6", false);
+            hub.getEconomyDAO().addCurrency("gold", gold); // Insert into the database
+            currencies.put("gold", gold);
+        }
 
-            if (!hub.getEconomyDAO().currencyExists("signature_token")) { // Check if 'signature_token' exists
-                Currency signature = new Currency("Signature Token", "st", "", "§e", true);
-                hub.getEconomyDAO().addCurrency("signature_token", signature); // Insert into the database
-                currencies.put("signature_token", signature);
-            }
-        } catch (SQLException e) {
-            plugin.writeLog("EcoManager", Level.SEVERE, "Error loading default currencies: " + e.getMessage());
-            e.printStackTrace();
+        if (!hub.getEconomyDAO().currencyExists("signature_token")) { // Check if 'signature_token' exists
+            Currency signature = new Currency("Signature Token", "st", "", "§e", true);
+            hub.getEconomyDAO().addCurrency("signature_token", signature); // Insert into the database
+            currencies.put("signature_token", signature);
         }
     }
 

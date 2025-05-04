@@ -31,8 +31,9 @@ public final Map<String, Unlockable> unlockables = new HashMap<>();
 
     public void deleteUnlockable(String id) {
         try {
-            hub.getUnlockableDAO().deleteUnlockable(id);
-        } catch (SQLException e) {
+            plugin.getLogger().log(Level.INFO, "Deleting unlockable: " + id);
+            //hub.getUnlockableDAO().deleteUnlockable(id);
+        } catch (Exception e) {
             plugin.writeLog("UnlockableManager", Level.SEVERE, "Delete Unlockable error: " + e.getMessage());
         }
 
@@ -40,8 +41,8 @@ public final Map<String, Unlockable> unlockables = new HashMap<>();
 
     public void createUnlockable(Unlockable unlockable) {
         try {
-            hub.getUnlockableDAO().addUnlockable(unlockable.getId());
-        } catch (SQLException e) {
+            //hub.getUnlockableDAO().addUnlockable(unlockable.getId());
+        } catch (Exception e) {
             plugin.writeLog("UnlockableManager", Level.SEVERE, "Could not create Unlockable '"+unlockable.getId()+"': " + e.getMessage());
         }
     }
@@ -75,12 +76,8 @@ public final Map<String, Unlockable> unlockables = new HashMap<>();
     }
 
     public boolean getPlayerTempUnlockable(OfflinePlayer p, String id) {
-        try {
-            return hub.getUnlockableDAO().getPlayerTempUnlockable(p, id);
-        } catch (SQLException e) {
-            plugin.writeLog("UnlockableManager", Level.SEVERE, "Could not get Temp Unlockable '"+id+"': " + e.getMessage());
-            return false;
-        }
+        return hub.getUnlockableDAO().getPlayerTempUnlockable(p, id);
+
     }
 
 

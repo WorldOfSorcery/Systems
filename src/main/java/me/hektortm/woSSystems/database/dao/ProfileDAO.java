@@ -13,13 +13,11 @@ import java.sql.*;
 import java.util.UUID;
 
 public class ProfileDAO implements IDAO {
-    private final Connection conn;
     private final DatabaseManager db;
     private final DAOHub hub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
-    public ProfileDAO(DatabaseManager db, DAOHub hub) {
-        this.conn = db.getConnection();
+    public ProfileDAO(DatabaseManager db, DAOHub hub) throws SQLException {
         this.db = db;
         this.hub = hub;
     }
@@ -27,7 +25,7 @@ public class ProfileDAO implements IDAO {
     @Override
     public void initializeTable() throws SQLException {
         // Create profile table
-        try (Statement stmt = conn.createStatement()) {
+        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS playerdata_profile (
                     uuid VARCHAR(36) NOT NULL,
@@ -43,7 +41,7 @@ public class ProfileDAO implements IDAO {
 
     public String getBackground(UUID uuid) {
         String sql = "SELECT background FROM playerdata_profile WHERE uuid = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
@@ -59,7 +57,7 @@ public class ProfileDAO implements IDAO {
 
     public String getBackgroundID(UUID uuid) {
         String sql = "SELECT background_id FROM playerdata_profile WHERE uuid = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
@@ -75,7 +73,7 @@ public class ProfileDAO implements IDAO {
 
     public String getProfilePicture(UUID uuid) {
         String sql = "SELECT picture FROM playerdata_profile WHERE uuid = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
@@ -91,7 +89,7 @@ public class ProfileDAO implements IDAO {
 
     public String getProfilePictureID(UUID uuid) {
         String sql = "SELECT picture_id FROM playerdata_profile WHERE uuid = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
@@ -107,7 +105,7 @@ public class ProfileDAO implements IDAO {
 
     public void updateBackground(UUID uuid, String background) {
         String sql = "INSERT OR REPLACE INTO playerdata_profile (uuid, background, background_id) VALUES (?, ?, ?)";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             pstmt.setString(2, background);
             pstmt.setString(3, "e");
@@ -121,7 +119,7 @@ public class ProfileDAO implements IDAO {
 
     public void updateProfilePicture(UUID uuid, String pictureItem, String id) {
         String sql = "INSERT OR REPLACE INTO playerdata_profile (uuid, picture, picture_id) VALUES (?, ?, ?)";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             pstmt.setString(2, pictureItem);
             pstmt.setString(3, id);
@@ -143,7 +141,7 @@ public class ProfileDAO implements IDAO {
                 picture = VALUES(picture),
                 picture_id = VALUES(picture_id)
         """;
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             pstmt.setString(2, background);
             pstmt.setString(3, backgroundId);

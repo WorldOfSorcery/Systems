@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.channels;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.ChannelDAO;
+import me.hektortm.woSSystems.utils.CosmeticType;
 import me.hektortm.woSSystems.utils.Parsers;
 import me.hektortm.wosCore.Utils;
 import net.kyori.adventure.text.Component;
@@ -239,8 +240,8 @@ public class ChannelManager {
                 nickManager.getNickname(sender).replace("_", " ") :
                 sender.getName();
 
-        String badgeID = hub.getBadgeDAO().getCurrentBadgeID(sender);
-        String badge = hub.getBadgeDAO().getCurrentBadge(sender);
+        String badgeID = hub.getCosmeticsDAO().getCurrentCosmeticId(sender, CosmeticType.BADGE);
+        String badge = hub.getCosmeticsDAO().getCurrentCosmetic(sender, CosmeticType.BADGE);
         if (badge == null) {
             badge = "";  // Set a default empty string if null
         }
@@ -248,13 +249,13 @@ public class ChannelManager {
         Component badgeComponent;
         if (badgeID != null) {
             badgeComponent = Component.text(badge)
-                    .hoverEvent(HoverEvent.showText(fromString(hub.getBadgeDAO().getBadgeDescription(badgeID))));
+                    .hoverEvent(HoverEvent.showText(fromString(hub.getCosmeticsDAO().getCosmeticDescription(CosmeticType.BADGE, badgeID))));
         } else {
             badgeComponent = Component.text("");
         }
 
-        String prefixID = hub.getPrefixDAO().getCurrentPrefixID(sender);
-        String prefix = hub.getPrefixDAO().getCurrentPrefix(sender);
+        String prefixID = hub.getCosmeticsDAO().getCurrentCosmeticId(sender, CosmeticType.PREFIX);
+        String prefix = hub.getCosmeticsDAO().getCurrentCosmetic(sender, CosmeticType.PREFIX);
         if (prefix == null) {
             prefix = "";  // Set a default empty string if null
         }
@@ -262,7 +263,7 @@ public class ChannelManager {
         Component prefixComponent;
         if (prefixID != null) {
             prefixComponent = Component.text(prefix)
-                    .hoverEvent(HoverEvent.showText(fromString(hub.getPrefixDAO().getPrefixDescription(prefixID))));
+                    .hoverEvent(HoverEvent.showText(fromString(hub.getCosmeticsDAO().getCosmeticDescription(CosmeticType.PREFIX, prefixID))));
         } else {
             prefixComponent = Component.text("");
         }
@@ -350,7 +351,7 @@ public class ChannelManager {
         String shownName = nickname != null ? nickname : player.getName();
 
         // Build the player info line
-        Component playerInfo = Component.text("").append(fromString(hub.getPrefixDAO().getCurrentPrefix(player)+ " " + shownName));
+        Component playerInfo = Component.text("").append(fromString(hub.getCosmeticsDAO().getCurrentCosmetic(player, CosmeticType.PREFIX)+ " " + shownName));
 
         // Build the username line
         Component username = Component.text()
@@ -359,7 +360,7 @@ public class ChannelManager {
                 .build();
 
         // Build the title line
-        String titleText = hub.getTitlesDAO().getCurrentTitle(player);
+        String titleText = hub.getCosmeticsDAO().getCurrentCosmetic(player, CosmeticType.TITLE);
         Component title = Component.text()
                 .append(Component.text("§7"+Parsers.parseUniStatic("Title:")+" "))
                 .append(titleText != null ? Component.text("").append(fromString(titleText)) : Component.text(""))
