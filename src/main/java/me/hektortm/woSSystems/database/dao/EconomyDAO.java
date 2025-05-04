@@ -9,6 +9,8 @@ import me.hektortm.wosCore.database.IDAO;
 import org.bukkit.entity.Player;
 
 import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 public class EconomyDAO implements IDAO {
@@ -101,14 +103,29 @@ public class EconomyDAO implements IDAO {
         }
     }
 
-    public ResultSet getCurrencies() {
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement("SELECT * FROM currencies")) {
-            return stmt.executeQuery();
+    public Map<String, Currency> getCurrencies() {
+        Map<String, Currency> currenciesMap = new HashMap<>();
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM currencies")) {
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                String id = rs.getString("id");
+                String name = rs.getString("name");
+                String shortName = rs.getString("short_name");
+                String icon = rs.getString("icon");
+                String color = rs.getString("color");
+                boolean hiddenIfZero = rs.getBoolean("hidden_if_zero");
+
+                Currency currency = new Currency(name, shortName, icon, color, hiddenIfZero);
+                currenciesMap.put(id, currency);
+            }
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to get Currencies: " + e);
-            return null;
         }
+        return currenciesMap;
     }
+
 
     public boolean currencyExists(String id) {
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM currencies WHERE id = ?")) {

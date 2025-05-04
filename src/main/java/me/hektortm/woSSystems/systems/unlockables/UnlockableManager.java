@@ -2,85 +2,35 @@ package me.hektortm.woSSystems.systems.unlockables;
 
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.systems.unlockables.utils.Action;
+import me.hektortm.woSSystems.utils.Actions;
 import me.hektortm.woSSystems.utils.dataclasses.TempUnlockable;
 import me.hektortm.woSSystems.utils.dataclasses.Unlockable;
-import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Level;
 
 public class UnlockableManager {
 
-public final Map<String, Unlockable> unlockables = new HashMap<>();
+    public final Map<String, Unlockable> unlockables = new HashMap<>();
     public final Map<String, TempUnlockable> tempUnlockables = new HashMap<>();
-    // TODO new unlockable system
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final LogManager logManager = plugin.getLogManager();
     private final DAOHub hub;
 
     public UnlockableManager(DAOHub hub) {
         this.hub = hub;
     }
 
-    public void deleteUnlockable(String id) {
-        try {
-            plugin.getLogger().log(Level.INFO, "Deleting unlockable: " + id);
-            //hub.getUnlockableDAO().deleteUnlockable(id);
-        } catch (Exception e) {
-            plugin.writeLog("UnlockableManager", Level.SEVERE, "Delete Unlockable error: " + e.getMessage());
-        }
-
-    }
-
-    public void createUnlockable(Unlockable unlockable) {
-        try {
-            //hub.getUnlockableDAO().addUnlockable(unlockable.getId());
-        } catch (Exception e) {
-            plugin.writeLog("UnlockableManager", Level.SEVERE, "Could not create Unlockable '"+unlockable.getId()+"': " + e.getMessage());
-        }
-    }
-
-    public void addUnlockable(CommandSender sender, String id) {
-        if (unlockables.containsKey(id)) {
-            sender.sendMessage("Already exists");
-            return;
-        }
-        Unlockable unlockable = new Unlockable(id);
-        unlockables.put(id, unlockable);
-        createUnlockable(unlockable);
-        logManager.writeLog((Player) sender, "Unlockable added: " + id);
-    }
-
-    public void modifyUnlockable(UUID uuid, String id, Action action) {
-        try {
-            hub.getUnlockableDAO().modifyUnlockable(uuid, id, action);
-        } catch (SQLException e) {
-            plugin.writeLog("UnlockableManager", Level.SEVERE, "Could not modify Unlockable '"+id+"': " + e.getMessage());
-        }
+    public void modifyUnlockable(UUID uuid, String id, Actions action) {
+        hub.getUnlockableDAO().modifyUnlockable(uuid, id, action);
     }
 
     public boolean getPlayerUnlockable(OfflinePlayer p, String id) {
-        try {
-            return hub.getUnlockableDAO().getPlayerUnlockable(p, id);
-        } catch (SQLException e) {
-            plugin.writeLog("UnlockableManager", Level.SEVERE, "Could not get Unlockable '"+id+"': " + e.getMessage());
-            return false;
-        }
+        return hub.getUnlockableDAO().getPlayerUnlockable(p, id);
     }
 
     public boolean getPlayerTempUnlockable(OfflinePlayer p, String id) {
         return hub.getUnlockableDAO().getPlayerTempUnlockable(p, id);
-
     }
-
-
-
-
 }

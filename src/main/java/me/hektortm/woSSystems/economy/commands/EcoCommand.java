@@ -31,7 +31,6 @@ public class EcoCommand implements CommandExecutor {
         subCommands.put("set", new SetCommand(manager, log));
         subCommands.put("reset", new ResetCommand(manager, log));
         subCommands.put("currencies", new CurrenciesCommand(manager));
-        subCommands.put("reload", new ReloadCommand(manager, lang, log));
         subCommands.put("help", new HelpCommand(this));
 
     }

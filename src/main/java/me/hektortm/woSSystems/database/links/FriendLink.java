@@ -11,12 +11,10 @@ import java.sql.SQLException;
 import java.util.*;
 
 public class FriendLink {
-    private final Connection conn;
     private final DatabaseManager db;
     private final DAOHub hub;
 
     public FriendLink(DatabaseManager db, DAOHub hub) throws SQLException {
-        this.conn = db.getConnection();
         this.db = db;
         this.hub = hub;
     }
@@ -24,7 +22,7 @@ public class FriendLink {
 
     public void addFriend(UUID uuid, UUID friendUUID) {
         String sql = "INSERT INTO friends (uuid, friend_uuid) VALUES (?, ?)";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             pstmt.setString(2, friendUUID.toString());
             pstmt.executeUpdate();
@@ -36,7 +34,7 @@ public class FriendLink {
     // Remove a friend
     public void removeFriend(UUID uuid, UUID friendUUID) {
         String sql = "DELETE FROM friends WHERE uuid = ? AND friend_uuid = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             pstmt.setString(2, friendUUID.toString());
             pstmt.executeUpdate();
@@ -49,7 +47,7 @@ public class FriendLink {
     public List<UUID> getFriends(UUID uuid) {
         List<UUID> friends = new ArrayList<>();
         String sql = "SELECT friend_uuid FROM friends WHERE uuid = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -64,7 +62,7 @@ public class FriendLink {
     // Check if two players are friends
     public boolean isFriend(UUID uuid, UUID friendUUID) {
         String sql = "SELECT 1 FROM friends WHERE uuid = ? AND friend_uuid = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             pstmt.setString(2, friendUUID.toString());
             ResultSet rs = pstmt.executeQuery();
@@ -78,7 +76,7 @@ public class FriendLink {
     // Add a friend request
     public void addFriendRequest(UUID senderUUID, UUID receiverUUID) {
         String sql = "INSERT INTO friend_requests (sender_uuid, receiver_uuid) VALUES (?, ?)";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, senderUUID.toString());
             pstmt.setString(2, receiverUUID.toString());
             pstmt.executeUpdate();
@@ -90,7 +88,7 @@ public class FriendLink {
     // Remove a friend request
     public void removeFriendRequest(UUID senderUUID, UUID receiverUUID) {
         String sql = "DELETE FROM friend_requests WHERE sender_uuid = ? AND receiver_uuid = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, senderUUID.toString());
             pstmt.setString(2, receiverUUID.toString());
             pstmt.executeUpdate();
@@ -103,7 +101,7 @@ public class FriendLink {
     public List<UUID> getFriendRequests(UUID uuid) {
         List<UUID> requests = new ArrayList<>();
         String sql = "SELECT sender_uuid FROM friend_requests WHERE receiver_uuid = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -118,7 +116,7 @@ public class FriendLink {
     // Add a favorite friend
     public void addFavorite(UUID uuid, UUID friendUUID) {
         String sql = "UPDATE friends SET favorite = TRUE WHERE uuid = ? AND friend_uuid = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             pstmt.setString(2, friendUUID.toString());
             pstmt.executeUpdate();
@@ -130,7 +128,7 @@ public class FriendLink {
     // Remove a favorite friend
     public void removeFavorite(UUID uuid, UUID friendUUID) {
         String sql = "UPDATE friends SET favorite = FALSE WHERE uuid = ? AND friend_uuid = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             pstmt.setString(2, friendUUID.toString());
             pstmt.executeUpdate();
@@ -143,7 +141,7 @@ public class FriendLink {
     public List<UUID> getFavorites(UUID uuid) {
         List<UUID> favorites = new ArrayList<>();
         String sql = "SELECT friend_uuid FROM friends WHERE uuid = ? AND favorite = TRUE";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -159,7 +157,7 @@ public class FriendLink {
     public Map<String, Object> getPlayerData(UUID uuid) {
         Map<String, Object> data = new HashMap<>();
         String sql = "SELECT last_known_name, last_online FROM playerdata WHERE uuid = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
@@ -174,7 +172,7 @@ public class FriendLink {
 
     public boolean hasRequestFrom(UUID sender, UUID receiver) {
         String sql = "SELECT 1 FROM friend_requests WHERE sender_uuid = ? AND receiver_uuid = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, sender.toString());
             pstmt.setString(2, receiver.toString());
             ResultSet rs = pstmt.executeQuery();

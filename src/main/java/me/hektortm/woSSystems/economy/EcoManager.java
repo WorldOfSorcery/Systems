@@ -22,9 +22,6 @@ public class EcoManager {
         this.plugin = plugin;
         this.core = (WoSCore) plugin.getServer().getPluginManager().getPlugin("WoSCore");
         this.hub = hub;
-
-        loadDefaultCurrencies();
-        loadCurrencies();
     }
 
     public void modifyCurrency(UUID uuid, String currency, long amount, Operation operation) {
@@ -58,45 +55,10 @@ public class EcoManager {
         GIVE, TAKE, SET, RESET
     }
 
-    public void loadCurrencies() {
-        currencies.clear();
-        try {
-            ResultSet rs = hub.getEconomyDAO().getCurrencies(); // Assume this method returns all currencies from the database
-            while (rs.next()) {
-                String id = rs.getString("id");
-                String name = rs.getString("name");
-                String shortName = rs.getString("short_name");
-                String icon = rs.getString("icon");
-                String color = rs.getString("color");
-                boolean hiddenIfZero = rs.getBoolean("hidden_if_zero");
-
-                Currency currency = new Currency(name, shortName, icon, color, hiddenIfZero);
-                currencies.put(id, currency);
-            }
-        } catch (SQLException e) {
-            plugin.writeLog("EcoManager", Level.SEVERE, "Error loading currencies from the database: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-
-    private void loadDefaultCurrencies() {
-        if (!hub.getEconomyDAO().currencyExists("gold")) { // Check if 'gold' currency exists
-            Currency gold = new Currency("Gold", "g", "", "§6", false);
-            hub.getEconomyDAO().addCurrency("gold", gold); // Insert into the database
-            currencies.put("gold", gold);
-        }
-
-        if (!hub.getEconomyDAO().currencyExists("signature_token")) { // Check if 'signature_token' exists
-            Currency signature = new Currency("Signature Token", "st", "", "§e", true);
-            hub.getEconomyDAO().addCurrency("signature_token", signature); // Insert into the database
-            currencies.put("signature_token", signature);
-        }
-    }
 
 
     public Map<String, Currency> getCurrencies() {
-        return currencies;
+        return hub.getEconomyDAO().getCurrencies(); // Fetch currencies from the database
     }
 
     public long getCurrencyBalance(UUID uuid, String currency) {

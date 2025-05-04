@@ -29,8 +29,6 @@ public class UnlockableCommand implements CommandExecutor {
         this.lang = lang;
         this.logManager = logManager;
 
-        subCommands.put("create", new CreateCommand(manager));
-        subCommands.put("delete", new DeleteCommand(manager, logManager));
         subCommands.put("give", new GiveCommand(manager));
         subCommands.put("take", new TakeCommand(manager));
         subCommands.put("help", new HelpCommand(this));
@@ -47,27 +45,26 @@ public class UnlockableCommand implements CommandExecutor {
         String subCommandName = args[0].toLowerCase();
         SubCommand subCommand = subCommands.get(subCommandName);
 
-
-
         if (subCommand != null) {
             if(!(PermissionUtil.hasPermission(sender, subCommand.getPermission()))) return true;
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));
         } else {
             unlockableHelp(sender);
         }
-
-
         return true;
     }
 
     public void unlockableHelp(CommandSender sender) {
         if (PermissionUtil.hasAnyPermission(sender, Permissions.UNLOCKABLE_GIVE, Permissions.UNLOCKABLE_TAKE, Permissions.UNLOCKABLE_DELETE, Permissions.UNLOCKABLE_CREATE)) {
-            Utils.successMsg(sender, "unlockables", "help.perm.header");
-            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.UNLOCKABLE_CREATE)) sender.sendMessage(lang.getMessage("unlockables", "help.perm.create"));
-            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.UNLOCKABLE_DELETE)) sender.sendMessage(lang.getMessage("unlockables", "help.perm.delete"));
-            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.UNLOCKABLE_GIVE)) sender.sendMessage(lang.getMessage("unlockables", "help.perm.give"));
-            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.UNLOCKABLE_TAKE)) sender.sendMessage(lang.getMessage("unlockables", "help.perm.take"));
-            sender.sendMessage(lang.getMessage("unlockables", "help.perm.help"));
+            Utils.info(sender, "unlockables", "help.header");
+
+            if (PermissionUtil.hasPermissionNoMsg(sender, Permissions.UNLOCKABLE_GIVE))
+                Utils.noPrefix(sender, "unlockables", "help.give");
+
+            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.UNLOCKABLE_TAKE))
+                Utils.noPrefix(sender, "unlockables", "help.take");
+
+            Utils.noPrefix(sender, "unlockables", "help.help");
         } else {
             Utils.error(sender, "general", "error.perms");
         }

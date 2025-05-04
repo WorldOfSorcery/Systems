@@ -1,8 +1,7 @@
 package me.hektortm.woSSystems.systems.unlockables.commands.subcommands;
 
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
-import me.hektortm.woSSystems.systems.unlockables.utils.Action;
-import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.Actions;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
@@ -39,14 +38,12 @@ public class GiveCommand extends SubCommand {
         OfflinePlayer p = Bukkit.getOfflinePlayer(args[0]);
         String id = args[1];
 
-
-
         if(!manager.unlockables.containsKey(id)) {
             Utils.error(sender, "unlockables", "error.exists");
             return;
         }
 
-        manager.modifyUnlockable(p.getUniqueId(), id, Action.GIVE);
+        manager.modifyUnlockable(p.getUniqueId(), id, Actions.GIVE);
         if (sender instanceof Player P) {
             Utils.successMsg2Values(P, "unlockables", "give.perm", "%id%", id, "%player%", p.getName());
         }
