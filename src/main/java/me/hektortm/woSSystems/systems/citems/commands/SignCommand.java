@@ -2,10 +2,8 @@ package me.hektortm.woSSystems.systems.citems.commands;
 
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
-import me.hektortm.woSSystems.systems.stats.StatsManager;
-import me.hektortm.woSSystems.systems.stats.utils.Operation;
+import me.hektortm.woSSystems.utils.Operations;
 import me.hektortm.wosCore.Utils;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -53,7 +51,7 @@ public class SignCommand implements CommandExecutor {
             return true;
         }
         manager.createStamp(target, item, quote);
-        eco.modifyCurrency(target.getUniqueId(), "signature_token", 1, EcoManager.Operation.TAKE);
+        eco.modifyCurrency(target.getUniqueId(), "signature_token", 1, Operations.TAKE);
         Utils.successMsg(target, "citems", "stamp");
 
         return true;

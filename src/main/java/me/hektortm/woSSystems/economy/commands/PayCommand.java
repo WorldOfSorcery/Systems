@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.economy.commands;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.utils.Operations;
 import me.hektortm.woSSystems.utils.dataclasses.Currency;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
@@ -76,8 +77,8 @@ public class PayCommand implements CommandExecutor {
             }
 
             if(ecoManager.hasEnoughCurrency(p.getUniqueId(), currencyName, amount)) {
-                ecoManager.modifyCurrency(target.getUniqueId(), currencyName, amount, EcoManager.Operation.GIVE);
-                ecoManager.modifyCurrency(p.getUniqueId(), currencyName, amount, EcoManager.Operation.TAKE);
+                ecoManager.modifyCurrency(target.getUniqueId(), currencyName, amount, Operations.GIVE);
+                ecoManager.modifyCurrency(p.getUniqueId(), currencyName, amount, Operations.TAKE);
                 WoSSystems.ecoMsg3Values(target, "economy", "pay.target", "%amount%", color + amount, "%currency%", icon+ " " + currencyName, "%player%", p.getName());
                 WoSSystems.ecoMsg3Values(sender, "economy", "pay.player", "%amount%", color + amount, "%currency%", icon+ " " + currencyName, "%target%", targetName);
                 String actionbar = lang.getMessage("economy", "actionbar.given")

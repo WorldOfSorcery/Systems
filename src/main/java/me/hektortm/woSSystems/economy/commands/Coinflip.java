@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.economy.commands;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.economy.EcoManager;
+import me.hektortm.woSSystems.utils.Operations;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.dataclasses.Challenge;
@@ -170,8 +171,8 @@ public class Coinflip implements CommandExecutor, Listener {
 
         // Deduct gold from both players
         int amount = challenge.getAmount();
-        ecoManager.modifyCurrency(acceptor.getUniqueId(), "gold", amount, EcoManager.Operation.TAKE);
-        ecoManager.modifyCurrency(challenger.getUniqueId(), "gold", amount, EcoManager.Operation.TAKE);
+        ecoManager.modifyCurrency(acceptor.getUniqueId(), "gold", amount, Operations.TAKE);
+        ecoManager.modifyCurrency(challenger.getUniqueId(), "gold", amount, Operations.TAKE);
 
         // Determine winner
         String result = randomInt(2, 1) == 1 ? "heads" : "tails";
@@ -180,7 +181,7 @@ public class Coinflip implements CommandExecutor, Listener {
 
         // Transfer gold
         int winnings = amount * 2;
-        ecoManager.modifyCurrency(winner.getUniqueId(), "gold", winnings, EcoManager.Operation.GIVE);
+        ecoManager.modifyCurrency(winner.getUniqueId(), "gold", winnings, Operations.GIVE);
 
         // Notify players
         Utils.successMsg2Values(winner, "economy", "coinflip.win", "%result%", result, "%amount%", String.valueOf(winnings));

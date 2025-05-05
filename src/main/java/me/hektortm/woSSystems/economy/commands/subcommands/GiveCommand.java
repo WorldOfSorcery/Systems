@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.economy.commands.subcommands;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.utils.Operations;
 import me.hektortm.woSSystems.utils.dataclasses.Currency;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.utils.Permissions;
@@ -75,7 +76,7 @@ public class GiveCommand extends SubCommand {
                 log.writeLog(p, "-> "+ target.getName() +": Gave "+amount+" "+currencyID);
         }
 
-        ecoManager.modifyCurrency(target.getUniqueId(), currencyID, amount, EcoManager.Operation.GIVE);
+        ecoManager.modifyCurrency(target.getUniqueId(), currencyID, amount, Operations.GIVE);
         WoSSystems.ecoMsg3Values(sender, "economy", "currency.given", "%amount%", String.valueOf(amount), "%currency%", color+name, "%player%", playerName);
 
         String actionbar = lang.getMessage("economy", "actionbar.given")

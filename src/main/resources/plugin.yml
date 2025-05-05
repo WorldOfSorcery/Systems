@@ -41,14 +41,10 @@ commands:
     permission: stats_global.create
     usage: /<command>
   # Unlockable Commands
-  tempunlockable:
-    description: temp unlockable
-    permission: unlockable_temp.create
-    usage: /<command>
   unlockable:
     description: Unlockable Command
     permission: unlockable.create
-    usage: /<command> <create|createtemp|give|givetemp|>
+    usage: /<command> <give|take>
   # Economy Commands
   economy:
     aliases: [ eco ]

@@ -30,15 +30,15 @@ public class StatsDAO implements IDAO {
         String createStatsTable = """
             CREATE TABLE IF NOT EXISTS playerdata_stats (
                 uuid CHAR(36) NOT NULL,
-                stat_id VARCHAR(255) NOT NULL,
+                id VARCHAR(255) NOT NULL,
                 value BIGINT DEFAULT 0,
-                PRIMARY KEY (uuid, stat_id)
+                PRIMARY KEY (uuid, id)
             );
         """;
 
         String createGlobalStatsTable = """
             CREATE TABLE IF NOT EXISTS global_stats (
-                stat_id VARCHAR(255) PRIMARY KEY,
+                id VARCHAR(255) PRIMARY KEY,
                 value BIGINT DEFAULT 0,
                 max BIGINT DEFAULT 0,
                 capped BOOLEAN DEFAULT FALSE
@@ -47,7 +47,7 @@ public class StatsDAO implements IDAO {
 
         String createStatDefinitionsTable = """
             CREATE TABLE IF NOT EXISTS stats (
-                stat_id VARCHAR(255) PRIMARY KEY,
+                id VARCHAR(255) PRIMARY KEY,
                 max BIGINT DEFAULT 0,
                 capped BOOLEAN DEFAULT FALSE
             );
@@ -88,10 +88,10 @@ public class StatsDAO implements IDAO {
     /** Modifies a player's stat value */
     public void modifyPlayerStat(UUID uuid, String statId, long amount, Operations operation) {
         String sql = switch (operation) {
-            case GIVE -> "INSERT INTO playerdata_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, stat_id) DO UPDATE SET value = value + ?;";
-            case TAKE -> "INSERT INTO playerdata_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, stat_id) DO UPDATE SET value = value - ?;";
-            case SET -> "INSERT INTO playerdata_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, stat_id) DO UPDATE SET value = ?;";
-            case RESET -> "INSERT INTO playerdata_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, stat_id) DO UPDATE SET value = 0;";
+            case GIVE -> "INSERT INTO playerdata_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, id) DO UPDATE SET value = value + ?;";
+            case TAKE -> "INSERT INTO playerdata_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, id) DO UPDATE SET value = value - ?;";
+            case SET -> "INSERT INTO playerdata_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, id) DO UPDATE SET value = ?;";
+            case RESET -> "INSERT INTO playerdata_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, id) DO UPDATE SET value = 0;";
         };
 
         Stat stat = getAllStats().get(statId);
@@ -183,7 +183,7 @@ public class StatsDAO implements IDAO {
 
     /** Retrieves a single player's stat value */
     public long getPlayerStatValue(UUID uuid, String statId) {
-        String sql = "SELECT value FROM player_stats WHERE uuid = ? AND stat_id = ?;";
+        String sql = "SELECT value FROM player_stats WHERE uuid = ? AND id = ?;";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, statId);
@@ -199,7 +199,7 @@ public class StatsDAO implements IDAO {
 
     /** Retrieves a global stat value */
     public long getGlobalStatValue(String statId) {
-        String sql = "SELECT value FROM global_stats WHERE stat_id = ?;";
+        String sql = "SELECT value FROM global_stats WHERE id = ?;";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, statId);
             ResultSet rs = stmt.executeQuery();

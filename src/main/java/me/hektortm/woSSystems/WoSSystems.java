@@ -54,7 +54,6 @@ import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.systems.stats.commands.GlobalStatCommand;
 import me.hektortm.woSSystems.systems.stats.commands.StatsCommand;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
-import me.hektortm.woSSystems.systems.unlockables.commands.TempUnlockableCommand;
 import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableCommand;
 import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
@@ -337,7 +336,6 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("stats", new StatsCommand(statsManager));
         cmdReg("globalstats", new GlobalStatCommand(statsManager));
         cmdReg("unlockable", new UnlockableCommand(unlockableManager, lang, log));
-        cmdReg("tempunlockable", new TempUnlockableCommand(unlockableManager, lang));
         cmdReg("economy", new EcoCommand(ecoManager, lang, log));
         cmdReg("balance", new BalanceCommand(ecoManager, core));
         cmdReg("pay", new PayCommand(ecoManager, lang));

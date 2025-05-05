@@ -27,7 +27,6 @@ public class ViewCommand extends SubCommand {
     }
 
 
-    //TODO: WIP needed
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length < 2 || args.length > 3) {
