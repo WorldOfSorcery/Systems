@@ -13,8 +13,7 @@ error:
 info:
   usage:
     give: "Usage: /cosmetic give <Type> <Player> <ID>"
-    create: "Usage: /cosmetic create <Type> <ID> <Value>"
-    description: "Usage: /cosmetic desc <Type> <description>"
+    take: "Usage: /cosmetic take <Type> <Player> <ID>"
 
   has-badge: "The Player already has this badge."
   has-prefix: "The Player already has this prefix."

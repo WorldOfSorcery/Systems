@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.economy;
 
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.utils.Operations;
 import me.hektortm.woSSystems.utils.dataclasses.Currency;
 import me.hektortm.wosCore.WoSCore;
 import org.bukkit.entity.Player;
@@ -24,7 +25,7 @@ public class EcoManager {
         this.hub = hub;
     }
 
-    public void modifyCurrency(UUID uuid, String currency, long amount, Operation operation) {
+    public void modifyCurrency(UUID uuid, String currency, long amount, Operations operation) {
         Player player = plugin.getServer().getPlayer(uuid);
         if (player == null) return; // Ensure player is online
 
@@ -49,13 +50,6 @@ public class EcoManager {
         hub.getEconomyDAO().updatePlayerCurrency(player, currency, newAmount);
 
     }
-
-
-    public enum Operation {
-        GIVE, TAKE, SET, RESET
-    }
-
-
 
     public Map<String, Currency> getCurrencies() {
         return hub.getEconomyDAO().getCurrencies(); // Fetch currencies from the database
