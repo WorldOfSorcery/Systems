@@ -1,7 +1,6 @@
-package me.hektortm.woSSystems.systems.stats.commands.subcommands;
+package me.hektortm.woSSystems.systems.stats.commands.subcmd_stats;
 
 import me.hektortm.woSSystems.systems.stats.StatsManager;
-import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
@@ -10,37 +9,38 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.io.File;
+import static me.hektortm.woSSystems.utils.Operations.SET;
 
-import static me.hektortm.woSSystems.systems.stats.utils.Operation.TAKE;
 
-public class TakeCommand extends SubCommand {
-
+public class SetCommand extends SubCommand {
     private final StatsManager manager;
-    public TakeCommand(StatsManager manager) {
+
+    public SetCommand(StatsManager manager) {
         this.manager = manager;
     }
 
     @Override
     public String getName() {
-        return "take";
+        return "set";
     }
 
     @Override
     public Permissions getPermission() {
-        return Permissions.STATS_TAKE;
+        return Permissions.STATS_SET;
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length < 2 || args.length > 3) {
-            Utils.error(sender, "stats", "error.usage.take");
+            Utils.info(sender, "stats", "error.usage.take", "%type%", "stats");
             return;
         }
 
+
+
         OfflinePlayer p = Bukkit.getOfflinePlayer(args[0]);
         String id = args[1].toLowerCase();
-        long amount = 0L;
+        long amount = 0;
 
         if (!manager.getStats().containsKey(id)) {
             Utils.error(sender, "stats", "error.not-found");
@@ -64,10 +64,9 @@ public class TakeCommand extends SubCommand {
             return;
         }
 
-        manager.modifyStat(p.getUniqueId(), id, amount, TAKE);
+        manager.modifyStat(p.getUniqueId(), id, amount, SET);
         if (sender instanceof Player) {
-            Utils.successMsg3Values(sender, "stats", "take", "%player%", p.getName(),"%stat%", id, "%amount%", String.valueOf(amount));
+            Utils.success(sender, "stats", "set", "%player%", p.getName(),"%stat%", id, "%amount%", String.valueOf(amount));
         }
-
     }
 }

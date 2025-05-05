@@ -1,7 +1,6 @@
-package me.hektortm.woSSystems.systems.stats.commands.subcommands;
+package me.hektortm.woSSystems.systems.stats.commands.subcmd_globalstats;
 
 import me.hektortm.woSSystems.systems.stats.StatsManager;
-import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
@@ -10,14 +9,13 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.io.File;
+import static me.hektortm.woSSystems.utils.Operations.RESET;
 
-import static me.hektortm.woSSystems.systems.stats.utils.Operation.RESET;
 
-public class ResetCommand extends SubCommand {
+public class GlobalResetCommand extends SubCommand {
 
     private final StatsManager manager;
-    public ResetCommand(StatsManager manager) {
+    public GlobalResetCommand(StatsManager manager) {
         this.manager = manager;
     }
 
@@ -28,14 +26,14 @@ public class ResetCommand extends SubCommand {
 
     @Override
     public Permissions getPermission() {
-        return Permissions.STATS_RESET;
+        return Permissions.STATS_GLOBAL_RESET;
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
 
         if (args.length < 1 || args.length > 2) {
-            Utils.error(sender, "stats", "error.usage.reset");
+            Utils.info(sender, "stats", "error.usage.reset", "%type%", "globalstats");
             return;
         }
 
@@ -54,9 +52,9 @@ public class ResetCommand extends SubCommand {
             return;
         }
 
-        manager.modifyStat(p.getUniqueId(), id, 0, RESET);
+        manager.modifyGlobalStat(id, 0, RESET);
         if (sender instanceof Player) {
-            Utils.successMsg2Values(sender, "stats", "reset", "%player%", p.getName(),"%stat%", id);
+            Utils.success(sender, "stats", "global.reset", "%player%", p.getName(),"%stat%", id);
         }
     }
 }

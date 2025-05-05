@@ -2,9 +2,12 @@ error:
   invalid-amount: "Invalid amount. Please provide a number."
   not-found: "Stat not found."
   usage:
-    stats: "Usage: /stats <create|delete|give|take|set|view|reload|help>"
-    global-stats: "Usage: /globalstats <create|delete|give|take|set|reset|reload|>"
-    give: "Usage: /stats give <player> <id> <amount>"
+    general: "Usage: /%type% <give|take|set|reset|view|help>"
+    give: "Usage: /%type% give <player> <id> <amount>"
+    take: "Usage: /%type% take <player> <id> <amount>"
+    set: "Usage: /%type% set <player> <id> <amount>"
+    reset: "Usage: /%type% reset <player> <id>"
+    view: "Usage: /%type% view <player> <id>"
 
 
 give: "§aYou have given §e%amount% §aof stat §e'%stat%'§a to §e%player%§a."
@@ -31,6 +34,11 @@ global:
     confirm: "§7Confirm deletion with: /stats delete %id% confirm"
     success: "§aYou have deleted the Stat with the ID: §e%id%"
 
-  reload:
-    single: "§aReloaded Stat: §e%id%"
-    all: "§aReloaded all Stats."
+help:
+  header: "%type% Commands:"
+  give: "%cyan_300%/%type% give <Player> <ID> <amount> §7- Give a Stat to a Player."
+  take: "%cyan_300%/%type% take <Player> <ID> <amount> §7- Take a Stat from a Player."
+  set: "%cyan_300%/%type% set <Player> <ID> <amount> §7- Set a Stat of a Player."
+  reset: "%cyan_300%/%type% reset <Player> <ID> §7- Reset a Stat of a Player."
+  view: "%cyan_300%/%type% view <Player> <ID> §7- View a Stat Value of Player."
+  help: "%cyan_300%/%type% help §7- Display this Help Message."

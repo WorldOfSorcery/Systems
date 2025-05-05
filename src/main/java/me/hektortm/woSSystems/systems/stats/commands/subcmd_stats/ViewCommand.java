@@ -1,4 +1,4 @@
-package me.hektortm.woSSystems.systems.stats.commands.subcommands;
+package me.hektortm.woSSystems.systems.stats.commands.subcmd_stats;
 
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.utils.Permissions;
@@ -7,8 +7,6 @@ import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
-
-import java.io.File;
 
 public class ViewCommand extends SubCommand {
 
@@ -33,7 +31,7 @@ public class ViewCommand extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length < 2 || args.length > 3) {
-            Utils.error(sender, "stats", "error.usage.take");
+            Utils.info(sender, "stats", "error.usage.view", "%type%", "stats");
             return;
         }
 
@@ -47,7 +45,7 @@ public class ViewCommand extends SubCommand {
 
         long value = manager.getPlayerStat(p.getUniqueId(), id);
 
-        Utils.successMsg3Values(sender, "stats", "view", "%player%", p.getName(), "%value%", String.valueOf(value), "%id%", id);
+        Utils.success(sender, "stats", "view", "%player%", p.getName(), "%value%", String.valueOf(value), "%id%", id);
 
     }
 }

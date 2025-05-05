@@ -1,7 +1,7 @@
 package me.hektortm.woSSystems.systems.unlockables.commands.subcommands;
 
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
-import me.hektortm.woSSystems.utils.Actions;
+import me.hektortm.woSSystems.utils.Operations;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
@@ -43,7 +43,7 @@ public class TakeCommand extends SubCommand {
             return;
         }
 
-        manager.modifyUnlockable(p.getUniqueId(), id, Actions.TAKE);
+        manager.modifyUnlockable(p.getUniqueId(), id, Operations.TAKE);
         if (sender instanceof Player P) {
             Utils.successMsg2Values(P, "unlockables", "take.perm", "%id%", id, "%player%", p.getName());
         }

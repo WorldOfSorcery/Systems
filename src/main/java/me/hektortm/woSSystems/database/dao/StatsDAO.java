@@ -2,7 +2,7 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.systems.stats.utils.Operation;
+import me.hektortm.woSSystems.utils.Operations;
 import me.hektortm.woSSystems.utils.dataclasses.GlobalStat;
 import me.hektortm.woSSystems.utils.dataclasses.Stat;
 import me.hektortm.wosCore.database.DatabaseManager;
@@ -12,11 +12,13 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class StatsDAO implements IDAO {
     private final DatabaseManager db;
     private final DAOHub daoHub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final String logName = "StatsDAO";
 
     public StatsDAO(DatabaseManager db, DAOHub daoHub) throws SQLException {
         this.db = db;
@@ -26,7 +28,7 @@ public class StatsDAO implements IDAO {
     @Override
     public void initializeTable() throws SQLException {
         String createStatsTable = """
-            CREATE TABLE IF NOT EXISTS player_stats (
+            CREATE TABLE IF NOT EXISTS playerdata_stats (
                 uuid CHAR(36) NOT NULL,
                 stat_id VARCHAR(255) NOT NULL,
                 value BIGINT DEFAULT 0,
@@ -60,64 +62,40 @@ public class StatsDAO implements IDAO {
         }
     }
 
-    /** Creates a new player stat definition */
-    public void createStat(Stat stat) {
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement("INSERT INTO stats (stat_id, max, capped) VALUES (?, ?, ?) ON CONFLICT(stat_id) DO NOTHING;")) {
-            stmt.setString(1, stat.getId());
-            stmt.setLong(2, stat.getMax());
-            stmt.setBoolean(3, stat.getCapped());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
+    public boolean isStatLimitReached(UUID uuid, String statId) {
+        Stat stat = getAllStats().get(statId);
+        if (stat == null || !stat.getCapped()) {
+            return false;
         }
+
+        long currentValue = getPlayerStatValue(uuid, statId);
+        return currentValue >= stat.getMax();
     }
 
-    /** Creates a new global stat definition */
-    public void createGlobalStat(GlobalStat globalStat) {
-        String sql = "INSERT INTO global_stats (stat_id, value, max, capped) VALUES (?, 0, ?, ?) ON CONFLICT(stat_id) DO NOTHING;";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, globalStat.getId());
-            stmt.setLong(2, globalStat.getMax());
-            stmt.setBoolean(3, globalStat.getCapped());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
+    public boolean isGlobalStatLimitReached(String statId) {
+        GlobalStat stat = getAllGlobalStats().get(statId);
+        if (stat == null || !stat.getCapped()) {
+            return false;
         }
+
+        long currentValue = getGlobalStatValue(statId);
+        return currentValue >= stat.getMax();
     }
 
-    /** Deletes a player stat definition */
-    public void deleteStat(String statId) {
-        String sql = "DELETE FROM stats WHERE stat_id = ?;";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, statId);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
 
-    /** Deletes a global stat */
-    public void deleteGlobalStat(String statId) {
-        String sql = "DELETE FROM global_stats WHERE stat_id = ?;";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, statId);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
+
 
     /** Modifies a player's stat value */
-    public void modifyPlayerStat(UUID uuid, String statId, long amount, Operation operation) {
+    public void modifyPlayerStat(UUID uuid, String statId, long amount, Operations operation) {
         String sql = switch (operation) {
-            case GIVE -> "INSERT INTO player_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, stat_id) DO UPDATE SET value = value + ?;";
-            case TAKE -> "INSERT INTO player_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, stat_id) DO UPDATE SET value = value - ?;";
-            case SET -> "INSERT INTO player_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, stat_id) DO UPDATE SET value = ?;";
-            case RESET -> "INSERT INTO player_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, stat_id) DO UPDATE SET value = 0;";
+            case GIVE -> "INSERT INTO playerdata_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, stat_id) DO UPDATE SET value = value + ?;";
+            case TAKE -> "INSERT INTO playerdata_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, stat_id) DO UPDATE SET value = value - ?;";
+            case SET -> "INSERT INTO playerdata_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, stat_id) DO UPDATE SET value = ?;";
+            case RESET -> "INSERT INTO playerdata_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, stat_id) DO UPDATE SET value = 0;";
         };
 
         Stat stat = getAllStats().get(statId);
-        if (operation == Operation.GIVE) {
+        if (operation == Operations.GIVE) {
             if (stat.getCapped()) {
                 long currentValue = getPlayerStatValue(uuid, statId);
                 if (currentValue + amount > stat.getMax()) {
@@ -133,12 +111,12 @@ public class StatsDAO implements IDAO {
             stmt.setLong(4, amount);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to modify Stat: "+e);
         }
     }
 
     /** Modifies a global stat value */
-    public void modifyGlobalStatValue(String statId, long amount, Operation operation) {
+    public void modifyGlobalStatValue(String statId, long amount, Operations operation) {
         String sql = switch (operation) {
             case GIVE -> "UPDATE global_stats SET value = value + ? WHERE stat_id = ?;";
             case TAKE -> "UPDATE global_stats SET value = value - ? WHERE stat_id = ?;";
@@ -146,7 +124,7 @@ public class StatsDAO implements IDAO {
             case RESET -> "UPDATE global_stats SET value = 0 WHERE stat_id = ?;";
         };
         GlobalStat stat = getAllGlobalStats().get(statId);
-        if (operation == Operation.GIVE) {
+        if (operation == Operations.GIVE) {
             if (stat.getCapped()) {
                 long currentAmount = getGlobalStatValue(statId);
                 if (currentAmount + amount > stat.getMax()) {
@@ -161,7 +139,7 @@ public class StatsDAO implements IDAO {
             stmt.setString(2, statId);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to modify Global Stat: "+e);
         }
     }
 
@@ -179,7 +157,7 @@ public class StatsDAO implements IDAO {
                 ));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Stats: "+e);
         }
         return stats;
     }
@@ -198,7 +176,7 @@ public class StatsDAO implements IDAO {
                 ));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Global Stat: "+e);
         }
         return stats;
     }
@@ -214,7 +192,7 @@ public class StatsDAO implements IDAO {
                 return rs.getLong("value");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Stat Value: "+e);
         }
         return 0;
     }
@@ -229,7 +207,7 @@ public class StatsDAO implements IDAO {
                 return rs.getLong("value");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Global Stat Value: "+e);
         }
         return 0;
     }

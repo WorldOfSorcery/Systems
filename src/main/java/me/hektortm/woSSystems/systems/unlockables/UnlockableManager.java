@@ -2,7 +2,7 @@ package me.hektortm.woSSystems.systems.unlockables;
 
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.utils.Actions;
+import me.hektortm.woSSystems.utils.Operations;
 import me.hektortm.woSSystems.utils.dataclasses.TempUnlockable;
 import me.hektortm.woSSystems.utils.dataclasses.Unlockable;
 import org.bukkit.OfflinePlayer;
@@ -22,7 +22,7 @@ public class UnlockableManager {
         this.hub = hub;
     }
 
-    public void modifyUnlockable(UUID uuid, String id, Actions action) {
+    public void modifyUnlockable(UUID uuid, String id, Operations action) {
         hub.getUnlockableDAO().modifyUnlockable(uuid, id, action);
     }
 

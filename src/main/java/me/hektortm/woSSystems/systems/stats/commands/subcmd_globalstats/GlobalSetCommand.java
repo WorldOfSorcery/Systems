@@ -1,7 +1,6 @@
-package me.hektortm.woSSystems.systems.stats.commands.subcommands;
+package me.hektortm.woSSystems.systems.stats.commands.subcmd_globalstats;
 
 import me.hektortm.woSSystems.systems.stats.StatsManager;
-import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
@@ -10,14 +9,13 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.io.File;
+import static me.hektortm.woSSystems.utils.Operations.SET;
 
-import static me.hektortm.woSSystems.systems.stats.utils.Operation.SET;
 
-public class SetCommand extends SubCommand {
+public class GlobalSetCommand extends SubCommand {
     private final StatsManager manager;
 
-    public SetCommand(StatsManager manager) {
+    public GlobalSetCommand(StatsManager manager) {
         this.manager = manager;
     }
 
@@ -28,13 +26,13 @@ public class SetCommand extends SubCommand {
 
     @Override
     public Permissions getPermission() {
-        return Permissions.STATS_SET;
+        return Permissions.STATS_GLOBAL_SET;
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length < 2 || args.length > 3) {
-            Utils.error(sender, "stats", "error.usage.take");
+            Utils.info(sender, "stats", "error.usage.take", "%type%", "globalstats");
             return;
         }
 
@@ -66,9 +64,9 @@ public class SetCommand extends SubCommand {
             return;
         }
 
-        manager.modifyStat(p.getUniqueId(), id, amount, SET);
+        manager.modifyGlobalStat(id, amount, SET);
         if (sender instanceof Player) {
-            Utils.successMsg3Values(sender, "stats", "set", "%player%", p.getName(),"%stat%", id, "%amount%", String.valueOf(amount));
+            Utils.success(sender, "stats", "global.set", "%player%", p.getName(),"%stat%", id, "%amount%", String.valueOf(amount));
         }
     }
 }

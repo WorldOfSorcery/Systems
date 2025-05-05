@@ -1,21 +1,21 @@
-package me.hektortm.woSSystems.systems.stats.commands.subcommands;
+package me.hektortm.woSSystems.systems.stats.commands.subcmd_stats;
 
 import me.hektortm.woSSystems.systems.stats.StatsManager;
-import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.io.File;
+import static me.hektortm.woSSystems.utils.Operations.GIVE;
 
-import static me.hektortm.woSSystems.systems.stats.utils.Operation.GIVE;
-
-public class GlobalGiveCommand extends SubCommand {
+public class GiveCommand extends SubCommand {
 
     private final StatsManager manager;
-    public GlobalGiveCommand(StatsManager manager) {
+
+    public GiveCommand(StatsManager manager) {
         this.manager = manager;
     }
 
@@ -26,26 +26,27 @@ public class GlobalGiveCommand extends SubCommand {
 
     @Override
     public Permissions getPermission() {
-        return Permissions.STATS_GLOBAL_GIVE;
+        return Permissions.STATS_GIVE;
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length < 2 || args.length > 3) {
-            Utils.error(sender, "stats", "error.usage.give");
+            Utils.info(sender, "stats", "error.usage.give", "%type%", "stats");
             return;
         }
 
-        String id = args[0].toLowerCase();
+        OfflinePlayer p = Bukkit.getOfflinePlayer(args[0]);
+        String id = args[1].toLowerCase();
         long amount = 0L;
 
-        if (!manager.getGlobalStats().containsKey(id)) {
+        if (!manager.getStats().containsKey(id)) {
             Utils.error(sender, "stats", "error.not-found");
             return;
         }
 
         try {
-            amount = Long.parseLong(args[1]);
+            amount = Long.parseLong(args[2]);
         } catch (NumberFormatException e) {
             Utils.error(sender, "stats", "error.invalid-amount");
             return;
@@ -56,14 +57,15 @@ public class GlobalGiveCommand extends SubCommand {
             return;
         }
 
-        if (!manager.getGlobalStats().containsKey(id)) {
+        if (!manager.getStats().containsKey(id)) {
             Utils.error(sender, "stats", "error.not-found");
             return;
         }
 
-        manager.modifyGlobalStat(id, amount, GIVE);
+        manager.modifyStat(p.getUniqueId(), id, amount, GIVE);
         if (sender instanceof Player) {
-            Utils.successMsg2Values(sender, "stats", "give","%stat%", id, "%amount%", String.valueOf(amount));
+            Utils.success(sender, "stats", "give", "%player%", p.getName(),"%stat%", id, "%amount%", String.valueOf(amount));
         }
+
     }
 }

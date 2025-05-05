@@ -1,7 +1,8 @@
 package me.hektortm.woSSystems.systems.stats.commands;
 
 import me.hektortm.woSSystems.systems.stats.StatsManager;
-import me.hektortm.woSSystems.systems.stats.commands.subcommands.*;
+import me.hektortm.woSSystems.systems.stats.commands.subcmd_stats.ResetCommand;
+import me.hektortm.woSSystems.systems.stats.commands.subcmd_stats.*;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
@@ -25,19 +26,16 @@ public class StatsCommand implements CommandExecutor {
         subCommands.put("give", new GiveCommand(manager));
         subCommands.put("take", new TakeCommand(manager));
         subCommands.put("set", new SetCommand(manager));
-        //subCommands.put("help", new HelpCommand());
         subCommands.put("reset", new ResetCommand(manager));
-        subCommands.put("reload", new ReloadCommand(manager));
-        subCommands.put("create", new CreateCommand(manager));
-        subCommands.put("delete", new DeleteCommand(manager));
         subCommands.put("view", new ViewCommand(manager));
+        subCommands.put("help", new HelpCommand(this));
 
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if (args.length == 0) {
-            Utils.error(sender, "stats", "error.usage.stats");
+            Utils.info(sender, "stats", "error.usage.general", "%type%", "stats");
             return true;
         }
 
@@ -48,10 +46,36 @@ public class StatsCommand implements CommandExecutor {
             if(!(PermissionUtil.hasPermission(sender, subCommand.getPermission()))) return true;
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));
         } else {
-            Utils.error(sender, "stats", "error.usage.stats");
+            Utils.info(sender, "stats", "error.usage.general", "%type%", "stats");
         }
 
 
         return true;
+    }
+
+
+    public void statsHelp(CommandSender sender) {
+        if (PermissionUtil.hasAnyPermission(sender, Permissions.STATS_GIVE, Permissions.STATS_TAKE, Permissions.STATS_SET, Permissions.STATS_RESET, Permissions.STATS_VIEW)) {
+            Utils.info(sender, "stats", "help.header", "%type%", "Stats");
+
+            if (PermissionUtil.hasPermissionNoMsg(sender, Permissions.STATS_GIVE))
+                Utils.noPrefix(sender, "stats", "help.give", "%type%", "stats");
+
+            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.STATS_TAKE))
+                Utils.noPrefix(sender, "stats", "help.take", "%type%", "stats");
+
+            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.STATS_SET))
+                Utils.noPrefix(sender, "stats", "help.set", "%type%", "stats");
+
+            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.STATS_RESET))
+                Utils.noPrefix(sender, "stats", "help.reset", "%type%", "stats");
+
+            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.STATS_VIEW))
+                Utils.noPrefix(sender, "stats", "help.view", "%type%", "stats");
+
+            Utils.noPrefix(sender, "stats", "help.help", "%type%", "stats");
+        } else {
+            Utils.error(sender, "general", "error.perms");
+        }
     }
 }

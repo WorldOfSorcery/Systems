@@ -2,7 +2,7 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.utils.Actions;
+import me.hektortm.woSSystems.utils.Operations;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import org.bukkit.OfflinePlayer;
@@ -38,7 +38,7 @@ public class UnlockableDAO implements IDAO {
         }
     }
 
-    public void modifyUnlockable(UUID uuid, String id, Actions action) {
+    public void modifyUnlockable(UUID uuid, String id, Operations action) {
         switch (action) {
             case GIVE:
                 try (Connection conn = db.getConnection();

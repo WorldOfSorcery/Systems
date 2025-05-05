@@ -27,23 +27,17 @@ public enum Permissions {
 
     GUI_OPEN("gui.open"),
 
-    STATS_CREATE("stats.create"),
-    STATS_DELETE("stats.delete"),
     STATS_GIVE("stats.modify.give"),
     STATS_TAKE("stats.modify.take"),
     STATS_SET("stats.modify.set"),
     STATS_RESET("stats.modify.reset"),
-    STATS_RELOAD_SINGLE("stats.reload.single"),
     STATS_VIEW("stats.view"),
-    STATS_RELOAD_ALL("stats.reload.all"),
 
-    STATS_GLOBAL_CREATE("stats_global.create"),
-    STATS_GLOBAL_DELETE("stats_global.delete"),
     STATS_GLOBAL_GIVE("stats_global.modify.give"),
     STATS_GLOBAL_TAKE("stats_global.modify.take"),
     STATS_GLOBAL_SET("stats_global.modify.set"),
     STATS_GLOBAL_RESET("stats_global.modify.reset"),
-    STATS_GLOBAL_RELOAD("stats_global.reload"),
+    STATS_GLOBAL_VIEW("stats_global.view"),
 
     UNLOCKABLE_CREATE("unlockable.create"),
     UNLOCKABLE_DELETE("unlockable.delete"),
