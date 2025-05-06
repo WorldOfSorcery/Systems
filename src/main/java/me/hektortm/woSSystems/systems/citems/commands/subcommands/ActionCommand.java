@@ -55,6 +55,11 @@ public class ActionCommand extends SubCommand {
         Player p = (Player) sender;
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
 
+        if (args.length == 0) {
+            Utils.info(p, "citems", "info.usage.action");
+            return;
+        }
+
         if (!citemManager.getErrorHandler().handleCitemErrors(itemInHand, p)) return;
 
         String action = args[0].toLowerCase();
@@ -62,9 +67,7 @@ public class ActionCommand extends SubCommand {
 
         InteractionData interaction = manager.getInteractionByID(actionID);
         if (interaction == null) {
-            String message = lang.getMessage("citems", "error.inter-not-found").replace("%id%", actionID);
-            sender.sendMessage(lang.getMessage("general", "prefix.error")+message);
-
+            Utils.error(p, "citems", "error.inter-not-found", "%id%", actionID);
             return;
         }
 
@@ -76,11 +79,11 @@ public class ActionCommand extends SubCommand {
         switch (action) {
             case "left":
                 data.set(leftActionKey, PersistentDataType.STRING, actionID);
-                Utils.successMsg1Value(p, "citems", "action.set.left", "%action%", actionID);
+                Utils.success(p, "citems", "action.set.left", "%action%", actionID);
                 break;
             case "right":
                 data.set(rightActionKey, PersistentDataType.STRING, actionID);
-                Utils.successMsg1Value(p, "citems", "action.set.right", "%action%", actionID);
+                Utils.success(p, "citems", "action.set.right", "%action%", actionID);
                 break;
             default:
                 Utils.error(p, "citems", "error.wrong-action");

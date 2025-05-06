@@ -72,18 +72,18 @@ public class FlagCommand extends SubCommand {
                 if (flag.equals("undroppable")) {
                     PersistentDataContainer data = meta.getPersistentDataContainer();
                     data.set(undroppableKey, PersistentDataType.BOOLEAN, true);
-                    Utils.successMsg(p, "citems", "flag.add.undroppable");
+                    Utils.success(p, "citems", "flag.add.undroppable");
                 }
-                if (flag.equals("unbreakable")) {
+                else if (flag.equals("unbreakable")) {
                     meta.setUnbreakable(true);
-                    Utils.successMsg(p, "citems", "flag.add.unbreakable");
+                    Utils.success(p, "citems", "flag.add.unbreakable");
                 }
-                if (flag.equals("unusable")) {
+                else if (flag.equals("unusable")) {
                     PersistentDataContainer data = meta.getPersistentDataContainer();
                     data.set(unusableKey, PersistentDataType.BOOLEAN, true);
-                    Utils.successMsg(p, "citems", "flag.add.unusable");
+                    Utils.success(p, "citems", "flag.add.unusable");
                 }
-                if (flag.equals("hide")) {
+                else if (flag.equals("hide")) {
 
                     // TODO: Fix item Attributes showing
 
@@ -98,11 +98,11 @@ public class FlagCommand extends SubCommand {
                     meta.addItemFlags(ItemFlag.HIDE_PLACED_ON);
                     Utils.successMsg(p, "citems", "flag.add.hide");
                 }
-                if (flag.equals("owner")) {
+                else if (flag.equals("owner")) {
                     PersistentDataContainer data = meta.getPersistentDataContainer();
                     data.set(ownerKey, PersistentDataType.STRING, "");
                 }
-                if(flag.equals("placeable")) {
+                else if(flag.equals("placeable")) {
                     if (args.length < 3) {
                         Utils.info(p, "citems", "info.placeable-flag");
                         return;
@@ -121,7 +121,7 @@ public class FlagCommand extends SubCommand {
                         return;
                     }
                 }
-                if(flag.equals("profile_picture")) {
+                else if(flag.equals("profile_picture")) {
                     if (args.length < 3) {
                         Utils.info(p, "citems", "info.profile-picture-flag");
                         return;
@@ -133,7 +133,7 @@ public class FlagCommand extends SubCommand {
                     Utils.success(p, "citems", "flag.add.profile-picture");
 
                 }
-                if (flag.equals("profile_background")) {
+                else if (flag.equals("profile_background")) {
                     if (args.length < 3) {
                         Utils.info(p, "citems", "info.profile-background-flag");
                         return;
@@ -145,6 +145,10 @@ public class FlagCommand extends SubCommand {
                     Utils.success(p, "citems", "flag.add.profile-background");
 
                 }
+                else {
+                    sendList(p);
+                    return;
+                }
                 break;
 
             case "remove":
@@ -153,16 +157,16 @@ public class FlagCommand extends SubCommand {
                     data.remove(undroppableKey);
                     Utils.success(p, "citems", "flag.remove.undroppable");
                 }
-                if (flag.equals("unbreakable")) {
+                else if (flag.equals("unbreakable")) {
                     meta.setUnbreakable(false);
                     Utils.success(p, "citems", "flag.remove.unbreakable");
                 }
-                if (flag.equals("unusable")) {
+                else if (flag.equals("unusable")) {
                     PersistentDataContainer data = meta.getPersistentDataContainer();
                     data.remove(unusableKey);
                     Utils.success(p, "citems", "flag.remove.unusable");
                 }
-                if (flag.equals("hide"))
+                else if (flag.equals("hide"))
                 {   //noinspection removal
                     AttributeModifier fakeArmorToughness = new AttributeModifier(
                             UUID.randomUUID(), "fake_armor_toughness", 0, AttributeModifier.Operation.ADD_SCALAR);
@@ -179,20 +183,23 @@ public class FlagCommand extends SubCommand {
                     meta.removeItemFlags(ItemFlag.HIDE_PLACED_ON);
                     Utils.success(p, "citems", "flag.remove.hide");
                 }
-                if (flag.equals("placeable")) {
+                else if (flag.equals("placeable")) {
                     PersistentDataContainer data = meta.getPersistentDataContainer();
                     data.remove(placeableKey);
                     Utils.success(p, "citems", "flag.remove.placeable");
                 }
-                if(flag.equals("profile_picture")) {
+                else if(flag.equals("profile_picture")) {
                     PersistentDataContainer data = meta.getPersistentDataContainer();
                     data.remove(profilePicKey);
                     Utils.success(p, "citems", "flag.remove.profile-picture");
                 }
-                if (flag.equals("profile_background")) {
+                else if (flag.equals("profile_background")) {
                     PersistentDataContainer data = meta.getPersistentDataContainer();
                     data.remove(profileBgKey);
                     Utils.success(p, "citems", "flag.remove.profile-background");
+                }
+                else {
+                    sendList(p);
                 }
                 break;
 
@@ -201,5 +208,16 @@ public class FlagCommand extends SubCommand {
                 return;
         }
         itemInHand.setItemMeta(meta);
+    }
+
+    public void sendList(Player p) {
+        Utils.info(p, "citems", "info.usage.flag");
+        Utils.noPrefix(p, "citems", "flag.list.undroppable");
+        Utils.noPrefix(p, "citems", "flag.list.unbreakable");
+        Utils.noPrefix(p, "citems", "flag.list.unusable");
+        Utils.noPrefix(p, "citems", "flag.list.hide");
+        Utils.noPrefix(p, "citems", "flag.list.placeable");
+        Utils.noPrefix(p, "citems", "flag.list.profile_picture");
+        Utils.noPrefix(p, "citems", "flag.list.profile_background");
     }
 }

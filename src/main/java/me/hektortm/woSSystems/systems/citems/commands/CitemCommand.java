@@ -7,6 +7,7 @@ import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
@@ -40,10 +41,10 @@ public class CitemCommand implements CommandExecutor {
         subCommands.put("update", new UpdateCommand(this, data));
         subCommands.put("lore", new LoreCommand(data));
         subCommands.put("flag", new FlagCommand(data));
-        subCommands.put("delete", new DeleteCommand(this, log, data));
         subCommands.put("action", new ActionCommand(data, interactionManager));
         subCommands.put("tag", new Tag(data));
         subCommands.put("info", new Info(data));
+        subCommands.put("help", new HelpCommand(this));
     }
 
     @Override
@@ -66,5 +67,40 @@ public class CitemCommand implements CommandExecutor {
         return true;
     }
 
+    public void citemHelp(CommandSender sender) {
+        if (PermissionUtil.hasAnyPermission(sender, Permissions.CITEM_SAVE, Permissions.CITEM_RENAME,
+                Permissions.CITEM_UPDATE, Permissions.CITEM_LORE, Permissions.CITEM_FLAGS, Permissions.CITEM_ACTIONS,
+                Permissions.CITEM_TAG, Permissions.CITEM_INFO, Permissions.CITEM_GIVE, Permissions.CITEM_REMOVE)) {
+            Utils.info(sender, "unlockables", "help.header");
+
+            if (PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_SAVE))
+                Utils.noPrefix(sender, "citems", "help.save");
+
+            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_UPDATE))
+                Utils.noPrefix(sender, "citems", "help.update");
+
+            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_RENAME))
+                Utils.noPrefix(sender, "citems", "help.rename");
+
+            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_LORE))
+                Utils.noPrefix(sender, "citems", "help.lore");
+            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_FLAGS))
+                Utils.noPrefix(sender, "citems", "help.flags");
+            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_ACTIONS))
+                Utils.noPrefix(sender, "citems", "help.actions");
+            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_TAG))
+                Utils.noPrefix(sender, "citems", "help.tag");
+            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_INFO))
+                Utils.noPrefix(sender, "citems", "help.info");
+            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_GIVE))
+                Utils.noPrefix(sender, "citems", "help.give");
+            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_REMOVE))
+                Utils.noPrefix(sender, "citems", "help.remove");
+
+            Utils.noPrefix(sender, "citems", "help.help");
+        } else {
+            Utils.error(sender, "general", "error.perms");
+        }
+    }
 
 }

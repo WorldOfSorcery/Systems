@@ -98,8 +98,7 @@ public class CitemManager {
         itemToGive.setAmount(amount);
         t.getInventory().addItem(itemToGive);
         t.playSound(t.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1 ,1);
-        String message = lang.getMessage("citems", "given").replace("%amount%", String.valueOf(amount)).replace("%id%", id).replace("%player%", t.getName());
-        s.sendMessage(message);
+        Utils.success(s, "citems", "given", "%amount%", String.valueOf(amount), "%id%", id, "%player%", t.getName());
     }
 
 

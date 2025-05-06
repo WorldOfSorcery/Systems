@@ -15,6 +15,7 @@ error:
 info:
   usage:
     citem: "Usage: /citem <save|rename|lore|flag|update>"
+    action: "Usage: /citem action <left|right> <id>"
     flag: "Usage: /citem flag <add|remove> <FLAG>"
     lore: "Usage: /citem lore <add|edit|remove> <arguments>"
     lore-add: "Usage: /citem lore add <text>"
@@ -48,6 +49,28 @@ flag:
     unusable: "§cUnusable flag removed."
     hide: "§cHide flags removed."
     placeable: "§cPlaceable flag removed."
+  list:
+    undroppable: "%cyan_300%- Undroppable"
+    unbreakable: "%cyan_300%- Unbreakable"
+    unusable: "%cyan_300%- Unusable"
+    hide: "%cyan_300%- Hide"
+    placeable: "%cyan_300%- Placeable (small/normal)"
+    profile_picture: "%cyan_300%- Profile_picture"
+    profile_background: "%cyan_300%- Profile_background"
+
+help:
+  header: "Citem Commands:"
+  save: "%cyan_300%/citem save <id> §7- Save a Citem to the Database."
+  update: "%cyan_300%/citem update <id> §7- Update an existing Citem."
+  rename: "%cyan_300%/citem rename <name> §7- Rename the item in your hand."
+  lore: "%cyan_300%/citem lore <add|edit|remove> §7- Modify the lore of an item."
+  flags: "%cyan_300%/citem flag <add|remove> §7- Add flags to the item in your hand."
+  actions: "%cyan_300%/citem action <left|right> <inter-id> §7- Add an interaction to an Item."
+  tag: "%cyan_300%/citem tag <tag> §7- Add tags to an item."
+  info: "%cyan_300%/citem info §7- Displays info of the held Citem."
+  give: "%cyan_300%/cgive <player> <id> [amount] §7- Give a player a Citem."
+  remove: "%cyan_300%/cremove <player> <id> [amount] §7- Remove a Citem from a player."
+  help: "%cyan_300%/citem help §7- Displays this help message."
 
 lore:
   added: "§aLore added."
