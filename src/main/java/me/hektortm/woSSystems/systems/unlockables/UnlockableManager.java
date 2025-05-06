@@ -26,11 +26,13 @@ public class UnlockableManager {
         hub.getUnlockableDAO().modifyUnlockable(uuid, id, action);
     }
 
-    public boolean getPlayerUnlockable(OfflinePlayer p, String id) {
+    public boolean hasPlayerUnlockable(OfflinePlayer p, String id) {
         return hub.getUnlockableDAO().getPlayerUnlockable(p, id);
     }
 
     public boolean getPlayerTempUnlockable(OfflinePlayer p, String id) {
         return hub.getUnlockableDAO().getPlayerTempUnlockable(p, id);
     }
+
+
 }

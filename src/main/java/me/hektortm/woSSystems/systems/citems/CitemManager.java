@@ -263,6 +263,28 @@ public class CitemManager {
         }
     }
 
+    public boolean hasCitemAmount(Player p, String id, int amount) {
+        ItemStack citem = hub.getCitemDAO().getCitem(id);
+
+        if (citem == null) return false;
+
+        int found = 0;
+
+        for (ItemStack item : p.getInventory().getContents()) {
+            if (item == null) continue;
+
+            if (item.isSimilar(citem)) {
+                found += item.getAmount();
+                if (found >= amount) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+
 
     public void leftClickAction(Player p) {
         ItemStack item = p.getItemInHand();

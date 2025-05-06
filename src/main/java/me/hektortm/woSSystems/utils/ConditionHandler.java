@@ -235,7 +235,7 @@ public class ConditionHandler {
                 return player.hasPermission(conditionIdentifier);
 
             case "unlockable":
-                return unlockableManager.getPlayerUnlockable(player, conditionIdentifier);
+                return unlockableManager.hasPlayerUnlockable(player, conditionIdentifier);
 
             default:
                 plugin.getLogger().warning("Unknown condition type: " + conditionType);
@@ -284,7 +284,7 @@ public class ConditionHandler {
             // Check if the value is a Boolean (the actual condition)
             if (conditionValue instanceof Boolean) {
                 boolean requiredState = (Boolean) conditionValue;
-                boolean playerHasUnlockable = unlockableManager.getPlayerUnlockable(player, unlockableId);
+                boolean playerHasUnlockable = unlockableManager.hasPlayerUnlockable(player, unlockableId);
 
                 if (playerHasUnlockable != requiredState) {
                     return false;

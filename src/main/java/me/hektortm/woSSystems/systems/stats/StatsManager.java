@@ -6,6 +6,7 @@ import me.hektortm.woSSystems.utils.Operations;
 import me.hektortm.woSSystems.utils.dataclasses.GlobalStat;
 import me.hektortm.woSSystems.utils.dataclasses.Stat;
 import me.hektortm.wosCore.WoSCore;
+import org.bukkit.OfflinePlayer;
 
 import java.util.Map;
 import java.util.UUID;
@@ -90,6 +91,12 @@ public class StatsManager {
             plugin.writeLog(logName, Level.SEVERE, "Error fetching stat max: " + e.getMessage());
             return 0;
         }
+    }
+
+    public boolean hasStatValue(OfflinePlayer player, String id, long amount) {
+        UUID playerUUID = player.getUniqueId();
+        long statValue = hub.getStatsDAO().getPlayerStatValue(playerUUID, id);
+        return statValue >= amount;
     }
 
     public long getGlobalStatMax(String id) {

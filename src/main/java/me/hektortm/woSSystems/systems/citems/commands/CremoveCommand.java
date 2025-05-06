@@ -57,8 +57,9 @@ public class CremoveCommand implements CommandExecutor {
                 return true;
             }
             t.getInventory().removeItem(item);
-            String message = lang.getMessage("citems", "removed").replace("%amount%", String.valueOf(amount)).replace("%id%", id).replace("%player%", t.getName());
-            sender.sendMessage(message);
+            Utils.success(sender, "citems", "removed",
+                    "%amount%", String.valueOf(amount),
+                    "%id%", id, "%player%", t.getName());
 
         }
         return true;
