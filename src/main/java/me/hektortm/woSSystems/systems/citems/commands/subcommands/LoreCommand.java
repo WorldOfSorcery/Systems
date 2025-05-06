@@ -70,7 +70,7 @@ public class LoreCommand extends SubCommand {
                 lore.add(ChatColor.translateAlternateColorCodes('&', addLoreText.toString()));
                 meta.setLore(lore);
                 itemInHand.setItemMeta(meta);
-                Utils.successMsg(p, "citems", "lore.added");
+                Utils.success(p, "citems", "lore.added");
                 break;
 
             case "edit":
@@ -103,7 +103,7 @@ public class LoreCommand extends SubCommand {
                 lore.set(row, ChatColor.translateAlternateColorCodes('&', editLoreText.toString()));
                 meta.setLore(lore);
                 itemInHand.setItemMeta(meta);
-                Utils.successMsg(p, "citems", "lore.edited");
+                Utils.success(p, "citems", "lore.edited");
                 break;
 
             case "remove":
@@ -127,7 +127,7 @@ public class LoreCommand extends SubCommand {
                 lore.remove(row);
                 meta.setLore(lore);
                 itemInHand.setItemMeta(meta);
-                Utils.successMsg(p, "citems", "lore.removed");
+                Utils.success(p, "citems", "lore.removed");
                 break;
 
             default:

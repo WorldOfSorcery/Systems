@@ -57,6 +57,6 @@ public class NameCommand extends SubCommand {
         String name = ChatColor.translateAlternateColorCodes('&', nameBuilder.toString());
         meta.setDisplayName(name);
         itemInHand.setItemMeta(meta);
-        Utils.successMsg1Value(p, "citems", "renamed", "%name%", name);
+        Utils.success(p, "citems", "renamed", "%name%", name);
     }
 }

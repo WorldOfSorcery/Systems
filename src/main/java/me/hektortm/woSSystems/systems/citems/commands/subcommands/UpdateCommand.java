@@ -41,7 +41,7 @@ public class UpdateCommand extends SubCommand {
         Player p = (Player) sender;
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
 
-        if (args.length != 1) {
+        if (args.length < 1) {
             Utils.info(p, "citems", "info.usage.update");
             return;
         }

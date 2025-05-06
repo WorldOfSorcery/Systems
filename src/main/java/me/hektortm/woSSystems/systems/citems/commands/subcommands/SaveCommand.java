@@ -44,7 +44,7 @@ public class SaveCommand extends SubCommand {
 
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
 
-        if (args.length != 1) {
+        if (args.length < 1) {
             Utils.info(p, "citems", "info.usage.save");
             return;
         }
