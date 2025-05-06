@@ -193,7 +193,7 @@ public final class WoSSystems extends JavaPlugin {
         profileManager = new ProfileManager(daoHub);
 
 // Initialize the remaining managers
-        recipeManager = new CRecipeManager(interactionManager);
+        recipeManager = new CRecipeManager(daoHub);
         fishingManager = new FishingManager(fishingItemsFolder, daoHub);
         resolver = new PlaceholderResolver(statsManager, citemManager);
         new CraftingListener(this, recipeManager, conditionHandler, interactionManager);

@@ -1,6 +1,8 @@
 package me.hektortm.woSSystems.professions.crafting;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.database.dao.RecipeDAO;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
@@ -28,73 +30,50 @@ public class CRecipeManager {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final CitemManager citemManager = plugin.getCitemManager();
-    private InteractionManager interactionManager;
+    private final InteractionManager interactionManager = plugin.getInteractionManager();
     private final CitemCommand cmd = new CitemCommand(citemManager, interactionManager);
     private final LogManager logManager = plugin.getLogManager();
-    public final File recipesFolder;
     private final Map<NamespacedKey, RecipeData> recipeMap = new HashMap<>();
-
+    private final DAOHub hub;
 
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public CRecipeManager(InteractionManager interactionManager) {
-        this.interactionManager = interactionManager;
-        this.recipesFolder = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "CRecipes");
-        if(!recipesFolder.exists()) recipesFolder.mkdirs();
+    public CRecipeManager(DAOHub hub) {
+        this.hub = hub;
     }
 
 
-    public void loadRecipes() {
-        File[] recipeFiles = recipesFolder.listFiles((dir, name) -> name.endsWith(".json"));
-        if (recipeFiles == null || recipeFiles.length == 0) {
-            logManager.sendWarning("No CRecipes found in " + recipesFolder.getPath());
-            return;
-        }
+    public void loadRecipesFromDatabase() {
+        List<RecipeDAO.RecipeRecord> records = hub.getRecipeDAO().getAllRecipes();
 
-        for (File file : recipeFiles) {
-            String recipeId = file.getName().replace(".json", ""); // Use file name as recipe ID
-            try (FileReader reader = new FileReader(file)) {
-                JSONObject json = (JSONObject) new JSONParser().parse(reader);
-
-                // Load recipe type and result
-                String type = (String) json.getOrDefault("type", "shaped");
-                JSONObject resultJson = (JSONObject) json.get("result");
-                boolean craftingBook = (boolean) json.getOrDefault("crafting_book", false);
-                JSONArray conditions = (JSONArray) json.get("conditions");
-
-                // Load the success ID
-                String successId = (String) resultJson.get("success");
-
-                ItemStack resultItem = citemManager.getCitemDAO().getCitem(resultJson.get("id").toString());
+        for (RecipeDAO.RecipeRecord record : records) {
+            try {
+                NamespacedKey key = new NamespacedKey(plugin, record.id);
+                ItemStack resultItem = citemManager.getCitemDAO().getCitem(record.output);
                 if (resultItem == null) {
-                    //Bukkit.getLogger().warning("Failed to load result item for recipe: " + recipeId);
-                    logManager.sendWarning("Failed to load result item("+resultJson.get("id")+") for recipe: \"" + recipeId+"\"");
+                    logManager.sendWarning("Failed to load result item (" + record.output + ") for recipe: \"" + record.id + "\"");
                     continue;
                 }
 
-                NamespacedKey key = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), recipeId);
                 org.bukkit.inventory.Recipe recipe;
 
-                // Handle recipe type
-                if (type.equals("shaped")) {
-                    recipe = createShapedRecipe(json, resultItem, key, craftingBook);
-                } else if (type.equals("unshaped")) {
-                    recipe = createUnshapedRecipe(json, resultItem, key, craftingBook);
+                if (record.type.equalsIgnoreCase("shaped")) {
+                    recipe = parseShapedRecipeFromSlots(record.slots, resultItem, key);
+                } else if (record.type.equalsIgnoreCase("unshaped")) {
+                    recipe = parseUnshapedRecipeFromSlots(record.slots, resultItem, key);
                 } else {
-                    Bukkit.getLogger().warning("Unknown recipe type in " + file.getName() + ": " + type);
+                    logManager.sendWarning("Unknown recipe type for ID: " + record.id);
                     continue;
                 }
 
-                // Store recipe, success ID, and conditions
-                recipeMap.put(key, new RecipeData(recipe, conditions, successId));
-
-                // Add the recipe to Bukkit
+                recipeMap.put(key, new RecipeData(recipe, null, record.success));
                 Bukkit.addRecipe(recipe);
             } catch (Exception e) {
-                //
+                logManager.sendException("Failed to load recipe ID: " + record.id, e);
             }
         }
     }
+
 
     public String getSuccessId(NamespacedKey key) {
         RecipeData recipeData = recipeMap.get(key);
@@ -102,64 +81,35 @@ public class CRecipeManager {
     }
 
 
-    private ShapedRecipe createShapedRecipe(JSONObject json, ItemStack resultItem, NamespacedKey key, boolean craftingBook) {
-        ShapedRecipe recipe = new ShapedRecipe(key, resultItem);
-
-        // Parse ingredients
-        List<List<String>> ingredients = (List<List<String>>) json.get("ingredients");
+    private ShapedRecipe parseShapedRecipeFromSlots(String slots, ItemStack result, NamespacedKey key) {
+        ShapedRecipe recipe = new ShapedRecipe(key, result);
         recipe.shape("ABC", "DEF", "GHI");
-        char[] rows = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'};
-        int index = 0;
 
-        for (List<String> row : ingredients) {
-            for (String itemId : row) {
-                if (itemId != null && !itemId.equals("null")) {
-                    ItemStack ingredient = citemManager.getCitemDAO().getCitem(itemId);
-                    if (ingredient != null) {
-                        recipe.setIngredient(rows[index], new RecipeChoice.ExactChoice(ingredient));
-                    }
+        String[] parts = slots.split(",");
+        char[] chars = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'};
+
+        for (int i = 0; i < Math.min(parts.length, 9); i++) {
+            String itemId = parts[i];
+            if (!itemId.equalsIgnoreCase("null")) {
+                ItemStack ingredient = citemManager.getCitemDAO().getCitem(itemId);
+                if (ingredient != null) {
+                    recipe.setIngredient(chars[i], new RecipeChoice.ExactChoice(ingredient));
                 }
-                index++;
             }
         }
-
-        // Add to crafting book if specified
-        if (craftingBook) {
-            recipe.setGroup(key.getKey());
-        }
-
         return recipe;
     }
 
-
-    private ShapelessRecipe createUnshapedRecipe(JSONObject json, ItemStack resultItem, NamespacedKey key, boolean craftingBook) {
-        ShapelessRecipe recipe = new ShapelessRecipe(key, resultItem);
-
-        // Parse ingredients
-        List<String> ingredients = (List<String>) json.get("ingredients");
-        for (String itemId : ingredients) {
-            if (itemId != null && !itemId.equals("null")) {
+    private ShapelessRecipe parseUnshapedRecipeFromSlots(String slots, ItemStack result, NamespacedKey key) {
+        ShapelessRecipe recipe = new ShapelessRecipe(key, result);
+        String[] parts = slots.split(",");
+        for (String itemId : parts) {
+            if (!itemId.equalsIgnoreCase("null")) {
                 ItemStack ingredient = citemManager.getCitemDAO().getCitem(itemId);
                 if (ingredient != null) {
                     recipe.addIngredient(new RecipeChoice.ExactChoice(ingredient));
                 }
             }
         }
-
-        // Add to crafting book if specified
-        if (craftingBook) {
-            recipe.setGroup(key.getKey());
-        }
-
         return recipe;
     }
-
-    public JSONArray getConditions(NamespacedKey key) {
-        RecipeData recipeData = recipeMap.get(key);
-        return recipeData != null ? recipeData.getConditions() : null;
-    }
-
-
-
-
-}
