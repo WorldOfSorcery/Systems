@@ -88,40 +88,48 @@ public class StatsDAO implements IDAO {
     /** Modifies a player's stat value */
     public void modifyPlayerStat(UUID uuid, String statId, long amount, Operations operation) {
         String sql = switch (operation) {
-            case GIVE -> "INSERT INTO playerdata_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, id) DO UPDATE SET value = value + ?;";
-            case TAKE -> "INSERT INTO playerdata_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, id) DO UPDATE SET value = value - ?;";
-            case SET -> "INSERT INTO playerdata_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, id) DO UPDATE SET value = ?;";
-            case RESET -> "INSERT INTO playerdata_stats (uuid, stat_id, value) VALUES (?, ?, ?) ON CONFLICT(uuid, id) DO UPDATE SET value = 0;";
+            case GIVE -> "INSERT INTO playerdata_stats (uuid, id, value) VALUES (?, ?, ?) " +
+                    "ON DUPLICATE KEY UPDATE value = value + VALUES(value);";
+            case TAKE -> "INSERT INTO playerdata_stats (uuid, id, value) VALUES (?, ?, ?) " +
+                    "ON DUPLICATE KEY UPDATE value = value - VALUES(value);";
+            case SET -> "INSERT INTO playerdata_stats (uuid, id, value) VALUES (?, ?, ?) " +
+                    "ON DUPLICATE KEY UPDATE value = VALUES(value);";
+            case RESET -> "INSERT INTO playerdata_stats (uuid, id, value) VALUES (?, ?, 0) " +
+                    "ON DUPLICATE KEY UPDATE value = 0;";
         };
 
         Stat stat = getAllStats().get(statId);
-        if (operation == Operations.GIVE) {
-            if (stat.getCapped()) {
-                long currentValue = getPlayerStatValue(uuid, statId);
-                if (currentValue + amount > stat.getMax()) {
-                    amount = stat.getMax() - currentValue;
-                }
+
+        if (operation == Operations.GIVE && stat.getCapped()) {
+            long currentValue = getPlayerStatValue(uuid, statId);
+            if (currentValue + amount > stat.getMax()) {
+                amount = stat.getMax() - currentValue;
             }
         }
 
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, statId);
-            stmt.setLong(3, amount);
-            stmt.setLong(4, amount);
+
+            if (operation == Operations.RESET) {
+                stmt.setLong(3, 0); // for the VALUES clause
+            } else {
+                stmt.setLong(3, amount); // for INSERT
+            }
+
             stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to modify Stat: "+e);
+            plugin.writeLog(logName, Level.SEVERE, "Failed to modify Stat: " + e);
         }
     }
 
     /** Modifies a global stat value */
     public void modifyGlobalStatValue(String statId, long amount, Operations operation) {
         String sql = switch (operation) {
-            case GIVE -> "UPDATE global_stats SET value = value + ? WHERE stat_id = ?;";
-            case TAKE -> "UPDATE global_stats SET value = value - ? WHERE stat_id = ?;";
-            case SET -> "UPDATE global_stats SET value = ? WHERE stat_id = ?;";
-            case RESET -> "UPDATE global_stats SET value = 0 WHERE stat_id = ?;";
+            case GIVE -> "UPDATE global_stats SET value = value + ? WHERE id = ?;";
+            case TAKE -> "UPDATE global_stats SET value = value - ? WHERE id = ?;";
+            case SET -> "UPDATE global_stats SET value = ? WHERE id = ?;";
+            case RESET -> "UPDATE global_stats SET value = 0 WHERE id = ?;";
         };
         GlobalStat stat = getAllGlobalStats().get(statId);
         if (operation == Operations.GIVE) {
@@ -146,12 +154,12 @@ public class StatsDAO implements IDAO {
     /** Retrieves all player stats */
     public Map<String, Stat> getAllStats() {
         Map<String, Stat> stats = new HashMap<>();
-        String sql = "SELECT stat_id, max, capped FROM stats;";
+        String sql = "SELECT id, max, capped FROM stats;";
         try ( Connection conn = db.getConnection(); Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                stats.put(rs.getString("stat_id"), new Stat(
-                        rs.getString("stat_id"),
+                stats.put(rs.getString("id"), new Stat(
+                        rs.getString("id"),
                         rs.getLong("max"),
                         rs.getBoolean("capped")
                 ));
@@ -169,8 +177,8 @@ public class StatsDAO implements IDAO {
         try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                stats.put(rs.getString("stat_id"), new GlobalStat(
-                        rs.getString("stat_id"),
+                stats.put(rs.getString("id"), new GlobalStat(
+                        rs.getString("id"),
                         rs.getLong("max"),
                         rs.getBoolean("capped")
                 ));
@@ -183,7 +191,7 @@ public class StatsDAO implements IDAO {
 
     /** Retrieves a single player's stat value */
     public long getPlayerStatValue(UUID uuid, String statId) {
-        String sql = "SELECT value FROM player_stats WHERE uuid = ? AND id = ?;";
+        String sql = "SELECT value FROM playerdata_stats WHERE uuid = ? AND id = ?;";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, statId);

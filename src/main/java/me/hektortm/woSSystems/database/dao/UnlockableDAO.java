@@ -38,14 +38,45 @@ public class UnlockableDAO implements IDAO {
         }
     }
 
+    public boolean unlockableExists(String id) {
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT 1 FROM unlockables WHERE id = ?")) {
+            stmt.setString(1, id);
+            ResultSet resultSet = stmt.executeQuery();
+            return resultSet.next();
+        } catch (SQLException e) {
+            plugin.writeLog(logName, Level.SEVERE, "Failed to check unlockable existence: " + e);
+            return false;
+        }
+    }
+
+    public boolean isTemp(String id) {
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT temp FROM unlockables WHERE id = ?")) {
+            stmt.setString(1, id);
+            ResultSet resultSet = stmt.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getBoolean("temp");
+            }
+        } catch (SQLException e) {
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get unlockable state: " + e);
+        }
+        return false;
+    }
+
     public void modifyUnlockable(UUID uuid, String id, Operations action) {
         switch (action) {
             case GIVE:
                 try (Connection conn = db.getConnection();
-                     PreparedStatement stmt = conn.prepareStatement("INSERT INTO playerdata_unlockables (uuid, id) VALUES (?, ?) ON CONFLICT(uuid, id) DO NOTHING")) {
+
+
+                    // Nothing on duplicate
+                     PreparedStatement stmt = conn.prepareStatement("INSERT INTO playerdata_unlockables (uuid, id, temp) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE temp = ?")) {
 
                     stmt.setString(1, uuid.toString());
                     stmt.setString(2, id);
+                    stmt.setBoolean(3, isTemp(id));
+                    stmt.setBoolean(4, isTemp(id));
                     stmt.executeUpdate();
                 } catch (SQLException e) {
                     plugin.writeLog(logName, Level.SEVERE, "Failed to give unlockable: " + e);
@@ -77,7 +108,7 @@ public class UnlockableDAO implements IDAO {
 
     public boolean getPlayerUnlockable(OfflinePlayer p, String id) {
         try (Connection conn = db.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT 1 FROM player_unlockables WHERE uuid = ? AND id = ? AND temp = 0")) {
+             PreparedStatement stmt = conn.prepareStatement("SELECT 1 FROM playerdata_unlockables WHERE uuid = ? AND id = ? AND temp = 0")) {
             stmt.setString(1, p.getUniqueId().toString());
             stmt.setString(2, id);
             ResultSet resultSet = stmt.executeQuery();

@@ -59,14 +59,12 @@ public class CraftingListener implements Listener {
         }
 
         // Retrieve the conditions and success ID
-        JSONArray conditions = recipeManager.getConditions(key);
+        //JSONArray conditions = recipeManager.getConditions(key);
         String successId = recipeManager.getSuccessId(key);  // Add this method to get success ID
 
         // Validate the conditions using ConditionHandler
         if (!event.getViewers().isEmpty() && event.getViewers().get(0) instanceof Player player) {
-            if (!conditionHandler.validateConditionsBOOL(player, conditions)) {
-                inventory.setResult(new ItemStack(Material.AIR));
-            }
+            //
         }
     }
     @EventHandler
@@ -93,17 +91,13 @@ public class CraftingListener implements Listener {
         }
 
         // Retrieve the conditions and success ID
-        JSONArray conditions = recipeManager.getConditions(key);
+       // JSONArray conditions = recipeManager.getConditions(key);
         String successId = recipeManager.getSuccessId(key);
 
         // Check if the player is shift-clicking
         if (event.isShiftClick()) {
             // Shift-click detected
-            if (!conditionHandler.validateConditionsBOOL(player, conditions)) {
-                event.setCancelled(true);  // Cancel the entire crafting operation if conditions fail
-                player.sendMessage("You cannot bulk craft this item due to unmet conditions.");  // Optional feedback
-                return;
-            }
+            //
 
             // Allow bulk crafting if conditions are met
             if (successId != null) {
@@ -113,11 +107,7 @@ public class CraftingListener implements Listener {
         }
 
         // For regular crafting
-        if (!conditionHandler.validateConditionsBOOL(player, conditions)) {
-            event.setCancelled(true);  // Cancel the crafting event if conditions are not met
-            player.sendMessage("You cannot craft this item due to unmet conditions.");  // Optional feedback
-            return;
-        }
+        //
 
         // If conditions are valid, trigger the success interaction if available
         if (successId != null) {

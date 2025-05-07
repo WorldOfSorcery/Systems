@@ -18,6 +18,7 @@ public class DAOHub {
     private final FishingDAO fishingDAO;
     private final CosmeticsDAO cosmeticsDAO;
     private final RecipeDAO recipeDAO;
+    private final ConditionDAO conditionDAO;
 
     private final FriendLink friendLink;
 
@@ -35,6 +36,7 @@ public class DAOHub {
         this.profileDAO = new ProfileDAO(databaseManager, this);
         this.fishingDAO = new FishingDAO(databaseManager, this);
         this.recipeDAO = new RecipeDAO(databaseManager, this);
+        this.conditionDAO = new ConditionDAO(databaseManager, this);
     }
     public EconomyDAO getEconomyDAO() {
         return economyDAO;
@@ -65,6 +67,9 @@ public class DAOHub {
     }
     public RecipeDAO getRecipeDAO() {
         return recipeDAO;
+    }
+    public ConditionDAO getConditionDAO() {
+        return conditionDAO;
     }
 
     public FriendLink getFriendLink() {

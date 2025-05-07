@@ -41,86 +41,12 @@ public class Create extends SubCommand {
         boolean type = Boolean.parseBoolean(args[0]);
         String id = args[1];
 
-        createRecipeTemplate(sender, id, type);
-    }
-
-    private void createRecipeTemplate(CommandSender s, String id, Boolean type) {
-
-        File recipeFile = new File(manager.recipesFolder, id + ".json");
-
-        if (recipeFile.exists()) {
-            return;
-        }
-
-        // Boolean true = shaped
-
-        if (type) {
-            try (FileWriter writer = new FileWriter(recipeFile)) {
-                writer.write("{\n");
-                writer.write("  \"type\": \"shaped\",\n");
-                writer.write("  \"crafting_book\": false,\n");
-
-                writer.write("  \"condition\": {\n");
-
-                writer.write("    \"unlockable\": {\n");
-                writer.write("      \"unlockable1\": false,\n");
-                writer.write("      \"unlockable2\": true\n");
-                writer.write("    },\n");
-                writer.write("    \"stats\": {\n");
-                writer.write("      \"stat1\": 50,\n");
-                writer.write("      \"stat2\": 100\n");
-                writer.write("    }\n");
-                writer.write("  },\n");
-
-                writer.write("  \"result\": {\n");
-                writer.write("    \"id\": \"citem_id\",\n");
-                writer.write("    \"success\": \"interaction_id\"\n");
-                writer.write("  },\n");
-                writer.write("  \"ingredients\": [\n");
-                writer.write("    [\"null\", \"null\", \"null\"],\n");
-                writer.write("    [\"null\", \"null\", \"null\"],\n");
-                writer.write("    [\"null\", \"null\", \"null\"]\n");
-                writer.write("  ]\n");
-                writer.write("}\n");
-
-                Utils.successMsg1Value(s, "crecipes", "template.shaped", "%id%", id);
-            } catch (IOException e) {
-                Bukkit.getLogger().severe("Failed to create recipe template.");
-            }
-        }
-        else {
-            try (FileWriter writer = new FileWriter(recipeFile)) {
-                writer.write("{\n");
-                writer.write("  \"type\": \"unshaped\",\n");
-                writer.write("  \"crafting_book\": false,\n");
-                writer.write("  \"condition\": {\n");
-
-                writer.write("    \"unlockable\": {\n");
-                writer.write("      \"unlockable1\": false,\n");
-                writer.write("      \"unlockable2\": true\n");
-                writer.write("    },\n");
-                writer.write("    \"stats\": {\n");
-                writer.write("      \"stat1\": 50,\n");
-                writer.write("      \"stat2\": 100\n");
-                writer.write("    }\n");
-                writer.write("  },\n");
-                writer.write("  \"result\": {\n");
-                writer.write("    \"id\": \"citem_id\",\n");
-                writer.write("    \"success\": \"interaction_id\"\n");
-                writer.write("  },\n");
-                writer.write("  \"ingredients\": [\n");
-                writer.write("    \"null\",\n");
-                writer.write("    \"null\",\n");
-                writer.write("    \"null\"\n");
-                writer.write("  ]\n");
-                writer.write("}\n");
-                Utils.successMsg1Value(s, "crecipes", "template.unshaped", "%id%", id);
-            } catch (IOException e) {
-                Bukkit.getLogger().severe("Failed to create recipe template.");
-            }
-        }
-
 
     }
+
+
+
+
+
 
 }

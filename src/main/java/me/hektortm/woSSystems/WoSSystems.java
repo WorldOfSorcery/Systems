@@ -56,6 +56,7 @@ import me.hektortm.woSSystems.systems.stats.commands.StatsCommand;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableCommand;
 import me.hektortm.woSSystems.utils.ConditionHandler;
+import me.hektortm.woSSystems.utils.ConditionHandler_new;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
@@ -64,6 +65,7 @@ import me.hektortm.wosCore.WoSCore;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.logging.LogManager;
+import me.hektortm.wosCore.logging.command.DebugCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandMap;
@@ -103,6 +105,7 @@ public final class WoSSystems extends JavaPlugin {
     private FishingManager fishingManager;
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
+    private ConditionHandler_new conditionHandler_new;
     private CRecipeManager recipeManager;
     private ChannelManager channelManager;
     private NicknameManager nickManager;
@@ -155,6 +158,7 @@ public final class WoSSystems extends JavaPlugin {
             registerAndInitDAO(databaseManager, daoHub.getStatsDAO());
             registerAndInitDAO(databaseManager, daoHub.getCosmeticsDAO());
             registerAndInitDAO(databaseManager, daoHub.getProfileDAO());
+            registerAndInitDAO(databaseManager, daoHub.getConditionDAO());
 
             databaseManager.initializeAllDAOs();
         } catch (SQLException e) {
@@ -179,6 +183,7 @@ public final class WoSSystems extends JavaPlugin {
 
         citemManager = new CitemManager(daoHub);
         conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager, citemManager);
+        conditionHandler_new = new ConditionHandler_new();
         interactionManager = new InteractionManager();
         interactionManager.setConditionHandler(conditionHandler);
         interactionManager.setPlaceholderResolver(resolver);
@@ -231,7 +236,7 @@ public final class WoSSystems extends JavaPlugin {
         }
         channelManager.loadChannels();
         registerChannelCommands();
-        recipeManager.loadRecipes();
+        //recipeManager.loadRecipes();
         hologramManager.removeAll();
         registerCommands();
         registerEvents();
@@ -258,7 +263,7 @@ public final class WoSSystems extends JavaPlugin {
         PacketEvents.getAPI().load();
         FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
 
-        registerStringFlag("display-name", registry, DISPLAY_NAME);
+        DISPLAY_NAME = registerStringFlag("display-name", registry);
 
     }
 
@@ -281,21 +286,23 @@ public final class WoSSystems extends JavaPlugin {
         }
     }
 
-    private void registerStringFlag(String flagName, FlagRegistry registry, StringFlag var) {
+    private StringFlag registerStringFlag(String flagName, FlagRegistry registry) {
         try {
             StringFlag flag = new StringFlag(flagName);
             registry.register(flag);
-            var = flag;
+            return flag;
         } catch (FlagConflictException e) {
             Flag<?> existing = registry.get(flagName);
             if (existing instanceof StringFlag) {
-                var = (StringFlag) existing;
                 Bukkit.getLogger().warning("Flag already exists");
+                return (StringFlag) existing;
             } else {
-                Bukkit.getLogger().warning("wtf is happening");
+                Bukkit.getLogger().warning("Flag conflict with incompatible type!");
+                return null;
             }
         }
     }
+
 
     private void registerChannelCommands() {
         for (Channel channel : channelManager.getChannels()) {
@@ -335,7 +342,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("cremove", new CremoveCommand(citemManager, lang));
         cmdReg("stats", new StatsCommand(statsManager));
         cmdReg("globalstats", new GlobalStatCommand(statsManager));
-        cmdReg("unlockable", new UnlockableCommand(unlockableManager, lang, log));
+        cmdReg("unlockable", new UnlockableCommand(daoHub));
         cmdReg("economy", new EcoCommand(ecoManager, lang, log));
         cmdReg("balance", new BalanceCommand(ecoManager, core));
         cmdReg("pay", new PayCommand(ecoManager, lang));
@@ -349,6 +356,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("internalviewitem", new InternalViewItemCommand(this));
         cmdReg("cosmetic", new CosmeticCommand(cosmeticManager, daoHub));
         cmdReg("profile", new ProfileCommand());
+        cmdReg("debugcmd", new debug(daoHub));
     }
 
     private void registerEvents() {
@@ -459,6 +467,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public ProfileManager getProfileManager() {
         return profileManager;
+    }
+    public ConditionHandler_new getConditionHandler_new() {
+        return conditionHandler_new;
     }
 
 }

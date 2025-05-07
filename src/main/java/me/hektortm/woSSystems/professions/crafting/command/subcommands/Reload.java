@@ -26,7 +26,7 @@ public class Reload extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        manager.loadRecipes();
+        //manager.loadRecipes();
         sender.sendMessage("§aReloaded CRecipes");
         Utils.successMsg(sender, "crecipes", "reload");
 

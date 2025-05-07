@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.systems.unlockables.commands;
 
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.systems.unlockables.commands.subcommands.*;
 import me.hektortm.woSSystems.utils.PermissionUtil;
@@ -19,18 +20,13 @@ import java.util.Map;
 public class UnlockableCommand implements CommandExecutor {
 
     private final Map<String, SubCommand> subCommands = new HashMap<>();
-    private final UnlockableManager manager;
-    private final LangManager lang;
-    private final LogManager logManager;
+    private final DAOHub hub;
 
-    public UnlockableCommand(UnlockableManager manager, LangManager lang, LogManager logManager) {
+    public UnlockableCommand(DAOHub hub) {
+        this.hub = hub;
 
-        this.manager = manager;
-        this.lang = lang;
-        this.logManager = logManager;
-
-        subCommands.put("give", new GiveCommand(manager));
-        subCommands.put("take", new TakeCommand(manager));
+        subCommands.put("give", new GiveCommand(hub));
+        subCommands.put("take", new TakeCommand(hub));
         subCommands.put("help", new HelpCommand(this));
 
     }

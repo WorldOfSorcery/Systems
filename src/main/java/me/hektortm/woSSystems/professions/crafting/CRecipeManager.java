@@ -69,7 +69,7 @@ public class CRecipeManager {
                 recipeMap.put(key, new RecipeData(recipe, null, record.success));
                 Bukkit.addRecipe(recipe);
             } catch (Exception e) {
-                logManager.sendException("Failed to load recipe ID: " + record.id, e);
+
             }
         }
     }
@@ -113,3 +113,4 @@ public class CRecipeManager {
         }
         return recipe;
     }
+}

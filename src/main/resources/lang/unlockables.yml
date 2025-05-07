@@ -1,13 +1,13 @@
 error:
   not-found: "Unlockable not found."
+  has-unlockable: "%player% already has the Unlockable %id%."
+  has-not-unlockable: "%player% does not have the Unlockable %id%."
   usage:
     give: "Usage: /unlockable give <Player> <ID>"
     take: "Usage: /unlockable take <Player> <ID>"
 
-
-
-give:
-  perm: "§aYou have given §e%player%§a the §e%id% §aUnlockable."
+give: "§aYou have given §e%player%§a the §e%id% §aUnlockable."
+take: "§cYou have taken the §e%id% §cUnlockable from §e%player%§c."
 
 help:
   header: "Unlockable Commands:"

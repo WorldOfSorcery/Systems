@@ -29,10 +29,10 @@ public class ConditionDAO implements IDAO {
             stmt.execute("CREATE TABLE IF NOT EXISTS conditions(" +
                     "type VARCHAR(255), " +
                     "id VARCHAR(255), " +
-                    "condition VARCHAR(255), " +
+                    "condition_key VARCHAR(255), " +
                     "value VARCHAR(255), " +
                     "parameter VARCHAR(255), " +
-                    "PRIMARY KEY (type, id, condition)" + // Composite key
+                    "PRIMARY KEY (type, id, condition_key)" + // Composite key
                     ")");
         }
     }
@@ -48,7 +48,7 @@ public class ConditionDAO implements IDAO {
 
             while (rs.next()) {
                 result.add(new Condition(
-                        rs.getString("condition"),
+                        rs.getString("condition_key"),
                         rs.getString("value"),
                         rs.getString("parameter")
                 ));

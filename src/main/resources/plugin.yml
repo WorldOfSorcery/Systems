@@ -5,6 +5,9 @@ api-version: '1.21'
 author: HektorTM
 depend: [WoSCore, WorldGuard, Citizens, HologramLib]
 commands:
+  debugcmd:
+    description: Debug command
+    usage: /<command> <player>
   # Interaction Commands
   interaction:
     description: interaction command
