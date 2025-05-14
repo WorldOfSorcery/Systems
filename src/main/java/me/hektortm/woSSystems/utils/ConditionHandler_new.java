@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.utils;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.regions.RegionHandler;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
@@ -8,6 +9,7 @@ import me.hektortm.woSSystems.utils.dataclasses.Condition;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Map;
 
 public class ConditionHandler_new {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
@@ -44,6 +46,15 @@ public class ConditionHandler_new {
 
             case "has_not_stats":
                 return !stats.hasStatValue(player, condition.getValue(), Integer.parseInt(condition.getParameter()));
+
+            case "is_in_region":
+                Map<Player, String> playerRegions = plugin.getPlayerRegions();
+                String regionId = playerRegions.get(player);
+                return regionId != null && regionId.equalsIgnoreCase(condition.getValue());
+            case "is_not_in_region":
+                Map<Player, String> playerRegionsNot = plugin.getPlayerRegions();
+                String regionIdNot = playerRegionsNot.get(player);
+                return regionIdNot == null || !regionIdNot.equalsIgnoreCase(condition.getValue());
 
             case "permission":
                 return player.hasPermission(condition.getValue());

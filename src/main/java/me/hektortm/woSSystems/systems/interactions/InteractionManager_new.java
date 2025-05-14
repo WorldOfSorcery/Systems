@@ -43,7 +43,7 @@ public class InteractionManager_new {
 
 
     public void interactionTask() {
-        ParticleHandler particleHandler = new ParticleHandler();
+        ParticleHandler particleHandler = new ParticleHandler(hub);
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -51,7 +51,7 @@ public class InteractionManager_new {
                     for (Location location : inter.getBlockLocations()) {
                         if (location != null) {
                             for (Player player : Bukkit.getOnlinePlayers()) {
-                                //particleHandler.spawnParticlesForPlayer(player, inter, location, false);
+                                particleHandler.spawnParticlesForPlayer(player, inter, location, false);
 
                                 //spawnTextDisplay(location, inter, null, false);
                                 //updateTextDisplay(location, inter, null, false);
@@ -60,8 +60,8 @@ public class InteractionManager_new {
                     }
                     for (int id : inter.getNpcIDs()) {
                         for (Player player : Bukkit.getOnlinePlayers()) {
-                            //NPC npc1 = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(id));
-                            //Location location = npc1.getEntity().getLocation().getBlock().getLocation();
+                            NPC npc1 = CitizensAPI.getNPCRegistry().getById(id);
+                            Location location = npc1.getEntity().getLocation().getBlock().getLocation();
                             //particleHandler.spawnParticlesForPlayer(player, inter, npc1.getEntity().getLocation(), true);
                             //spawnTextDisplay(location, inter, id, true);
                             //updateTextDisplay(location, inter, id, true);
@@ -107,6 +107,11 @@ public class InteractionManager_new {
             }
             for (String cmd : action.getActions()) {
                 String parsedCommand = cmd.replace("@p", player.getName());
+                if (cmd.startsWith("send_message")) {
+                    String message = cmd.replace("send_message", "");
+                    player.sendMessage(message.replace("&", "§"));
+                    return;
+                }
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand);
             }
 

@@ -199,7 +199,7 @@ public class InteractionManager {
     }
 
     public void particleTask() {
-        ParticleHandler particleHandler = new ParticleHandler();
+        //ParticleHandler particleHandler = new ParticleHandler();
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -207,7 +207,7 @@ public class InteractionManager {
                     for (Location location : inter.getLocations()) {
                         if (location != null) {
                             for (Player player : Bukkit.getOnlinePlayers()) {
-                                particleHandler.spawnParticlesForPlayer(player, inter, location, false);
+                                //particleHandler.spawnParticlesForPlayer(player, inter, location, false);
 
                                 spawnTextDisplay(location, inter, null, false);
                                 updateTextDisplay(location, inter, null, false);
@@ -219,7 +219,7 @@ public class InteractionManager {
                             for (Player player : Bukkit.getOnlinePlayers()) {
                                 NPC npc1 = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(id));
                                 Location location = npc1.getEntity().getLocation().getBlock().getLocation();
-                                particleHandler.spawnParticlesForPlayer(player, inter, npc1.getEntity().getLocation(), true);
+                                //particleHandler.spawnParticlesForPlayer(player, inter, npc1.getEntity().getLocation(), true);
                                 spawnTextDisplay(location, inter, id, true);
                                 updateTextDisplay(location, inter, id, true);
                             }

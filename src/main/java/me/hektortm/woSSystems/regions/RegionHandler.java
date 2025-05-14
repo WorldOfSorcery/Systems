@@ -5,7 +5,6 @@ import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
-import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import me.hektortm.woSSystems.WoSSystems;
@@ -18,12 +17,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class CustomHandler implements Listener {
+public class RegionHandler implements Listener {
 
     private final RegionBossBar bossbar;
-    private final Map<Player, String> playerRegions = new HashMap<>(); // Tracks player's current region
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
-    public CustomHandler(RegionBossBar bossbar) {
+    public RegionHandler(RegionBossBar bossbar) {
         this.bossbar = bossbar;
     }
 
@@ -39,7 +38,7 @@ public class CustomHandler implements Listener {
 
         if (regionManager == null) {
             bossbar.updateBossBar(player, ""); // Clear bossbar if no regions
-            playerRegions.remove(player); // Remove the player from tracked regions
+            plugin.getPlayerRegions().remove(player); // Remove the player from tracked regions
             return;
         }
 
@@ -57,14 +56,14 @@ public class CustomHandler implements Listener {
             }
         }
 
-        String currentRegionId = playerRegions.get(player);
+        String currentRegionId = plugin.getPlayerRegions().get(player);
 
         // If the player has left their current region
         if (!Objects.equals(currentRegionId, newRegionId)) {
             if (newRegionId == null) {
                 bossbar.updateBossBar(player, ""); // Clear the bossbar if no region with display-name
             }
-            playerRegions.put(player, newRegionId); // Update the player's current region
+            plugin.getPlayerRegions().put(player, newRegionId); // Update the player's current region
         }
     }
 }

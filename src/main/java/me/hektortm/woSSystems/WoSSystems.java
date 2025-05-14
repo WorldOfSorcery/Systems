@@ -30,7 +30,7 @@ import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
 import me.hektortm.woSSystems.profiles.ProfileCommand;
 import me.hektortm.woSSystems.profiles.ProfileListener;
 import me.hektortm.woSSystems.profiles.ProfileManager;
-import me.hektortm.woSSystems.regions.CustomHandler;
+import me.hektortm.woSSystems.regions.RegionHandler;
 import me.hektortm.woSSystems.regions.RegionBossBar;
 import me.hektortm.woSSystems.systems.citems.commands.SignCommand;
 import me.hektortm.woSSystems.systems.guis.GUIManager;
@@ -66,7 +66,6 @@ import me.hektortm.wosCore.WoSCore;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.logging.LogManager;
-import me.hektortm.wosCore.logging.command.DebugCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandMap;
@@ -83,6 +82,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -122,6 +122,7 @@ public final class WoSSystems extends JavaPlugin {
     private ProfileManager profileManager;
 
     public static StringFlag DISPLAY_NAME;
+    public final Map<Player, String> playerRegions = new HashMap<>();
     private final Map<UUID, Inventory> clickActions = new HashMap<>();
 
 
@@ -246,8 +247,8 @@ public final class WoSSystems extends JavaPlugin {
         hologramManager.removeAll();
         registerCommands();
         registerEvents();
-        interactionManager.loadInteraction();
-        interactionManager.particleTask();
+        //interactionManager.loadInteraction();
+        interactionManager_new.interactionTask();
         tab.runTablist();
     }
 
@@ -373,7 +374,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new FishingListener());
         eventReg(new JoinListener(this));
         eventReg(new ChannelListener(channelManager, nickManager, unlockableManager, daoHub));
-        eventReg(new CustomHandler(regionBossBarManager));
+        eventReg(new RegionHandler(regionBossBarManager));
         eventReg(new ProfileListener());
         eventReg(new BackpackListener());
         getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager, daoHub), this);
@@ -479,6 +480,10 @@ public final class WoSSystems extends JavaPlugin {
     }
     public InteractionManager_new getInteractionManager_new() {
         return interactionManager_new;
+    }
+
+    public Map<Player, String> getPlayerRegions() {
+        return playerRegions;
     }
 
 }

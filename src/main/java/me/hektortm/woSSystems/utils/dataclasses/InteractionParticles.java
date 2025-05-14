@@ -8,13 +8,15 @@ public class InteractionParticles {
     private final String matchType; // "all" or "one"
     private final int particleId;
     private final String particle;
+    private final String particleColor;
 
-    public InteractionParticles(String interactionId, String behaviour, String matchType, int particleId, String particle) {
+    public InteractionParticles(String interactionId, String behaviour, String matchType, int particleId, String particle, String particleColor) {
         this.interactionId = interactionId;
         this.behaviour = behaviour;
         this.matchType = matchType;
         this.particleId = particleId;
         this.particle = particle;
+        this.particleColor = particleColor;
     }
 
     public String getInteractionId() {
@@ -31,6 +33,9 @@ public class InteractionParticles {
     }
     public String getParticle() {
         return particle;
+    }
+    public String getParticleColor() {
+        return particleColor;
     }
 
 }

@@ -113,6 +113,10 @@ public class Parsers {
 
     public static Color parseColorFromString(String colorString) {
         // Expected format: "Color:[argb0xFFFCBA03]"
+        if (colorString == null || colorString.isEmpty()) {
+            return null; // Default fallback
+        }
+
         try {
             String prefix = "Color:[argb0x";
             String suffix = "]";

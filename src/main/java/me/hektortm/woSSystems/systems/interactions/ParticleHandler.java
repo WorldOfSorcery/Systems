@@ -1,106 +1,147 @@
 package me.hektortm.woSSystems.systems.interactions;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.ConditionHandler;
+import me.hektortm.woSSystems.utils.ConditionHandler_new;
+import me.hektortm.woSSystems.utils.ConditionType;
+import me.hektortm.woSSystems.utils.dataclasses.Condition;
+import me.hektortm.woSSystems.utils.dataclasses.Interaction;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
+import me.hektortm.woSSystems.utils.dataclasses.InteractionParticles;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 
+import java.util.List;
+
 public class ParticleHandler {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final ConditionHandler conditionHandler =  plugin.getConditionHandler();
+    private final ConditionHandler_new conditionHandler = plugin.getConditionHandler_new();
+    private final DAOHub hub;
 
-    public void spawnParticlesForPlayer(Player player, InteractionData inter , Location location, boolean npc) {
-        String particleType = inter.getParticleType().toLowerCase();
-        String color = inter.getParticleColor();
+    public ParticleHandler(DAOHub hub) {
+        this.hub = hub;
+    }
 
-        ConditionHandler.ConditionOutcomes outcomes = conditionHandler.getUnmetConditionOutcomes(player, inter.getConditions());
+    public void spawnParticlesForPlayer(Player player, Interaction inter, Location location, boolean npc) {
+        List<InteractionParticles> particlesList = inter.getParticles();
 
-        if (outcomes.getParticleType() != null) {
-            particleType = outcomes.getParticleType();
+        if (particlesList == null || particlesList.isEmpty()) {
+            return; // No particles to spawn
         }
-        if (outcomes.getParticleColor() != null) {
-            color = outcomes.getParticleColor();
-        }
+
+        for(InteractionParticles particles : particlesList) {
+            String particleType = particles.getParticle().toLowerCase();
+            String color = particles.getParticleColor();
+            String matchType = particles.getMatchType();
 
 
-        if (npc) {
-            switch (particleType.toLowerCase()) {
-                case "redstone_dust":
-                    spawnRedstoneNPCParticles(player,location, color);
-                    break;
-                case "redstone_dust_circle":
-                    spawnRedstoneParticleCircle(player, location, color);
-                    break;
-                case "portal":
-                    spawnSurroundingNPCParticles(player, location, Particle.PORTAL);
-                    break;
-                case "villager_happy":
-                    spawnVillagerHappyNPCParticles(player, location);
-                    break;
-                case "villager_happy_circle":
-                    spawnVillagerHappyCircleParticles(player, location);
-                    break;
-                case "flame":
-                    spawnSurroundingNPCParticles(player, location, Particle.SMALL_FLAME);
-                    break;
-                case "totem":
-                    spawnSurroundingNPCParticles(player, location, Particle.TOTEM_OF_UNDYING);
-                    break;
-                case "smoke":
-                    spawnSurroundingNPCParticles(player, location, Particle.SMOKE);
-                    break;
-                case "explosion":
-                    spawnSurroundingNPCParticles(player, location, Particle.EXPLOSION);
-                    break;
-                case "mycelium":
-                    spawnSurroundingNPCParticles(player, location, Particle.MYCELIUM);
-                    break;
-                default:
-                    // Default behavior if the particle type is unknown
-                    break;
+
+            List<Condition> conditionList = hub.getConditionDAO().getConditions(
+                    ConditionType.PARTICLE,
+                    inter.getInteractionId() + ":" + particles.getParticleId()
+            );
+
+            if (!conditionList.isEmpty()) {
+                boolean shouldRun;
+                if ("one".equalsIgnoreCase(matchType)) {
+                    shouldRun = conditionList.isEmpty() || conditionList.stream()
+                            .anyMatch(cond -> conditionHandler.evaluate(player, cond));
+                } else {
+                    shouldRun = conditionHandler.checkConditions(player, conditionList);
+                }
+
+                if (!shouldRun) {
+                    continue;
+                }
+
+                if (npc) {
+                    switch (particleType.toLowerCase()) {
+                        case "redstone_dust":
+                            spawnRedstoneNPCParticles(player,location, color);
+                            break;
+                        case "redstone_dust_circle":
+                            spawnRedstoneParticleCircle(player, location, color);
+                            break;
+                        case "portal":
+                            spawnSurroundingNPCParticles(player, location, Particle.PORTAL);
+                            break;
+                        case "villager_happy":
+                            spawnVillagerHappyNPCParticles(player, location);
+                            break;
+                        case "villager_happy_circle":
+                            spawnVillagerHappyCircleParticles(player, location);
+                            break;
+                        case "flame":
+                            spawnSurroundingNPCParticles(player, location, Particle.SMALL_FLAME);
+                            break;
+                        case "totem":
+                            spawnSurroundingNPCParticles(player, location, Particle.TOTEM_OF_UNDYING);
+                            break;
+                        case "smoke":
+                            spawnSurroundingNPCParticles(player, location, Particle.SMOKE);
+                            break;
+                        case "explosion":
+                            spawnSurroundingNPCParticles(player, location, Particle.EXPLOSION);
+                            break;
+                        case "mycelium":
+                            spawnSurroundingNPCParticles(player, location, Particle.MYCELIUM);
+                            break;
+                        default:
+                            // Default behavior if the particle type is unknown
+                            break;
+                    }
+                } else {
+                    switch (particleType) {
+                        case "redstone_dust":
+                            spawnRedstoneParticles(player,location, color);
+                            break;
+                        case "redstone_dust_circle":
+                            spawnRedstoneParticleCircle(player, location, color);
+                            break;
+                        case "portal":
+                            spawnSurroundingParticles(player, location, Particle.PORTAL);
+                            break;
+                        case "villager_happy":
+                            spawnVillagerHappyParticles(player, location);
+                            break;
+                        case "villager_happy_circle":
+                            spawnVillagerHappyCircleParticles(player, location);
+                            break;
+                        case "flame":
+                            spawnSurroundingParticles(player, location, Particle.SMALL_FLAME);
+                            break;
+                        case "totem":
+                            spawnSurroundingParticles(player, location, Particle.TOTEM_OF_UNDYING);
+                            break;
+                        case "smoke":
+                            spawnSurroundingParticles(player, location, Particle.SMOKE);
+                            break;
+                        case "explosion":
+                            spawnSurroundingParticles(player, location, Particle.EXPLOSION);
+                            break;
+                        case "mycelium":
+                            spawnSurroundingParticles(player, location, Particle.MYCELIUM);
+                            break;
+                        default:
+                            // Default behavior if the particle type is unknown
+                            break;
+                    }
+                }
+
             }
-        } else {
-            switch (particleType) {
-                case "redstone_dust":
-                    spawnRedstoneParticles(player,location, color);
-                    break;
-                case "redstone_dust_circle":
-                    spawnRedstoneParticleCircle(player, location, color);
-                    break;
-                case "portal":
-                    spawnSurroundingParticles(player, location, Particle.PORTAL);
-                    break;
-                case "villager_happy":
-                    spawnVillagerHappyParticles(player, location);
-                    break;
-                case "villager_happy_circle":
-                    spawnVillagerHappyCircleParticles(player, location);
-                    break;
-                case "flame":
-                    spawnSurroundingParticles(player, location, Particle.SMALL_FLAME);
-                    break;
-                case "totem":
-                    spawnSurroundingParticles(player, location, Particle.TOTEM_OF_UNDYING);
-                    break;
-                case "smoke":
-                    spawnSurroundingParticles(player, location, Particle.SMOKE);
-                    break;
-                case "explosion":
-                    spawnSurroundingParticles(player, location, Particle.EXPLOSION);
-                    break;
-                case "mycelium":
-                    spawnSurroundingParticles(player, location, Particle.MYCELIUM);
-                    break;
-                default:
-                    // Default behavior if the particle type is unknown
-                    break;
-            }
+
         }
+
+
+
+
+
+
     }
 
     private void spawnSurroundingParticles(Player player, Location location, Particle particle) {

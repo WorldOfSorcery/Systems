@@ -24,6 +24,7 @@ public class PlaceholderResolver {
     public String resolvePlaceholders(String text, Player player) {
         UUID playerUUID = player.getUniqueId();
 
+
         if(text.contains("{stats.")) {
             for (String statId : statsManager.getStats().keySet()) {
                 String amountPlaceholder = "{stats." + statId + "_amount}";

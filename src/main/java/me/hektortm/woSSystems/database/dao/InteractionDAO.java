@@ -86,6 +86,7 @@ public class InteractionDAO implements IDAO {
                     matchtype VARCHAR(255) NOT NULL,
                     particle_id VARCHAR(255) NOT NULL,
                     particle VARCHAR(255) NOT NULL,
+                    particle_color VARCHAR(255),
                     PRIMARY KEY (id),
                     FOREIGN KEY (id) REFERENCES interactions(id)
                 )
@@ -127,7 +128,7 @@ public class InteractionDAO implements IDAO {
     public List<InteractionParticles> getParticlesForInteraction(String id) {
         List<InteractionParticles> particles = new ArrayList<>();
 
-        String sql = "SELECT * FROM inter_particles WHERE id = ?";
+        String sql = "SELECT * FROM inter_particles WHERE id = ? ORDER BY particle_id ASC";
 
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
@@ -137,9 +138,11 @@ public class InteractionDAO implements IDAO {
                 String matchType = rs.getString("matchtype");
                 int particleId = rs.getInt("particle_id");
                 String particle = rs.getString("particle");
+                String particleColor = rs.getString("particle_color");
 
-                particles.add(new InteractionParticles(id, behaviour, matchType, particleId, particle));
+                particles.add(new InteractionParticles(id, behaviour, matchType, particleId, particle, particleColor));
             }
+            return particles;
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to get particles: " + e);
         }
@@ -289,9 +292,10 @@ public class InteractionDAO implements IDAO {
                 String interactionId = rs.getString("id");
                 List<InteractionAction> actions = getActionsForInteraction(interactionId);
                 List<InteractionHologram> holograms = getHologramsForInteraction(interactionId);
+                List<InteractionParticles> particles = getParticlesForInteraction(interactionId);
                 List<Location> blockLocations = getBlocks(interactionId);
                 List<Integer> npcIDs = getNPCs(interactionId);
-                return new Interaction(interactionId, actions, holograms, blockLocations, npcIDs);
+                return new Interaction(interactionId, actions, holograms, particles, blockLocations, npcIDs);
             }
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to get interaction: " + e);
@@ -306,11 +310,7 @@ public class InteractionDAO implements IDAO {
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 String interactionId = rs.getString("id");
-                List<InteractionAction> actions = getActionsForInteraction(interactionId);
-                List<InteractionHologram> holograms = getHologramsForInteraction(interactionId);
-                List<Location> blockLocations = getBlocks(interactionId);
-                List<Integer> npcIDs = getNPCs(interactionId);
-                interactions.add(new Interaction(interactionId, actions, holograms, blockLocations, npcIDs));
+                interactions.add(getInteractionByID(interactionId));
             }
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to get interactions: " + e);
