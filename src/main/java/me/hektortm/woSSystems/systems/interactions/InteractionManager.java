@@ -1,7 +1,6 @@
 package me.hektortm.woSSystems.systems.interactions;
 
 import com.maximde.hologramlib.hologram.Hologram;
-import com.maximde.hologramlib.hologram.ItemHologram;
 import com.maximde.hologramlib.hologram.RenderMode;
 import com.maximde.hologramlib.hologram.TextHologram;
 import me.hektortm.woSSystems.WoSSystems;
@@ -19,9 +18,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Display;
-import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.TextDisplay;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import org.json.simple.JSONArray;
@@ -87,7 +84,7 @@ public class InteractionManager {
                 if (locationArray != null) {
                     for (Object location : locationArray) {
                         // Assuming there's a method to parse location strings into Location objects
-                        locations.add(Parsers.parseLocation((String) location));
+                        locations.add(Parsers.stringToLocation((String) location));
                     }
                 }
 

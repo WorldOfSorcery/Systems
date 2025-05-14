@@ -35,6 +35,7 @@ import me.hektortm.woSSystems.regions.RegionBossBar;
 import me.hektortm.woSSystems.systems.citems.commands.SignCommand;
 import me.hektortm.woSSystems.systems.guis.GUIManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
+import me.hektortm.woSSystems.systems.interactions.InteractionManager_new;
 import me.hektortm.woSSystems.systems.loottables.LoottableManager;
 import me.hektortm.woSSystems.systems.loottables.commands.LoottableCommand;
 import me.hektortm.woSSystems.tablist.TablistManager;
@@ -102,6 +103,7 @@ public final class WoSSystems extends JavaPlugin {
     private StatsManager statsManager;
     private UnlockableManager unlockableManager;
     private InteractionManager interactionManager;
+    private InteractionManager_new interactionManager_new;
     private FishingManager fishingManager;
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
@@ -159,6 +161,7 @@ public final class WoSSystems extends JavaPlugin {
             registerAndInitDAO(databaseManager, daoHub.getCosmeticsDAO());
             registerAndInitDAO(databaseManager, daoHub.getProfileDAO());
             registerAndInitDAO(databaseManager, daoHub.getConditionDAO());
+            registerAndInitDAO(databaseManager, daoHub.getInteractionDAO());
 
             databaseManager.initializeAllDAOs();
         } catch (SQLException e) {
@@ -173,7 +176,7 @@ public final class WoSSystems extends JavaPlugin {
         log = new LogManager(lang, core);
 
         statsManager = new StatsManager(daoHub);
-        ecoManager = new EcoManager(this, daoHub);
+        ecoManager = new EcoManager(daoHub);
         unlockableManager = new UnlockableManager(daoHub);
         fishingManager = new FishingManager(fishingItemsFolder, daoHub);
 
@@ -181,14 +184,17 @@ public final class WoSSystems extends JavaPlugin {
 
         resolver = new PlaceholderResolver(statsManager, citemManager);
 
+
         citemManager = new CitemManager(daoHub);
-        conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager, citemManager);
         conditionHandler_new = new ConditionHandler_new();
+        conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager, citemManager);
+
+        interactionManager_new = new InteractionManager_new(daoHub);
         interactionManager = new InteractionManager();
         interactionManager.setConditionHandler(conditionHandler);
         interactionManager.setPlaceholderResolver(resolver);
          // Ensure interactionManager is null-safe.
-        citemManager.setInteractionManager(interactionManager);
+        citemManager.setInteractionManager(interactionManager_new);
         channelManager = new ChannelManager(this, daoHub);
         nickManager = new NicknameManager(daoHub);
 
@@ -470,6 +476,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public ConditionHandler_new getConditionHandler_new() {
         return conditionHandler_new;
+    }
+    public InteractionManager_new getInteractionManager_new() {
+        return interactionManager_new;
     }
 
 }

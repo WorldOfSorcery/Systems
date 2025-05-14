@@ -28,7 +28,8 @@ public class ConditionDAO implements IDAO {
         try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute("CREATE TABLE IF NOT EXISTS conditions(" +
                     "type VARCHAR(255), " +
-                    "id VARCHAR(255), " +
+                    "type_id VARCHAR(255), " +
+                    "condition_id INT," +
                     "condition_key VARCHAR(255), " +
                     "value VARCHAR(255), " +
                     "parameter VARCHAR(255), " +
@@ -39,7 +40,7 @@ public class ConditionDAO implements IDAO {
 
     public List<Condition> getConditions(ConditionType type, String id) {
         List<Condition> result = new ArrayList<>();
-        String sql = "SELECT * FROM conditions WHERE type = ? AND id = ?";
+        String sql = "SELECT * FROM conditions WHERE type = ? AND type_id = ?";
 
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, type.getType());

@@ -6,6 +6,7 @@ import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.CitemDAO;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
+import me.hektortm.woSSystems.systems.interactions.InteractionManager_new;
 import me.hektortm.woSSystems.utils.ErrorHandler;
 import me.hektortm.woSSystems.utils.Parsers;
 import me.hektortm.wosCore.LangManager;
@@ -15,6 +16,7 @@ import me.hektortm.wosCore.WoSCore;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Interaction;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -51,12 +53,9 @@ public class CitemManager {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DAOHub hub;
-    private InteractionManager interactionManager;
+    private InteractionManager_new interactionManager;
     private final LogManager log = new LogManager(new LangManager(WoSCore.getPlugin(WoSCore.class)),WoSCore.getPlugin(WoSCore.class));
-    private final LangManager lang = new LangManager(WoSCore.getPlugin(WoSCore.class));
     private final NicknameManager nickManager;
-    private final CitemCommand cmd;
-    private final Parsers parsers = new Parsers();
     private final ErrorHandler errorHandler = new ErrorHandler();
 
 
@@ -64,7 +63,6 @@ public class CitemManager {
         this.hub = hub;
         nickManager = new NicknameManager(hub);
         citemFolder = new File(plugin.getDataFolder(), "citems");
-        cmd = new CitemCommand(this, interactionManager);
         undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
         unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
         leftActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-left");
@@ -79,7 +77,7 @@ public class CitemManager {
 
     }
 
-    public void setInteractionManager(InteractionManager interactionManager) {
+    public void setInteractionManager(InteractionManager_new interactionManager) {
         if (interactionManager == null) {
             throw new IllegalArgumentException("ConditionHandler cannot be null.");
         }
@@ -296,7 +294,7 @@ public class CitemManager {
         PersistentDataContainer data = meta.getPersistentDataContainer();
         String actionId = data.get(leftActionKey, PersistentDataType.STRING);
         if (actionId != null) {
-            interactionManager.triggerInteraction(p, actionId);
+            interactionManager.triggerInteraction(actionId, p);
         }
     }
 
@@ -310,7 +308,7 @@ public class CitemManager {
         PersistentDataContainer data = meta.getPersistentDataContainer();
         String actionId = data.get(rightActionKey, PersistentDataType.STRING);
         if (actionId != null) {
-            interactionManager.triggerInteraction(p, actionId);
+            interactionManager.triggerInteraction(actionId, p);
         }
     }
 

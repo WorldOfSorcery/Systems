@@ -8,6 +8,7 @@ import com.maximde.hologramlib.hologram.RenderMode;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
+import me.hektortm.woSSystems.systems.interactions.InteractionManager_new;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.tofaa.entitylib.meta.display.ItemDisplayMeta;
@@ -40,6 +41,7 @@ public class InterListener implements Listener {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final InteractionManager interManager = plugin.getInteractionManager();
+    private final InteractionManager_new interactionManager = plugin.getInteractionManager_new();
     private final CitemManager citemManager = plugin.getCitemManager();
     private final DAOHub hub;
     private final Map<Location, Long> blockCooldowns = new HashMap<>();
@@ -271,34 +273,11 @@ public class InterListener implements Listener {
             blockCooldowns.put(blockLocation, currentTime);
 
             // Process interactions
-            for (File file : interManager.interactionFolder.listFiles()) {
-                if (file.isFile() && file.getName().endsWith(".json")) {
-                    String id = file.getName().replace(".json", "");
-                    InteractionData inter = interManager.interactionMap.get(id);
-
-                    if (inter == null) {
-                        Bukkit.getLogger().info("Interaction " + id + " is null.");
-                        continue; // Skip invalid interaction files
-                    }
-
-                    List<Location> locs = inter.getLocations();
-                    for (Location loc : locs) {
-                        if (isSameLocation(blockLocation, loc)) {
-                            e.setCancelled(true); // Cancel default behavior
-
-                            Bukkit.getLogger().info("Interaction triggered for ID: " + id);
-
-                            // Trigger interaction based on action
-                            switch (e.getAction()) {
-                                case RIGHT_CLICK_BLOCK:
-                                case LEFT_CLICK_BLOCK:
-                                    interManager.triggerInteraction(p, id);
-                                    break;
-                            }
-                            return; // Exit after handling interaction
-                        }
-                    }
-                }
+            switch (e.getAction()) {
+                case RIGHT_CLICK_BLOCK:
+                case LEFT_CLICK_BLOCK:
+                    interactionManager.triggerInteraction(hub.getInteractionDAO().getInterOnBlock(blockLocation), p);
+                    break;
             }
         }
     }
@@ -312,22 +291,9 @@ public class InterListener implements Listener {
             return;
         }
 
-        for (File file : interManager.interactionFolder.listFiles()) {
-            if (file.isFile() && file.getName().endsWith(".json")) {
-                String id = file.getName().replace(".json", "");
-                InteractionData inter = interManager.interactionMap.get(id);
-                if (inter == null) {
-                    Bukkit.getLogger().info("Inter "+id+" is null.");
-                }
-                List<Location> locs = inter.getLocations();
-                for (Location loc : locs) {
-                    if (isSameLocation(block.getLocation(), loc)) {
-                        event.setCancelled(true);
-                        event.getPlayer().sendMessage("You cannot break this block!");
-                        return;
-                    }
-                }
-            }
+        if (hub.getInteractionDAO().getAllBlockLocations().contains(block.getLocation())) {
+            event.setCancelled(true);
+            return;
         }
     }
 

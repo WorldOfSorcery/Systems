@@ -119,7 +119,7 @@ public class CitemDAO implements IDAO {
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, loc);
             ResultSet rs = pstmt.executeQuery();
-            Location returnLoc = Parsers.parseLocation(rs.getString("display_location"));
+            Location returnLoc = Parsers.stringToLocation(rs.getString("display_location"));
             return returnLoc;
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to get Item Display Location: " + e);

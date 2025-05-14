@@ -15,7 +15,6 @@ import java.util.logging.Level;
 public class StatsManager {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final WoSCore core = plugin.getCore();
     private final DAOHub hub;
     private final String logName = "StatsManager";
 

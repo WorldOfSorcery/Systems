@@ -25,7 +25,7 @@ public class ConditionHandler_new {
         return true;
     }
 
-    private boolean evaluate(Player player, Condition condition) {
+    public boolean evaluate(Player player, Condition condition) {
         switch (condition.getName().toLowerCase()) {
             case "has_citem":
                 return citems.hasCitemAmount(player, condition.getValue(), Integer.parseInt(condition.getParameter())); // Placeholder until i have a correct method for it

@@ -4,8 +4,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 
-import java.awt.*;
-
 import static me.hektortm.woSSystems.utils.Letters.*;
 import static me.hektortm.woSSystems.utils.Letters.STAR;
 
@@ -112,7 +110,7 @@ public class Parsers {
         return loc.getWorld().getName() + "," + loc.getX() + "," + loc.getY() + "," + loc.getZ() + "," + loc.getYaw() + "," + loc.getPitch();
     }
 
-    public static Location parseLocation(String locationString) {
+    public static Location stringToLocation(String locationString) {
         try {
             // Split the string by commas
             String[] parts = locationString.split(",");

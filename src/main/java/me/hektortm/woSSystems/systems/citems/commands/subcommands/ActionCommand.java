@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
+import me.hektortm.woSSystems.systems.interactions.InteractionManager_new;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
@@ -26,13 +27,12 @@ public class ActionCommand extends SubCommand {
     private final NamespacedKey rightActionKey;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final CitemManager citemManager;
-    private final InteractionManager manager;
+    private final InteractionManager_new manager = plugin.getInteractionManager_new();
     private final LangManager lang = plugin.getLangManager();
 
 
-    public ActionCommand(CitemManager citemManager, InteractionManager manager) {
+    public ActionCommand(CitemManager citemManager) {
         this.citemManager = citemManager;
-        this.manager = manager;
         leftActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-left");
         rightActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-right");
 
@@ -65,8 +65,7 @@ public class ActionCommand extends SubCommand {
         String action = args[0].toLowerCase();
         String actionID = args[1].toLowerCase();
 
-        InteractionData interaction = manager.getInteractionByID(actionID);
-        if (interaction == null) {
+        if (!manager.interactionExist(actionID)) {
             Utils.error(p, "citems", "error.inter-not-found", "%id%", actionID);
             return;
         }
