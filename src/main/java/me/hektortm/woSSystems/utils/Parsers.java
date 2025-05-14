@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.utils;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.World;
 
@@ -108,6 +109,27 @@ public class Parsers {
 
     public static String locationToString(Location loc) {
         return loc.getWorld().getName() + "," + loc.getX() + "," + loc.getY() + "," + loc.getZ() + "," + loc.getYaw() + "," + loc.getPitch();
+    }
+
+    public static Color parseColorFromString(String colorString) {
+        // Expected format: "Color:[argb0xFFFCBA03]"
+        try {
+            String prefix = "Color:[argb0x";
+            String suffix = "]";
+            if (colorString.startsWith(prefix) && colorString.endsWith(suffix)) {
+                String hex = colorString.substring(prefix.length(), colorString.length() - suffix.length());
+                int argb = (int) Long.parseLong(hex, 16); // Must be long for unsigned ints > 0x7FFFFFFF
+
+                int red = (argb >> 16) & 0xFF;
+                int green = (argb >> 8) & 0xFF;
+                int blue = argb & 0xFF;
+
+                return Color.fromRGB(red, green, blue);
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // Log the error for debugging
+        }
+        return Color.WHITE; // Default fallback
     }
 
     public static Location stringToLocation(String locationString) {

@@ -273,12 +273,16 @@ public class InterListener implements Listener {
             blockCooldowns.put(blockLocation, currentTime);
 
             // Process interactions
-            switch (e.getAction()) {
-                case RIGHT_CLICK_BLOCK:
-                case LEFT_CLICK_BLOCK:
-                    interactionManager.triggerInteraction(hub.getInteractionDAO().getInterOnBlock(blockLocation), p);
-                    break;
+            if (hub.getInteractionDAO().getInterOnBlock(blockLocation) !=null) {
+
+                switch (e.getAction()) {
+                    case RIGHT_CLICK_BLOCK:
+                    case LEFT_CLICK_BLOCK:
+                        interactionManager.triggerInteraction(hub.getInteractionDAO().getInterOnBlock(blockLocation), p);
+                        break;
+                }
             }
+
         }
     }
 

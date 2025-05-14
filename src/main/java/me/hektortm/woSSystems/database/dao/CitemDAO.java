@@ -6,13 +6,12 @@ import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.Parsers;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -41,6 +40,7 @@ public class CitemDAO implements IDAO {
                     "lore TEXT, " +
                     "enchantments TEXT, " +
                     "damage INT, " +
+                    "color VARCHAR(255)," +
                     "custom_model_data INT, " +
                     "flag_undroppable BOOLEAN, "+
                     "flag_unusable BOOLEAN, " +
@@ -57,6 +57,7 @@ public class CitemDAO implements IDAO {
                     "PRIMARY KEY (citem_id))");
         }
     }
+
 
     public void createItemDisplay(String id, UUID ownerUUID, Location blockLocation, Location displayLocation) {
         String bLoc = Parsers.locationToString(blockLocation);
@@ -119,8 +120,11 @@ public class CitemDAO implements IDAO {
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, loc);
             ResultSet rs = pstmt.executeQuery();
-            Location returnLoc = Parsers.stringToLocation(rs.getString("display_location"));
-            return returnLoc;
+            if (rs.next()) {
+                return Parsers.stringToLocation(rs.getString("display_location"));
+            } else {
+                return null;
+            }
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to get Item Display Location: " + e);
             return null;
@@ -178,6 +182,7 @@ public class CitemDAO implements IDAO {
         String loreString = lore != null ? lore.toString() : "";
         String enchants = meta.hasEnchants() ? meta.getEnchants().toString() : null;
         int damage = meta instanceof Damageable ? ((Damageable) meta).getDamage() : 0;
+        Color color = meta instanceof LeatherArmorMeta ? ((LeatherArmorMeta) meta).getColor() : null;
         int custom_model_data = meta.hasCustomModelData() ? meta.getCustomModelData() : 0;
 
         PersistentDataContainer data = meta.getPersistentDataContainer();
@@ -200,7 +205,7 @@ public class CitemDAO implements IDAO {
         String profileBackground = data.has(plugin.getCitemManager().getProfileBgKey(), PersistentDataType.STRING)
                 ? data.get(plugin.getCitemManager().getProfileBgKey(), PersistentDataType.STRING) : null;
 
-        String query = "INSERT INTO citems (id, material, display_name, lore, enchantments, damage, custom_model_data, flag_undroppable, flag_unusable, action_left, action_right, flag_placeable, flag_profile_bg, flag_profile_picture) VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?, ?, ?)";
+        String query = "INSERT INTO citems (id, material, display_name, lore, enchantments, damage, color, custom_model_data, flag_undroppable, flag_unusable, action_left, action_right, flag_placeable, flag_profile_bg, flag_profile_picture) VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?,?, ?, ?)";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, id);
             stmt.setString(2, material);
@@ -208,14 +213,15 @@ public class CitemDAO implements IDAO {
             stmt.setString(4, loreString);
             stmt.setString(5, enchants);
             stmt.setInt(6, damage);
-            stmt.setInt(7, custom_model_data);
-            stmt.setBoolean(8, undroppable);
-            stmt.setBoolean(9, unusable);
-            stmt.setString(10, actionLeft);
-            stmt.setString(11, actionRight);
-            stmt.setInt(12, placeable);
-            stmt.setString(13, profileBackground);
-            stmt.setString(14, profilePicture);
+            stmt.setString(7, color.toString());
+            stmt.setInt(8, custom_model_data);
+            stmt.setBoolean(9, undroppable);
+            stmt.setBoolean(10, unusable);
+            stmt.setString(11, actionLeft);
+            stmt.setString(12, actionRight);
+            stmt.setInt(13, placeable);
+            stmt.setString(14, profileBackground);
+            stmt.setString(15, profilePicture);
             stmt.executeUpdate();
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to save Citem: " + e);
@@ -230,6 +236,7 @@ public class CitemDAO implements IDAO {
         String loreString = lore != null ? lore.toString() : "";
         String enchants = meta.hasEnchants() ? meta.getEnchants().toString() : null;
         int damage = meta instanceof Damageable ? ((Damageable) meta).getDamage() : 0;
+        Color color = meta instanceof LeatherArmorMeta ? ((LeatherArmorMeta) meta).getColor() : null;
         int custom_model_data = meta.hasCustomModelData() ? meta.getCustomModelData() : 0;
 
         PersistentDataContainer data = meta.getPersistentDataContainer();
@@ -252,13 +259,14 @@ public class CitemDAO implements IDAO {
         String profileBackground = data.has(plugin.getCitemManager().getProfileBgKey(), PersistentDataType.STRING)
                 ? data.get(plugin.getCitemManager().getProfileBgKey(), PersistentDataType.STRING) : null;
 
-        String query = "UPDATE citems SET material = ?, display_name = ?, lore = ?, enchantments = ?, damage = ?, custom_model_data = ?, flag_undroppable = ?, flag_unusable = ?, action_left = ?, action_right = ?, flag_placeable = ?, flag_profile_bg = ?, flag_profile_picture = ? WHERE id = ?";
+        String query = "UPDATE citems SET material = ?, display_name = ?, lore = ?, enchantments = ?, damage = ?, color = ?, custom_model_data = ?, flag_undroppable = ?, flag_unusable = ?, action_left = ?, action_right = ?, flag_placeable = ?, flag_profile_bg = ?, flag_profile_picture = ? WHERE id = ?";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, material);
             stmt.setString(2, display_name);
             stmt.setString(3, loreString);
             stmt.setString(4, enchants);
             stmt.setInt(5, damage);
+            stmt.setString(6, color.toString());
             stmt.setInt(6, custom_model_data);
             stmt.setBoolean(7, undroppable);
             stmt.setBoolean(8, unusable);
@@ -328,6 +336,7 @@ public class CitemDAO implements IDAO {
                 String loreString = rs.getString("lore");
                 String enchantsString = rs.getString("enchantments");
                 int damage = rs.getInt("damage");
+                Color color = Parsers.parseColorFromString(rs.getString("color"));
                 int custom_model_data = rs.getInt("custom_model_data");
                 boolean undroppable = rs.getBoolean("flag_undroppable");
                 boolean unusable = rs.getBoolean("flag_unusable");
@@ -381,6 +390,10 @@ public class CitemDAO implements IDAO {
                     // Set damage if applicable
                     if (meta instanceof Damageable) {
                         ((Damageable) meta).setDamage(damage);
+                    }
+
+                    if (meta instanceof LeatherArmorMeta) {
+                        ((LeatherArmorMeta) meta).setColor(color);
                     }
 
                     // Set custom model data
