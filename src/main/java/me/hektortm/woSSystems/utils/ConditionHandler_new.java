@@ -19,6 +19,10 @@ public class ConditionHandler_new {
 
 
     public boolean checkConditions(Player player, List<Condition> conditions) {
+        if (conditions == null || conditions.isEmpty()) {
+            return true;
+        }
+
         for (Condition condition : conditions) {
             if (!evaluate(player, condition)) {
                 return false; // if any condition fails, deny

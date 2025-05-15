@@ -178,10 +178,10 @@ public class InteractionDAO implements IDAO {
     }
 
 
-    public void bindNPC(String id, String npcId) {
+    public void bindNPC(String id, int npcId) {
         String sql = "INSERT INTO inter_npcs (npc_id, interaction_id) VALUES (?, ?)";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, npcId);
+            pstmt.setInt(1, npcId);
             pstmt.setString(2, id);
             pstmt.executeUpdate();
         } catch (SQLException e) {

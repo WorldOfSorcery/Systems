@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.systems.interactions.commands.subcommands;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
+import me.hektortm.woSSystems.systems.interactions.InteractionManager_new;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
@@ -15,7 +16,7 @@ import org.bukkit.entity.Player;
 public class NPCBind extends SubCommand {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final InteractionManager manager = plugin.getInteractionManager();
+    private final InteractionManager_new manager = plugin.getInteractionManager_new();
 
     @Override
     public String getName() {
@@ -42,7 +43,8 @@ public class NPCBind extends SubCommand {
 
         if (args.length == 1) {
             String interactionId = args[0];
-            manager.bindNPC(p, interactionId, npcId);
+            manager.npcBind(interactionId, npcId);
+
         } else {
             sender.sendMessage("/interaction bind <id>");
         }

@@ -62,7 +62,7 @@ public class InteractionManager_new {
                         for (Player player : Bukkit.getOnlinePlayers()) {
                             NPC npc1 = CitizensAPI.getNPCRegistry().getById(id);
                             Location location = npc1.getEntity().getLocation().getBlock().getLocation();
-                            //particleHandler.spawnParticlesForPlayer(player, inter, npc1.getEntity().getLocation(), true);
+                            particleHandler.spawnParticlesForPlayer(player, inter, npc1.getEntity().getLocation(), true);
                             //spawnTextDisplay(location, inter, id, true);
                             //updateTextDisplay(location, inter, id, true);
                         }
@@ -82,6 +82,10 @@ public class InteractionManager_new {
 
     public void blockBind(String id, Location loc) {
         hub.getInteractionDAO().bindBlock(id, loc);
+    }
+
+    public void npcBind(String id, int npcId) {
+        hub.getInteractionDAO().bindNPC(id, npcId);
     }
 
     public void triggerInteraction(String interactionId, Player player) {
@@ -115,7 +119,9 @@ public class InteractionManager_new {
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand);
             }
 
-            if (action.getBehaviour().equalsIgnoreCase("break")) {
+            if (action.getBehaviour().equalsIgnoreCase("continue")) {
+                continue;
+            } else {
                 break;
             }
         }
