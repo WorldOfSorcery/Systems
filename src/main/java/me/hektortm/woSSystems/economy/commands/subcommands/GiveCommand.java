@@ -76,6 +76,10 @@ public class GiveCommand extends SubCommand {
                 log.writeLog(p, "-> "+ target.getName() +": Gave "+amount+" "+currencyID);
         }
 
+        if (sender instanceof Player cmdSender) {
+            ecoManager.ecoLog(target.getUniqueId(), currencyID, amount, "Command", cmdSender.getName());
+        }
+
         ecoManager.modifyCurrency(target.getUniqueId(), currencyID, amount, Operations.GIVE);
         WoSSystems.ecoMsg3Values(sender, "economy", "currency.given", "%amount%", String.valueOf(amount), "%currency%", color+name, "%player%", playerName);
 

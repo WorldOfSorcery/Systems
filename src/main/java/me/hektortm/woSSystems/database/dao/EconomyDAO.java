@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 
 public class EconomyDAO implements IDAO {
@@ -41,9 +42,34 @@ public class EconomyDAO implements IDAO {
                     "icon VARCHAR(255), "+
                     "color VARCHAR(255), "+
                     "hidden_if_zero BOOLEAN NOT NULL DEFAULT false)");
+            statement.execute("CREATE TABLE IF NOT EXISTS eco_log (" +
+                    "uuid CHAR(36) NOT NULL, " +
+                    "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP," +
+                    "currency VARCHAR(255)," +
+                    "previous_amount BIGINT," +
+                    "new_amount BIGINT," +
+                    "change_amount BIGINT," +
+                    "source_type VARCHAR(255)," +
+                    "source VARCHAR(255)) ");
         }
     }
 
+    public void ecoLog(UUID uuuid, String currency, long previousAmount, long newAmount, long changeAmount, String sourceType, String source) {
+        try (Connection conn = db.getConnection(); PreparedStatement prepStmt = conn.prepareStatement(
+                "INSERT INTO eco_log (uuid, currency, previous_amount, new_amount, change_amount,source_type, source) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )) {
+            prepStmt.setString(1, uuuid.toString());
+            prepStmt.setString(2, currency);
+            prepStmt.setLong(3, previousAmount);
+            prepStmt.setLong(4, newAmount);
+            prepStmt.setLong(5, changeAmount);
+            prepStmt.setString(6, sourceType);
+            prepStmt.setString(7, source);
+            prepStmt.executeUpdate();
+        } catch (SQLException e) {
+            plugin.writeLog(logName, Level.SEVERE, "Failed to log economy change: " + e);
+        }
+    }
 
     public void ensurePlayerEconomyEntry(Player player, String currency) {
         try (Connection conn = db.getConnection(); PreparedStatement prepStmt = conn.prepareStatement(

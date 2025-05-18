@@ -43,7 +43,11 @@ public class EcoManager {
                 break;
         }
         hub.getEconomyDAO().updatePlayerCurrency(player, currency, newAmount);
+    }
 
+    public void ecoLog(UUID uuid, String currency, long changeAmount, String sourceType, String source) {
+        long previousAmount  =getCurrencyBalance(uuid, currency);
+        hub.getEconomyDAO().ecoLog(uuid, currency, previousAmount, previousAmount+changeAmount, changeAmount, sourceType, source);
     }
 
     public Map<String, Currency> getCurrencies() {
