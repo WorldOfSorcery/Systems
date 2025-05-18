@@ -168,9 +168,10 @@ public class InteractionDAO implements IDAO {
                         .map(String::trim)
                         .map(s -> s.replaceAll("^\"|\"$", "")) // remove surrounding quotes
                         .collect(Collectors.toList());
-
                 holograms.add(new InteractionHologram(id, hologramId, behaviour, matchType, parsedHologram));
             }
+
+            return holograms;
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to get holograms: " + e);
         }

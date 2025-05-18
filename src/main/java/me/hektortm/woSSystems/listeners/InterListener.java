@@ -1,18 +1,12 @@
 package me.hektortm.woSSystems.listeners;
 
-import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemCustomModelData;
-import com.github.retrooper.packetevents.protocol.item.type.ItemTypes;
-import com.github.retrooper.packetevents.protocol.nbt.NBTCompound;
-import com.maximde.hologramlib.hologram.ItemHologram;
-import com.maximde.hologramlib.hologram.RenderMode;
+
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager_new;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
-import me.tofaa.entitylib.meta.display.ItemDisplayMeta;
-import net.citizensnpcs.api.event.NPCClickEvent;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
 import org.bukkit.*;
 import org.bukkit.block.Block;

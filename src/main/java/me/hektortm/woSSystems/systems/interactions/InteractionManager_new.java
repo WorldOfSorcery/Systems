@@ -1,33 +1,37 @@
 package me.hektortm.woSSystems.systems.interactions;
 
-import com.maximde.hologramlib.hologram.RenderMode;
-import com.maximde.hologramlib.hologram.TextHologram;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.utils.ConditionHandler_new;
 import me.hektortm.woSSystems.utils.ConditionType;
-import me.hektortm.woSSystems.utils.dataclasses.Condition;
-import me.hektortm.woSSystems.utils.dataclasses.Interaction;
-import me.hektortm.woSSystems.utils.dataclasses.InteractionAction;
-import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
+import me.hektortm.woSSystems.utils.dataclasses.*;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.TextDisplay;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.logging.Level;
 
-public class InteractionManager_new {
+public class InteractionManager_new  {
 
     private final DAOHub hub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final ConditionHandler_new conditions = plugin.getConditionHandler_new();
+
 
 
 
@@ -44,6 +48,9 @@ public class InteractionManager_new {
 
     public void interactionTask() {
         ParticleHandler particleHandler = new ParticleHandler(hub);
+        HologramHandler hologramHandler = new HologramHandler(hub);
+
+
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -53,23 +60,29 @@ public class InteractionManager_new {
                             for (Player player : Bukkit.getOnlinePlayers()) {
                                 particleHandler.spawnParticlesForPlayer(player, inter, location, false);
 
-                                //spawnTextDisplay(location, inter, null, false);
-                                //updateTextDisplay(location, inter, null, false);
+//                                Bukkit.getScheduler().runTask(plugin, () -> {
+//                                    hologramHandler.handleHolograms(player, inter, location, false);
+//                                });
                             }
                         }
                     }
                     for (int id : inter.getNpcIDs()) {
                         for (Player player : Bukkit.getOnlinePlayers()) {
                             NPC npc1 = CitizensAPI.getNPCRegistry().getById(id);
+                            if (npc1 == null || !npc1.isSpawned() || npc1.getEntity() == null) {
+                                continue;
+                            }
                             Location location = npc1.getEntity().getLocation().getBlock().getLocation();
                             particleHandler.spawnParticlesForPlayer(player, inter, npc1.getEntity().getLocation(), true);
                             //spawnTextDisplay(location, inter, id, true);
-                            //updateTextDisplay(location, inter, id, true);
+//                            Bukkit.getScheduler().runTask(plugin, () -> {
+//                                hologramHandler.handleHolograms(player, inter, location, false);
+//                            });
                         }
                     }
                 }
             }
-        }.runTaskTimer(plugin, 0L, 10L);
+        }.runTaskTimer(plugin, 0L, 50L);
     }
 
     public boolean interactionExist(String id) {
@@ -116,6 +129,30 @@ public class InteractionManager_new {
                     player.sendMessage(message.replace("&", "§"));
                     return;
                 }
+
+                if(cmd.startsWith("eco")) {
+                    String[] parts = cmd.split(" ");
+                    String actionType = parts[1];
+                    String currency = parts[3];
+                    int amount = Integer.parseInt(parts[4]);
+                    if (actionType.equalsIgnoreCase("give")) {
+                        WoSSystems.getPlugin(WoSSystems.class).getEcoManager().ecoLog(player.getUniqueId(), currency, amount, "Interaction", inter.getInteractionId());
+
+                    }
+                    if (actionType.equalsIgnoreCase("take")) {
+                        WoSSystems.getPlugin(WoSSystems.class).getEcoManager().ecoLog(player.getUniqueId(), currency, -amount, "Interaction", inter.getInteractionId());
+
+                    }
+                    if (actionType.equalsIgnoreCase("set")) {
+                        WoSSystems.getPlugin(WoSSystems.class).getEcoManager().ecoLog(player.getUniqueId(), currency, amount, "Interaction", inter.getInteractionId());
+
+                    }
+                    if (actionType.equalsIgnoreCase("reset")) {
+                        WoSSystems.getPlugin(WoSSystems.class).getEcoManager().ecoLog(player.getUniqueId(), currency, 0, "Interaction", inter.getInteractionId());
+
+                    }
+                }
+
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand);
             }
 

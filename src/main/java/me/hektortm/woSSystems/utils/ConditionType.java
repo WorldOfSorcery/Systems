@@ -4,6 +4,7 @@ public enum ConditionType {
 
     INTERACTION("interaction"),
     PARTICLE("particle"),
+    HOLOGRAM("hologram"),
     RECIPE("recipe");
 
 

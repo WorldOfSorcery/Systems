@@ -1,15 +1,17 @@
 package me.hektortm.woSSystems;
 
-import com.github.retrooper.packetevents.PacketEvents;
-import com.maximde.hologramlib.HologramLib;
-import com.maximde.hologramlib.hologram.HologramManager;
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.ProtocolManager;
+import com.comphenix.protocol.events.ListenerPriority;
+import com.comphenix.protocol.events.PacketAdapter;
+import com.comphenix.protocol.events.PacketEvent;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
-import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import me.hektortm.woSSystems.channels.Channel;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.channels.cmd.ChannelCommand;
@@ -34,6 +36,7 @@ import me.hektortm.woSSystems.regions.RegionHandler;
 import me.hektortm.woSSystems.regions.RegionBossBar;
 import me.hektortm.woSSystems.systems.citems.commands.SignCommand;
 import me.hektortm.woSSystems.systems.guis.GUIManager;
+import me.hektortm.woSSystems.systems.interactions.HologramHandler;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager_new;
 import me.hektortm.woSSystems.systems.loottables.LoottableManager;
@@ -90,14 +93,14 @@ import java.util.logging.Logger;
 
 public final class WoSSystems extends JavaPlugin {
 
-    private HologramManager hologramManager;
     private static WoSSystems instance;
     private DAOHub daoHub;
     private WoSCore core;
     private static LangManager lang;
     public File fishingItemsFolder = new File(getDataFolder(), "professions/fishing/items");
     private LogManager log;
-
+    private ProtocolManager protocolManager;
+    private HologramHandler hologramHandler;
     private CitemManager citemManager;
     private EcoManager ecoManager;
     private StatsManager statsManager;
@@ -135,11 +138,6 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        PacketEvents.getAPI().init();
-        HologramLib.getManager().ifPresentOrElse(
-                manager -> hologramManager = manager,
-                () -> getLogger().severe("Failed to initialize HologramLib manager.")
-        );
         instance = this;
         try {
             core = WoSCore.getPlugin(WoSCore.class);
@@ -169,6 +167,7 @@ public final class WoSSystems extends JavaPlugin {
             System.out.println("Failed to connect to Database"+ e.getMessage());
             Bukkit.getPluginManager().disablePlugin(this);
         }
+        hologramHandler = new HologramHandler(daoHub);
         bossBarManager = new BossBarManager();
         regionBossBarManager = new RegionBossBar();
         tab = new TablistManager();
@@ -244,18 +243,28 @@ public final class WoSSystems extends JavaPlugin {
         channelManager.loadChannels();
         registerChannelCommands();
         //recipeManager.loadRecipes();
-        hologramManager.removeAll();
         registerCommands();
         registerEvents();
         //interactionManager.loadInteraction();
         interactionManager_new.interactionTask();
         tab.runTablist();
+
+        ProtocolLibrary.getProtocolManager().addPacketListener(
+                new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Server.SPAWN_ENTITY) {
+                    @Override
+                    public void onPacketSending(PacketEvent event) {
+                        if (event.getPacketType() == PacketType.Play.Server.SPAWN_ENTITY) {
+                            plugin.getLogger().info("Sending spawn packet: " + event.getPacket());
+                        }
+                    }
+                }
+        );
+
     }
 
     @Override
     public void onDisable() {
-        PacketEvents.getAPI().terminate();
-        interactionManager.removeTextDisplays();
+        hologramHandler.forceCleanupAllHolograms();
         channelManager.saveChannels();
         for (Player p : Bukkit.getOnlinePlayers()) {
             bossBarManager.removeBossBar(p);
@@ -266,8 +275,7 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onLoad() {
-        PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
-        PacketEvents.getAPI().load();
+        protocolManager = ProtocolLibrary.getProtocolManager();
         FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
 
         DISPLAY_NAME = registerStringFlag("display-name", registry);
@@ -377,6 +385,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new RegionHandler(regionBossBarManager));
         eventReg(new ProfileListener());
         eventReg(new BackpackListener());
+        eventReg(new HologramHandler(daoHub));
         getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager, daoHub), this);
     }
 
@@ -460,9 +469,6 @@ public final class WoSSystems extends JavaPlugin {
     public ConditionHandler getConditionHandler() {
         return conditionHandler;
     }
-    public HologramManager getHologramManager() {
-        return hologramManager;
-    }
     public ChannelManager getChannelManager() {
         return channelManager;
     }
@@ -480,6 +486,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public InteractionManager_new getInteractionManager_new() {
         return interactionManager_new;
+    }
+    public ProtocolManager getProtocolManager() {
+        return protocolManager;
     }
 
     public Map<Player, String> getPlayerRegions() {

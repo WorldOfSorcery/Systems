@@ -1,8 +1,5 @@
 package me.hektortm.woSSystems.systems.interactions;
 
-import com.maximde.hologramlib.hologram.Hologram;
-import com.maximde.hologramlib.hologram.RenderMode;
-import com.maximde.hologramlib.hologram.TextHologram;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.utils.Parsers;
@@ -39,7 +36,6 @@ public class InteractionManager {
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
     public final Map<String, InteractionData> interactionMap = new HashMap<>();
-    private final Map<String, TextHologram> hologramMap = new HashMap<>();
 
     public InteractionManager() {
         this.interactionFolder = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "interactions");
@@ -209,8 +205,6 @@ public class InteractionManager {
                             for (Player player : Bukkit.getOnlinePlayers()) {
                                 //particleHandler.spawnParticlesForPlayer(player, inter, location, false);
 
-                                spawnTextDisplay(location, inter, null, false);
-                                updateTextDisplay(location, inter, null, false);
                             }
                         }
                     }
@@ -220,8 +214,7 @@ public class InteractionManager {
                                 NPC npc1 = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(id));
                                 Location location = npc1.getEntity().getLocation().getBlock().getLocation();
                                 //particleHandler.spawnParticlesForPlayer(player, inter, npc1.getEntity().getLocation(), true);
-                                spawnTextDisplay(location, inter, id, true);
-                                updateTextDisplay(location, inter, id, true);
+
                             }
                         }
                     }
@@ -230,78 +223,9 @@ public class InteractionManager {
         }.runTaskTimer(plugin, 0L, 10L);
     }
 
-    public void removeTextDisplays() {
-        for (Hologram holo : hologramMap.values()) {
-            String id = holo.getId();
-            plugin.getHologramManager().remove(id);
-        }
-    }
-
-    public void spawnTextDisplay(Location location, InteractionData inter, String npcID, boolean npc) {
-
-        Location newL = location.clone().add(0.5, 2, 0.5);
-
-        String interId = inter.getId();
-        String id;
-        if (npc) {
-            id = interId+":npc_"+npcID;
-        } else {
-            //placeholder for now
-            id = interId+":loc_"+location.toString();
-            newL = location.clone().add(0.5, 1.2, 0.5);
-        }
-        if (!hologramMap.containsKey(id)) {
-            createDisplay(id, newL);
-        } else {
-            Location loc = hologramMap.get(id).getLocation();
-            if (!Objects.equals(loc.toString(), newL.toString())) {
-                plugin.getHologramManager().remove(id);
-                hologramMap.remove(id);
-                createDisplay(id, newL);
-            }
-        }
-    }
-
-    private void createDisplay(String id, Location loc) {
-        TextHologram textHologram = new TextHologram(id, RenderMode.ALL, (player1, textDisplayMeta) ->{
-
-            String[] parts = id.split(":");
-            String interactionID = parts[0];
-            InteractionData interaction = getInteractionByID(interactionID);
-            ConditionHandler.ConditionOutcomes outcomes = conditionHandler.getUnmetConditionOutcomes(player1, interaction.getConditions());
-            List<String> lines = interaction.getHologram();
-            if (outcomes.holograms != null) {
-                lines = outcomes.holograms;
-
-            }
-            String combinedText = String.join("\n", lines);
-            Component component = Component.text(combinedText);
-            textDisplayMeta.setText(component);
 
 
-            return textDisplayMeta;
-        })
-                .setBillboard(Display.Billboard.VERTICAL);
 
-
-        plugin.getHologramManager().spawn(textHologram, loc);
-        hologramMap.put(id, textHologram);
-    }
-    private void updateTextDisplay(Location location, InteractionData inter, String npcID, boolean npc) {
-
-        String interId = inter.getId();
-        String id;
-        if (npc) {
-            id = interId+":npc_"+npcID;
-        } else {
-            //placeholder for now
-            id = interId+":loc_"+location.toString();
-        }
-        if (hologramMap.containsKey(id)) {
-            TextHologram holo = hologramMap.get(id);
-            holo.update();
-        }
-    }
 
     public Location getTargetBlock(Player p) {
         double distance = 5.0;

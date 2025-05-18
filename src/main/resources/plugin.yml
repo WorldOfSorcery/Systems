@@ -3,7 +3,7 @@ version: '1.0'
 main: me.hektortm.woSSystems.WoSSystems
 api-version: '1.21'
 author: HektorTM
-depend: [WoSCore, WorldGuard, Citizens, HologramLib]
+depend: [WoSCore, WorldGuard, Citizens, ProtocolLib]
 commands:
   debugcmd:
     description: Debug command
