@@ -11,11 +11,13 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class NicknameDAO implements IDAO {
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DatabaseManager db;
     private final DAOHub daoHub;
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final String logName = "NicknameDAO";
 
     public NicknameDAO(DatabaseManager db, DAOHub daoHub) throws SQLException {
         this.db = db;
@@ -56,7 +58,8 @@ public class NicknameDAO implements IDAO {
             stmt.setString(4, nickname + ",");
             stmt.executeUpdate();
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("Failed to insert nickname: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Failed to insert nickname: " + e);
+
         }
 
         // Update the nickname if it already exists
@@ -68,7 +71,7 @@ public class NicknameDAO implements IDAO {
             stmt.setString(4, uuid.toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("Failed to update nickname: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Failed to update nickname: " + e);
         }
     }
 
@@ -79,7 +82,7 @@ public class NicknameDAO implements IDAO {
             stmt.setString(1, uuid.toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("Failed to reset nickname: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Failed to reset nickname: " + e);
         }
     }
 
@@ -93,7 +96,7 @@ public class NicknameDAO implements IDAO {
                 return rs.getString("nickname");
             }
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("Failed to get nickname: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get nickname: " + e);
         }
         return null;
     }
@@ -111,7 +114,7 @@ public class NicknameDAO implements IDAO {
                 return nickname != null ? nickname : username;
             }
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("Failed to get real name or nickname: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get real or nickname: " + e);
         }
         return null;
     }
@@ -124,7 +127,7 @@ public class NicknameDAO implements IDAO {
             stmt.setString(2, nickname);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("Failed to request nickname change: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Failed to request nickname change: " + e);
         }
     }
 
@@ -145,7 +148,7 @@ public class NicknameDAO implements IDAO {
                 removeNicknameRequest(uuid);
             }
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("Failed to approve nickname change: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Failed to approve nickname: " + e);
         }
     }
 
@@ -161,7 +164,7 @@ public class NicknameDAO implements IDAO {
             stmt.setString(1, uuid.toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("Failed to remove nickname request: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Failed to remove nickname request: " + e);
         }
     }
 
@@ -175,7 +178,7 @@ public class NicknameDAO implements IDAO {
                 requests.put(UUID.fromString(rs.getString("uuid")), rs.getString("nickname"));
             }
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("Failed to get nickname requests: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get nickname request: " + e);
         }
         return requests;
     }
@@ -188,7 +191,7 @@ public class NicknameDAO implements IDAO {
             stmt.setString(2, nickname);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("Failed to reserve nickname: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Failed to reserve nickname: " + e);
         }
     }
 
@@ -199,7 +202,7 @@ public class NicknameDAO implements IDAO {
             stmt.setString(1, uuid.toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("Failed to unreserve nickname: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Failed to unreserve nickname: " + e);
         }
     }
 
@@ -211,7 +214,7 @@ public class NicknameDAO implements IDAO {
             ResultSet rs = stmt.executeQuery();
             return rs.next();
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("Failed to check if nickname is reserved: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Failed to check if nickname is reserved: " + e);
         }
         return false;
     }
@@ -226,7 +229,7 @@ public class NicknameDAO implements IDAO {
                 reservedNicks.put(UUID.fromString(rs.getString("uuid")), rs.getString("nickname"));
             }
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("Failed to get reserved nicknames: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get reserved nicknames: " + e);
         }
         return reservedNicks;
     }

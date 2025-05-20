@@ -11,11 +11,13 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.sql.*;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class ProfileDAO implements IDAO {
     private final DatabaseManager db;
     private final DAOHub hub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final String logName = "ProfileDAO";
 
     public ProfileDAO(DatabaseManager db, DAOHub hub) throws SQLException {
         this.db = db;
@@ -49,8 +51,7 @@ public class ProfileDAO implements IDAO {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to retrieve background for UUID: " + uuid);
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to retrieve background: " + e);
         }
         return null;
     }
@@ -65,8 +66,7 @@ public class ProfileDAO implements IDAO {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to retrieve background ID for UUID: " + uuid);
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to retrieve background ID: " + e);
         }
         return null;
     }
@@ -81,8 +81,7 @@ public class ProfileDAO implements IDAO {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to retrieve profile picture for UUID: " + uuid);
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to retrieve profile picture: " + e);
         }
         return null;
     }
@@ -97,8 +96,7 @@ public class ProfileDAO implements IDAO {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to retrieve profile picture ID for UUID: " + uuid);
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to retrieve profile picture ID: " +e);
         }
         return null;
     }
@@ -112,8 +110,7 @@ public class ProfileDAO implements IDAO {
 
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to update background for UUID: " + uuid);
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to update background: "+e);
         }
     }
 
@@ -126,8 +123,7 @@ public class ProfileDAO implements IDAO {
 
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to update profile picture for UUID: " + uuid);
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to update profile picture: "+e);
         }
     }
 
@@ -149,8 +145,7 @@ public class ProfileDAO implements IDAO {
             pstmt.setString(5, pictureId);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to insert or update profile for UUID: " + uuid);
-            e.printStackTrace();
+            plugin.writeLog(logName, Level.SEVERE, "Failed to insert or update profile: "+e);
         }
     }
 }

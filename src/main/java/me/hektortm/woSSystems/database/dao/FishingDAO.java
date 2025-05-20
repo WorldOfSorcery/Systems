@@ -8,13 +8,16 @@ import me.hektortm.wosCore.database.IDAO;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Level;
 
 public class FishingDAO implements IDAO {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DatabaseManager db;
     private final DAOHub hub;
+    private final String logName = "FishingDAO";
 
     public FishingDAO(DatabaseManager db, DAOHub hub) throws SQLException {
         this.db = db;
@@ -25,76 +28,66 @@ public class FishingDAO implements IDAO {
     @Override
     public void initializeTable() throws SQLException {
         try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.execute("CREATE TABLE IF NOT EXISTS fishing_items(" +
+            stmt.execute("CREATE TABLE IF NOT EXISTS fishing(" +
                     "id VARCHAR(255) UNIQUE NOT NULL, " +
-                    "item_id VARCHAR(255) NOT NULL, " +
-                    "interaction_id VARCHAR(255), " +
+                    "citem_id VARCHAR(255) NOT NULL, " +
+                    "catch_interaction VARCHAR(255), " +
                     "rarity VARCHAR(255) NOT NULL, " +
-                    "regions VARCHAR(255))");
+                    "regions TEXT)");
         }
     }
 
-    // Create a new FishingItem in the database
-    public void createFishingItem(FishingItem item) throws SQLException {
-        String query = "INSERT INTO fishing_items (id, item_id, interaction_id, rarity, regions) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, item.getId());
-            stmt.setString(2, item.getCitem());
-            stmt.setString(3, item.getInteraction());
-            stmt.setString(4, item.getRarity());
-            stmt.setString(5, String.join(",", item.getRegions()));
-            stmt.executeUpdate();
+    public FishingItem getRandomItemByRarityAndRegion(String rarity, String region) {
+        List<FishingItem> itemsByRarity = getItemsByRarity(rarity);
+        List<FishingItem> eligibleItems = new ArrayList<>();
+
+        for (FishingItem item : itemsByRarity) {
+            List<String> regions = item.getRegions();
+            if (regions.isEmpty() || regions.contains(region)) {
+                eligibleItems.add(item);
+            }
         }
+
+        if (eligibleItems.isEmpty()) {
+            return null;
+        }
+
+        Random random = new Random();
+        return eligibleItems.get(random.nextInt(eligibleItems.size()));
     }
 
-    // Get a random FishingItem by rarity and region
-    public FishingItem getRandomItemByRarityAndRegion(String rarity, String region) throws SQLException {
-        String query = "SELECT * FROM fishing_items WHERE rarity = ? AND (regions IS NULL OR regions LIKE ?)";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+    private List<FishingItem> getItemsByRarity(String rarity) {
+        List<FishingItem> items = new ArrayList<>();
+
+        String query = "SELECT id, citem_id, catch_interaction, regions, rarity FROM fishing WHERE rarity = ?";
+
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
             stmt.setString(1, rarity);
-            stmt.setString(2, "%" + region + "%");
             ResultSet rs = stmt.executeQuery();
 
-            List<FishingItem> items = new ArrayList<>();
             while (rs.next()) {
-                items.add(new FishingItem(
-                        rs.getString("id"),
-                        rs.getString("item_id"),
-                        rs.getString("interaction_id"),
-                        List.of(rs.getString("regions").split(",")),
-                        rs.getString("rarity")
-                ));
+                String id = rs.getString("id");
+                String citemId = rs.getString("citem_id");
+                String interaction = rs.getString("catch_interaction");
+                String regionsStr = rs.getString("regions");
+                List<String> regions = new ArrayList<>();
+
+                if (regionsStr != null && !regionsStr.trim().isEmpty()) {
+                    regions = Arrays.asList(regionsStr.split(","));
+                }
+
+                FishingItem item = new FishingItem(id, citemId, interaction, regions, rs.getString("rarity"));
+                items.add(item);
             }
 
-            if (!items.isEmpty()) {
-                return items.get(new Random().nextInt(items.size()));
-            }
+        } catch (SQLException e) {
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Item By Rarity: "+e);
         }
-        return null;
+
+        return items;
     }
 
-    // Get a random FishingItem by region
-    public FishingItem getRandomItemByRegion(String region) throws SQLException {
-        String query = "SELECT * FROM fishing_items WHERE regions LIKE ?";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, "%" + region + "%");
-            ResultSet rs = stmt.executeQuery();
 
-            List<FishingItem> items = new ArrayList<>();
-            while (rs.next()) {
-                items.add(new FishingItem(
-                        rs.getString("id"),
-                        rs.getString("item_id"),
-                        rs.getString("interaction_id"),
-                        List.of(rs.getString("regions").split(",")),
-                        rs.getString("rarity")
-                ));
-            }
-
-            if (!items.isEmpty()) {
-                return items.get(new Random().nextInt(items.size()));
-            }
-        }
-        return null;
-    }
 }
