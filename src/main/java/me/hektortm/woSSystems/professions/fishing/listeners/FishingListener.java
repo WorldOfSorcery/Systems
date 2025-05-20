@@ -1,11 +1,14 @@
 package me.hektortm.woSSystems.professions.fishing.listeners;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.professions.fishing.FishingManager;
+import me.hektortm.woSSystems.systems.interactions.InteractionManager_new;
 import me.hektortm.woSSystems.utils.dataclasses.FishingItem;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,65 +22,68 @@ import java.util.Random;
 public class FishingListener implements Listener {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final FishingManager fishingManager = plugin.getFishingManager();
-    private final CitemManager citemManager = plugin.getCitemManager();
-    private final InteractionManager interactionManager = plugin.getInteractionManager();
+    private final DAOHub hub;
+    private final InteractionManager_new interactionManager = plugin.getInteractionManager_new();
+
+    public FishingListener(DAOHub hub) {
+        this.hub = hub;
+    }
 
     @EventHandler
     public void onFish(PlayerFishEvent event) {
         if (event.getState() == PlayerFishEvent.State.CAUGHT_FISH) {
             Player player = event.getPlayer();
-            String region = "default"; // Replace with actual region logic
+            String region = plugin.getPlayerRegions().get(player.getUniqueId());
             String rarity = getRandomRarity();
 
             try {
-                FishingItem fishingItem = fishingManager.getDAO().getRandomItemByRarityAndRegion(rarity, region);
+                FishingItem fishingItem = hub.getFishingDAO().getRandomItemByRarityAndRegion(rarity, region);
 
                 if (fishingItem != null) {
                     Item caughtItemEntity = (Item) event.getCaught();
                     String id = fishingItem.getCitem();
 
-                    if (citemManager.getCitemDAO().citemExists(id)) {
-                        ItemStack citem = citemManager.getCitemDAO().getCitem(id);
+                    if (hub.getCitemDAO().citemExists(id)) {
+                        ItemStack citem = hub.getCitemDAO().getCitem(id);
 
                         if (citem != null) {
                             caughtItemEntity.setItemStack(citem);
-                            interactionManager.triggerInteraction(player, fishingItem.getInteraction());
+                            interactionManager.triggerInteraction(fishingItem.getInteraction(), player);
+                        } else fallback(player, event);
+                    } else fallback(player, event);
+                } else fallback(player, event);
 
-                            ItemMeta iM = citem.getItemMeta();
-                            String iN = iM.getDisplayName();
-                            Bukkit.getLogger().info("[" + player.getName() + "] Caught: " + iN);
-                        } else {
-                            Bukkit.getLogger().severe("[" + player.getName() + "] Failed to load custom item.");
-                        }
-                    } else {
-                        Bukkit.getLogger().severe("[" + player.getName() + "] Citem does not exist: " + id);
-                    }
-                } else {
-                    Bukkit.getLogger().severe("[" + player.getName() + "] FishingItem is null!");
-                }
             } catch (Exception e) {
                 Bukkit.getLogger().severe("[" + player.getName() + "] Error while fishing: " + e.getMessage());
             }
         }
     }
 
+    private void fallback(Player p, PlayerFishEvent e ){
+        Item caughtItemEntity = (Item) e.getCaught();
+        ItemStack fallback = new ItemStack(Material.AIR);
+        caughtItemEntity.setItemStack(fallback);
+        p.sendMessage("§7Your line broke...");
+    }
+
     private String getRandomRarity() {
         Random random = new Random();
-        int chance = random.nextInt(100);
+        float chance = random.nextFloat(100);
 
         if (chance < 50) {
-            return "common";
-        } else if (chance < 75) {
-            return "uncommon";
-        } else if (chance < 90) {
-            return "rare";
-        } else if (chance < 98) {
-            return "epic";
+            return "COMMON";          // 50% chance (0-49.999...)
+        } else if (chance < 80) {
+            return "UNCOMMON";        // 30% chance (50-79.999...)
+        } else if (chance < 95) {
+            return "RARE";            // 15% chance (80-94.999...)
         } else if (chance < 99) {
-            return "legendary";
+            return "EPIC";            // 4% chance (95-98.999...)
+        } else if (chance < 99.7) {
+            return "LEGENDARY";       // 0.7% chance (99-99.699...)
+        } else if (chance < 99.97) {
+            return "ANCIENT";         // 0.27% chance (99.7-99.969...)
         } else {
-            return "ancient";
+            return "MYTHIC";          // 0.03% chance (99.97-100)
         }
     }
 }

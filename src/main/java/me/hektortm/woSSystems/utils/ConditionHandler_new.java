@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class ConditionHandler_new {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
@@ -52,12 +53,12 @@ public class ConditionHandler_new {
                 return !stats.hasStatValue(player, condition.getValue(), Integer.parseInt(condition.getParameter()));
 
             case "is_in_region":
-                Map<Player, String> playerRegions = plugin.getPlayerRegions();
-                String regionId = playerRegions.get(player);
+                Map<UUID, String> playerRegions = plugin.getPlayerRegions();
+                String regionId = playerRegions.get(player.getUniqueId());
                 return regionId != null && regionId.equalsIgnoreCase(condition.getValue());
             case "is_not_in_region":
-                Map<Player, String> playerRegionsNot = plugin.getPlayerRegions();
-                String regionIdNot = playerRegionsNot.get(player);
+                Map<UUID, String> playerRegionsNot = plugin.getPlayerRegions();
+                String regionIdNot = playerRegionsNot.get(player.getUniqueId());
                 return regionIdNot == null || !regionIdNot.equalsIgnoreCase(condition.getValue());
 
             case "permission":

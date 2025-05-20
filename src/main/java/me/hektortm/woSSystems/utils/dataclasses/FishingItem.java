@@ -37,4 +37,5 @@ public class FishingItem {
     public String getId() {
         return id;
     }
+
 }

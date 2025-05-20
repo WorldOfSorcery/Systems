@@ -14,35 +14,11 @@ import java.util.Map;
 
 public class FishingManager {
 
-    private final Map<String, List<FishingItem>> fishingItemsByRarity = new HashMap<>();
     private final DAOHub hub;
 
 
-    public FishingManager(File itemFolder, DAOHub hub) {
+    public FishingManager(DAOHub hub) {
         this.hub = hub;
-        loadFishingItems(itemFolder);
-    }
-
-    private void loadFishingItems(File folder) {
-        if (!folder.exists()) {
-            folder.mkdirs();
-        }
-
-        File[] files = folder.listFiles((dir, name) -> name.endsWith(".yml"));
-        if (files != null) {
-            for (File file : files) {
-                FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-
-                String citem = config.getString("citem");
-                String interaction = config.getString("interaction");
-                String rarity = config.getString("rarity");
-
-                //FishingItem fishingItem = new FishingItem(citem, interaction, rarity);
-
-                //fishingItemsByRarity.computeIfAbsent(rarity, k -> new ArrayList<>()).add(fishingItem);
-
-            }
-        }
     }
 
     public List<FishingItem> getItemByRarity(String rarity) {
