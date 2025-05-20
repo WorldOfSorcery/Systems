@@ -38,7 +38,7 @@ public class RegionHandler implements Listener {
 
         if (regionManager == null) {
             bossbar.updateBossBar(player, ""); // Clear bossbar if no regions
-            plugin.getPlayerRegions().remove(player); // Remove the player from tracked regions
+            plugin.getPlayerRegions().remove(player.getUniqueId()); // Remove the player from tracked regions
             return;
         }
 
@@ -56,14 +56,14 @@ public class RegionHandler implements Listener {
             }
         }
 
-        String currentRegionId = plugin.getPlayerRegions().get(player);
+        String currentRegionId = plugin.getPlayerRegions().get(player.getUniqueId());
 
         // If the player has left their current region
         if (!Objects.equals(currentRegionId, newRegionId)) {
             if (newRegionId == null) {
                 bossbar.updateBossBar(player, ""); // Clear the bossbar if no region with display-name
             }
-            plugin.getPlayerRegions().put(player, newRegionId); // Update the player's current region
+            plugin.getPlayerRegions().put(player.getUniqueId(), newRegionId); // Update the player's current region
         }
     }
 }

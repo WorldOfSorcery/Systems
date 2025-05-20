@@ -97,7 +97,6 @@ public final class WoSSystems extends JavaPlugin {
     private DAOHub daoHub;
     private WoSCore core;
     private static LangManager lang;
-    public File fishingItemsFolder = new File(getDataFolder(), "professions/fishing/items");
     private LogManager log;
     private ProtocolManager protocolManager;
     private HologramHandler hologramHandler;
@@ -107,7 +106,6 @@ public final class WoSSystems extends JavaPlugin {
     private UnlockableManager unlockableManager;
     private InteractionManager interactionManager;
     private InteractionManager_new interactionManager_new;
-    private FishingManager fishingManager;
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
     private ConditionHandler_new conditionHandler_new;
@@ -125,7 +123,7 @@ public final class WoSSystems extends JavaPlugin {
     private ProfileManager profileManager;
 
     public static StringFlag DISPLAY_NAME;
-    public final Map<Player, String> playerRegions = new HashMap<>();
+    public final Map<UUID, String> playerRegions = new HashMap<>();
     private final Map<UUID, Inventory> clickActions = new HashMap<>();
 
 
@@ -178,7 +176,6 @@ public final class WoSSystems extends JavaPlugin {
         statsManager = new StatsManager(daoHub);
         ecoManager = new EcoManager(daoHub);
         unlockableManager = new UnlockableManager(daoHub);
-        fishingManager = new FishingManager(fishingItemsFolder, daoHub);
 
         guiManager = new GUIManager();
 
@@ -205,7 +202,7 @@ public final class WoSSystems extends JavaPlugin {
 
 // Initialize the remaining managers
         recipeManager = new CRecipeManager(daoHub);
-        fishingManager = new FishingManager(fishingItemsFolder, daoHub);
+
         resolver = new PlaceholderResolver(statsManager, citemManager);
         new CraftingListener(this, recipeManager, conditionHandler, interactionManager);
 
@@ -379,7 +376,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new DropListener());
         eventReg(new HoverListener(citemManager));
         eventReg(new QuitListener(core, unlockableManager, daoHub, coinflipCommand, this));
-        eventReg(new FishingListener());
+        eventReg(new FishingListener(daoHub));
         eventReg(new JoinListener(this));
         eventReg(new ChannelListener(channelManager, nickManager, unlockableManager, daoHub));
         eventReg(new RegionHandler(regionBossBarManager));
@@ -424,15 +421,12 @@ public final class WoSSystems extends JavaPlugin {
     public WoSCore getCore() {
         return core;
     }
-
     public LogManager getLogManager() {
         return log;
     }
-
     public LangManager getLangManager() {
         return lang;
     }
-
     public PlaceholderResolver getPlaceholderResolver() {
         return resolver;
     }
@@ -450,9 +444,6 @@ public final class WoSSystems extends JavaPlugin {
     }
     public CitemManager getCitemManager() {
         return citemManager;
-    }
-    public FishingManager getFishingManager() {
-        return fishingManager;
     }
     public CRecipeManager getCRecipeManager() {
         return recipeManager;
@@ -491,7 +482,7 @@ public final class WoSSystems extends JavaPlugin {
         return protocolManager;
     }
 
-    public Map<Player, String> getPlayerRegions() {
+    public Map<UUID, String> getPlayerRegions() {
         return playerRegions;
     }
 
