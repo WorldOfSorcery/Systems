@@ -2,7 +2,7 @@ package me.hektortm.woSSystems.professions.fishing;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.systems.interactions.InteractionManager_new;
+import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.dataclasses.FishingItem;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -19,7 +19,7 @@ public class FishingListener implements Listener {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DAOHub hub;
-    private final InteractionManager_new interactionManager = plugin.getInteractionManager_new();
+    private final InteractionManager interactionManager = plugin.getInteractionManager_new();
 
     public FishingListener(DAOHub hub) {
         this.hub = hub;

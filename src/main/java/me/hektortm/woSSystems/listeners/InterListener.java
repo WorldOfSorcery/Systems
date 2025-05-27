@@ -4,8 +4,6 @@ package me.hektortm.woSSystems.listeners;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
-import me.hektortm.woSSystems.systems.interactions.InteractionManager_new;
-import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
 import org.bukkit.*;
@@ -23,19 +21,15 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Transformation;
-import org.bukkit.util.Vector;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 
-import java.io.File;
 import java.util.*;
-import java.util.logging.Level;
 
 public class InterListener implements Listener {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final InteractionManager interManager = plugin.getInteractionManager();
-    private final InteractionManager_new interactionManager = plugin.getInteractionManager_new();
+    private final InteractionManager interactionManager = plugin.getInteractionManager_new();
     private final CitemManager citemManager = plugin.getCitemManager();
     private final DAOHub hub;
     private final Map<Location, Long> blockCooldowns = new HashMap<>();
@@ -56,27 +50,27 @@ public class InterListener implements Listener {
         String npcIdString = String.valueOf(clickedNPCid);
         Bukkit.getLogger().info("Interacted with NPC: " + clickedNPCid);
 
-        for (File file : interManager.interactionFolder.listFiles()) {
-            if (file.isFile() && file.getName().endsWith(".json")) {
-                String id = file.getName().replace(".json", "");
-                InteractionData inter = interManager.interactionMap.get(id);
-                if (inter == null) {
-                    Bukkit.getLogger().info("Interaction " + id + " is null.");
-                    continue; // Skip invalid interaction files
-                }
-                List<String> ids = inter.getNpcIDs();
-
-                for (String npcid : ids) {
-                    if (Objects.equals(npcid, npcIdString)) {
-                        Bukkit.getLogger().info("NPC Interaction triggered for ID: " + id);
-
-                        // Trigger interaction based on action
-                        interManager.triggerInteraction(p, id);
-                        return; // Exit after handling interaction
-                    }
-                }
-            }
-        }
+//        for (File file : interManager.interactionFolder.listFiles()) {
+//            if (file.isFile() && file.getName().endsWith(".json")) {
+//                String id = file.getName().replace(".json", "");
+//                InteractionData inter = interManager.interactionMap.get(id);
+//                if (inter == null) {
+//                    Bukkit.getLogger().info("Interaction " + id + " is null.");
+//                    continue; // Skip invalid interaction files
+//                }
+//                List<String> ids = inter.getNpcIDs();
+//
+//                for (String npcid : ids) {
+//                    if (Objects.equals(npcid, npcIdString)) {
+//                        Bukkit.getLogger().info("NPC Interaction triggered for ID: " + id);
+//
+//                        // Trigger interaction based on action
+//                        interManager.triggerInteraction(p, id);
+//                        return; // Exit after handling interaction
+//                    }
+//                }
+//            }
+//        }
     }
 
     @EventHandler

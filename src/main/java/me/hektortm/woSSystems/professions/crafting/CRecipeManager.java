@@ -5,7 +5,6 @@ import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.RecipeDAO;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
-import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.dataclasses.RecipeData;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
@@ -30,8 +29,7 @@ public class CRecipeManager {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final CitemManager citemManager = plugin.getCitemManager();
-    private final InteractionManager interactionManager = plugin.getInteractionManager();
-    private final CitemCommand cmd = new CitemCommand(citemManager, interactionManager);
+    private final CitemCommand cmd = new CitemCommand(citemManager);
     private final LogManager logManager = plugin.getLogManager();
     private final Map<NamespacedKey, RecipeData> recipeMap = new HashMap<>();
     private final DAOHub hub;

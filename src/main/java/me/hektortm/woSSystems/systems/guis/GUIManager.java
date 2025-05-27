@@ -5,6 +5,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.utils.ActionHandler;
+import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.woSSystems.utils.dataclasses.GUI;
 import me.hektortm.woSSystems.utils.dataclasses.GUISlot;
 import org.bukkit.Bukkit;
@@ -31,6 +33,8 @@ import java.util.logging.Level;
 public class GUIManager implements Listener {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final PlaceholderResolver placeholderResolver = plugin.getPlaceholderResolver();
+    private final ActionHandler actionHandler = new ActionHandler();
     private final DAOHub hub;
 
     public GUIManager(DAOHub hub) {
@@ -46,18 +50,26 @@ public class GUIManager implements Listener {
 
         Inventory inventory = Bukkit.createInventory(
                 new GUIHolder(guiId),
-                gui.getSize(),
+                gui.getSize()*9,
                 gui.getTitle()
         );
 
+
+
         for (GUISlot slot : gui.getSlots()) {
             if (!slot.isVisible()) continue;
+
+            List<String> preLore = slot.getLore();
+            for (int i = 0; i < preLore.size(); i++) {
+                preLore.set(i, placeholderResolver.resolvePlaceholders(preLore.get(i), player).replace("&", "§"));
+            }
+
 
             ItemStack item = new ItemStack(slot.getMaterial());
             ItemMeta meta = item.getItemMeta();
 
             if (slot.getDisplayName() != null) {
-                meta.setDisplayName(slot.getDisplayName());
+                meta.setDisplayName(placeholderResolver.resolvePlaceholders(slot.getDisplayName(), player).replace("&", "§"));
             }
 
             if (slot.getLore() != null && !slot.getLore().isEmpty()) {
@@ -78,15 +90,9 @@ public class GUIManager implements Listener {
         }
 
         player.openInventory(inventory);
-        executeActions(player, gui.getOpenActions());
+        actionHandler.executeActions(player, gui.getOpenActions(), ActionHandler.SourceType.GUI, guiId);
     }
 
-    private void executeActions(Player player, List<String> actions) {
-        for (String action : actions) {
-            String processed = action.replace("%player%", player.getName());
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), processed);
-        }
-    }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
@@ -117,7 +123,7 @@ public class GUIManager implements Listener {
         };
 
         if (actions != null && !actions.isEmpty()) {
-            executeActions(player, actions);
+            actionHandler.executeActions(player, actions, ActionHandler.SourceType.GUI, null);
         }
     }
 
@@ -128,7 +134,7 @@ public class GUIManager implements Listener {
 
         GUI gui = hub.getGuiDAO().getGUIbyId(holder.getGuiId());
         if (gui != null) {
-            executeActions(player, gui.getCloseActions());
+            actionHandler.executeActions(player, gui.getCloseActions(), ActionHandler.SourceType.GUI, gui.getGuiId());
         }
     }
 

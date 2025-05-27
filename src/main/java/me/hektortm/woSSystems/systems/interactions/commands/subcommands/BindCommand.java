@@ -3,7 +3,6 @@ package me.hektortm.woSSystems.systems.interactions.commands.subcommands;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
-import me.hektortm.woSSystems.systems.interactions.InteractionManager_new;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
@@ -15,7 +14,7 @@ import org.bukkit.entity.Player;
 public class BindCommand extends SubCommand {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final InteractionManager_new manager = plugin.getInteractionManager_new();
+    private final InteractionManager manager = plugin.getInteractionManager_new();
 
 
     @Override

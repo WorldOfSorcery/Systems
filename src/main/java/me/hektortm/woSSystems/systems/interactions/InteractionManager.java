@@ -1,384 +1,126 @@
 package me.hektortm.woSSystems.systems.interactions;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.utils.ConditionHandler;
-import me.hektortm.woSSystems.utils.Parsers;
-import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
-import me.hektortm.woSSystems.utils.PlaceholderResolver;
-import me.hektortm.wosCore.LangManager;
-import me.hektortm.wosCore.WoSCore;
-import me.hektortm.wosCore.logging.LogManager;
+import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.utils.ActionHandler;
+import me.hektortm.woSSystems.utils.ConditionHandler_new;
+import me.hektortm.woSSystems.utils.ConditionType;
+import me.hektortm.woSSystems.utils.dataclasses.*;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
-import net.kyori.adventure.text.Component;
-import org.bukkit.*;
-import org.bukkit.block.Block;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Display;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.util.*;
+import java.util.List;
 
 public class InteractionManager {
 
-    public final File interactionFolder;
+    private final DAOHub hub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final ConditionHandler newConditionHandler = plugin.getConditionHandler();
-    private final LogManager log = new LogManager(new LangManager(WoSCore.getPlugin(WoSCore.class)), WoSCore.getPlugin(WoSCore.class));
-    private PlaceholderResolver resolver;
-    private ConditionHandler conditionHandler;
-    public final Map<String, InteractionData> interactionMap = new HashMap<>();
-
-    public InteractionManager() {
-        this.interactionFolder = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "interactions");
-        if(!interactionFolder.exists()) interactionFolder.mkdirs();
+    private final ConditionHandler_new conditions = plugin.getConditionHandler_new();
+    private final ActionHandler actionHandler = new ActionHandler();
 
 
+
+    public InteractionManager(DAOHub hub) {
+        this.hub = hub;
     }
 
-    // TODO: Particle Conditions
-
-    public void setConditionHandler(ConditionHandler conditionHandler) {
-        if (conditionHandler == null) {
-            throw new IllegalArgumentException("ConditionHandler cannot be null.");
-        }
-        this.conditionHandler = conditionHandler;
-    }
-    public void setPlaceholderResolver(PlaceholderResolver resolver) {
-        if (resolver == null) {
-            throw new IllegalArgumentException("PlaceholderResolver cannot be null.");
-        }
-        this.resolver = resolver;
-    }
-
-
-    public void loadInteraction() {
-        File[] interactionFiles = interactionFolder.listFiles((dir, name) -> name.endsWith(".json"));
-        if(interactionFiles == null || interactionFiles.length == 0) {
-            log.sendWarning("No valid interactions loaded. Check JSON structure in " + interactionFolder.getPath());
-            return;
-        }
-
-        for (File file : interactionFiles) {
-            String interactionId =  file.getName().replace(".json", "");
-            try (FileReader reader = new FileReader(file)) {
-                JSONObject json = (JSONObject) new JSONParser().parse(reader);
-
-                JSONObject bound = (JSONObject) json.get("bound");
-                JSONArray locationArray = (JSONArray) bound.get("location");
-                JSONArray npcArray = (JSONArray) bound.get("npc");
-
-                List<Location> locations = new ArrayList<>();
-                if (locationArray != null) {
-                    for (Object location : locationArray) {
-                        // Assuming there's a method to parse location strings into Location objects
-                        locations.add(Parsers.stringToLocation((String) location));
-                    }
-                }
-
-                List<String> validNpcIds = new ArrayList<>();
-                if (npcArray != null) {
-                    for (Object npcId : npcArray) {
-                        validNpcIds.add((String) npcId);
-                    }
-                }
-
-                JSONObject particlesJson = (JSONObject) json.get("particles");
-                String particleType = particlesJson != null ? (String) particlesJson.get("type") : "";
-                String particleColor = particlesJson != null ? (String) particlesJson.get("color") : "";
-
-                JSONArray hologramJson = (JSONArray) json.get("hologram");
-                List<String> hologramDefault = new ArrayList<>();
-
-                if (hologramJson != null) {
-                    for (Object line : hologramJson) {
-                        hologramDefault.add((String) line);
-                    }
-                }
-
-
-
-                // Load the "conditions" section
-                JSONArray conditionsArray = (JSONArray) json.get("conditions");
-                List<JSONObject> orderedConditions = new ArrayList<>();
-                if (conditionsArray != null) {
-                    for (Object obj : conditionsArray) {
-                        orderedConditions.add((JSONObject) obj);
-                    }
-                }
-
-                // Load the "actions" section
-                JSONArray actionsArray = (JSONArray) json.get("actions");
-                List<String> actions = new ArrayList<>();
-                if (actionsArray != null) {
-                    for (Object action : actionsArray) {
-                        actions.add((String) action);
-                    }
-                }
-
-                interactionMap.put(interactionId, new InteractionData(interactionId, conditionsArray,actions,locations,validNpcIds,particleType,particleColor, hologramDefault));
-
-            } catch (Exception e) {
-                Bukkit.getLogger().warning("Error loading interaction from file " + file.getName() + ": " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
+    private Interaction getInteraction(String id) {
+        Interaction inter = hub.getInteractionDAO().getInteractionByID(id);
+        return inter;
     }
 
 
 
-    public void reloadInter(String id) {
-        if(interactionMap.containsKey(id)) {
-            interactionMap.put(id, interactionMap.get(id));
-        } else {
-            plugin.getLogger().warning("Failed to reload interaction: " + id);
-        }
-    }
+    public void interactionTask() {
+        ParticleHandler particleHandler = new ParticleHandler(hub);
+        HologramHandler hologramHandler = new HologramHandler(hub);
 
-    public void triggerInteraction(Player p, String id) {
-        InteractionData inter = getInteractionByID(id);
 
-        if (inter == null) {
-            Bukkit.getLogger().warning(p.getName()+": Interaction \""+ id + "\" not found");
-            return;
-        }
-
-        if(inter.getActions() == null) return;
-        List<String> actions;
-        // proritize conditions
-        ConditionHandler.ConditionOutcomes unMetOutcomes = newConditionHandler.getUnmetConditionOutcomes(p, inter.getConditions());
-        if (unMetOutcomes != null) {
-            actions = unMetOutcomes.actions;
-        } else {
-            actions = inter.getActions();
-        }
-
-        for (String action : actions) {
-            action = action.replace("%player%", p.getName());
-
-            if (action.startsWith("send_message")) {
-                String message = action.replace("send_message", "");
-                String finalMessage = resolver.resolvePlaceholders(message, p);
-                p.sendMessage(finalMessage.replace("&", "§"));
-            }
-            if (action.startsWith("close_gui")) {
-                p.closeInventory();
-            }
-            if (action.startsWith("playsound")) {
-                String[] parts = action.split(" ");
-                if (parts.length > 1) {
-                    String sound = parts[1];
-                    p.playSound(p.getLocation(), sound, 1.0F, 1.0F);
-                }
-            }
-            if (action.startsWith("player_cmd")) {
-                String cmd = action.replace("player_cmd", "");
-                plugin.getServer().dispatchCommand(p, cmd);
-            } else {
-                if (!action.startsWith("send_message") &&
-                        !action.startsWith("close_gui") &&
-                        !action.startsWith("playsound") &&
-                        !action.startsWith("player_cmd")) {
-                    plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), action);
-                }
-            }
-        }
-
-    }
-
-    public void particleTask() {
-        //ParticleHandler particleHandler = new ParticleHandler();
         new BukkitRunnable() {
             @Override
             public void run() {
-                for (InteractionData inter : interactionMap.values()) {
-                    for (Location location : inter.getLocations()) {
+                for (Interaction inter : hub.getInteractionDAO().getInteractions()) {
+                    for (Location location : inter.getBlockLocations()) {
                         if (location != null) {
                             for (Player player : Bukkit.getOnlinePlayers()) {
-                                //particleHandler.spawnParticlesForPlayer(player, inter, location, false);
+                                particleHandler.spawnParticlesForPlayer(player, inter, location, false);
 
+//                                Bukkit.getScheduler().runTask(plugin, () -> {
+//                                    hologramHandler.handleHolograms(player, inter, location, false);
+//                                });
                             }
                         }
                     }
-                    for (String id : inter.getNpcIDs()) {
-                        if (id != null) {
-                            for (Player player : Bukkit.getOnlinePlayers()) {
-                                NPC npc1 = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(id));
-                                Location location = npc1.getEntity().getLocation().getBlock().getLocation();
-                                //particleHandler.spawnParticlesForPlayer(player, inter, npc1.getEntity().getLocation(), true);
-
+                    for (int id : inter.getNpcIDs()) {
+                        for (Player player : Bukkit.getOnlinePlayers()) {
+                            NPC npc1 = CitizensAPI.getNPCRegistry().getById(id);
+                            if (npc1 == null || !npc1.isSpawned() || npc1.getEntity() == null) {
+                                continue;
                             }
+                            Location location = npc1.getEntity().getLocation().getBlock().getLocation();
+                            particleHandler.spawnParticlesForPlayer(player, inter, npc1.getEntity().getLocation(), true);
+                            //spawnTextDisplay(location, inter, id, true);
+//                            Bukkit.getScheduler().runTask(plugin, () -> {
+//                                hologramHandler.handleHolograms(player, inter, location, false);
+//                            });
                         }
                     }
                 }
             }
-        }.runTaskTimer(plugin, 0L, 10L);
+        }.runTaskTimer(plugin, 0L, 50L);
     }
 
-
-
-
-
-    public Location getTargetBlock(Player p) {
-        double distance = 5.0;
-
-        Block target = p.getTargetBlock(null, (int)distance);
-
-        if (target == null) return null;
-        return target.getLocation();
-    }
-
-    public void unbindLocation(Player p, String id, Location loc) {
-        if (!interExists(p,id)) return;
-        if (!isBound(loc)) {
-            p.sendMessage("Theres no interaction bound on this block.");
+    public boolean interactionExist(String id) {
+        Interaction inter = hub.getInteractionDAO().getInteractionByID(id);
+        if (inter == null) {
+            return false;
         }
-        InteractionData inter = getInteractionByID(id);
-        inter.removeLocation(loc);
-        interactionMap.put(id, inter);
-        saveInteractionToFile(id, inter);
-        p.sendMessage("Unbound interaction '"+id);
+        return true;
     }
 
-    public void bindLocation(Player p, String id, Location loc) {
-        if (!interExists(p,id)) return;
-        if (isBound(loc)) {
-            p.sendMessage("Theres already an Interaction bound on this block.");
-            return;
-        }
-        InteractionData inter = getInteractionByID(id);
-        inter.addLocation(loc);
-        interactionMap.put(id, inter);
-        saveInteractionToFile(id, inter);
-        p.sendMessage("Bound interaction '"+id);
+    public void blockBind(String id, Location loc) {
+        hub.getInteractionDAO().bindBlock(id, loc);
     }
 
-    public void bindNPC(Player p, String id, int npcID) {
-        String npcIDString = String.valueOf(npcID);
-        if(!interExists(p,id)) return;
-        if (isNPCBound(npcID)) {
-            p.sendMessage("error isBound");
-            return;
-        }
-        InteractionData inter = getInteractionByID(id);
-        inter.addNpcID(npcIDString);
-        interactionMap.put(id, inter);
-        saveInteractionToFile(id, inter);
-        p.sendMessage("Bound interaction '"+id+"' to NPC '"+npcID+"'");
-    }
-    public void unbindNPC(Player p, String id, int npcID) {
-        String npcIDString = String.valueOf(npcID);
-        if (!interExists(p,id)) return;
-        if (!isNPCBound(npcID)) {
-            p.sendMessage("Theres no interaction bound on this NPC.");
-        }
-        InteractionData inter = getInteractionByID(id);
-        inter.removeNpcID(npcIDString);
-        interactionMap.put(id, inter);
-        saveInteractionToFile(id, inter);
-        p.sendMessage("Unbound interaction '"+id+"' from NPC '"+npcID+"'");
+    public void npcBind(String id, int npcId) {
+        hub.getInteractionDAO().bindNPC(id, npcId);
     }
 
-    public boolean isNPCBound(int id) {
-        for (InteractionData inter : interactionMap.values()) {
-            if(inter.getNpcIDs().contains(id)) return true;
-        }
-        return false;
-    }
+    public void triggerInteraction(String interactionId, Player player) {
+        Interaction inter = getInteraction(interactionId);
+        if (inter == null) return;
 
-    public boolean isBound(Location loc) {
-        for (InteractionData inter : interactionMap.values()) {
-            if(inter.getLocations().contains(loc)) return true;
-        }
-        return false;
-    }
+        List<InteractionAction> actions = inter.getActions();
 
-    public boolean interExists(CommandSender c, String id) {
-        for (File file : interactionFolder.listFiles()) {
-            if (file.getName().equals(id+".json")) return true;
-        }
-        c.sendMessage("Interaction \""+id+"\" not found.");
-        return false;
-    }
+        for (InteractionAction action : actions) {
+            List<Condition> conditionList = hub.getConditionDAO().getConditions(
+                    ConditionType.INTERACTION,
+                    interactionId + ":" + action.getActionId()
+            );
+            if (!conditionList.isEmpty()) {
+                boolean shouldRun;
+                if ("one".equalsIgnoreCase(action.getMatchType())) {
+                    shouldRun = conditionList.isEmpty() || conditionList.stream().anyMatch(cond -> conditions.evaluate(player, cond));
+                } else {
+                    shouldRun = conditions.checkConditions(player, conditionList);
+                }
 
-    public InteractionData getInteractionByID(String id) {
-        return interactionMap.get(id);
-    }
-
-
-
-
-
-    public void saveInteractionToFile(String id, InteractionData interaction) {
-        try {
-            File interactionFile = new File(interactionFolder, id + ".json");
-            if (!interactionFile.exists()) {
-                interactionFile.createNewFile();
+                if (!shouldRun) continue;
             }
 
-            JSONObject json = new JSONObject();
+            actionHandler.executeActions(player, action.getActions(), ActionHandler.SourceType.INTERACTION, interactionId);
 
-            // Bound locations
-            JSONObject bound = new JSONObject();
-            JSONArray locationArray = new JSONArray();
-            for (Location loc : interaction.getLocations()) {
-                locationArray.add(Parsers.locationToString(loc)); // Convert each location to string
-            }
-            bound.put("location", locationArray);
-
-            JSONArray npcArray = new JSONArray();
-            for (String npc : interaction.getNpcIDs()) {
-                npcArray.add(npc);
-            }
-            bound.put("npc", npcArray);
-
-            json.put("bound", bound);
-
-            // Particles
-            JSONObject particlesJson = new JSONObject();
-            particlesJson.put("type", interaction.getParticleType());
-            particlesJson.put("color", interaction.getParticleColor());
-            json.put("particles", particlesJson);
-
-            // Hologram
-
-            json.put("hologram", interaction.getHologram());
-
-
-            // Conditions
-            json.put("conditions", interaction.getConditions());
-
-            // Actions
-            JSONArray actionsArray = new JSONArray();
-            actionsArray.addAll(interaction.getActions());
-            json.put("actions", actionsArray);
-
-            // Write to the file
-            try (FileWriter writer = new FileWriter(interactionFile)) {
-                writer.write(json.toJSONString());
-            }
-
-        } catch (Exception e) {
-            Bukkit.getLogger().warning("Failed to save interaction to file: " + id);
-            e.printStackTrace();
-        }
-    }
-    private JSONArray listToJsonArray(List<String> lines) {
-        JSONArray jsonArray = new JSONArray();
-        if (lines != null) {
-            for (String line : lines) {
-                jsonArray.add(line); // Add each line to the JSONArray
+            if (action.getBehaviour().equalsIgnoreCase("continue")) {
+                continue;
+            } else {
+                break;
             }
         }
-        return jsonArray;
+
     }
 
 }

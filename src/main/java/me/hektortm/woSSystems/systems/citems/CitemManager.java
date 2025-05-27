@@ -4,9 +4,7 @@ import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.channels.NicknameManager;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.CitemDAO;
-import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
-import me.hektortm.woSSystems.systems.interactions.InteractionManager_new;
 import me.hektortm.woSSystems.utils.ErrorHandler;
 import me.hektortm.woSSystems.utils.Parsers;
 import me.hektortm.wosCore.LangManager;
@@ -16,7 +14,6 @@ import me.hektortm.wosCore.WoSCore;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Interaction;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -53,7 +50,7 @@ public class CitemManager {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DAOHub hub;
-    private InteractionManager_new interactionManager;
+    private InteractionManager interactionManager;
     private final LogManager log = new LogManager(new LangManager(WoSCore.getPlugin(WoSCore.class)),WoSCore.getPlugin(WoSCore.class));
     private final NicknameManager nickManager;
     private final ErrorHandler errorHandler = new ErrorHandler();
@@ -77,7 +74,7 @@ public class CitemManager {
 
     }
 
-    public void setInteractionManager(InteractionManager_new interactionManager) {
+    public void setInteractionManager(InteractionManager interactionManager) {
         if (interactionManager == null) {
             throw new IllegalArgumentException("ConditionHandler cannot be null.");
         }

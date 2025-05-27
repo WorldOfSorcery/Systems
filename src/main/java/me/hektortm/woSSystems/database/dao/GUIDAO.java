@@ -32,7 +32,7 @@ public class GUIDAO implements IDAO {
             stmt.execute("CREATE TABLE IF NOT EXISTS guis(" +
                     "id VARCHAR(255) NOT NULL," +
                     "size INTEGER NOT NULL," +
-                    "title VARCHAR(255)" +
+                    "title VARCHAR(255)," +
                     "open_actions TEXT," +
                     "close_actions TEXT" +
                     ")");

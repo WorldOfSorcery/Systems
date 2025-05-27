@@ -2,7 +2,6 @@ package me.hektortm.woSSystems.systems.interactions.commands.subcommands;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
-import me.hektortm.woSSystems.systems.interactions.InteractionManager_new;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.Bukkit;
@@ -12,8 +11,7 @@ import org.bukkit.entity.Player;
 public class TriggerCommand extends SubCommand {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final InteractionManager manager = plugin.getInteractionManager();
-    private final InteractionManager_new manager_new = plugin.getInteractionManager_new();
+    private final InteractionManager manager_new = plugin.getInteractionManager_new();
 
     @Override
     public String getName() {

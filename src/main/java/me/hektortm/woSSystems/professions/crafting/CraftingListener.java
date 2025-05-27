@@ -1,7 +1,6 @@
 package me.hektortm.woSSystems.professions.crafting;
 
 import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
-import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.ConditionHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
@@ -22,13 +21,11 @@ public class CraftingListener implements Listener {
     private final JavaPlugin plugin;
     private final CRecipeManager recipeManager;
     private final ConditionHandler conditionHandler;
-    private final InteractionManager interactionManager;
 
-    public CraftingListener(JavaPlugin plugin, CRecipeManager recipeManager, ConditionHandler conditionHandler, InteractionManager interactionManager) {
+    public CraftingListener(JavaPlugin plugin, CRecipeManager recipeManager, ConditionHandler conditionHandler) {
         this.plugin = plugin;
         this.recipeManager = recipeManager;
         this.conditionHandler = conditionHandler;
-        this.interactionManager = interactionManager;
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
@@ -118,11 +115,11 @@ public class CraftingListener implements Listener {
     // Helper method to trigger success interaction
     private void triggerSuccessInteraction(Player player, String successId) {
         // Retrieve the interaction configuration for the successId
-        InteractionData interaction = interactionManager.getInteractionByID(successId);
-        if (interaction != null) {
+        //InteractionData interaction = interactionManager.getInteractionByID(successId);
+        //if (interaction != null) {
             // Trigger the interaction
-            interactionManager.triggerInteraction(player, successId);
-        }
+            //interactionManager.triggerInteraction(player, successId);
+        //}
     }
 
 

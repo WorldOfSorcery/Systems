@@ -1,7 +1,6 @@
 package me.hektortm.woSSystems.systems.interactions.commands.subcommands;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
@@ -10,9 +9,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class UnbindCommand extends SubCommand {
-
+    // TODO: Interactions
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final InteractionManager manager = plugin.getInteractionManager();
 
     @Override
     public String getName() {
@@ -33,9 +31,9 @@ public class UnbindCommand extends SubCommand {
         if (args.length == 1) {
             String interactionId = args[0];
 
-            Location loc = manager.getTargetBlock(p);
+            //Location loc = manager.getTargetBlock(p);
 
-            manager.unbindLocation(p, interactionId, loc);
+            //manager.unbindLocation(p, interactionId, loc);
 
 
         } else {

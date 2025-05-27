@@ -39,7 +39,6 @@ import me.hektortm.woSSystems.systems.guis.GUIManager;
 import me.hektortm.woSSystems.systems.guis.command.GUICommand;
 import me.hektortm.woSSystems.systems.interactions.HologramHandler;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
-import me.hektortm.woSSystems.systems.interactions.InteractionManager_new;
 import me.hektortm.woSSystems.systems.loottables.LoottableManager;
 import me.hektortm.woSSystems.systems.loottables.commands.LoottableCommand;
 import me.hektortm.woSSystems.tablist.TablistManager;
@@ -49,7 +48,6 @@ import me.hektortm.woSSystems.time.cmd.TimeCommand;
 import me.hektortm.woSSystems.professions.crafting.CraftingListener;
 import me.hektortm.woSSystems.professions.crafting.command.CRecipeCommand;
 import me.hektortm.woSSystems.professions.fishing.FishingListener;
-import me.hektortm.woSSystems.professions.fishing.listeners.FishingListener;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.citems.commands.CgiveCommand;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
@@ -103,8 +101,7 @@ public final class WoSSystems extends JavaPlugin {
     private EcoManager ecoManager;
     private StatsManager statsManager;
     private UnlockableManager unlockableManager;
-    private InteractionManager interactionManager;
-    private InteractionManager_new interactionManager_new;
+    private InteractionManager interactionManager_;
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
     private ConditionHandler_new conditionHandler_new;
@@ -178,34 +175,31 @@ public final class WoSSystems extends JavaPlugin {
         ecoManager = new EcoManager(daoHub);
         unlockableManager = new UnlockableManager(daoHub);
 
-        guiManager = new GUIManager(daoHub);
+
 
         resolver = new PlaceholderResolver(statsManager, citemManager);
-
+        guiManager = new GUIManager(daoHub);
 
         citemManager = new CitemManager(daoHub);
         conditionHandler_new = new ConditionHandler_new();
         conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager, citemManager);
 
-        interactionManager_new = new InteractionManager_new(daoHub);
-        interactionManager = new InteractionManager();
-        interactionManager.setConditionHandler(conditionHandler);
-        interactionManager.setPlaceholderResolver(resolver);
+        interactionManager_ = new InteractionManager(daoHub);
          // Ensure interactionManager is null-safe.
-        citemManager.setInteractionManager(interactionManager_new);
+        citemManager.setInteractionManager(interactionManager_);
         channelManager = new ChannelManager(this, daoHub);
         nickManager = new NicknameManager(daoHub);
 
-        lootTableManager = new LoottableManager(interactionManager, citemManager);
+        lootTableManager = new LoottableManager(citemManager);
         coinflipCommand = new Coinflip(ecoManager, this, lang);
         cosmeticManager = new CosmeticManager(daoHub);
         profileManager = new ProfileManager(daoHub);
 
 // Initialize the remaining managers
-        recipeManager = new CRecipeManager(daoHub);
+        recipeManager = new CRecipeManager(daoHub); // TODO: interactions
 
         resolver = new PlaceholderResolver(statsManager, citemManager);
-        new CraftingListener(this, recipeManager, conditionHandler, interactionManager);
+        new CraftingListener(this, recipeManager, conditionHandler); // TODO: interactions
 
 
 
@@ -244,7 +238,7 @@ public final class WoSSystems extends JavaPlugin {
         registerCommands();
         registerEvents();
         //interactionManager.loadInteraction();
-        interactionManager_new.interactionTask();
+        interactionManager_.interactionTask();
         tab.runTablist();
 
         ProtocolLibrary.getProtocolManager().addPacketListener(
@@ -350,7 +344,7 @@ public final class WoSSystems extends JavaPlugin {
 
         //cmdReg("opengui", new GUIcommand(guiManager, interactionManager));
         cmdReg("interaction", new InteractionCommand());
-        cmdReg("citem", new CitemCommand(citemManager, interactionManager));
+        cmdReg("citem", new CitemCommand(citemManager));
         cmdReg("cgive", new CgiveCommand(citemManager));
         cmdReg("cremove", new CremoveCommand(citemManager, lang));
         cmdReg("stats", new StatsCommand(statsManager));
@@ -451,9 +445,6 @@ public final class WoSSystems extends JavaPlugin {
     public CRecipeManager getCRecipeManager() {
         return recipeManager;
     }
-    public InteractionManager getInteractionManager() {
-        return interactionManager;
-    }
     public BossBarManager getBossBarManager() {
         return bossBarManager;
     }
@@ -478,8 +469,8 @@ public final class WoSSystems extends JavaPlugin {
     public ConditionHandler_new getConditionHandler_new() {
         return conditionHandler_new;
     }
-    public InteractionManager_new getInteractionManager_new() {
-        return interactionManager_new;
+    public InteractionManager getInteractionManager_new() {
+        return interactionManager_;
     }
     public GUIManager getGuiManager() {
         return guiManager;

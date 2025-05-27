@@ -12,13 +12,11 @@ import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.logging.LogManager;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,14 +26,13 @@ public class CitemCommand implements CommandExecutor {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final CitemManager data;
     private final StatsManager statsManager = plugin.getStatsManager();
-    private final InteractionManager interactionManager;
+    private final InteractionManager interactionManager = plugin.getInteractionManager_new();
     private final LangManager lang = plugin.getLangManager();
     private final LogManager log = plugin.getLogManager();
 
-    public CitemCommand(CitemManager data, InteractionManager interactionManager) {
+    public CitemCommand(CitemManager data) {
         this.data = data;
 
-        this.interactionManager = interactionManager;
         subCommands.put("save", new SaveCommand(this, data));
         subCommands.put("rename", new NameCommand(data));
         subCommands.put("update", new UpdateCommand(this, data));

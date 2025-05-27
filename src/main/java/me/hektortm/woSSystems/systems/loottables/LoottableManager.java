@@ -2,7 +2,6 @@ package me.hektortm.woSSystems.systems.loottables;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
-import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.WoSCore;
 import me.hektortm.wosCore.logging.LogManager;
@@ -20,7 +19,6 @@ import java.util.Random;
 
 public class LoottableManager {
 
-    private final InteractionManager interManager;
     private final CitemManager citemManager;
     private final WoSSystems woSSystems = WoSSystems.getPlugin(WoSSystems.class);
     private final WoSCore core = WoSCore.getPlugin(WoSCore.class);
@@ -28,8 +26,7 @@ public class LoottableManager {
     private final File loottableFolder = new File(woSSystems.getDataFolder(), "loottables");
     public final Map<String, JSONObject> loottableMap = new HashMap<>();
 
-    public LoottableManager(InteractionManager interManager, CitemManager citemManager) {
-        this.interManager = interManager;
+    public LoottableManager(CitemManager citemManager) {
         this.citemManager = citemManager;
 
         if (!loottableFolder.exists()) {
@@ -109,7 +106,7 @@ public class LoottableManager {
                         citemManager.giveCitem(Bukkit.getConsoleSender(), p, action, 1);
                         break;
                     case "interaction":
-                        interManager.triggerInteraction(p, action);
+                        //interManager.triggerInteraction(p, action);
                         break;
                     default:
                         Bukkit.getLogger().warning("Unrecognized category: " + category);

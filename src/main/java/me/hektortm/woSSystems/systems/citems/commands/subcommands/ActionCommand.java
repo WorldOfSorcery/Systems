@@ -3,15 +3,12 @@ package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
-import me.hektortm.woSSystems.systems.interactions.InteractionManager_new;
-import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -27,7 +24,7 @@ public class ActionCommand extends SubCommand {
     private final NamespacedKey rightActionKey;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final CitemManager citemManager;
-    private final InteractionManager_new manager = plugin.getInteractionManager_new();
+    private final InteractionManager manager = plugin.getInteractionManager_new();
     private final LangManager lang = plugin.getLangManager();
 
 

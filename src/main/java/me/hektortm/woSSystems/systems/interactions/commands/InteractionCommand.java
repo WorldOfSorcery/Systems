@@ -19,7 +19,6 @@ public class InteractionCommand implements CommandExecutor {
     public InteractionCommand() {
         subCommands.put("trigger", new TriggerCommand());
         subCommands.put("help", new HelpCommand(this));
-        subCommands.put("reload", new ReloadCommand());
         subCommands.put("bind", new BindCommand());
         subCommands.put("unbind", new UnbindCommand());
         subCommands.put("npcbind", new NPCBind());
