@@ -157,6 +157,7 @@ public final class WoSSystems extends JavaPlugin {
             registerAndInitDAO(databaseManager, daoHub.getProfileDAO());
             registerAndInitDAO(databaseManager, daoHub.getConditionDAO());
             registerAndInitDAO(databaseManager, daoHub.getInteractionDAO());
+            registerAndInitDAO(databaseManager, daoHub.getGuiDAO());
 
             databaseManager.initializeAllDAOs();
         } catch (SQLException e) {
