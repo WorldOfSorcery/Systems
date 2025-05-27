@@ -103,6 +103,10 @@ commands:
     description: profile
     usage: /<command> <player>
 
+  gui:
+    description: open GUIs for players
+    usage: /<command> <open> <player> <id>
+
 
 permissions:
   # Citem Permissions
