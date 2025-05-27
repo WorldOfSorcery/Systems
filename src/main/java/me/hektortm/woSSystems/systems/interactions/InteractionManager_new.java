@@ -103,7 +103,7 @@ public class InteractionManager_new  {
 
     public void triggerInteraction(String interactionId, Player player) {
         Interaction inter = getInteraction(interactionId);
-
+        if (inter == null) return;
 
         List<InteractionAction> actions = inter.getActions();
 
@@ -116,7 +116,7 @@ public class InteractionManager_new  {
                 boolean shouldRun;
                 if ("one".equalsIgnoreCase(action.getMatchType())) {
                     shouldRun = conditionList.isEmpty() || conditionList.stream().anyMatch(cond -> conditions.evaluate(player, cond));
-                } else { // default to "all"
+                } else {
                     shouldRun = conditions.checkConditions(player, conditionList);
                 }
 
@@ -127,7 +127,6 @@ public class InteractionManager_new  {
                 if (cmd.startsWith("send_message")) {
                     String message = cmd.replace("send_message", "");
                     player.sendMessage(message.replace("&", "§"));
-                    return;
                 }
 
                 if(cmd.startsWith("eco")) {

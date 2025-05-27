@@ -19,7 +19,7 @@ public class FishingDAO implements IDAO {
     private final DAOHub hub;
     private final String logName = "FishingDAO";
 
-    public FishingDAO(DatabaseManager db, DAOHub hub) throws SQLException {
+    public FishingDAO(DatabaseManager db, DAOHub hub) {
         this.db = db;
         this.hub = hub;
     }
@@ -75,7 +75,7 @@ public class FishingDAO implements IDAO {
                 List<String> regions = new ArrayList<>();
 
                 if (regionsStr != null && !regionsStr.trim().isEmpty()) {
-                    regions = Arrays.asList(regionsStr.split(","));
+                    regions = Arrays.asList(regionsStr.replace("\"", "").split(","));
                 }
 
                 FishingItem item = new FishingItem(id, citemId, interaction, regions, rs.getString("rarity"));

@@ -47,8 +47,7 @@ import me.hektortm.woSSystems.time.TimeManager;
 import me.hektortm.woSSystems.time.cmd.TimeCommand;
 import me.hektortm.woSSystems.professions.crafting.CraftingListener;
 import me.hektortm.woSSystems.professions.crafting.command.CRecipeCommand;
-import me.hektortm.woSSystems.professions.fishing.FishingManager;
-import me.hektortm.woSSystems.professions.fishing.listeners.FishingListener;
+import me.hektortm.woSSystems.professions.fishing.FishingListener;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.citems.commands.CgiveCommand;
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
@@ -80,12 +79,10 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -159,6 +156,7 @@ public final class WoSSystems extends JavaPlugin {
             registerAndInitDAO(databaseManager, daoHub.getProfileDAO());
             registerAndInitDAO(databaseManager, daoHub.getConditionDAO());
             registerAndInitDAO(databaseManager, daoHub.getInteractionDAO());
+            registerAndInitDAO(databaseManager, daoHub.getFishingDAO());
 
             databaseManager.initializeAllDAOs();
         } catch (SQLException e) {
