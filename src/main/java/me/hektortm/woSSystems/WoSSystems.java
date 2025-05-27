@@ -36,6 +36,7 @@ import me.hektortm.woSSystems.regions.RegionHandler;
 import me.hektortm.woSSystems.regions.RegionBossBar;
 import me.hektortm.woSSystems.systems.citems.commands.SignCommand;
 import me.hektortm.woSSystems.systems.guis.GUIManager;
+import me.hektortm.woSSystems.systems.guis.command.GUICommand;
 import me.hektortm.woSSystems.systems.interactions.HologramHandler;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager_new;
@@ -47,7 +48,6 @@ import me.hektortm.woSSystems.time.TimeManager;
 import me.hektortm.woSSystems.time.cmd.TimeCommand;
 import me.hektortm.woSSystems.professions.crafting.CraftingListener;
 import me.hektortm.woSSystems.professions.crafting.command.CRecipeCommand;
-import me.hektortm.woSSystems.professions.fishing.FishingManager;
 import me.hektortm.woSSystems.professions.fishing.listeners.FishingListener;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.citems.commands.CgiveCommand;
@@ -80,12 +80,10 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -177,7 +175,7 @@ public final class WoSSystems extends JavaPlugin {
         ecoManager = new EcoManager(daoHub);
         unlockableManager = new UnlockableManager(daoHub);
 
-        guiManager = new GUIManager();
+        guiManager = new GUIManager(daoHub);
 
         resolver = new PlaceholderResolver(statsManager, citemManager);
 
@@ -368,6 +366,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("internalviewitem", new InternalViewItemCommand(this));
         cmdReg("cosmetic", new CosmeticCommand(cosmeticManager, daoHub));
         cmdReg("profile", new ProfileCommand());
+        cmdReg("gui", new GUICommand(daoHub));
         cmdReg("debugcmd", new debug(daoHub));
     }
 
@@ -383,6 +382,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new ProfileListener());
         eventReg(new BackpackListener());
         eventReg(new HologramHandler(daoHub));
+        eventReg(new GUIManager(daoHub));
         getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager, daoHub), this);
     }
 
@@ -478,6 +478,10 @@ public final class WoSSystems extends JavaPlugin {
     public InteractionManager_new getInteractionManager_new() {
         return interactionManager_new;
     }
+    public GUIManager getGuiManager() {
+        return guiManager;
+    }
+
     public ProtocolManager getProtocolManager() {
         return protocolManager;
     }
