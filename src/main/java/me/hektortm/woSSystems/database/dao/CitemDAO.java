@@ -266,7 +266,7 @@ public class CitemDAO implements IDAO {
             stmt.setString(3, loreString);
             stmt.setString(4, enchants);
             stmt.setInt(5, damage);
-            stmt.setString(6, color.toString());
+            stmt.setString(6, color != null ? color.toString() : null);
             stmt.setInt(6, custom_model_data);
             stmt.setBoolean(7, undroppable);
             stmt.setBoolean(8, unusable);
