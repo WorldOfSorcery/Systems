@@ -10,6 +10,8 @@ import java.util.List;
 
 public class ActionHandler {
 
+    private final PlaceholderResolver resolver = WoSSystems.getPlugin(WoSSystems.class).getPlaceholderResolver();
+
     public enum SourceType {
         INTERACTION("interaction"),
         GUI("gui");
@@ -28,8 +30,8 @@ public class ActionHandler {
         for (String cmd : actions) {
             String parsedCommand = cmd.replace("@p", player.getName());
             if (cmd.startsWith("send_message")) {
-                String message = cmd.replace("send_message", "");
-                player.sendMessage(message.replace("&", "§"));
+                String message = cmd.replace("send_message ", "").replace("&", "§");
+                player.sendMessage(resolver.resolvePlaceholders(message, player));
                 continue;
             }
             if(cmd.startsWith("eco")) {

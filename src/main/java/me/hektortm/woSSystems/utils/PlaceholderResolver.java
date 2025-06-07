@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.utils;
 
+import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import org.bukkit.entity.Player;
@@ -11,13 +12,9 @@ import java.util.List;
 import java.util.UUID;
 
 public class PlaceholderResolver {
-    private final StatsManager statsManager;
-    private final CitemManager citemsManager;
-
-    public PlaceholderResolver(StatsManager statsManager, CitemManager citemsManager) {
-        this.statsManager = statsManager;
-        this.citemsManager = citemsManager;
-    }
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final StatsManager statsManager = plugin.getStatsManager();
+    private final CitemManager citemsManager = plugin.getCitemManager();
 
     // TODO UPDATE WHEN INVENTORY IS OPENED AGAIN
 
@@ -27,8 +24,8 @@ public class PlaceholderResolver {
 
         if(text.contains("{stats.")) {
             for (String statId : statsManager.getStats().keySet()) {
-                String amountPlaceholder = "{stats." + statId + "_amount}";
-                String maxPlaceholder = "{stats." + statId + "_max}";
+                String amountPlaceholder = "{stats.amount:" + statId +"}";
+                String maxPlaceholder = "{stats.max:" + statId + "}";
 
                 if (text.contains(amountPlaceholder)) {
                     long statAmount = statsManager.getPlayerStat(playerUUID, statId);
@@ -43,8 +40,8 @@ public class PlaceholderResolver {
         }
         if (text.contains("{global_stats.")) {
             for (String statId : statsManager.getGlobalStats().keySet()) {
-                String amountPlaceholder = "{global_stats." + statId + "_amount}";
-                String maxPlaceholder = "{global_stats." + statId + "_max}";
+                String amountPlaceholder = "{global_stats.amount:" + statId + "}";
+                String maxPlaceholder = "{global_stats.max:" + statId + "}";
 
                 if (text.contains(amountPlaceholder)) {
                     long statAmount = statsManager.getGlobalStatValue(statId);
@@ -57,14 +54,13 @@ public class PlaceholderResolver {
             }
         }
         if(text.contains("{citems.")) {
-            // BIG TODO
-            /*
-            for (File file : citemsManager.citemFolder.listFiles()) {
-                String id = file.getName().replace(".json", "");
-                String namePlaceholder = "{citems."+id+"_name}";
-                String lorePlaceholder = "{citems."+id+"_lore}";
 
-                ItemStack citem = citemsManager.loadItemFromFile(file);
+
+            for (String citemId : citemsManager.getCitemDAO().getCitemIds()) {
+                String namePlaceholder = "{citems.name:"+citemId+"}";
+                String lorePlaceholder = "{citems.lore:"+citemId+"}";
+
+                ItemStack citem = citemsManager.getCitemDAO().getCitem(citemId);
                 ItemMeta meta = citem.getItemMeta();
                 if (text.contains(namePlaceholder)) {
                     String name = meta.getDisplayName();
@@ -74,13 +70,18 @@ public class PlaceholderResolver {
                     List<String> lore = meta.getLore();
                     StringBuilder builder = new StringBuilder();
                     for ( int i = 0; i < lore.size(); i++ ) {
-                        builder.append(lore.get(i));
+                        if (i != lore.size()-1) {
+                            builder.append(lore.get(i)+"\n");
+                        } else {
+                            builder.append(lore.get(i));
+                        }
+
                     }
                     text = text.replace(lorePlaceholder, builder.toString());
                 }
 
             }
-             */
+
         }
         return text;
     }

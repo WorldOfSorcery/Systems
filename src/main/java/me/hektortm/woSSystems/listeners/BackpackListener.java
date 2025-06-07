@@ -8,6 +8,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -29,7 +30,7 @@ public class BackpackListener implements Listener {
         if (!(item.getItemMeta() instanceof BlockStateMeta meta)) return;
         if (!(meta.getBlockState() instanceof org.bukkit.block.ShulkerBox shulkerBox)) return;
 
-        Inventory shulkerInventory = Bukkit.createInventory(event.getPlayer(), 27, item.getItemMeta().getDisplayName());
+        Inventory shulkerInventory = Bukkit.createInventory(event.getPlayer(), InventoryType.SHULKER_BOX, item.getItemMeta().getDisplayName());
         shulkerInventory.setContents(shulkerBox.getInventory().getContents());
 
         player.openInventory(shulkerInventory);

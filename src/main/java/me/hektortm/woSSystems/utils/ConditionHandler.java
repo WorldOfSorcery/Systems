@@ -27,7 +27,7 @@ public class ConditionHandler {
         this.statsManager = statsManager;
         this.ecoManager = ecoManager;
         this.citemManager = citemManager;
-        resolver  = new PlaceholderResolver(statsManager, citemManager);
+        resolver  = new PlaceholderResolver();
     }
 
     public ConditionOutcomes getUnmetConditionOutcomes(Player player, JSONArray conditions) {

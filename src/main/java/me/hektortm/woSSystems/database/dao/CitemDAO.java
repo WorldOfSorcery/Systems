@@ -57,7 +57,19 @@ public class CitemDAO implements IDAO {
                     "PRIMARY KEY (citem_id))");
         }
     }
-
+    public List<String> getCitemIds() {
+        String sql = "SELECT id FROM citems";
+        List<String> citemIds = new ArrayList<>();
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                citemIds.add(rs.getString("id"));
+            }
+        } catch (SQLException e) {
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Citem IDs: " + e);
+        }
+        return citemIds;
+    }
 
     public void createItemDisplay(String id, UUID ownerUUID, Location blockLocation, Location displayLocation) {
         String bLoc = Parsers.locationToString(blockLocation);

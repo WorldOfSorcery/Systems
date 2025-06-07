@@ -176,11 +176,11 @@ public final class WoSSystems extends JavaPlugin {
         unlockableManager = new UnlockableManager(daoHub);
 
 
-
-        resolver = new PlaceholderResolver(statsManager, citemManager);
+        citemManager = new CitemManager(daoHub);
+        resolver = new PlaceholderResolver();
         guiManager = new GUIManager(daoHub);
 
-        citemManager = new CitemManager(daoHub);
+
         conditionHandler_new = new ConditionHandler_new();
         conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager, citemManager);
 
@@ -198,7 +198,7 @@ public final class WoSSystems extends JavaPlugin {
 // Initialize the remaining managers
         recipeManager = new CRecipeManager(daoHub); // TODO: interactions
 
-        resolver = new PlaceholderResolver(statsManager, citemManager);
+        resolver = new PlaceholderResolver();
         new CraftingListener(this, recipeManager, conditionHandler); // TODO: interactions
 
 
@@ -378,7 +378,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new RegionHandler(regionBossBarManager));
         eventReg(new ProfileListener());
         eventReg(new BackpackListener());
-        eventReg(new HologramHandler(daoHub));
+        //eventReg(new HologramHandler(daoHub));
         eventReg(new GUIManager(daoHub));
         getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager, daoHub), this);
     }
