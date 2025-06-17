@@ -119,6 +119,7 @@ public final class WoSSystems extends JavaPlugin {
     private ProfileManager profileManager;
 
     public static StringFlag DISPLAY_NAME;
+    public static StringFlag ENTER_INTERACTION;
     public final Map<UUID, String> playerRegions = new HashMap<>();
     private final Map<UUID, Inventory> clickActions = new HashMap<>();
 
@@ -271,6 +272,7 @@ public final class WoSSystems extends JavaPlugin {
         FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
 
         DISPLAY_NAME = registerStringFlag("display-name", registry);
+        ENTER_INTERACTION = registerStringFlag("enter-interaction", registry);
 
     }
 

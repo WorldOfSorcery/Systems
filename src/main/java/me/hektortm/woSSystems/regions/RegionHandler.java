@@ -49,10 +49,16 @@ public class RegionHandler implements Listener {
 
         for (ProtectedRegion region : regions) {
             String displayName = region.getFlag(WoSSystems.DISPLAY_NAME); // Get the display-name flag
+            String enterInteraction = region.getFlag(WoSSystems.ENTER_INTERACTION);
             newRegionId = region.getId();
             if (displayName != null) {
                  // Found a region with a display-name
                 bossbar.updateBossBar(player, displayName); // Update boss bar with the display name
+                break;
+            }
+            if (enterInteraction != null && !plugin.getPlayerRegions().containsValue(newRegionId)) {
+
+                plugin.getInteractionManager_new().triggerInteraction(enterInteraction, player);
                 break;
             }
         }
