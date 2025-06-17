@@ -31,7 +31,7 @@ public class FishingListener implements Listener {
             Player player = event.getPlayer();
             String region = plugin.getPlayerRegions().get(player.getUniqueId());
             String rarity = getRandomRarity();
-
+            event.setExpToDrop(0);
             try {
                 FishingItem fishingItem = hub.getFishingDAO().getRandomItemByRarityAndRegion(rarity, region);
 
@@ -48,7 +48,6 @@ public class FishingListener implements Listener {
                         } else fallback(player, event);
                     } else fallback(player, event);
                 } else fallback(player, event);
-
             } catch (Exception e) {
                 Bukkit.getLogger().severe("[" + player.getName() + "] Error while fishing: " + e.getMessage());
             }
