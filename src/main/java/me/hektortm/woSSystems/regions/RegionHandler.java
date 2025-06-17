@@ -49,8 +49,9 @@ public class RegionHandler implements Listener {
 
         for (ProtectedRegion region : regions) {
             String displayName = region.getFlag(WoSSystems.DISPLAY_NAME); // Get the display-name flag
+            newRegionId = region.getId();
             if (displayName != null) {
-                newRegionId = region.getId(); // Found a region with a display-name
+                 // Found a region with a display-name
                 bossbar.updateBossBar(player, displayName); // Update boss bar with the display name
                 break;
             }

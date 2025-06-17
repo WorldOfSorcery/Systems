@@ -6,11 +6,13 @@ import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.utils.dataclasses.Condition;
+import me.hektortm.wosCore.discord.DiscordLogger;
 import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class ConditionHandler_new {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
@@ -33,43 +35,50 @@ public class ConditionHandler_new {
     }
 
     public boolean evaluate(Player player, Condition condition) {
-        switch (condition.getName().toLowerCase()) {
-            case "has_citem":
-                return citems.hasCitemAmount(player, condition.getValue(), Integer.parseInt(condition.getParameter())); // Placeholder until i have a correct method for it
+        try {
+            switch (condition.getName().toLowerCase()) {
+                case "has_citem":
+                    return citems.hasCitemAmount(player, condition.getValue(), Integer.parseInt(condition.getParameter())); // Placeholder until i have a correct method for it
 
-            case "has_not_citem":
-                return !citems.hasCitemAmount(player, condition.getValue(), Integer.parseInt(condition.getParameter()));
+                case "has_not_citem":
+                    return !citems.hasCitemAmount(player, condition.getValue(), Integer.parseInt(condition.getParameter()));
 
-            case "has_unlockable":
-                return unlockables.hasPlayerUnlockable(player, condition.getValue());
+                case "has_unlockable":
+                    return unlockables.hasPlayerUnlockable(player, condition.getValue());
 
-            case "has_not_unlockable":
-                return !unlockables.hasPlayerUnlockable(player, condition.getValue());
+                case "has_not_unlockable":
+                    return !unlockables.hasPlayerUnlockable(player, condition.getValue());
 
-            case "has_stats":
-                return stats.hasStatValue(player, condition.getValue(), Integer.parseInt(condition.getParameter()));
+                case "has_stats":
+                    return stats.hasStatValue(player, condition.getValue(), Integer.parseInt(condition.getParameter()));
 
-            case "has_not_stats":
-                return !stats.hasStatValue(player, condition.getValue(), Integer.parseInt(condition.getParameter()));
+                case "has_not_stats":
+                    return !stats.hasStatValue(player, condition.getValue(), Integer.parseInt(condition.getParameter()));
 
-            case "is_in_region":
-                Map<UUID, String> playerRegions = plugin.getPlayerRegions();
-                String regionId = playerRegions.get(player.getUniqueId());
-                return regionId != null && regionId.equalsIgnoreCase(condition.getValue());
-            case "is_not_in_region":
-                Map<UUID, String> playerRegionsNot = plugin.getPlayerRegions();
-                String regionIdNot = playerRegionsNot.get(player.getUniqueId());
-                return regionIdNot == null || !regionIdNot.equalsIgnoreCase(condition.getValue());
+                case "is_in_region":
+                    Map<UUID, String> playerRegions = plugin.getPlayerRegions();
+                    String regionId = playerRegions.get(player.getUniqueId());
+                    return regionId != null && regionId.equalsIgnoreCase(condition.getValue());
+                case "is_not_in_region":
+                    Map<UUID, String> playerRegionsNot = plugin.getPlayerRegions();
+                    String regionIdNot = playerRegionsNot.get(player.getUniqueId());
+                    return regionIdNot == null || !regionIdNot.equalsIgnoreCase(condition.getValue());
 
-            case "permission":
-                return player.hasPermission(condition.getValue());
+                case "permission":
+                    return player.hasPermission(condition.getValue());
 
-            case "world":
-                return player.getWorld().getName().equalsIgnoreCase(condition.getValue());
+                case "world":
+                    return player.getWorld().getName().equalsIgnoreCase(condition.getValue());
 
-            // Add more condition types as needed
-            default:
-                return false;
+                // Add more condition types as needed
+                default:
+                    return false;
+            }
+        } catch (Exception e) {
+            DiscordLogger.log("WoSSystems: ConditionHandler", Level.SEVERE, "Error evaluating condition: " + condition.getName() + " for player: " + player.getName() + ". Error: ", e);
+            plugin.writeLog("ConditionHandler", Level.SEVERE, "Error evaluating condition: " + condition.getName() + " for player: " + player.getName() + ". Error: " + e.getMessage());
+            return false;
         }
+
     }
 }
