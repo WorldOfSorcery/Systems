@@ -46,7 +46,7 @@ public class Remove extends SubCommand {
         }
 
         try {
-            //hub.getCooldownDAO().removeCooldown(player, cooldownId);
+            hub.getCooldownDAO().removeCooldown(player, cooldownId);
         } catch (Exception e) {
             Utils.error(sender, "cooldowns", "error.internal");
             plugin.writeLog(logName, Level.SEVERE, "Failed to remove cooldown from player: " + player.getName() + " with ID: " + cooldownId + e);
