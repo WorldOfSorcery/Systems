@@ -3,13 +3,10 @@ package me.hektortm.woSSystems.systems.interactions;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.ConditionHandler;
-import me.hektortm.woSSystems.utils.ConditionHandler_new;
 import me.hektortm.woSSystems.utils.ConditionType;
 import me.hektortm.woSSystems.utils.dataclasses.Condition;
 import me.hektortm.woSSystems.utils.dataclasses.Interaction;
-import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionParticles;
-import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -21,7 +18,7 @@ import java.util.Objects;
 public class ParticleHandler {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final ConditionHandler_new conditionHandler = plugin.getConditionHandler_new();
+    private final ConditionHandler conditionHandler = plugin.getConditionHandler();
     private final DAOHub hub;
 
     public ParticleHandler(DAOHub hub) {

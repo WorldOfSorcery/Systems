@@ -2,17 +2,11 @@ package me.hektortm.woSSystems;
 
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.interactions.HologramHandler;
-import me.hektortm.woSSystems.utils.ConditionHandler;
-import me.hektortm.woSSystems.utils.ConditionHandler_new;
-import me.hektortm.woSSystems.utils.ConditionType;
-import me.hektortm.woSSystems.utils.dataclasses.Condition;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 public class debug implements CommandExecutor {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);

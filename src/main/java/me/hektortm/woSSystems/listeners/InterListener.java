@@ -29,7 +29,7 @@ import java.util.*;
 public class InterListener implements Listener {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final InteractionManager interactionManager = plugin.getInteractionManager_new();
+    private final InteractionManager interactionManager = plugin.getInteractionManager();
     private final CitemManager citemManager = plugin.getCitemManager();
     private final DAOHub hub;
     private final Map<Location, Long> blockCooldowns = new HashMap<>();

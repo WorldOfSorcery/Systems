@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 public class TriggerCommand extends SubCommand {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final InteractionManager manager_new = plugin.getInteractionManager_new();
+    private final InteractionManager manager_new = plugin.getInteractionManager();
 
     @Override
     public String getName() {

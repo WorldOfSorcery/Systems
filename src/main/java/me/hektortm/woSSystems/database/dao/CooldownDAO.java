@@ -172,6 +172,28 @@ public class CooldownDAO implements IDAO {
         }
     }
 
+    public Map<String, Cooldown> getAllCooldowns() {
+        Map<String, Cooldown> cooldowns = new HashMap<>();
+        String sql = "SELECT * FROM cooldowns";
+
+        try (Connection conn = db.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                String id = rs.getString("id");
+                long duration = rs.getLong("duration");
+                String startInteraction = rs.getString("start_interaction");
+                String endInteraction = rs.getString("end_interaction");
+
+                cooldowns.put(id, new Cooldown(id, duration, startInteraction, endInteraction));
+            }
+        } catch (SQLException e) {
+            plugin.writeLog(logName, Level.SEVERE, "Failed to fetch all Cooldowns: " + e);
+        }
+        return cooldowns;
+    }
+
     public String formatRemainingTime(long seconds) {
         long minutes = seconds / 60;
         long remainingSeconds = seconds % 60;

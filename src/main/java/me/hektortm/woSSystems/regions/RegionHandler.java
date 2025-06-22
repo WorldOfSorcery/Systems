@@ -13,8 +13,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 public class RegionHandler implements Listener {
@@ -58,7 +56,7 @@ public class RegionHandler implements Listener {
             }
             if (enterInteraction != null && !plugin.getPlayerRegions().containsValue(newRegionId)) {
 
-                plugin.getInteractionManager_new().triggerInteraction(enterInteraction, player);
+                plugin.getInteractionManager().triggerInteraction(enterInteraction, player);
                 break;
             }
         }

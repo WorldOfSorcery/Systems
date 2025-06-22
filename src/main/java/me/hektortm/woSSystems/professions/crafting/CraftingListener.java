@@ -1,7 +1,5 @@
 package me.hektortm.woSSystems.professions.crafting;
 
-import me.hektortm.woSSystems.utils.dataclasses.InteractionData;
-import me.hektortm.woSSystems.utils.ConditionHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.Material;
@@ -20,12 +18,10 @@ public class CraftingListener implements Listener {
 
     private final JavaPlugin plugin;
     private final CRecipeManager recipeManager;
-    private final ConditionHandler conditionHandler;
 
-    public CraftingListener(JavaPlugin plugin, CRecipeManager recipeManager, ConditionHandler conditionHandler) {
+    public CraftingListener(JavaPlugin plugin, CRecipeManager recipeManager) {
         this.plugin = plugin;
         this.recipeManager = recipeManager;
-        this.conditionHandler = conditionHandler;
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 

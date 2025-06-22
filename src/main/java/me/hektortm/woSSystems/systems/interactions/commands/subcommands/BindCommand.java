@@ -14,7 +14,7 @@ import org.bukkit.entity.Player;
 public class BindCommand extends SubCommand {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final InteractionManager manager = plugin.getInteractionManager_new();
+    private final InteractionManager manager = plugin.getInteractionManager();
 
 
     @Override

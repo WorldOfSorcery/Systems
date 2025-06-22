@@ -19,7 +19,7 @@ public class FishingListener implements Listener {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DAOHub hub;
-    private final InteractionManager interactionManager = plugin.getInteractionManager_new();
+    private final InteractionManager interactionManager = plugin.getInteractionManager();
 
     public FishingListener(DAOHub hub) {
         this.hub = hub;

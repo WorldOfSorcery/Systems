@@ -169,4 +169,17 @@ public class Parsers {
         }
     }
 
+
+    public static String formatCooldownTime(long totalSeconds) {
+        long days = totalSeconds / 86400;
+        long hours = (totalSeconds % 86400) / 3600;
+        long minutes = (totalSeconds % 3600) / 60;
+        long seconds = totalSeconds % 60;
+
+        if (days > 0) {
+            return String.format("%dd %02d:%02d:%02d", days, hours, minutes, seconds);
+        }
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
+
 }

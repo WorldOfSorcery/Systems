@@ -5,7 +5,6 @@ import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.dataclasses.Cooldown;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.SQLException;
@@ -57,7 +56,7 @@ public class CooldownManager extends BukkitRunnable {
         Cooldown cd = hub.getCooldownDAO().getCooldownByID(cooldownId);
         String endInt = cd.getEnd_interaction();
 
-        if (endInt != null) plugin.getInteractionManager_new().triggerInteraction(endInt, player.getPlayer());
+        if (endInt != null) plugin.getInteractionManager().triggerInteraction(endInt, player.getPlayer());
 
     }
 

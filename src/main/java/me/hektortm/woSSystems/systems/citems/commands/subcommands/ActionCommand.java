@@ -24,7 +24,7 @@ public class ActionCommand extends SubCommand {
     private final NamespacedKey rightActionKey;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final CitemManager citemManager;
-    private final InteractionManager manager = plugin.getInteractionManager_new();
+    private final InteractionManager manager = plugin.getInteractionManager();
     private final LangManager lang = plugin.getLangManager();
 
 

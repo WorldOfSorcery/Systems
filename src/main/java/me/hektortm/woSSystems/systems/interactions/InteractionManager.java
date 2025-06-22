@@ -3,7 +3,7 @@ package me.hektortm.woSSystems.systems.interactions;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.ActionHandler;
-import me.hektortm.woSSystems.utils.ConditionHandler_new;
+import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.utils.ConditionType;
 import me.hektortm.woSSystems.utils.dataclasses.*;
 import net.citizensnpcs.api.CitizensAPI;
@@ -19,7 +19,7 @@ public class InteractionManager {
 
     private final DAOHub hub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final ConditionHandler_new conditions = plugin.getConditionHandler_new();
+    private final ConditionHandler conditions = plugin.getConditionHandler();
     private final ActionHandler actionHandler = new ActionHandler();
 
 
@@ -32,8 +32,6 @@ public class InteractionManager {
         Interaction inter = hub.getInteractionDAO().getInteractionByID(id);
         return inter;
     }
-
-
 
     public void interactionTask() {
         ParticleHandler particleHandler = new ParticleHandler(hub);

@@ -26,7 +26,7 @@ public class CitemCommand implements CommandExecutor {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final CitemManager data;
     private final StatsManager statsManager = plugin.getStatsManager();
-    private final InteractionManager interactionManager = plugin.getInteractionManager_new();
+    private final InteractionManager interactionManager = plugin.getInteractionManager();
     private final LangManager lang = plugin.getLangManager();
     private final LogManager log = plugin.getLogManager();
 

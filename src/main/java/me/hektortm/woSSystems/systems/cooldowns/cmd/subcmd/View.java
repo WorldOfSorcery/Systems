@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.systems.cooldowns.cmd.subcmd;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.utils.Parsers;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
@@ -62,7 +63,7 @@ public class View extends SubCommand {
                 Utils.success(sender, "cooldowns", "view.active",
                         "%player%", player.getName(),
                         "%cooldown%", cooldownId,
-                        "%time%", formatTime(time)
+                        "%time%", Parsers.formatCooldownTime(time)
                 );
             }
         } catch (Exception e) {
@@ -72,15 +73,4 @@ public class View extends SubCommand {
         }
     }
 
-    private String formatTime(long totalSeconds) {
-        long days = totalSeconds / 86400;
-        long hours = (totalSeconds % 86400) / 3600;
-        long minutes = (totalSeconds % 3600) / 60;
-        long seconds = totalSeconds % 60;
-
-        if (days > 0) {
-            return String.format("%dd %02d:%02d:%02d", days, hours, minutes, seconds);
-        }
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
-    }
 }

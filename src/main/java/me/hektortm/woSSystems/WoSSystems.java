@@ -61,7 +61,6 @@ import me.hektortm.woSSystems.systems.stats.commands.StatsCommand;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableCommand;
 import me.hektortm.woSSystems.utils.ConditionHandler;
-import me.hektortm.woSSystems.utils.ConditionHandler_new;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
@@ -104,10 +103,9 @@ public final class WoSSystems extends JavaPlugin {
     private EcoManager ecoManager;
     private StatsManager statsManager;
     private UnlockableManager unlockableManager;
-    private InteractionManager interactionManager_;
+    private InteractionManager interactionManager;
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
-    private ConditionHandler_new conditionHandler_new;
     private CRecipeManager recipeManager;
     private ChannelManager channelManager;
     private NicknameManager nickManager;
@@ -183,17 +181,16 @@ public final class WoSSystems extends JavaPlugin {
 
         citemManager = new CitemManager(daoHub);
 
-        resolver = new PlaceholderResolver();
+        resolver = new PlaceholderResolver(daoHub);
         guiManager = new GUIManager(daoHub);
 
 
-        conditionHandler_new = new ConditionHandler_new(daoHub);
-        conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager, citemManager);
+        conditionHandler = new ConditionHandler(daoHub);
 
-        interactionManager_ = new InteractionManager(daoHub);
+        interactionManager = new InteractionManager(daoHub);
         cooldownManager = new CooldownManager(daoHub);
          // Ensure interactionManager is null-safe.
-        citemManager.setInteractionManager(interactionManager_);
+        citemManager.setInteractionManager(interactionManager);
         channelManager = new ChannelManager(this, daoHub);
         nickManager = new NicknameManager(daoHub);
 
@@ -205,7 +202,7 @@ public final class WoSSystems extends JavaPlugin {
 // Initialize the remaining managers
         recipeManager = new CRecipeManager(daoHub); // TODO: interactions
 
-        new CraftingListener(this, recipeManager, conditionHandler); // TODO: interactions
+        new CraftingListener(this, recipeManager); // TODO: interactions
 
 
 
@@ -246,7 +243,7 @@ public final class WoSSystems extends JavaPlugin {
         registerCommands();
         registerEvents();
         //interactionManager.loadInteraction();
-        interactionManager_.interactionTask();
+        interactionManager.interactionTask();
         tab.runTablist();
         cooldownManager.start();
 
@@ -466,9 +463,6 @@ public final class WoSSystems extends JavaPlugin {
     public RegionBossBar getRegionBossBarManager() {
         return regionBossBarManager;
     }
-    public ConditionHandler getConditionHandler() {
-        return conditionHandler;
-    }
     public ChannelManager getChannelManager() {
         return channelManager;
     }
@@ -481,11 +475,11 @@ public final class WoSSystems extends JavaPlugin {
     public ProfileManager getProfileManager() {
         return profileManager;
     }
-    public ConditionHandler_new getConditionHandler_new() {
-        return conditionHandler_new;
+    public ConditionHandler getConditionHandler() {
+        return conditionHandler;
     }
-    public InteractionManager getInteractionManager_new() {
-        return interactionManager_;
+    public InteractionManager getInteractionManager() {
+        return interactionManager;
     }
     public GUIManager getGuiManager() {
         return guiManager;

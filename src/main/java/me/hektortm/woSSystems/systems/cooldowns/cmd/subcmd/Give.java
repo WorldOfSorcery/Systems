@@ -16,7 +16,7 @@ import java.util.logging.Level;
 public class Give extends SubCommand {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final InteractionManager interManager = plugin.getInteractionManager_new();
+    private final InteractionManager interManager = plugin.getInteractionManager();
     private final DAOHub hub;
     private final String logName = "Cooldowns | Give";
 

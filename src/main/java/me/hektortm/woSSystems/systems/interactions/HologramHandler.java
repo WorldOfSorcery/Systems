@@ -7,16 +7,12 @@ import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.comphenix.protocol.wrappers.WrappedDataValue;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
-import com.sk89q.worldedit.world.entity.EntityType;
-import com.sk89q.worldedit.world.entity.EntityTypes;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.utils.ConditionHandler_new;
+import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.utils.ConditionType;
 import me.hektortm.woSSystems.utils.dataclasses.*;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -34,7 +30,7 @@ import java.util.logging.Level;
 public class HologramHandler implements Listener {
 
     private final WoSSystems plugin;
-    private final ConditionHandler_new conditionHandler;
+    private final ConditionHandler conditionHandler;
     private final DAOHub hub;
     private final MiniMessage miniMessage = MiniMessage.miniMessage();
 
@@ -46,7 +42,7 @@ public class HologramHandler implements Listener {
 
     public HologramHandler(DAOHub hub) {
         this.plugin = WoSSystems.getPlugin(WoSSystems.class);
-        this.conditionHandler = plugin.getConditionHandler_new();
+        this.conditionHandler = plugin.getConditionHandler();
         this.hub = hub;
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }

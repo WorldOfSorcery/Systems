@@ -1,8 +1,10 @@
 package me.hektortm.woSSystems.utils;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -10,11 +12,19 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.io.File;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
+
+import static java.lang.Long.parseLong;
 
 public class PlaceholderResolver {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final DAOHub hub;
     private final StatsManager statsManager = plugin.getStatsManager();
     private final CitemManager citemsManager = plugin.getCitemManager();
+
+    public PlaceholderResolver(DAOHub hub) {
+        this.hub = hub;
+    }
 
     // TODO UPDATE WHEN INVENTORY IS OPENED AGAIN
 
@@ -53,9 +63,23 @@ public class PlaceholderResolver {
                 }
             }
         }
+        if (text.contains("{cooldowns.")) {
+            for (String cooldownId : hub.getCooldownDAO().getAllCooldowns().keySet()) {
+                String durationPlaceholder = "{cooldowns.duration:" + cooldownId + "}";
+
+                if (text.contains(durationPlaceholder)) {
+                    long duration = hub.getCooldownDAO().getRemainingSeconds(Bukkit.getOfflinePlayer(playerUUID), cooldownId);
+                    // Convert duration from seconds to a human-readable format
+                    String formattedDuration = Parsers.formatCooldownTime(duration);
+                    text = text.replace(durationPlaceholder, formattedDuration);
+                    if (hub.getCooldownDAO().getRemainingSeconds(Bukkit.getOfflinePlayer(playerUUID), cooldownId) == null) {
+                        // If the cooldown is expired, replace with "Expired"
+                        text = text.replace(durationPlaceholder, "00:00:00");
+                    }
+                }
+            }
+        }
         if(text.contains("{citems.")) {
-
-
             for (String citemId : citemsManager.getCitemDAO().getCitemIds()) {
                 String namePlaceholder = "{citems.name:"+citemId+"}";
                 String lorePlaceholder = "{citems.lore:"+citemId+"}";
