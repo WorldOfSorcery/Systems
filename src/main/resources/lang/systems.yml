@@ -1,0 +1,14 @@
+header: "§eSystem Informations:"
+1.0.3:
+  version: "%cyan_300%1.0.3"
+  changelog: |
+    %cyan_300%- Added Cooldowns
+    %cyan_300%- Added Cooldown Conditions
+1.0.2:
+  version: "%cyan_300%1.0.2"
+  changelog: |
+    %cyan_300%- Added enter-interaction Region Flag
+1.0.1:
+  version: "%cyan_300%1.0.1"
+  changelog: |
+    %cyan_300%- Fixed Region bug (Issue #21)

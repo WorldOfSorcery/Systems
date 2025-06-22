@@ -85,7 +85,13 @@ public enum Permissions {
     COSMETIC_DESC("cosmetic.desc"),
 
     LOOTTABLE_GIVE("loottable.give"),
-    LOOTTABLE_RELOAD("loottable.reload");
+    LOOTTABLE_RELOAD("loottable.reload"),
+
+    COOLDOWNS_GIVE("cooldowns.give"),
+    COOLDOWNS_REMOVE("cooldowns.remove"),
+    COOLDOWNS_VIEW("cooldowns.view"),
+
+    SYSTEMS("systems");
 
 
 

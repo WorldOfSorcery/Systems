@@ -1,0 +1,23 @@
+error:
+  exists: "This Cooldown does not exist."
+  internal: "An internal error has occured."
+info:
+  usage:
+    give: "Usage: /cooldown give <Player> <ID>"
+    remove: "Usage: /cooldown remove <Player> <ID>"
+    view: "Usage: /cooldown view <Player> <ID>"
+    general: "Usage: /cooldown <give|remove|view> <Player> <ID>"
+
+give: "§aYou have given §e%player%§a the cooldown: '§e%cooldown%§a'."
+remove: "§aYou have removed §e%player%§a's cooldown: '§e%cooldown%§a'."
+view:
+  active: "§e%player%§7 has the cooldown: '§e%cooldown%§7' with a remaining time of §e%time%§7."
+  no_cooldown: "§e%player%§7 has no cooldown with the ID: '§e%cooldown%§7'."
+  cooldown_expired: "§e%player%§7's cooldown: '§e%cooldown%§7' has expired."
+
+help:
+  header: "Cooldown Commands:"
+  give: "%cyan_300%/cooldown give <Player> <ID> §7- Give a Player a Cooldown."
+  remove: "%cyan_300%/cooldown remove <Player> <ID> §7- Remove a Cooldown from a Player."
+  view: "%cyan_300%/cooldown view <Player> <ID> §7- View a Cooldown of a Player."
+  help: "%cyan_300%/cooldown help §7- Display this help message."

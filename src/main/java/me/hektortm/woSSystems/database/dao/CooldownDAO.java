@@ -9,9 +9,7 @@ import me.hektortm.wosCore.database.IDAO;
 import org.bukkit.OfflinePlayer;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -32,7 +30,7 @@ public class CooldownDAO implements IDAO {
             stmt.execute("CREATE TABLE IF NOT EXISTS cooldowns(" +
                     "id VARCHAR(255)," +
                     "duration BIGINT," +
-                    "start_interaction VARCHAR(255)" +
+                    "start_interaction VARCHAR(255)," +
                     "end_interaction VARCHAR(255))");
             stmt.execute("CREATE TABLE IF NOT EXISTS playerdata_cooldowns(" +
                     "uuid VARCHAR(255)," +
@@ -48,10 +46,10 @@ public class CooldownDAO implements IDAO {
             stmt.setString(1, id);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return new Cooldown(id, rs.getInt("duration"), rs.getString("start_interaction"), rs.getString("end_interaction"));
+                // Duration is now in seconds
+                return new Cooldown(id, rs.getLong("duration"), rs.getString("start_interaction"), rs.getString("end_interaction"));
             }
             return null;
-
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to fetch all Cooldowns");
             return null;
@@ -65,7 +63,6 @@ public class CooldownDAO implements IDAO {
             stmt.setString(2, id);
             stmt.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
             stmt.executeUpdate();
-            
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to give cooldown");
         }
@@ -73,11 +70,11 @@ public class CooldownDAO implements IDAO {
 
     public long getCooldownDuration(String id) {
         String sql = "SELECT duration FROM cooldowns WHERE id = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt =  conn.prepareStatement(sql)) {
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, id);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return rs.getLong("duration");
+                return rs.getLong("duration"); // Returns duration in seconds
             }
             return 0;
         } catch (SQLException e) {
@@ -103,25 +100,82 @@ public class CooldownDAO implements IDAO {
     }
 
     public boolean isCooldownActive(OfflinePlayer p, String id) {
-        // Get the start time of the cooldown
         Timestamp start = getPlayerStartTime(p, id);
-
-        // If no start time exists, there's no active cooldown
         if (start == null) {
             return false;
         }
 
-        // Get current time
-        Timestamp now = new Timestamp(System.currentTimeMillis());
-
-        // Calculate the duration that has passed since the cooldown started
-        long elapsedMillis = now.getTime() - start.getTime();
-
-        // Get the cooldown duration for this specific ID (you'll need to implement getCooldownDuration)
+        // Convert both to seconds for comparison
+        long elapsedSeconds = (System.currentTimeMillis() - start.getTime()) / 1000;
         long cooldownDuration = getCooldownDuration(id);
 
-        // If elapsed time is less than cooldown duration, cooldown is still active
-        return elapsedMillis < cooldownDuration;
+        return elapsedSeconds < cooldownDuration;
+    }
+
+    public Long getRemainingSeconds(OfflinePlayer p, String id) {
+        if (!isCooldownActive(p, id)) {
+            return null; // No active cooldown
+        }
+
+        Timestamp start = getPlayerStartTime(p, id);
+        long durationSeconds = getCooldownDuration(id);
+        long elapsedSeconds = (System.currentTimeMillis() - start.getTime()) / 1000;
+
+        return durationSeconds - elapsedSeconds;
+    }
+
+    public Map<UUID, List<String>> getAllActiveCooldowns() throws SQLException {
+        Map<UUID, List<String>> cooldowns = new HashMap<>();
+        String sql = "SELECT uuid, id FROM playerdata_cooldowns";
+
+        try (Connection conn = db.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                UUID playerId = UUID.fromString(rs.getString("uuid"));
+                String cooldownId = rs.getString("id");
+                cooldowns.computeIfAbsent(playerId, k -> new ArrayList<>()).add(cooldownId);
+            }
+        }
+        return cooldowns;
+    }
+
+    // Remove specific cooldown for a player
+    public void removeCooldown(OfflinePlayer oP, String cooldownId) throws SQLException {
+        String sql = "DELETE FROM playerdata_cooldowns WHERE uuid = ? AND id = ?";
+
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, oP.getUniqueId().toString());
+            stmt.setString(2, cooldownId);
+            stmt.executeUpdate();
+        }
+    }
+
+    // Check if cooldown is expired
+    public boolean isCooldownExpired(OfflinePlayer oP, String cooldownId) throws SQLException {
+        String sql = "SELECT start_time FROM playerdata_cooldowns WHERE uuid = ? AND id = ?";
+
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, oP.getUniqueId().toString());
+            stmt.setString(2, cooldownId);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                long startTime = rs.getTimestamp("start_time").getTime();
+                long duration = getCooldownDuration(cooldownId) * 1000L;
+                return System.currentTimeMillis() > (startTime + duration);
+            }
+            return false;
+        }
+    }
+
+    public String formatRemainingTime(long seconds) {
+        long minutes = seconds / 60;
+        long remainingSeconds = seconds % 60;
+        return String.format("%d min %d sec", minutes, remainingSeconds);
     }
 
 }

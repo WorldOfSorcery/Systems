@@ -35,6 +35,8 @@ import me.hektortm.woSSystems.profiles.ProfileManager;
 import me.hektortm.woSSystems.regions.RegionHandler;
 import me.hektortm.woSSystems.regions.RegionBossBar;
 import me.hektortm.woSSystems.systems.citems.commands.SignCommand;
+import me.hektortm.woSSystems.systems.cooldowns.CooldownManager;
+import me.hektortm.woSSystems.systems.cooldowns.cmd.CooldownCommand;
 import me.hektortm.woSSystems.systems.guis.GUIManager;
 import me.hektortm.woSSystems.systems.guis.command.GUICommand;
 import me.hektortm.woSSystems.systems.interactions.HologramHandler;
@@ -98,6 +100,7 @@ public final class WoSSystems extends JavaPlugin {
     private ProtocolManager protocolManager;
     private HologramHandler hologramHandler;
     private CitemManager citemManager;
+    private CooldownManager cooldownManager;
     private EcoManager ecoManager;
     private StatsManager statsManager;
     private UnlockableManager unlockableManager;
@@ -158,6 +161,7 @@ public final class WoSSystems extends JavaPlugin {
             registerAndInitDAO(databaseManager, daoHub.getInteractionDAO());
             registerAndInitDAO(databaseManager, daoHub.getGuiDAO());
             registerAndInitDAO(databaseManager, daoHub.getFishingDAO());
+            registerAndInitDAO(databaseManager, daoHub.getCooldownDAO());
 
             databaseManager.initializeAllDAOs();
         } catch (SQLException e) {
@@ -178,14 +182,16 @@ public final class WoSSystems extends JavaPlugin {
 
 
         citemManager = new CitemManager(daoHub);
+
         resolver = new PlaceholderResolver();
         guiManager = new GUIManager(daoHub);
 
 
-        conditionHandler_new = new ConditionHandler_new();
+        conditionHandler_new = new ConditionHandler_new(daoHub);
         conditionHandler = new ConditionHandler(unlockableManager, statsManager, ecoManager, citemManager);
 
         interactionManager_ = new InteractionManager(daoHub);
+        cooldownManager = new CooldownManager(daoHub);
          // Ensure interactionManager is null-safe.
         citemManager.setInteractionManager(interactionManager_);
         channelManager = new ChannelManager(this, daoHub);
@@ -199,7 +205,6 @@ public final class WoSSystems extends JavaPlugin {
 // Initialize the remaining managers
         recipeManager = new CRecipeManager(daoHub); // TODO: interactions
 
-        resolver = new PlaceholderResolver();
         new CraftingListener(this, recipeManager, conditionHandler); // TODO: interactions
 
 
@@ -215,6 +220,8 @@ public final class WoSSystems extends JavaPlugin {
             lang.loadLangFileExternal(this, "channel", core);
             lang.loadLangFileExternal(this, "loottables", core);
             lang.loadLangFileExternal(this, "cosmetics", core);
+            lang.loadLangFileExternal(this, "cooldowns", core);
+            lang.loadLangFileExternal(this, "systems", core);
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }
@@ -241,6 +248,7 @@ public final class WoSSystems extends JavaPlugin {
         //interactionManager.loadInteraction();
         interactionManager_.interactionTask();
         tab.runTablist();
+        cooldownManager.start();
 
         ProtocolLibrary.getProtocolManager().addPacketListener(
                 new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Server.SPAWN_ENTITY) {
@@ -367,6 +375,8 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("profile", new ProfileCommand());
         cmdReg("gui", new GUICommand(daoHub));
         cmdReg("debugcmd", new debug(daoHub));
+        cmdReg("cooldown", new CooldownCommand(daoHub));
+        cmdReg("systems", new SystemsCommand());
     }
 
     private void registerEvents() {
@@ -434,6 +444,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public EcoManager getEcoManager() {
         return ecoManager;
+    }
+    public CooldownManager getCooldownManager() {
+        return cooldownManager;
     }
     public UnlockableManager getUnlockableManager() {
         return unlockableManager;

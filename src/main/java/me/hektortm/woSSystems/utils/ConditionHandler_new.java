@@ -1,12 +1,15 @@
 package me.hektortm.woSSystems.utils;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.regions.RegionHandler;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
+import me.hektortm.woSSystems.systems.cooldowns.CooldownManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.utils.dataclasses.Condition;
 import me.hektortm.wosCore.discord.DiscordLogger;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -19,6 +22,12 @@ public class ConditionHandler_new {
     private final CitemManager citems = plugin.getCitemManager();
     private final UnlockableManager unlockables = plugin.getUnlockableManager();
     private final StatsManager stats = plugin.getStatsManager();
+    private final CooldownManager cooldowns = plugin.getCooldownManager();
+    private final DAOHub hub;
+
+    public ConditionHandler_new(DAOHub hub) {
+        this.hub = hub;
+    }
 
 
     public boolean checkConditions(Player player, List<Condition> conditions) {
@@ -63,7 +72,10 @@ public class ConditionHandler_new {
                     Map<UUID, String> playerRegionsNot = plugin.getPlayerRegions();
                     String regionIdNot = playerRegionsNot.get(player.getUniqueId());
                     return regionIdNot == null || !regionIdNot.equalsIgnoreCase(condition.getValue());
-
+                case "has_active_cooldown":
+                    return isCooldownActive(player, condition.getValue());
+                case "has_not_active_cooldown":
+                    return !isCooldownActive(player, condition.getValue());
                 case "permission":
                     return player.hasPermission(condition.getValue());
 
@@ -81,4 +93,9 @@ public class ConditionHandler_new {
         }
 
     }
+
+    public boolean isCooldownActive(OfflinePlayer oP, String cooldownId) {
+        return hub.getCooldownDAO().getRemainingSeconds(oP, cooldownId) != null;
+    }
+
 }

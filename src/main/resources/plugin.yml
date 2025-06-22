@@ -1,5 +1,5 @@
 name: WoSSystems
-version: '1.0.2'
+version: '1.0.3'
 main: me.hektortm.woSSystems.WoSSystems
 api-version: '1.21'
 author: HektorTM
@@ -107,6 +107,15 @@ commands:
     description: open GUIs for players
     usage: /<command> <open> <player> <id>
 
+  cooldown:
+    description: cooldown management
+    usage: /<command> <give|remove|view> <player> <id>
+    aliases: [cd]
+
+  systems:
+    description: Changelog info
+    usage: /<command>
+    permission: systems
 
 permissions:
   # Citem Permissions
