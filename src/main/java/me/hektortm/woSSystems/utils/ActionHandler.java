@@ -34,6 +34,31 @@ public class ActionHandler {
                 player.sendMessage(resolver.resolvePlaceholders(message, player));
                 continue;
             }
+            if (cmd.startsWith("send_actionbar")) {
+                String message = cmd.replace("send_actionbar ", "").replace("&", "§");
+                player.sendActionBar(resolver.resolvePlaceholders(message, player));
+                continue;
+            }
+            if (cmd.startsWith("send_title")) {
+                String[] parts = cmd.split(" -s ");
+                String title = parts[0].replace("&", "§").replace("send_title ", "");
+                String subtitle;
+                if (parts.length > 1) {
+                    subtitle = parts[1].replace("&", "§");
+                } else {
+                    subtitle = "";
+                }
+                player.sendTitle(title, subtitle, 10, 70, 20);
+                continue;
+            }
+            if (cmd.startsWith("play_sound")) {
+                String[] parts = cmd.split(" ");
+                String soundName = parts[1];
+                float volume = Float.parseFloat(parts[2]);
+                float pitch = Float.parseFloat(parts[3]);
+                player.playSound(player.getLocation(), soundName, volume, pitch);
+                continue;
+            }
             if(cmd.startsWith("eco")) {
                 String[] parts = cmd.split(" ");
                 String actionType = parts[1];
