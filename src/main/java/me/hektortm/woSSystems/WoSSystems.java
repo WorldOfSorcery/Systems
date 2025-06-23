@@ -450,14 +450,8 @@ public final class WoSSystems extends JavaPlugin {
     public UnlockableManager getUnlockableManager() {
         return unlockableManager;
     }
-    public CRecipeManager getRecipeManager() {
-        return recipeManager;
-    }
     public CitemManager getCitemManager() {
         return citemManager;
-    }
-    public CRecipeManager getCRecipeManager() {
-        return recipeManager;
     }
     public BossBarManager getBossBarManager() {
         return bossBarManager;
@@ -485,10 +479,6 @@ public final class WoSSystems extends JavaPlugin {
     }
     public GUIManager getGuiManager() {
         return guiManager;
-    }
-
-    public ProtocolManager getProtocolManager() {
-        return protocolManager;
     }
 
     public Map<UUID, String> getPlayerRegions() {

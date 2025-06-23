@@ -39,6 +39,8 @@ public class GUIDAO implements IDAO {
             stmt.execute("CREATE TABLE IF NOT EXISTS gui_slots(" +
                     "gui_id VARCHAR(255) NOT NULL," +
                     "slot INTEGER NOT NULL," +
+                    "slot_id INTEGER NOT NULL," +
+                    "matchtype VARCHAR(255)," +
                     "material VARCHAR(255)," +
                     "display_name VARCHAR(255)," +
                     "lore TEXT," +
@@ -59,6 +61,8 @@ public class GUIDAO implements IDAO {
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 int slot = rs.getInt("slot");
+                int slotId = rs.getInt("slot_id");
+                String matchType = rs.getString("matchtype");
                 Material material = Material.getMaterial(rs.getString("material"));
                 String displayName = rs.getString("display_name");
                 String loreRaw = rs.getString("lore");
@@ -84,7 +88,7 @@ public class GUIDAO implements IDAO {
 
 
 
-                slots.add(new GUISlot(id, slot, material, displayName, lore, customModelData, enchanted, parsedRightClick, parsedLeftClick, visible));
+                slots.add(new GUISlot(id, slot, slotId, matchType, material, displayName, lore, customModelData, enchanted, parsedRightClick, parsedLeftClick, visible));
             }
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to get Slots for "+id+": "+e);

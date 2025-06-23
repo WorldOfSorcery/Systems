@@ -6,7 +6,10 @@ import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.ActionHandler;
+import me.hektortm.woSSystems.utils.ConditionHandler;
+import me.hektortm.woSSystems.utils.ConditionType;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
+import me.hektortm.woSSystems.utils.dataclasses.Condition;
 import me.hektortm.woSSystems.utils.dataclasses.GUI;
 import me.hektortm.woSSystems.utils.dataclasses.GUISlot;
 import org.bukkit.Bukkit;
@@ -34,6 +37,7 @@ public class GUIManager implements Listener {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final PlaceholderResolver placeholderResolver = plugin.getPlaceholderResolver();
+    private final ConditionHandler conditions = plugin.getConditionHandler();
     private final ActionHandler actionHandler = new ActionHandler();
     private final DAOHub hub;
 
@@ -53,10 +57,25 @@ public class GUIManager implements Listener {
                 gui.getSize()*9,
                 gui.getTitle()
         );
+        List<GUISlot> slots = gui.getSlots();
 
 
+        for (GUISlot slot : slots) {
+            List<Condition> conditionList = hub.getConditionDAO().getConditions(
+                    ConditionType.GUISLOT,
+                    guiId + ":"+slot.getSlot()+":"+slot.getSlotId()
+            );
+            if (!conditionList.isEmpty()) {
+                boolean shouldRun;
+                if ("one".equalsIgnoreCase(slot.getMatchType())) {
+                    shouldRun = conditionList.isEmpty() || conditionList.stream().anyMatch(cond -> conditions.evaluate(player, cond));
+                } else {
+                    shouldRun = conditions.checkConditions(player, conditionList);
+                }
 
-        for (GUISlot slot : gui.getSlots()) {
+                if (!shouldRun) continue;
+            }
+
             if (!slot.isVisible()) continue;
 
             List<String> preLore = slot.getLore();

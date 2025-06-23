@@ -8,6 +8,8 @@ public class GUISlot {
 
     private final String guiId;
     private final int slot;
+    private final int slot_id;
+    private final String matchType;
     private final Material material;
     private final String displayName;
     private final List<String> lore;
@@ -18,9 +20,11 @@ public class GUISlot {
     private final boolean visible;
 
 
-    public GUISlot(String guiId, int slot, Material material, String displayName, List<String> lore, int customModelData, boolean enchanted, List<String> rightActions, List<String> leftActions, boolean visible) {
+    public GUISlot(String guiId, int slot, int slot_id, String matchType, Material material, String displayName, List<String> lore, int customModelData, boolean enchanted, List<String> rightActions, List<String> leftActions, boolean visible) {
         this.guiId = guiId;
         this.slot = slot;
+        this.slot_id = slot_id;
+        this.matchType = matchType;
         this.material = material;
         this.displayName = displayName;
         this.lore = lore;
@@ -36,6 +40,12 @@ public class GUISlot {
     }
     public int getSlot() {
         return slot;
+    }
+    public int getSlotId() {
+        return slot_id;
+    }
+    public String getMatchType() {
+        return matchType;
     }
     public Material getMaterial() {
         return material;
