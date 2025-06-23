@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.utils;
 public enum ConditionType {
 
     INTERACTION("interaction"),
+    GUISLOT("guislot"),
     PARTICLE("particle"),
     HOLOGRAM("hologram"),
     RECIPE("recipe");
