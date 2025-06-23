@@ -46,17 +46,20 @@ public class RegionHandler implements Listener {
         String newRegionId = null; // Track the region with a display-name flag
 
         for (ProtectedRegion region : regions) {
-            String displayName = region.getFlag(WoSSystems.DISPLAY_NAME); // Get the display-name flag
+            String displayName = region.getFlag(WoSSystems.DISPLAY_NAME);
             String enterInteraction = region.getFlag(WoSSystems.ENTER_INTERACTION);
+            String leaveInteraction = region.getFlag(WoSSystems.LEAVE_INTERACTION);
             newRegionId = region.getId();
             if (displayName != null) {
-                 // Found a region with a display-name
-                bossbar.updateBossBar(player, displayName); // Update boss bar with the display name
+                bossbar.updateBossBar(player, displayName);
                 break;
             }
             if (enterInteraction != null && !plugin.getPlayerRegions().containsValue(newRegionId)) {
-
                 plugin.getInteractionManager().triggerInteraction(enterInteraction, player);
+                break;
+            }
+            if (leaveInteraction != null && !plugin.getPlayerRegions().containsValue(newRegionId)) {
+                plugin.getInteractionManager().triggerInteraction(leaveInteraction, player);
                 break;
             }
         }

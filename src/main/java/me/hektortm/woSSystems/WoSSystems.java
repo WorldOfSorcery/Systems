@@ -121,6 +121,7 @@ public final class WoSSystems extends JavaPlugin {
 
     public static StringFlag DISPLAY_NAME;
     public static StringFlag ENTER_INTERACTION;
+    public static StringFlag LEAVE_INTERACTION;
     public final Map<UUID, String> playerRegions = new HashMap<>();
     private final Map<UUID, Inventory> clickActions = new HashMap<>();
 
@@ -278,6 +279,7 @@ public final class WoSSystems extends JavaPlugin {
 
         DISPLAY_NAME = registerStringFlag("display-name", registry);
         ENTER_INTERACTION = registerStringFlag("enter-interaction", registry);
+        LEAVE_INTERACTION = registerStringFlag("leave-interaction", registry);
 
     }
 
