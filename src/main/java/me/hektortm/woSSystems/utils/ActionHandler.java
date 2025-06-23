@@ -7,10 +7,11 @@ import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.logging.Level;
 
 public class ActionHandler {
-
-    private final PlaceholderResolver resolver = WoSSystems.getPlugin(WoSSystems.class).getPlaceholderResolver();
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final PlaceholderResolver resolver = plugin.getPlaceholderResolver();
 
     public enum SourceType {
         INTERACTION("interaction"),
@@ -31,7 +32,12 @@ public class ActionHandler {
             String parsedCommand = cmd.replace("@p", player.getName());
             if (cmd.startsWith("send_message")) {
                 String message = cmd.replace("send_message ", "").replace("&", "§");
-                player.sendMessage(resolver.resolvePlaceholders(message, player));
+                if (message.isBlank() || message.isEmpty()) {
+                    player.sendMessage("");
+                } else {
+                    player.sendMessage(resolver.resolvePlaceholders(message, player));
+                }
+
                 continue;
             }
             if (cmd.startsWith("send_actionbar")) {
@@ -50,6 +56,17 @@ public class ActionHandler {
                 }
                 player.sendTitle(title, subtitle, 10, 70, 20);
                 continue;
+            }
+            if (cmd.startsWith("wait")) {
+                String[] parts = cmd.split(" ");
+                int duration = Integer.parseInt(parts[1]);
+                try  {
+                    wait(duration);
+                } catch(InterruptedException e) {
+                    plugin.writeLog("ActionHandler | wait", Level.SEVERE, "InterruptedException:" + e);
+                }
+                continue;
+
             }
             if (cmd.startsWith("play_sound")) {
                 String[] parts = cmd.split(" ");
