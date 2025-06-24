@@ -52,15 +52,11 @@ public class RegionHandler implements Listener {
             newRegionId = region.getId();
             if (displayName != null) {
                 bossbar.updateBossBar(player, displayName);
-                break;
+
             }
             if (enterInteraction != null && !plugin.getPlayerRegions().containsValue(newRegionId)) {
                 plugin.getInteractionManager().triggerInteraction(enterInteraction, player);
-                break;
-            }
-            if (leaveInteraction != null && !plugin.getPlayerRegions().containsValue(newRegionId)) {
-                plugin.getInteractionManager().triggerInteraction(leaveInteraction, player);
-                break;
+
             }
         }
 
@@ -71,7 +67,8 @@ public class RegionHandler implements Listener {
             if (newRegionId == null) {
                 bossbar.updateBossBar(player, ""); // Clear the bossbar if no region with display-name
             }
-            plugin.getPlayerRegions().put(player.getUniqueId(), newRegionId); // Update the player's current region
+             // Update the player's current region
         }
+        plugin.getPlayerRegions().put(player.getUniqueId(), newRegionId);
     }
 }
