@@ -94,28 +94,35 @@ commands:
   internalviewitem:
     description: Internal command for viewing items.
     usage: /internalviewitem <clickId>
-
+# Cosmetic Commands
   cosmetic:
     description: cosmetic management
     usage: /<command>
-
+  prefixes:
+    description: open Prefix Menu
+    uasge: /<command>
+    aliases: [prefix]
+  badges:
+    description: open Badge Menu
+    uasge: /<command>
+    aliases: [badge]
+  titles:
+    description: open Title Menu
+    uasge: /<command>
+  # Profile Command
   profile:
     description: profile
     usage: /<command> <player>
-
+  # GUI Command
   gui:
     description: open GUIs for players
     usage: /<command> <open> <player> <id>
-
+  # Cooldown Command
   cooldown:
     description: cooldown management
     usage: /<command> <give|remove|view> <player> <id>
     aliases: [cd]
 
-  systems:
-    description: Changelog info
-    usage: /<command>
-    permission: systems
 
 permissions:
   # Citem Permissions
