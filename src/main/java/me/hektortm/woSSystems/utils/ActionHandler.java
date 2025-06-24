@@ -32,12 +32,13 @@ public class ActionHandler {
             String parsedCommand = cmd.replace("@p", player.getName());
             if (cmd.startsWith("send_message")) {
                 String message = cmd.replace("send_message ", "").replace("&", "§");
-                if (message.isBlank() || message.isEmpty()) {
-                    player.sendMessage("");
-                } else {
-                    player.sendMessage(resolver.resolvePlaceholders(message, player));
-                }
+                player.sendMessage(resolver.resolvePlaceholders(message, player));
 
+
+                continue;
+            }
+            if (cmd.startsWith("empty_line")) {
+                player.sendMessage("");
                 continue;
             }
             if (cmd.startsWith("send_actionbar")) {
@@ -61,9 +62,10 @@ public class ActionHandler {
                 String[] parts = cmd.split(" ");
                 int duration = Integer.parseInt(parts[1]);
                 try  {
-                    wait(duration);
+                    Thread.sleep(duration);
                 } catch(InterruptedException e) {
                     plugin.writeLog("ActionHandler | wait", Level.SEVERE, "InterruptedException:" + e);
+                    Thread.currentThread().interrupt();
                 }
                 continue;
 
