@@ -125,8 +125,23 @@ public class GUIManager implements Listener {
 
         int slot = event.getRawSlot();
         if (slot < 0 || slot >= event.getInventory().getSize()) return;
-
+        plugin.writeLog("GUIManager", Level.INFO, gui.getSlots().toString());
         for (GUISlot guiSlot : gui.getSlots()) {
+            List<Condition> conditionList = hub.getConditionDAO().getConditions(
+                    ConditionType.GUISLOT,
+                    holder.getGuiId() + ":"+guiSlot.getSlot()+":"+guiSlot.getSlotId()
+            );
+            plugin.writeLog("GUIManager", Level.INFO, holder.getGuiId()+":"+guiSlot.getSlot()+":"+guiSlot.getSlotId() + " - Conditions: " + conditionList.toString());
+            if (!conditionList.isEmpty()) {
+                boolean shouldRun;
+                if ("one".equalsIgnoreCase(guiSlot.getMatchType())) {
+                    shouldRun = conditionList.isEmpty() || conditionList.stream().anyMatch(cond -> conditions.evaluate(player, cond));
+                } else {
+                    shouldRun = conditions.checkConditions(player, conditionList);
+                }
+
+                if (!shouldRun) continue;
+            }
             if (guiSlot.getSlot() == slot && guiSlot.isVisible()) {
                 handleClickActions(player, event.getClick(), guiSlot);
                 break;

@@ -183,10 +183,11 @@ public final class WoSSystems extends JavaPlugin {
         citemManager = new CitemManager(daoHub);
 
         resolver = new PlaceholderResolver(daoHub);
+        conditionHandler = new ConditionHandler(daoHub);
         guiManager = new GUIManager(daoHub);
 
 
-        conditionHandler = new ConditionHandler(daoHub);
+
 
         interactionManager = new InteractionManager(daoHub);
         cooldownManager = new CooldownManager(daoHub);

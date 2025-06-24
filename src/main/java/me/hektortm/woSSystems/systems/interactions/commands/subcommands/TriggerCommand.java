@@ -38,8 +38,8 @@ public class TriggerCommand extends SubCommand {
 
 
 
-                manager_new.triggerInteraction(interactionId, targetPlayer);
                 sender.sendMessage("Triggered interaction " + interactionId + " for player " + playerName);
+                manager_new.triggerInteraction(interactionId, targetPlayer);
 
 
         } else {
