@@ -179,7 +179,14 @@ public class Parsers {
         if (days > 0) {
             return String.format("%dd %02d:%02d:%02d", days, hours, minutes, seconds);
         }
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        if (hours > 0) {
+            return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        }
+        if (minutes > 0) {
+            return String.format("%02d:%02d", minutes, seconds);
+        }
+        return String.format("%02d", seconds);
+
     }
 
 }

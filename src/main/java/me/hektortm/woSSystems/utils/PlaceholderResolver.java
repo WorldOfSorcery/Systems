@@ -68,7 +68,12 @@ public class PlaceholderResolver {
                 String durationPlaceholder = "{cooldowns.duration:" + cooldownId + "}";
 
                 if (text.contains(durationPlaceholder)) {
-                    long duration = hub.getCooldownDAO().getRemainingSeconds(Bukkit.getOfflinePlayer(playerUUID), cooldownId);
+                    long duration;
+                    if (hub.getCooldownDAO().getRemainingSeconds(Bukkit.getOfflinePlayer(playerUUID), cooldownId) == null) {
+                        duration = 0;
+                    } else {
+                        duration = hub.getCooldownDAO().getRemainingSeconds(Bukkit.getOfflinePlayer(playerUUID), cooldownId);
+                    }
                     // Convert duration from seconds to a human-readable format
                     String formattedDuration = Parsers.formatCooldownTime(duration);
                     text = text.replace(durationPlaceholder, formattedDuration);
