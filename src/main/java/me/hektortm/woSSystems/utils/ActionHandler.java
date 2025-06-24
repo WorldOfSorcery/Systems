@@ -6,13 +6,14 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 
 public class ActionHandler {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final PlaceholderResolver resolver = plugin.getPlaceholderResolver();
-
+    private final List<String> blacklist = Arrays.asList("op", "gmc", "gamemode");
     public enum SourceType {
         INTERACTION("interaction"),
         GUI("gui");
@@ -35,6 +36,18 @@ public class ActionHandler {
                 player.sendMessage(resolver.resolvePlaceholders(message, player));
 
 
+                continue;
+            }
+            if (cmd.startsWith("sudo")) {
+                String[] parts = cmd.split(" ");
+                for (String term : blacklist) {
+                    if (parts[1].contains(term)) {
+                        plugin.getLogManager().sendWarning(player.getName() + " Tried to execute: " + parts[1] + " | Source: "+sourceType.getType()+"("+sourceID+")");
+                        plugin.getLogManager().writeLog(player, "Tried to execute: " + parts[1] + " | Source: "+sourceType.getType()+"("+sourceID+")");
+                        return;
+                    }
+                }
+                Bukkit.dispatchCommand(player, parts[1]);
                 continue;
             }
             if (cmd.startsWith("empty_line")) {
