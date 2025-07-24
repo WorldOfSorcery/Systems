@@ -376,7 +376,6 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("gui", new GUICommand(daoHub));
         cmdReg("debugcmd", new debug(daoHub));
         cmdReg("cooldown", new CooldownCommand(daoHub));
-        cmdReg("systems", new SystemsCommand());
     }
 
     private void registerEvents() {

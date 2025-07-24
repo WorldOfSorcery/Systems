@@ -57,24 +57,31 @@ public class ConditionHandler {
                 case "has_not_unlockable":
                     return !unlockables.hasPlayerUnlockable(player, condition.getValue());
 
-                case "has_stats":
-                    return stats.hasStatValue(player, condition.getValue(), Integer.parseInt(condition.getParameter()));
+                case "has_stats_greater_than":
+                    return stats.getPlayerStat(player.getUniqueId(), condition.getValue()) > Long.parseLong(condition.getParameter());
 
-                case "has_not_stats":
-                    return !stats.hasStatValue(player, condition.getValue(), Integer.parseInt(condition.getParameter()));
+                case "has_stats_less_than":
+                    return stats.getPlayerStat(player.getUniqueId(), condition.getValue()) < Long.parseLong(condition.getParameter());
+
+                case "has_stats_equal_to":
+                    return stats.getPlayerStat(player.getUniqueId(), condition.getValue()) == Long.parseLong(condition.getParameter());
 
                 case "is_in_region":
                     Map<UUID, String> playerRegions = plugin.getPlayerRegions();
                     String regionId = playerRegions.get(player.getUniqueId());
                     return regionId != null && regionId.equalsIgnoreCase(condition.getValue());
+
                 case "is_not_in_region":
                     Map<UUID, String> playerRegionsNot = plugin.getPlayerRegions();
                     String regionIdNot = playerRegionsNot.get(player.getUniqueId());
                     return regionIdNot == null || !regionIdNot.equalsIgnoreCase(condition.getValue());
+
                 case "has_active_cooldown":
                     return isCooldownActive(player, condition.getValue());
+
                 case "has_not_active_cooldown":
                     return !isCooldownActive(player, condition.getValue());
+
                 case "permission":
                     return player.hasPermission(condition.getValue());
 

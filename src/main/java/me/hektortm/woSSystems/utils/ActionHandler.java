@@ -33,8 +33,6 @@ public class ActionHandler {
             if (cmd.startsWith("send_message")) {
                 String message = cmd.replace("send_message ", "").replace("&", "§");
                 player.sendMessage(resolver.resolvePlaceholders(message, player));
-
-
                 continue;
             }
             if (cmd.startsWith("empty_line")) {
@@ -58,18 +56,18 @@ public class ActionHandler {
                 player.sendTitle(title, subtitle, 10, 70, 20);
                 continue;
             }
-            if (cmd.startsWith("wait")) {
-                String[] parts = cmd.split(" ");
-                int duration = Integer.parseInt(parts[1]);
-                try  {
-                    Thread.sleep(duration);
-                } catch(InterruptedException e) {
-                    plugin.writeLog("ActionHandler | wait", Level.SEVERE, "InterruptedException:" + e);
-                    Thread.currentThread().interrupt();
-                }
-                continue;
-
-            }
+//            if (cmd.startsWith("wait")) {
+//                String[] parts = cmd.split(" ");
+//                int duration = Integer.parseInt(parts[1]);
+//                try  {
+//                    Thread.sleep(duration);
+//                } catch(InterruptedException e) {
+//                    plugin.writeLog("ActionHandler | wait", Level.SEVERE, "InterruptedException:" + e);
+//                    Thread.currentThread().interrupt();
+//                }
+//                continue;
+//
+//            }
             if (cmd.startsWith("play_sound")) {
                 String[] parts = cmd.split(" ");
                 String soundName = parts[1];
@@ -100,7 +98,7 @@ public class ActionHandler {
 
                 }
             }
-            if (cmd.startsWith("close_inventory")) {
+            if (cmd.startsWith("close_gui")) {
                 player.closeInventory();
                 continue;
             }

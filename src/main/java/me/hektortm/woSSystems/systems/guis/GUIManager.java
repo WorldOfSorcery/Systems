@@ -1,8 +1,5 @@
 package me.hektortm.woSSystems.systems.guis;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.ActionHandler;
@@ -13,8 +10,6 @@ import me.hektortm.woSSystems.utils.dataclasses.Condition;
 import me.hektortm.woSSystems.utils.dataclasses.GUI;
 import me.hektortm.woSSystems.utils.dataclasses.GUISlot;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -28,8 +23,6 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.io.File;
-import java.io.FileReader;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -109,6 +102,8 @@ public class GUIManager implements Listener {
         }
 
         player.openInventory(inventory);
+        List<String> openActions = gui.getOpenActions();
+        if (openActions == null || openActions.isEmpty()) return;
         actionHandler.executeActions(player, gui.getOpenActions(), ActionHandler.SourceType.GUI, guiId);
     }
 
@@ -156,9 +151,9 @@ public class GUIManager implements Listener {
             default -> null;
         };
 
-        if (actions != null && !actions.isEmpty()) {
-            actionHandler.executeActions(player, actions, ActionHandler.SourceType.GUI, null);
-        }
+        if (actions == null || actions.isEmpty()) return;
+        actionHandler.executeActions(player, actions, ActionHandler.SourceType.GUI, null);
+
     }
 
     @EventHandler
@@ -168,7 +163,9 @@ public class GUIManager implements Listener {
 
         GUI gui = hub.getGuiDAO().getGUIbyId(holder.getGuiId());
         if (gui != null) {
-            actionHandler.executeActions(player, gui.getCloseActions(), ActionHandler.SourceType.GUI, gui.getGuiId());
+            List<String> actions = gui.getCloseActions();
+            if (actions == null || actions.isEmpty()) return;
+            actionHandler.executeActions(player, actions, ActionHandler.SourceType.GUI, gui.getGuiId());
         }
     }
 
