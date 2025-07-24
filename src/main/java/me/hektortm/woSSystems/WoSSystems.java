@@ -21,6 +21,7 @@ import me.hektortm.woSSystems.channels.cmd.InternalViewItemCommand;
 import me.hektortm.woSSystems.channels.cmd.NicknameCommand;
 import me.hektortm.woSSystems.cosmetic.CosmeticManager;
 import me.hektortm.woSSystems.cosmetic.cmd.CosmeticCommand;
+import me.hektortm.woSSystems.cosmetic.cmd.QuickCommands;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.BalanceCommand;
@@ -372,6 +373,9 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("time", new TimeCommand(timeManager, this, lang));
         cmdReg("internalviewitem", new InternalViewItemCommand(this));
         cmdReg("cosmetic", new CosmeticCommand(cosmeticManager, daoHub));
+        cmdReg("prefixes", new QuickCommands.PrefixCommand());
+        cmdReg("badges", new QuickCommands.BadgeCommand());
+        cmdReg("titles", new QuickCommands.TitleCommand());
         cmdReg("profile", new ProfileCommand());
         cmdReg("gui", new GUICommand(daoHub));
         cmdReg("debugcmd", new debug(daoHub));

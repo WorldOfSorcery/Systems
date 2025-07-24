@@ -67,6 +67,18 @@ public class CosmeticsDAO implements IDAO {
         }
     }
 
+    public void takeCosmetic(CosmeticType type, String id, UUID uuid) {
+        String sql = "DELETE FROM player_cosmetics WHERE uuid = ? AND id = ? AND cosmetic_type = ?";
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, uuid.toString());
+            pstmt.setString(2, id);
+            pstmt.setString(3, type.name());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            plugin.writeLog(logName, Level.SEVERE, "Failed to take Cosmetic: " + e);
+        }
+    }
+
     public String getCurrentCosmetic(Player p, CosmeticType type) {
         String uuid = p.getUniqueId().toString();
         String sql = """

@@ -94,11 +94,22 @@ commands:
   internalviewitem:
     description: Internal command for viewing items.
     usage: /internalviewitem <clickId>
-
+# Cosmetic Commands
   cosmetic:
     description: cosmetic management
     usage: /<command>
-
+  prefixes:
+    description: open Prefix Menu
+    uasge: /<command>
+    aliases: [prefix]
+  badges:
+    description: open Badge Menu
+    uasge: /<command>
+    aliases: [badge]
+  titles:
+    description: open Title Menu
+    uasge: /<command>
+  # Profile Command
   profile:
     description: profile
     usage: /<command> <player>

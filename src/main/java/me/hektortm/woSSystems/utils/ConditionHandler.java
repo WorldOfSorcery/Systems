@@ -30,14 +30,9 @@ public class ConditionHandler {
 
 
     public boolean checkConditions(Player player, List<Condition> conditions) {
-        if (conditions == null || conditions.isEmpty()) {
-            return true;
-        }
-
+        if (conditions == null || conditions.isEmpty()) return true;
         for (Condition condition : conditions) {
-            if (!evaluate(player, condition)) {
-                return false; // if any condition fails, deny
-            }
+            if (!evaluate(player, condition)) return false;
         }
         return true;
     }
@@ -70,18 +65,30 @@ public class ConditionHandler {
                     Map<UUID, String> playerRegions = plugin.getPlayerRegions();
                     String regionId = playerRegions.get(player.getUniqueId());
                     return regionId != null && regionId.equalsIgnoreCase(condition.getValue());
-
                 case "is_not_in_region":
                     Map<UUID, String> playerRegionsNot = plugin.getPlayerRegions();
                     String regionIdNot = playerRegionsNot.get(player.getUniqueId());
                     return regionIdNot == null || !regionIdNot.equalsIgnoreCase(condition.getValue());
-
                 case "has_active_cooldown":
                     return isCooldownActive(player, condition.getValue());
-
                 case "has_not_active_cooldown":
                     return !isCooldownActive(player, condition.getValue());
-
+                case "has_badge":
+                    return hub.getCosmeticsDAO().hasCosmetic(player.getUniqueId(), CosmeticType.BADGE, condition.getValue());
+                case "has_not_badge":
+                    return !hub.getCosmeticsDAO().hasCosmetic(player.getUniqueId(), CosmeticType.BADGE, condition.getValue());
+                case "has_prefix":
+                    return hub.getCosmeticsDAO().hasCosmetic(player.getUniqueId(), CosmeticType.PREFIX, condition.getValue());
+                case "has_not_prefix":
+                    return !hub.getCosmeticsDAO().hasCosmetic(player.getUniqueId(), CosmeticType.PREFIX, condition.getValue());
+                case "has_title":
+                    return hub.getCosmeticsDAO().hasCosmetic(player.getUniqueId(), CosmeticType.TITLE, condition.getValue());
+                case "has_not_title":
+                    return !hub.getCosmeticsDAO().hasCosmetic(player.getUniqueId(), CosmeticType.TITLE, condition.getValue());
+                case "has_currency":
+                    return hub.getEconomyDAO().getPlayerCurrency(player, condition.getValue()) >= (condition.getParameter() != null ? Long.parseLong(condition.getParameter()) : 0);
+                case "has_not_currency":
+                    return hub.getEconomyDAO().getPlayerCurrency(player, condition.getValue()) <= (condition.getParameter() != null ? Long.parseLong(condition.getParameter()) : 0);
                 case "permission":
                     return player.hasPermission(condition.getValue());
 
