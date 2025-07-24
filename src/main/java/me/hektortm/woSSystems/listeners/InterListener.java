@@ -40,38 +40,9 @@ public class InterListener implements Listener {
 
     public InterListener(DAOHub hub) {
         this.hub = hub;
-        unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
+        unusableKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "unusable");
     }
-
-    @EventHandler
-    public void onNPCInteract(NPCRightClickEvent event) {
-        Player p = event.getClicker();
-        int clickedNPCid = event.getNPC().getId();
-        String npcIdString = String.valueOf(clickedNPCid);
-        Bukkit.getLogger().info("Interacted with NPC: " + clickedNPCid);
-
-//        for (File file : interManager.interactionFolder.listFiles()) {
-//            if (file.isFile() && file.getName().endsWith(".json")) {
-//                String id = file.getName().replace(".json", "");
-//                InteractionData inter = interManager.interactionMap.get(id);
-//                if (inter == null) {
-//                    Bukkit.getLogger().info("Interaction " + id + " is null.");
-//                    continue; // Skip invalid interaction files
-//                }
-//                List<String> ids = inter.getNpcIDs();
-//
-//                for (String npcid : ids) {
-//                    if (Objects.equals(npcid, npcIdString)) {
-//                        Bukkit.getLogger().info("NPC Interaction triggered for ID: " + id);
-//
-//                        // Trigger interaction based on action
-//                        interManager.triggerInteraction(p, id);
-//                        return; // Exit after handling interaction
-//                    }
-//                }
-//            }
-//        }
-    }
+    
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent e) {

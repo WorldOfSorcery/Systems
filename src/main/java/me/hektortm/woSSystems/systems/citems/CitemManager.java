@@ -36,7 +36,7 @@ public class CitemManager {
 
     private final NamespacedKey undroppableKey;
     private final NamespacedKey unusableKey;
-    private final NamespacedKey idKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "id");
+    private final NamespacedKey idKey;
     private final NamespacedKey leftActionKey;
     private final NamespacedKey rightActionKey;
     private final NamespacedKey timeKey;
@@ -48,7 +48,6 @@ public class CitemManager {
     public final NamespacedKey profilePicKey;
     public final File citemFolder;
 
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DAOHub hub;
     private InteractionManager interactionManager;
     private final LogManager log = new LogManager(new LangManager(WoSCore.getPlugin(WoSCore.class)),WoSCore.getPlugin(WoSCore.class));
@@ -59,9 +58,11 @@ public class CitemManager {
     public CitemManager(DAOHub hub) {
         this.hub = hub;
         nickManager = new NicknameManager(hub);
+        WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
         citemFolder = new File(plugin.getDataFolder(), "citems");
-        undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
-        unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
+        undroppableKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "undroppable");
+        idKey  = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "id");
+        unusableKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "unusable");
         leftActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-left");
         rightActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-right");
         timeKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "stamp-time");

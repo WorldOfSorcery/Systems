@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.listeners;
 
+import me.hektortm.woSSystems.WoSSystems;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.EventHandler;
@@ -15,7 +16,7 @@ public class DropListener implements Listener {
     private final NamespacedKey undroppableKey;
 
     public DropListener() {
-        undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
+        undroppableKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "undroppable");
     }
 
     @EventHandler

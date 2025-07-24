@@ -33,8 +33,8 @@ public class FlagCommand extends SubCommand {
         this.manager = manager;
         placeableKey = manager.getPlaceableKey();
         ownerKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "owner");
-        undroppableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "undroppable");
-        unusableKey = new NamespacedKey(Bukkit.getPluginManager().getPlugin("WoSSystems"), "unusable");
+        undroppableKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "undroppable");
+        unusableKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "unusable");
         profileBgKey = manager.getProfileBgKey();
         profilePicKey = manager.getProfilePicKey();
     }
