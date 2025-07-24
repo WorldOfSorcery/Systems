@@ -1,9 +1,9 @@
-name: WoSSystems
-version: '1.0.4'
+name: Systems
+version: '1.21.8-0.0.1'
 main: me.hektortm.woSSystems.WoSSystems
-api-version: '1.21'
+api-version: '1.21.8'
 author: HektorTM
-depend: [WoSCore, WorldGuard, Citizens, ProtocolLib]
+depend: [Core, WorldGuard, Citizens]
 commands:
   debugcmd:
     description: Debug command

@@ -11,8 +11,6 @@ import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.inventory.*;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
 public class CraftingListener implements Listener {
 
@@ -53,7 +51,7 @@ public class CraftingListener implements Listener {
 
         // Retrieve the conditions and success ID
         //JSONArray conditions = recipeManager.getConditions(key);
-        String successId = recipeManager.getSuccessId(key);  // Add this method to get success ID
+       // String successId = recipeManager.getSuccessId(key);  // Add this method to get success ID
 
         // Validate the conditions using ConditionHandler
         if (!event.getViewers().isEmpty() && event.getViewers().get(0) instanceof Player player) {
@@ -85,7 +83,7 @@ public class CraftingListener implements Listener {
 
         // Retrieve the conditions and success ID
        // JSONArray conditions = recipeManager.getConditions(key);
-        String successId = recipeManager.getSuccessId(key);
+       // String successId = recipeManager.getSuccessId(key);
 
         // Check if the player is shift-clicking
         if (event.isShiftClick()) {
@@ -93,19 +91,19 @@ public class CraftingListener implements Listener {
             //
 
             // Allow bulk crafting if conditions are met
-            if (successId != null) {
-                triggerSuccessInteraction(player, successId);
-            }
-            return;
+//            if (successId != null) {
+//                triggerSuccessInteraction(player, successId);
+//            }
+//            return;
         }
 
         // For regular crafting
         //
 
         // If conditions are valid, trigger the success interaction if available
-        if (successId != null) {
-            triggerSuccessInteraction(player, successId);
-        }
+//        if (successId != null) {
+//            triggerSuccessInteraction(player, successId);
+//        }
     }
 
     // Helper method to trigger success interaction

@@ -24,8 +24,6 @@ public class debug implements CommandExecutor {
 
         Player p = (Player) commandSender;
 
-        hologramHandler.forceCleanupAllHolograms();
-
         p.sendMessage("Cleaning up holograms");
 
         return true;

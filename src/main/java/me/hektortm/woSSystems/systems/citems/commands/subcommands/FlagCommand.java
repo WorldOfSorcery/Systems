@@ -93,7 +93,7 @@ public class FlagCommand extends SubCommand {
                     meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
                     meta.addItemFlags(ItemFlag.HIDE_DYE);
                     meta.addItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
-                    meta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
+                  //  meta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
                     meta.addItemFlags(ItemFlag.HIDE_DESTROYS);
                     meta.addItemFlags(ItemFlag.HIDE_PLACED_ON);
                     Utils.successMsg(p, "citems", "flag.add.hide");
@@ -171,14 +171,14 @@ public class FlagCommand extends SubCommand {
                     AttributeModifier fakeArmorToughness = new AttributeModifier(
                             UUID.randomUUID(), "fake_armor_toughness", 0, AttributeModifier.Operation.ADD_SCALAR);
 
-                    meta.addAttributeModifier(Attribute.GENERIC_ARMOR_TOUGHNESS, fakeArmorToughness);
+                   // meta.addAttributeModifier(Attribute.GENERIC_ARMOR_TOUGHNESS, fakeArmorToughness);
                     meta.removeItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                     meta.removeItemFlags(ItemFlag.HIDE_ENCHANTS);
                     meta.removeItemFlags(ItemFlag.HIDE_UNBREAKABLE);
                     meta.removeItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
                     meta.removeItemFlags(ItemFlag.HIDE_DYE);
                     meta.removeItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
-                    meta.removeItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
+                   // meta.removeItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
                     meta.removeItemFlags(ItemFlag.HIDE_DESTROYS);
                     meta.removeItemFlags(ItemFlag.HIDE_PLACED_ON);
                     Utils.success(p, "citems", "flag.remove.hide");

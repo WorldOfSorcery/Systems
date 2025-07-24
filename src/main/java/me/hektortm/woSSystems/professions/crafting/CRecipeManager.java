@@ -13,13 +13,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
-import java.io.File;
-import java.io.FileReader;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,7 +58,7 @@ public class CRecipeManager {
                     continue;
                 }
 
-                recipeMap.put(key, new RecipeData(recipe, null, record.success));
+              //  recipeMap.put(key, new RecipeData(recipe, null, record.success));
                 Bukkit.addRecipe(recipe);
             } catch (Exception e) {
 
@@ -73,10 +67,10 @@ public class CRecipeManager {
     }
 
 
-    public String getSuccessId(NamespacedKey key) {
-        RecipeData recipeData = recipeMap.get(key);
-        return recipeData != null ? recipeData.getSuccessId() : null;
-    }
+//    public String getSuccessId(NamespacedKey key) {
+//        RecipeData recipeData = recipeMap.get(key);
+//        return recipeData != null ? recipeData.getSuccessId() : null;
+//    }
 
 
     private ShapedRecipe parseShapedRecipeFromSlots(String slots, ItemStack result, NamespacedKey key) {

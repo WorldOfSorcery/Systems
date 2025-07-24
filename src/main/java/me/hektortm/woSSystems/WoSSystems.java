@@ -1,11 +1,5 @@
 package me.hektortm.woSSystems;
 
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.ProtocolManager;
-import com.comphenix.protocol.events.ListenerPriority;
-import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketEvent;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.StateFlag;
@@ -97,7 +91,6 @@ public final class WoSSystems extends JavaPlugin {
     private WoSCore core;
     private static LangManager lang;
     private LogManager log;
-    private ProtocolManager protocolManager;
     private HologramHandler hologramHandler;
     private CitemManager citemManager;
     private CooldownManager cooldownManager;
@@ -250,22 +243,10 @@ public final class WoSSystems extends JavaPlugin {
         tab.runTablist();
         cooldownManager.start();
 
-        ProtocolLibrary.getProtocolManager().addPacketListener(
-                new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Server.SPAWN_ENTITY) {
-                    @Override
-                    public void onPacketSending(PacketEvent event) {
-                        if (event.getPacketType() == PacketType.Play.Server.SPAWN_ENTITY) {
-                            plugin.getLogger().info("Sending spawn packet: " + event.getPacket());
-                        }
-                    }
-                }
-        );
-
     }
 
     @Override
     public void onDisable() {
-        hologramHandler.forceCleanupAllHolograms();
         channelManager.saveChannels();
         for (Player p : Bukkit.getOnlinePlayers()) {
             bossBarManager.removeBossBar(p);
@@ -276,7 +257,6 @@ public final class WoSSystems extends JavaPlugin {
 
     @Override
     public void onLoad() {
-        protocolManager = ProtocolLibrary.getProtocolManager();
         FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
 
         DISPLAY_NAME = registerStringFlag("display-name", registry);

@@ -7,8 +7,6 @@ import me.hektortm.wosCore.WoSCore;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 import java.io.File;
 import java.io.FileReader;
@@ -24,7 +22,7 @@ public class LoottableManager {
     private final WoSCore core = WoSCore.getPlugin(WoSCore.class);
     private final LogManager log = new LogManager(new LangManager(core), core);
     private final File loottableFolder = new File(woSSystems.getDataFolder(), "loottables");
-    public final Map<String, JSONObject> loottableMap = new HashMap<>();
+  //  public final Map<String, JSONObject> loottableMap = new HashMap<>();
 
     public LoottableManager(CitemManager citemManager) {
         this.citemManager = citemManager;
@@ -46,10 +44,10 @@ public class LoottableManager {
         for (File file : lootTableFiles) {
             String lootTableId = file.getName().replace(".json", "");
             try (FileReader reader = new FileReader(file)) {
-                JSONObject lootTableJson = (JSONObject) new JSONParser().parse(reader);
+              //  JSONObject lootTableJson = (JSONObject) new JSONParser().parse(reader);
 
                 // Validate and store the loot table
-                loottableMap.put(lootTableId, lootTableJson);
+              //  loottableMap.put(lootTableId, lootTableJson);
 
                 Bukkit.getLogger().info("Loaded loot table: " + lootTableId);
 
@@ -63,21 +61,21 @@ public class LoottableManager {
 
 
     public void giveLoottables(Player p, String id) {
-        JSONObject lootTable = loottableMap.get(id);
+       // JSONObject lootTable = loottableMap.get(id);
 
-        if (lootTable == null || lootTable.isEmpty()) {
-            Bukkit.getLogger().warning("Loot table with ID '"+id+"' not found or is empty");
-
-            return;
-        }
+//        if (lootTable == null || lootTable.isEmpty()) {
+//            Bukkit.getLogger().warning("Loot table with ID '"+id+"' not found or is empty");
+//
+//            return;
+//        }
 
         Map<String, Integer> weightedActions = new HashMap<>();
-        lootTable.forEach((category, value) -> {
-            JSONObject categoryItems = (JSONObject) value;
-            categoryItems.forEach((action, weight) -> {
-                weightedActions.put(category + ":" + action, ((Long) weight).intValue());
-            });
-        });
+       // lootTable.forEach((category, value) -> {
+       //     JSONObject categoryItems = (JSONObject) value;
+       //     categoryItems.forEach((action, weight) -> {
+       //         weightedActions.put(category + ":" + action, ((Long) weight).intValue());
+       //     });
+       // });
 
         int totalWeight = weightedActions.values().stream().mapToInt(Integer::intValue).sum();
 
