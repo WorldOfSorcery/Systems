@@ -28,7 +28,6 @@ public class JoinListener implements Listener {
         plugin.getChannelManager().joinDefault(player);
         plugin.getBossBarManager().createBossBar(player);
         plugin.getRegionBossBarManager().createBossBar(player);
-
     }
 
 

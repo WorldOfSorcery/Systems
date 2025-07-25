@@ -9,8 +9,10 @@ import me.hektortm.wosCore.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -136,11 +138,6 @@ public class ChannelManager {
 
     }
 
-    public void deleteChannel(String name) {
-        channels.remove(name.toLowerCase());
-        hub.getChannelDAO().deleteChannel(name);
-    }
-
     public void setFocus(Player player, String channelIdentifier) {
         UUID playerUUID = player.getUniqueId();
         Channel channel = getChannel(channelIdentifier); // Try to get by normal name
@@ -235,42 +232,46 @@ public class ChannelManager {
         String format = channel.getFormat();
 
         NicknameManager nickManager = new NicknameManager(hub);
-        // Use the player's nickname if available, otherwise use their username
         String name = nickManager.getNickname(sender) != null ?
                 nickManager.getNickname(sender).replace("_", " ") :
                 sender.getName();
 
+        // BADGE COMPONENT
+
         String badgeID = hub.getCosmeticsDAO().getCurrentCosmeticId(sender, CosmeticType.BADGE);
-        String badge = hub.getCosmeticsDAO().getCurrentCosmetic(sender, CosmeticType.BADGE);
-        if (badge == null) {
-            badge = "";  // Set a default empty string if null
+        Component badgeC = Utils.parseColorCodes(hub.getCosmeticsDAO().getCurrentCosmetic(sender, CosmeticType.BADGE));
+        if (badgeC == null) {
+            badgeC = Component.text("");  // Set a default empty string if null
         }
 
         Component badgeComponent;
+        Component badgeString = Utils.parseColorCodes(hub.getCosmeticsDAO().getCosmeticDescription(CosmeticType.BADGE, badgeID));
         if (badgeID != null) {
-            badgeComponent = Component.text(badge)
-                    .hoverEvent(HoverEvent.showText(fromString(hub.getCosmeticsDAO().getCosmeticDescription(CosmeticType.BADGE, badgeID))));
+            badgeComponent = badgeC
+                    .hoverEvent(HoverEvent.showText(badgeString));
         } else {
             badgeComponent = Component.text("");
         }
 
+        // PREFIX COMPONENT
+
         String prefixID = hub.getCosmeticsDAO().getCurrentCosmeticId(sender, CosmeticType.PREFIX);
-        String prefix = hub.getCosmeticsDAO().getCurrentCosmetic(sender, CosmeticType.PREFIX);
+        Component prefix = Utils.parseColorCodes(hub.getCosmeticsDAO().getCurrentCosmetic(sender, CosmeticType.PREFIX) + " " + name);
         if (prefix == null) {
-            prefix = "";  // Set a default empty string if null
+            prefix = Component.text("");  // Set a default empty string if null
         }
 
         Component prefixComponent;
         if (prefixID != null) {
-            prefixComponent = Component.text(prefix)
-                    .hoverEvent(HoverEvent.showText(fromString(hub.getCosmeticsDAO().getCosmeticDescription(CosmeticType.PREFIX, prefixID))));
+            prefixComponent = prefix
+                    .hoverEvent(HoverEvent.showText(getPlayerStats(sender)));
         } else {
             prefixComponent = Component.text("");
         }
 
+        // PLAYER COMPONENT
 
-        // Create a hoverable player name component
-        Component playerComponent = Component.text(name)
+        Component playerComponent = Component.text(name).style(Style.empty())
                 .hoverEvent(HoverEvent.showText(getPlayerStats(sender)));
 
         // Handle the item in the player's main hand
@@ -321,7 +322,7 @@ public class ChannelManager {
         // Create the item component with hover text
         UUID clickId = UUID.randomUUID();
         Component itemComponent = LegacyComponentSerializer.legacySection().deserialize("§7[" + itemName + "§7]")
-                .hoverEvent(HoverEvent.showText(Component.text("").append(fromString(loreString))))
+                .hoverEvent(HoverEvent.showText(Component.text("").append(Utils.parseColorCodes(loreString))))
                 .clickEvent(ClickEvent.runCommand("/internalviewitem " + clickId));
 
         // Store the action in the clickActions map
@@ -337,7 +338,7 @@ public class ChannelManager {
         // Replace {player} and {message} placeholders in the format
         Component finalMessage = formatComponent
                 .replaceText(builder -> builder.matchLiteral("{badge}").replacement(badgeComponent))
-                .replaceText(builder -> builder.matchLiteral("{prefix}").replacement(prefixComponent))
+                .replaceText(builder -> builder.matchLiteral("{prefix_player}").replacement(prefixComponent))
                 .replaceText(builder -> builder.matchLiteral("{player}").replacement(playerComponent))
                 .replaceText(builder -> builder.matchLiteral("{message}").replacement(messageComponent));
 
@@ -349,9 +350,13 @@ public class ChannelManager {
     private @NotNull Component getPlayerStats(Player player) {
         String nickname = hub.getNicknameDAO().getNickname(player.getUniqueId());
         String shownName = nickname != null ? nickname : player.getName();
+        Component display = hub.getCosmeticsDAO().getCurrentCosmetic(player, CosmeticType.PREFIX) == null
+                ? Utils.parseColorCodes(shownName)
+                : Utils.parseColorCodes(hub.getCosmeticsDAO().getCurrentCosmetic(player, CosmeticType.PREFIX) + " " + shownName);
 
         // Build the player info line
-        Component playerInfo = Component.text("").append(fromString(hub.getCosmeticsDAO().getCurrentCosmetic(player, CosmeticType.PREFIX)+ " " + shownName));
+        Component playerInfo = Component.empty()
+                .append(display);
 
         // Build the username line
         Component username = Component.text()

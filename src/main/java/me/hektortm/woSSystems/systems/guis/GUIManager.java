@@ -9,6 +9,7 @@ import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.woSSystems.utils.dataclasses.Condition;
 import me.hektortm.woSSystems.utils.dataclasses.GUI;
 import me.hektortm.woSSystems.utils.dataclasses.GUISlot;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -48,7 +49,7 @@ public class GUIManager implements Listener {
         Inventory inventory = Bukkit.createInventory(
                 new GUIHolder(guiId),
                 gui.getSize()*9,
-                gui.getTitle()
+                Utils.parseColorCodeString(gui.getTitle())
         );
         List<GUISlot> slots = gui.getSlots();
 
@@ -81,11 +82,17 @@ public class GUIManager implements Listener {
             ItemMeta meta = item.getItemMeta();
 
             if (slot.getDisplayName() != null) {
-                meta.setDisplayName(placeholderResolver.resolvePlaceholders(slot.getDisplayName(), player).replace("&", "§"));
+                meta.setDisplayName(Utils.parseColorCodeString(placeholderResolver.resolvePlaceholders(slot.getDisplayName(), player)));
             }
 
             if (slot.getLore() != null && !slot.getLore().isEmpty()) {
-                meta.setLore(slot.getLore());
+
+                List<String> slotLore = slot.getLore();
+                for (int i = 0; i < slotLore.size(); i++) {
+                    slotLore.set(i, Utils.parseColorCodeString(placeholderResolver.resolvePlaceholders(slotLore.get(i), player)));
+                }
+
+                meta.setLore(slotLore);
             }
 
             if (slot.getCustomModelData() != 0) {
@@ -100,11 +107,12 @@ public class GUIManager implements Listener {
             item.setItemMeta(meta);
             inventory.setItem(slot.getSlot(), item);
         }
-
+        if (gui.getOpenActions() != null && !gui.getOpenActions().isEmpty()) {
+            actionHandler.executeActions(player, gui.getOpenActions(), ActionHandler.SourceType.GUI, guiId);
+        }
         player.openInventory(inventory);
-        List<String> openActions = gui.getOpenActions();
-        if (openActions == null || openActions.isEmpty()) return;
-        actionHandler.executeActions(player, gui.getOpenActions(), ActionHandler.SourceType.GUI, guiId);
+
+
     }
 
 
@@ -163,9 +171,9 @@ public class GUIManager implements Listener {
 
         GUI gui = hub.getGuiDAO().getGUIbyId(holder.getGuiId());
         if (gui != null) {
-            List<String> actions = gui.getCloseActions();
-            if (actions == null || actions.isEmpty()) return;
-            actionHandler.executeActions(player, actions, ActionHandler.SourceType.GUI, gui.getGuiId());
+            if (gui.getCloseActions() != null && gui.getCloseActions().isEmpty()) {
+                actionHandler.executeActions(player, gui.getCloseActions(), ActionHandler.SourceType.GUI, gui.getGuiId());
+            }
         }
     }
 

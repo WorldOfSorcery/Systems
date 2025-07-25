@@ -80,9 +80,9 @@ public enum Permissions {
     CHANNEL_BROADCAST("chat.channel.broadcast"),
     CHANNEL_MODIFY("chat.channel.modify"),
 
-    COSMETIC_CREATE("cosmetic.create"),
+    COSMETIC_TAKE("cosmetic.take"),
     COSMETIC_GIVE("cosmetic.give"),
-    COSMETIC_DESC("cosmetic.desc"),
+    COSMETIC_SET("cosmetic.set"),
 
     LOOTTABLE_GIVE("loottable.give"),
     LOOTTABLE_RELOAD("loottable.reload"),

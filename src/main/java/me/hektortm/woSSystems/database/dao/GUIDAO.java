@@ -106,26 +106,36 @@ public class GUIDAO implements IDAO {
                 int size = rs.getInt("size");
                 String title = rs.getString("title");
                 List<GUISlot> slots = getSlotsForID(interactionId);
+
                 String openActions = rs.getString("open_actions");
                 String closeActions = rs.getString("close_actions");
 
-                List<String> parsedOpenActions = Arrays.stream(openActions.replace("[", "").replace("]", "").split(","))
-                        .map(String::trim)
-                        .map(s -> s.replaceAll("^\"|\"$", "")) // remove surrounding quotes
-                        .collect(Collectors.toList());
+                List<String> parsedOpenActions = null;
+                if (openActions != null && !openActions.trim().isEmpty()) {
+                    parsedOpenActions = Arrays.stream(openActions.replace("[", "").replace("]", "").split(","))
+                            .map(String::trim)
+                            .map(s -> s.replaceAll("^\"|\"$", ""))
+                            .filter(s -> !s.isEmpty())
+                            .collect(Collectors.toList());
+                }
 
-                List<String> parsedCloseActions = Arrays.stream(closeActions.replace("[", "").replace("]", "").split(","))
-                        .map(String::trim)
-                        .map(s -> s.replaceAll("^\"|\"$", "")) // remove surrounding quotes
-                        .collect(Collectors.toList());
+                List<String> parsedCloseActions = null;
+                if (closeActions != null && !closeActions.trim().isEmpty()) {
+                    parsedCloseActions = Arrays.stream(closeActions.replace("[", "").replace("]", "").split(","))
+                            .map(String::trim)
+                            .map(s -> s.replaceAll("^\"|\"$", ""))
+                            .filter(s -> !s.isEmpty())
+                            .collect(Collectors.toList());
+                }
 
                 return new GUI(id, size, title, slots, parsedOpenActions, parsedCloseActions);
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get GUI for "+id+": "+e);
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get GUI for " + id + ": " + e);
         }
         return null;
     }
+
 
     public List<GUI> getGUIs() {
         List<GUI> guis = new ArrayList<>();

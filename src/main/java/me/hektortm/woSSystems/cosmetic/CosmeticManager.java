@@ -3,6 +3,8 @@ package me.hektortm.woSSystems.cosmetic;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.CosmeticType;
+import me.hektortm.wosCore.Utils;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -45,7 +47,7 @@ public class CosmeticManager {
         for (int i = 0; i < titles.size(); i++) {
             List<String> lore = new ArrayList<>();
             plugin.writeLog("CosmeticManager", Level.INFO, hub.getCosmeticsDAO().getCurrentCosmeticId(p, CosmeticType.TITLE) + " | " + titles.get(i));
-            lore.add(hub.getCosmeticsDAO().getCosmeticDescription(CosmeticType.TITLE, titles.get(i)));
+            lore.add(Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDescription(CosmeticType.TITLE, titles.get(i))));
             lore.add("§7");
             if (Objects.equals(hub.getCosmeticsDAO().getCurrentCosmeticId(p, CosmeticType.TITLE), titles.get(i))) {
                 lore.add("§cCurrently selected");
@@ -53,7 +55,7 @@ public class CosmeticManager {
                 lore.add("§bClick to select");
             }
 
-            ItemStack item = createItem(hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.TITLE, titles.get(i)), Material.NAME_TAG);
+            ItemStack item = createItem(Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.TITLE, titles.get(i))), Material.NAME_TAG);
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer container = meta.getPersistentDataContainer();
             container.set(new NamespacedKey(plugin, "titleID"), PersistentDataType.STRING, titles.get(i));
@@ -70,7 +72,7 @@ public class CosmeticManager {
 
         for (int i = 0; i < prefixes.size(); i++) {
             List<String> lore = new ArrayList<>();
-            lore.add(hub.getCosmeticsDAO().getCosmeticDescription(CosmeticType.PREFIX, prefixes.get(i)));
+            lore.add(Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDescription(CosmeticType.PREFIX, prefixes.get(i))));
             lore.add("§7");
             if (Objects.equals(hub.getCosmeticsDAO().getCurrentCosmeticId(p, CosmeticType.PREFIX), prefixes.get(i))) {
                 lore.add("§cCurrently selected");
@@ -78,7 +80,7 @@ public class CosmeticManager {
                 lore.add("§bClick to select");
             }
 
-            ItemStack item = createItem(hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.PREFIX, prefixes.get(i)), Material.PAPER);
+            ItemStack item = createItem(Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.PREFIX, prefixes.get(i))), Material.PAPER);
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer container = meta.getPersistentDataContainer();
             container.set(new NamespacedKey(plugin, "prefixID"), PersistentDataType.STRING, prefixes.get(i));
@@ -95,7 +97,7 @@ public class CosmeticManager {
 
         for (int i = 0; i < badges.size(); i++) {
             List<String> lore = new ArrayList<>();
-            lore.add(hub.getCosmeticsDAO().getCosmeticDescription(CosmeticType.BADGE, badges.get(i)));
+            lore.add(Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDescription(CosmeticType.BADGE, badges.get(i))));
             lore.add("§7");
             if (Objects.equals(hub.getCosmeticsDAO().getCurrentCosmeticId(p, CosmeticType.BADGE), badges.get(i))) {
                 lore.add("§cCurrently selected");
@@ -103,7 +105,7 @@ public class CosmeticManager {
                 lore.add("§bClick to select");
             }
 
-            ItemStack item = createItem(hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.BADGE, badges.get(i)), Material.FLOWER_BANNER_PATTERN);
+            ItemStack item = createItem(Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.BADGE, badges.get(i))), Material.FLOWER_BANNER_PATTERN);
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer container = meta.getPersistentDataContainer();
             container.set(new NamespacedKey(plugin, "badgeID"), PersistentDataType.STRING, badges.get(i));
@@ -121,6 +123,4 @@ public class CosmeticManager {
         item.setItemMeta(meta);
         return item;
     }
-
-
 }

@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.utils;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.utils.dataclasses.Interaction;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -33,7 +34,7 @@ public class ActionHandler {
             String parsedCommand = cmd.replace("@p", player.getName());
             if (cmd.startsWith("send_message")) {
                 String message = cmd.replace("send_message ", "").replace("&", "§");
-                player.sendMessage(resolver.resolvePlaceholders(message, player));
+                player.sendMessage(Utils.parseColorCodeString(resolver.resolvePlaceholders(message, player)));
                 continue;
             }
             if (cmd.startsWith("sudo")) {
@@ -54,7 +55,7 @@ public class ActionHandler {
             }
             if (cmd.startsWith("send_actionbar")) {
                 String message = cmd.replace("send_actionbar ", "").replace("&", "§");
-                player.sendActionBar(resolver.resolvePlaceholders(message, player));
+                player.sendActionBar(Utils.parseColorCodeString(resolver.resolvePlaceholders(message, player)));
                 continue;
             }
             if (cmd.startsWith("send_title")) {

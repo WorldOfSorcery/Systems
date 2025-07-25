@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.channels.NicknameManager;
+import me.hektortm.woSSystems.cosmetic.CosmeticManager;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
@@ -73,7 +74,7 @@ public class InventoryClickListener implements Listener {
             event.setCancelled(true);
 
         }
-        if (inv == plugin.getCosmeticManager().titlesPage) {
+        if (inv == CosmeticManager.titlesPage) {
             ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem == null) return;
             ItemMeta clickedItemMeta = clickedItem.getItemMeta();
@@ -88,10 +89,11 @@ public class InventoryClickListener implements Listener {
 
             hub.getCosmeticsDAO().equipCosmetic(player,CosmeticType.TITLE, titleID);
             player.sendMessage("Equipped Title: " + hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.TITLE, titleID));
+            Utils.success(player, "cosmetics", "equipped", "%type%", "Prefix", "%display%", Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.TITLE, titleID)));
             event.setCancelled(true);
             player.closeInventory();
         }
-        if (inv == plugin.getCosmeticManager().prefixPage) {
+        if (inv == CosmeticManager.prefixPage) {
             ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem == null) return;
             ItemMeta clickedItemMeta = clickedItem.getItemMeta();
@@ -104,11 +106,11 @@ public class InventoryClickListener implements Listener {
             }
 
             hub.getCosmeticsDAO().equipCosmetic(player, CosmeticType.PREFIX, prefixID);
-            player.sendMessage("Equipped Prefix: " + hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.PREFIX, prefixID));
+            Utils.success(player, "cosmetics", "equipped", "%type%", "Prefix", "%display%", Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.PREFIX, prefixID)));
             event.setCancelled(true);
             player.closeInventory();
         }
-        if (inv == plugin.getCosmeticManager().badgesPage) {
+        if (inv == CosmeticManager.badgesPage) {
             ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem == null) return;
             ItemMeta clickedItemMeta = clickedItem.getItemMeta();
@@ -122,7 +124,7 @@ public class InventoryClickListener implements Listener {
             }
 
             hub.getCosmeticsDAO().equipCosmetic(player, CosmeticType.BADGE, badgeID);
-            player.sendMessage("Equipped Badge: " + hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.BADGE, badgeID));
+            Utils.success(player, "cosmetics", "equipped", "%type%", "Badge", "%display%", Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.BADGE, badgeID)));
             event.setCancelled(true);
             player.closeInventory();
         }

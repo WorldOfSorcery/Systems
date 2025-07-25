@@ -10,29 +10,27 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.Objects;
-
-public class Give extends SubCommand {
+public class Take extends SubCommand {
     private final DAOHub hub;
 
-    public Give(DAOHub hub) {
+    public Take(DAOHub hub) {
         this.hub = hub;
     }
 
     @Override
     public String getName() {
-        return "give";
+        return "take";
     }
 
     @Override
     public Permissions getPermission() {
-        return Permissions.COSMETIC_GIVE;
+        return Permissions.COSMETIC_TAKE;
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length < 3) {
-            Utils.info(sender, "cosmetics", "info.usage.give");
+            Utils.info(sender, "cosmetics", "info.usage.take");
             return;
         }
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
@@ -63,19 +61,14 @@ public class Give extends SubCommand {
             Utils.error(sender, "cosmetics", "error.exists", "%type%", parsedType);
             return;
         }
-        if (hub.getCosmeticsDAO().hasCosmetic(target.getUniqueId(), cType, id)) {
-            Utils.info(sender, "cosmetics", "info.has", "%player%", target.getName(), "%type%", parsedType);
+        if (!hub.getCosmeticsDAO().hasCosmetic(target.getUniqueId(), cType, id)) {
+            Utils.info(sender, "cosmetics", "info.has-not", "%player%", target.getName(), "%type%", parsedType);
             return;
         }
-        hub.getCosmeticsDAO().giveCosmetic(cType, id, target.getUniqueId());
-        Utils.success(sender, "cosmetics", "given",
+        hub.getCosmeticsDAO().takeCosmetic(cType, id, target.getUniqueId());
+        Utils.success(sender, "cosmetics", "taken",
                 "%player%", target.getName(),
                 "%type%", parsedType,
                 "%display%", Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDisplay(cType, id)));
-        if (target.isOnline()) {
-            Utils.success((Player) target, "cosmetics", "received",
-                    "%type%", parsedType,
-                    "%display%", Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDisplay(cType, id)));
-        }
     }
 }

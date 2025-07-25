@@ -31,13 +31,11 @@ public class CooldownManager extends BukkitRunnable {
             for (Map.Entry<UUID, List<String>> entry : activeCooldowns.entrySet()) {
                 UUID playerId = entry.getKey();
                 OfflinePlayer oP = Bukkit.getOfflinePlayer(playerId);
-                plugin.getLogger().info("Processing cooldowns for player: " + oP.getName() + " (UUID: " + playerId + ")");
 
                 // Check each cooldown
                 for (String cooldownId : entry.getValue()) {
                     if (hub.getCooldownDAO().isCooldownExpired(oP, cooldownId)) {
                         // Remove expired cooldown
-                        plugin.getLogger().info("Cooldown expired for player: " + oP.getName() + " with ID: " + cooldownId);
                         hub.getCooldownDAO().removeCooldown(oP, cooldownId);
 
                         // Trigger completion action

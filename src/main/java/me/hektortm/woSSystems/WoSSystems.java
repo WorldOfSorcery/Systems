@@ -164,7 +164,7 @@ public final class WoSSystems extends JavaPlugin {
         hologramHandler = new HologramHandler(daoHub);
         bossBarManager = new BossBarManager();
         regionBossBarManager = new RegionBossBar();
-        tab = new TablistManager();
+        tab = new TablistManager(daoHub);
         timeManager = new TimeManager(this, bossBarManager);
         lang = new LangManager(core);
         log = new LogManager(lang, core);

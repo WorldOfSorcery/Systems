@@ -68,7 +68,7 @@ public class CosmeticsDAO implements IDAO {
     }
 
     public void takeCosmetic(CosmeticType type, String id, UUID uuid) {
-        String sql = "DELETE FROM player_cosmetics WHERE uuid = ? AND id = ? AND cosmetic_type = ?";
+        String sql = "DELETE FROM player_cosmetics WHERE uuid = ? AND cosmetic_id = ? AND cosmetic_type = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             pstmt.setString(2, id);
@@ -76,6 +76,20 @@ public class CosmeticsDAO implements IDAO {
             pstmt.executeUpdate();
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to take Cosmetic: " + e);
+        }
+    }
+
+    public void setCosmetic(CosmeticType type, String id, UUID uuid) {
+        String sql =  "INSERT INTO player_cosmetics (uuid, cosmetic_id, cosmetic_type, equipped) " +
+                      "VALUES (?, ?, ?, 1) " +
+                      "ON DUPLICATE KEY UPDATE equipped = 1";
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, uuid.toString());
+            pstmt.setString(2, id);
+            pstmt.setString(3, type.name());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            plugin.writeLog(logName, Level.SEVERE, "Failed to set Cosmetic: " + e);
         }
     }
 

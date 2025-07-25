@@ -46,7 +46,7 @@ public class EcoManager {
     }
 
     public void ecoLog(UUID uuid, String currency, long changeAmount, String sourceType, String source) {
-        long previousAmount  =getCurrencyBalance(uuid, currency);
+        long previousAmount = getCurrencyBalance(uuid, currency);
         hub.getEconomyDAO().ecoLog(uuid, currency, previousAmount, previousAmount+changeAmount, changeAmount, sourceType, source);
     }
 

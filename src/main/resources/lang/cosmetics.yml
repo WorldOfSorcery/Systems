@@ -1,38 +1,26 @@
 error:
-  title:
-    exists: "This title does not exist."
-
-  prefix:
-    exists: "This prefix does not exist."
-
-  badge:
-    exists: "This badge does not exist."
+  exists: "This %type% already exists."
 
   invalid-type: "Invalid Type. Use 'prefix', 'title', 'badge'"
 
 info:
   usage:
-    give: "Usage: /cosmetic give <Type> <Player> <ID>"
-    take: "Usage: /cosmetic take <Type> <Player> <ID>"
+    give: "Usage: /cosmetic give <Player> <Type> <ID>"
+    take: "Usage: /cosmetic take <Player> <Type> <ID>"
+    set: "Usage: /cosmetic set <Player> <Type> <ID>"
+  has: "%player% already has this %type%."
+  has-not: "%player% does not have this %type%."
 
-  has-badge: "The Player already has this badge."
-  has-prefix: "The Player already has this prefix."
-  has-title: "The Player already has this title."
+given: "§aYou have given §e%player%§a the %type%: '%display%§a'."
+taken: "§aYou have taken the %type%: '%display%§a' from §e%player%§a."
+set: "§aYou have set the %type%: '%display%§a' for §e%player%§a."
+received: "§aYou have received the %type%: '%display%§a'."
+set-player: "§aYour %type% has been set to: '%display%§a'."
+equipped: "§aYou have equipped the %type%: '%display%§a'."
 
-titles:
-  given: "§aYou have given §e%player%§a the title: '%title%§a'."
-  received: "§aYou have received the title: '%title%§a'."
-  created: "§aCreated Title '%title%§a' (%id%§a)."
-  desc: "§aSet Title(§e%id%§a) description to: %desc%"
-
-prefix:
-  given: "§aYou have given §e%player%§a the prefix: '%prefix%§a'."
-  received: "§aYou have received the prefix: '%prefix%§a'."
-  created: "§aCreated Prefix '%prefix%§a' (%id%§a)."
-  desc: "§aSet Prefix(§e%id%§a) description to: %desc%"
-
-badge:
-  given: "§aYou have given §e%player%§a the badge: '%badge%§a'."
-  received: "§aYou have received the badge: '%badge%§a'."
-  created: "§aCreated Badge '%badge%§a' (%id%§a)."
-  desc: "§aSet Badge(§e%id%§a) description to: %desc%"
+help:
+  header: "Cosmetic Commands:"
+  give: "%cyan_300%/cosmetic give <Player> <Type> <ID> §7- Give a Player a Cosmetic."
+  take: "%cyan_300%/cosmetic take <Player> <Type> <ID> §7- Take a Cosmetic from a Player."
+  set: "%cyan_300%/cosmetic set <Player> <Type> <ID> §7- Set a Cosmetic for a Player."
+  help: "%cyan_300%/cosmetic help §7- Display this help message."

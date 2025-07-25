@@ -10,12 +10,10 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.Objects;
-
-public class Give extends SubCommand {
+public class Set extends SubCommand {
     private final DAOHub hub;
 
-    public Give(DAOHub hub) {
+    public Set(DAOHub hub) {
         this.hub = hub;
     }
 
@@ -63,17 +61,13 @@ public class Give extends SubCommand {
             Utils.error(sender, "cosmetics", "error.exists", "%type%", parsedType);
             return;
         }
-        if (hub.getCosmeticsDAO().hasCosmetic(target.getUniqueId(), cType, id)) {
-            Utils.info(sender, "cosmetics", "info.has", "%player%", target.getName(), "%type%", parsedType);
-            return;
-        }
-        hub.getCosmeticsDAO().giveCosmetic(cType, id, target.getUniqueId());
-        Utils.success(sender, "cosmetics", "given",
+        hub.getCosmeticsDAO().setCosmetic(cType, id, target.getUniqueId());
+        Utils.success(sender, "cosmetics", "set",
                 "%player%", target.getName(),
                 "%type%", parsedType,
                 "%display%", Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDisplay(cType, id)));
         if (target.isOnline()) {
-            Utils.success((Player) target, "cosmetics", "received",
+            Utils.success((Player) target, "cosmetics", "set-player",
                     "%type%", parsedType,
                     "%display%", Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDisplay(cType, id)));
         }

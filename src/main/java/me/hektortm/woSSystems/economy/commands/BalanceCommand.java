@@ -103,7 +103,7 @@ public class BalanceCommand implements CommandExecutor {
                 continue;
             }
 
-            sender.sendMessage(currency.getColor() + currency.getName() + ": §7" + balance);
+            sender.sendMessage(Utils.parseColorCodes(currency.getColor() + currency.getName() + ": §7" + balance));
         }
     }
 
