@@ -24,13 +24,16 @@ public class TimeEvents {
         boolean foundMatchingActivity = false;
 
         for (Activity activity : activities) {
+            boolean isEnabled = activity.getIsEnabled();
             String activityDate = activity.getDate();
             int startTime = activity.getStartTime();
             int endTime = activity.getEndTime();
             boolean isDefault = activity.isDefault();
             String startInteraction = activity.getStartInteraction();
             String endInteraction = activity.getEndInteraction();
-
+            if (!isEnabled) {
+                continue;
+            }
             boolean dateMatches = isDefault || (activityDate != null && activityDate.equals(date));
             boolean isWithinTime = hour >= startTime && hour < endTime;
 

@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.utils.dataclasses;
 public class Activity
 {
     private final String id;
+    private final boolean isEnabled;
     private final String name;
     private final String message;
     private final boolean isDefault;
@@ -12,8 +13,9 @@ public class Activity
     private final String startInteraction;
     private final String endInteraction;
 
-    public Activity(String id, String name, String message, boolean isDefault, String date, int startTime, int endTime, String startInteraction, String endInteraction) {
+    public Activity(String id, boolean isEnabled, String name, String message, boolean isDefault, String date, int startTime, int endTime, String startInteraction, String endInteraction) {
         this.id = id;
+        this.isEnabled = isEnabled;
         this.name = name;
         this.message = message;
         this.isDefault = isDefault;
@@ -26,6 +28,10 @@ public class Activity
 
     public String getId() {
         return id;
+    }
+
+    public boolean getIsEnabled() {
+        return isEnabled;
     }
 
     public String getName() {
