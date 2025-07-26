@@ -40,6 +40,7 @@ import me.hektortm.woSSystems.systems.loottables.LoottableManager;
 import me.hektortm.woSSystems.systems.loottables.commands.LoottableCommand;
 import me.hektortm.woSSystems.tablist.TablistManager;
 import me.hektortm.woSSystems.time.BossBarManager;
+import me.hektortm.woSSystems.time.TimeEvents;
 import me.hektortm.woSSystems.time.TimeManager;
 import me.hektortm.woSSystems.time.cmd.TimeCommand;
 import me.hektortm.woSSystems.professions.crafting.CraftingListener;
@@ -107,6 +108,7 @@ public final class WoSSystems extends JavaPlugin {
     private LoottableManager lootTableManager;
     private GUIManager guiManager;
     private BossBarManager bossBarManager;
+    private TimeEvents timeEvents;
     private TimeManager timeManager;
     private RegionBossBar regionBossBarManager;
     private TablistManager tab;
@@ -155,6 +157,7 @@ public final class WoSSystems extends JavaPlugin {
             registerAndInitDAO(databaseManager, daoHub.getGuiDAO());
             registerAndInitDAO(databaseManager, daoHub.getFishingDAO());
             registerAndInitDAO(databaseManager, daoHub.getCooldownDAO());
+            registerAndInitDAO(databaseManager, daoHub.getTimeDAO());
 
             databaseManager.initializeAllDAOs();
         } catch (SQLException e) {
@@ -165,7 +168,8 @@ public final class WoSSystems extends JavaPlugin {
         bossBarManager = new BossBarManager();
         regionBossBarManager = new RegionBossBar();
         tab = new TablistManager(daoHub);
-        timeManager = new TimeManager(this, bossBarManager);
+        timeEvents = new TimeEvents(daoHub, bossBarManager);
+        timeManager = new TimeManager(timeEvents);
         lang = new LangManager(core);
         log = new LogManager(lang, core);
 
@@ -448,6 +452,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public CosmeticManager getCosmeticManager() {
         return cosmeticManager;
+    }
+    public TimeManager getTimeManager() {
+        return timeManager;
     }
     public Map<UUID, Inventory> getClickActions() {
         return clickActions;

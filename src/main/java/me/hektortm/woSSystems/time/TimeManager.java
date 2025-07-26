@@ -16,16 +16,15 @@ import java.util.Map;
 
 public class TimeManager {
 
-    private final WoSSystems plugin;
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final TimeEvents timeEvents;
 
     private boolean timeFrozen = false;
     public File timeFolder = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "time");
     private File gameStateFile;
     private File timeConfigFile;
-    public File activitiesFile;
     private FileConfiguration gameStateConfig;
     public FileConfiguration timeConfig;
-    public FileConfiguration activitiesConfig;
 
     private static final int MINUTES_IN_A_DAY = 1440;
     private static final int DAYS_IN_MONTH = 30;
@@ -39,17 +38,13 @@ public class TimeManager {
     private Map<Integer, String> monthNames;
 
 
-    private BossBarManager bossBarManager;
 
-    public TimeManager(WoSSystems plugin, BossBarManager bossBarManager) {
-        this.plugin = plugin;
-        this.bossBarManager = bossBarManager;
+    public TimeManager(TimeEvents timeEvents) {
+        this.timeEvents = timeEvents;
         gameStateFile = new File(timeFolder, "gamestate.yml");
         timeConfigFile = new File(timeFolder, "time-config.yml");
-        activitiesFile = new File(timeFolder, "activities.yml");
         gameStateConfig = YamlConfiguration.loadConfiguration(gameStateFile);
         timeConfig = YamlConfiguration.loadConfiguration(timeConfigFile);
-        activitiesConfig = YamlConfiguration.loadConfiguration(activitiesFile);
 
         checkFiles();
 
@@ -58,7 +53,6 @@ public class TimeManager {
     private void checkFiles() {
         checkAndCreateFile(gameStateFile, "focused.yml");
         checkAndCreateFile(timeConfigFile, "time-config.yml");
-        checkAndCreateFile(activitiesFile, "activities.yml");
     }
 
     private void checkAndCreateFile(File file, String fileName) {
@@ -116,10 +110,6 @@ public class TimeManager {
                 if(timeFrozen) {
                     return;
                 }
-                if (bossBarManager == null) {
-                    Bukkit.getLogger().warning("bossbar manager = null");
-                    return;
-                }
 
                 inGameTimeMinutes++;
                 if (inGameTimeMinutes >= MINUTES_IN_A_DAY) {
@@ -134,12 +124,8 @@ public class TimeManager {
                 String dayOfWeek = capitalizeFirstLetter(inGameDayOfWeek.name().toLowerCase());
                 String formattedDate = String.format("%s"+ Letters_bg.COMMA.getLetter() +" %s %02d", dayOfWeek, monthNames.get(inGameMonth), inGameDayOfMonth);
 
-                String activeActivity = new TimeEvents(plugin, TimeManager.this).getActiveActivity(inGameTimeMinutes);
+                timeEvents.checkForActivity(hours, time, formattedDate);
 
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    bossBarManager.updateBossBar(player, time, formattedDate, activeActivity);
-                }
-                new TimeEvents(plugin, TimeManager.this).checkScheduledEvents(inGameTimeMinutes);
             }
         }.runTaskTimer(plugin, 0L, ticks); // Update every second (2 ticks)
     }

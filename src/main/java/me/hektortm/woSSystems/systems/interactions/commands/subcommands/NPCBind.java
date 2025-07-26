@@ -30,7 +30,7 @@ public class NPCBind extends SubCommand {
 
         Player p = (Player) sender;
 
-        Integer npcId = CitizensAPI.getDefaultNPCSelector().getSelected(p).getId();
+        Integer npcId = 1;
         if (npcId == null) {
             p.sendMessage("You dont have an npc selected");
             return;

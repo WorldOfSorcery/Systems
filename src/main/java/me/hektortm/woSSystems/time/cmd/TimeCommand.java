@@ -75,18 +75,9 @@ public class TimeCommand implements CommandExecutor {
         // Get the current date in the game
         String date = String.format("%s %02d", manager.getMonthName(manager.getInGameMonth()), manager.getInGameDayOfMonth());
 
-        // Get the active activity using TimeEventListener
-        TimeEvents eventListener = new TimeEvents(plugin, manager);
-        String activeActivity = eventListener.getActiveActivity(inGameMinutes);
-
-        if (activeActivity == null) {
-            activeActivity = "No scheduled activity.";
-        }
-
         // Send the in-game time, date, and activity to the player
         player.sendMessage("§eIn-Game Time: §f" + time);
         player.sendMessage("§eIn-Game Date: §f" + date);
-        player.sendMessage("§eCurrent Activity: §f" + activeActivity);
     }
 
 
