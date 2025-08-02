@@ -123,6 +123,11 @@ commands:
     usage: /<command> <give|remove|view> <player> <id>
     aliases: [cd]
 
+  family:
+    aliases: [fam]
+    description: family management
+    usage: /<command> <create|delete|invite|accept|leave|kick|setleader|view>
+
 permissions:
   # Citem Permissions
   citem.modify:

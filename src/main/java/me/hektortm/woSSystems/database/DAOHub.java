@@ -22,6 +22,7 @@ public class DAOHub {
     private final InteractionDAO interactionDAO;
     private final GUIDAO guiDAO;
     private final CooldownDAO cooldownDAO;
+    private final FamilyDAO familyDAO;
 
     private final FriendLink friendLink;
 
@@ -43,6 +44,8 @@ public class DAOHub {
         this.interactionDAO = new InteractionDAO(databaseManager, this);
         this.guiDAO = new GUIDAO(databaseManager, this);
         this.cooldownDAO = new CooldownDAO(databaseManager, this);
+        this.familyDAO = new FamilyDAO(databaseManager, this);
+
     }
     public EconomyDAO getEconomyDAO() {
         return economyDAO;
@@ -85,6 +88,9 @@ public class DAOHub {
     }
     public CooldownDAO getCooldownDAO() {
         return cooldownDAO;
+    }
+    public FamilyDAO getFamilyDAO() {
+        return familyDAO;
     }
 
     public FriendLink getFriendLink() {

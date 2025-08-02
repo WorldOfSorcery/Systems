@@ -22,6 +22,7 @@ import me.hektortm.woSSystems.economy.commands.BalanceCommand;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
 import me.hektortm.woSSystems.economy.commands.EcoCommand;
 import me.hektortm.woSSystems.economy.commands.PayCommand;
+import me.hektortm.woSSystems.family.cmds.FamilyCommand;
 import me.hektortm.woSSystems.listeners.*;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
 import me.hektortm.woSSystems.profiles.ProfileCommand;
@@ -155,6 +156,7 @@ public final class WoSSystems extends JavaPlugin {
             registerAndInitDAO(databaseManager, daoHub.getGuiDAO());
             registerAndInitDAO(databaseManager, daoHub.getFishingDAO());
             registerAndInitDAO(databaseManager, daoHub.getCooldownDAO());
+            registerAndInitDAO(databaseManager, daoHub.getFamilyDAO());
 
             databaseManager.initializeAllDAOs();
         } catch (SQLException e) {
@@ -360,6 +362,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("gui", new GUICommand(daoHub));
         cmdReg("debugcmd", new debug(daoHub));
         cmdReg("cooldown", new CooldownCommand(daoHub));
+        cmdReg("family", new FamilyCommand(daoHub));
     }
 
     private void registerEvents() {
