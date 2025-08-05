@@ -29,10 +29,6 @@ public class Help extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-
-
-
         HelpUtil.sendHelp(cmd.permCmds, sender, "nicknames");
-
     }
 }
