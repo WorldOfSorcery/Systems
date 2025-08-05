@@ -123,6 +123,11 @@ commands:
     usage: /<command> <give|remove|view> <player> <id>
     aliases: [cd]
 
+  calendar:
+    aliases: [calender, cal]
+    description: calendar management
+    usage: /<command> <view|set> [date]
+
 permissions:
   # Citem Permissions
   citem.modify:

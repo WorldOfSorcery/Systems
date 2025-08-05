@@ -40,7 +40,9 @@ import me.hektortm.woSSystems.systems.loottables.LoottableManager;
 import me.hektortm.woSSystems.systems.loottables.commands.LoottableCommand;
 import me.hektortm.woSSystems.tablist.TablistManager;
 import me.hektortm.woSSystems.time.BossBarManager;
+import me.hektortm.woSSystems.time.TimeEvents;
 import me.hektortm.woSSystems.time.TimeManager;
+import me.hektortm.woSSystems.time.cmd.Calender;
 import me.hektortm.woSSystems.time.cmd.TimeCommand;
 import me.hektortm.woSSystems.professions.crafting.CraftingListener;
 import me.hektortm.woSSystems.professions.crafting.command.CRecipeCommand;
@@ -107,6 +109,7 @@ public final class WoSSystems extends JavaPlugin {
     private LoottableManager lootTableManager;
     private GUIManager guiManager;
     private BossBarManager bossBarManager;
+    private TimeEvents timeEvents;
     private TimeManager timeManager;
     private RegionBossBar regionBossBarManager;
     private TablistManager tab;
@@ -118,14 +121,6 @@ public final class WoSSystems extends JavaPlugin {
     public static StringFlag LEAVE_INTERACTION;
     public final Map<UUID, String> playerRegions = new HashMap<>();
     private final Map<UUID, Inventory> clickActions = new HashMap<>();
-
-
-    // TODO:
-    //  - Interactions
-    //      - Conditions
-    //   - Stats
-    //      - Global stats
-
 
     @Override
     public void onEnable() {
@@ -155,6 +150,7 @@ public final class WoSSystems extends JavaPlugin {
             registerAndInitDAO(databaseManager, daoHub.getGuiDAO());
             registerAndInitDAO(databaseManager, daoHub.getFishingDAO());
             registerAndInitDAO(databaseManager, daoHub.getCooldownDAO());
+            registerAndInitDAO(databaseManager, daoHub.getTimeDAO());
 
             databaseManager.initializeAllDAOs();
         } catch (SQLException e) {
@@ -165,7 +161,8 @@ public final class WoSSystems extends JavaPlugin {
         bossBarManager = new BossBarManager();
         regionBossBarManager = new RegionBossBar();
         tab = new TablistManager(daoHub);
-        timeManager = new TimeManager(this, bossBarManager);
+        timeEvents = new TimeEvents(daoHub, bossBarManager);
+        timeManager = new TimeManager(timeEvents, daoHub);
         lang = new LangManager(core);
         log = new LogManager(lang, core);
 
@@ -185,7 +182,7 @@ public final class WoSSystems extends JavaPlugin {
 
         interactionManager = new InteractionManager(daoHub);
         cooldownManager = new CooldownManager(daoHub);
-         // Ensure interactionManager is null-safe.
+        // Ensure interactionManager is null-safe.
         citemManager.setInteractionManager(interactionManager);
         channelManager = new ChannelManager(this, daoHub);
         nickManager = new NicknameManager(daoHub);
@@ -346,8 +343,8 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("pay", new PayCommand(ecoManager, lang));
         cmdReg("coinflip", coinflipCommand);
         cmdReg("crecipe", new CRecipeCommand(this, recipeManager, lang));
-        cmdReg("channel", new ChannelCommand(channelManager));
-        cmdReg("nickname", new NicknameCommand(nickManager));
+        cmdReg("channel", new ChannelCommand());
+        cmdReg("nickname", new NicknameCommand());
         cmdReg("loottable", new LoottableCommand(lootTableManager));
         cmdReg("sign", new SignCommand(citemManager, ecoManager));
         cmdReg("time", new TimeCommand(timeManager, this, lang));
@@ -360,6 +357,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("gui", new GUICommand(daoHub));
         cmdReg("debugcmd", new debug(daoHub));
         cmdReg("cooldown", new CooldownCommand(daoHub));
+        cmdReg("calendar", new Calender());
     }
 
     private void registerEvents() {
@@ -449,6 +447,9 @@ public final class WoSSystems extends JavaPlugin {
     public CosmeticManager getCosmeticManager() {
         return cosmeticManager;
     }
+    public TimeManager getTimeManager() {
+        return timeManager;
+    }
     public Map<UUID, Inventory> getClickActions() {
         return clickActions;
     }
@@ -463,6 +464,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public GUIManager getGuiManager() {
         return guiManager;
+    }
+    public NicknameManager getNickManager() {
+        return nickManager;
     }
 
     public Map<UUID, String> getPlayerRegions() {

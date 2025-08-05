@@ -47,3 +47,12 @@ realname:
   success:
     username: "§e%input%'s§7 username is: §e%result%"
     nickname: "§e%input%'s§7 nickname is: §e%result%"
+
+help:
+  header: "Nickname Commands"
+  requests: "%cyan_300%/nick requests §7- Show all nickname requests."
+  request: "%cyan_300%/nick request <nickname> §7- Request a nickname."
+  reset: "%cyan_300%/nick request reset §7- Reset your nickname."
+  reserve: "%cyan_300%/nick reserve <nickname> §7- Reserve a nickname."
+  unreserve: "%cyan_300%/nick unreserve §7- Unreserve your nickname."
+  help: "%cyan_300%/nick help §7- Display this help message."

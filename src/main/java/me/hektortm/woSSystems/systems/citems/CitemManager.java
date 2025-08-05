@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.systems.citems;
 
+import io.papermc.paper.datacomponent.item.Equippable;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.channels.NicknameManager;
 import me.hektortm.woSSystems.database.DAOHub;
@@ -13,6 +14,7 @@ import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -144,6 +146,8 @@ public class CitemManager {
             return;
         }
         ItemMeta meta = item.getItemMeta();
+
+        
 
         if (meta == null) return;
 

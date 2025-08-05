@@ -68,8 +68,7 @@ public enum Permissions {
     NICK_REQUEST_DENY("nick.request.deny"),
     NICK_RESERVE("nick.reserve"),
     NICK_UNRESERVE("nick.unreserve"),
-    NICK_RESET_SELF("nick.reset.self"),
-    NICK_RESET_OTHERS("nick.reset.others"),
+    NICK_RESET("nick.reset"),
     
     CHANNEL_CREATE("chat.channel.create"),
     CHANNEL_JOIN("chat.channel.join"),

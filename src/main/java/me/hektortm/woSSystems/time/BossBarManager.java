@@ -12,12 +12,16 @@ import org.bukkit.entity.Player;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static me.hektortm.woSSystems.utils.Letters_bg.*;
 
 public class BossBarManager {
 
     private final Map<UUID, BossBar> playerBars = new HashMap<>();
+    private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("(?i)&?#([A-Fa-f0-9]{6})");
+    private static final Pattern LEGACY_COLOR_PATTERN = Pattern.compile("&([0-9a-fk-orA-FK-OR])");
 
     public void createBossBar(Player p) {
         BossBar timeBar = BossBar.bossBar(
@@ -36,14 +40,6 @@ public class BossBarManager {
         if (bossBar == null) {
             return;
         }
-
-        time = parseUni(time);
-        date = parseUni(date);
-        if (activityName != null) {
-            activityName = parseUni(activityName);
-
-        }
-
         // Define the color code for the shadow-free effect (#4e5c24)
 
         // Apply the color to the text
@@ -60,7 +56,7 @@ public class BossBarManager {
                         + "  " +
                         BORDER_LEFT.getLetter() + NEGATIVE_SPACE.getLetter() + "%s" + Letters_bg.BORDER_RIGHT.getLetter(),
                 formattedTime, formattedDate, formattedActivityName) : String.format(
-                 BORDER_LEFT.getLetter() + NEGATIVE_SPACE.getLetter()+ CLOCK.getLetter()+ NEGATIVE_SPACE.getLetter() + "%s" + Letters_bg.BORDER_RIGHT.getLetter()
+                BORDER_LEFT.getLetter() + NEGATIVE_SPACE.getLetter()+ CLOCK.getLetter()+ NEGATIVE_SPACE.getLetter() + "%s" + Letters_bg.BORDER_RIGHT.getLetter()
                         + "  " +
                         BORDER_LEFT.getLetter() + NEGATIVE_SPACE.getLetter()+CALENDER.getLetter()+ NEGATIVE_SPACE.getLetter() + "%s" + Letters_bg.BORDER_RIGHT.getLetter(),
                 formattedTime, formattedDate);
@@ -135,32 +131,39 @@ public class BossBarManager {
     }
     private String applyColorAndNegativeSpace(String input) {
         StringBuilder result = new StringBuilder();
-        char[] chars = input.toCharArray();
 
-        int i = 0;
-        while (i < chars.length) {
+        // Step 1: Replace hex colors (&#rrggbb → §x§r§r§g§g§b§b)
+        Matcher hexMatcher = HEX_COLOR_PATTERN.matcher(input);
+        StringBuffer hexBuffer = new StringBuffer();
+        while (hexMatcher.find()) {
+            String hex = hexMatcher.group(1); // e.g., "ffaa00"
+            StringBuilder replacement = new StringBuilder("§x");
+            for (char c : hex.toCharArray()) {
+                replacement.append('§').append(c);
+            }
+            hexMatcher.appendReplacement(hexBuffer, Matcher.quoteReplacement(replacement.toString()));
+        }
+        hexMatcher.appendTail(hexBuffer);
+        String coloredInput = hexBuffer.toString();
+
+        // Step 2: Replace legacy codes (&a, &l → §a, §l)
+        Matcher legacyMatcher = LEGACY_COLOR_PATTERN.matcher(coloredInput);
+        coloredInput = legacyMatcher.replaceAll("§$1");
+
+        // Step 3: Apply character mapping and preserve current formatting
+        StringBuilder currentFormat = new StringBuilder(); // Holds active formatting (e.g., §6§l)
+        char[] chars = coloredInput.toCharArray();
+
+        for (int i = 0; i < chars.length; i++) {
             char c = chars[i];
 
-            // Check for legacy color codes (e.g., §a, §l)
+            // Handle § formatting codes
             if (c == '§' && i + 1 < chars.length) {
-                char code = chars[i + 1];
-                result.append('§').append(code); // Preserve the color/formatting
-                i += 2;
+                currentFormat.append(c).append(chars[i + 1]);
+                i++; // Skip formatting code
                 continue;
             }
 
-            // Check for hex color codes (e.g., §x§f§f§f§f§f§f)
-            if (c == '§' && i + 13 < chars.length && chars[i + 1] == 'x') {
-                // Append full hex code: §x§R§R§G§G§B§B
-                result.append("§x");
-                for (int j = 2; j <= 12; j += 2) {
-                    result.append(chars[i + j]).append(chars[i + j + 1]);
-                }
-                i += 14;
-                continue;
-            }
-
-            // Character mapping
             Letters_bg letterEnum = null;
             if (Character.isLetter(c)) {
                 try {
@@ -187,12 +190,10 @@ public class BossBarManager {
             }
 
             if (letterEnum != null) {
-                result.append(letterEnum.getLetter()).append(NEGATIVE_SPACE.getLetter());
+                result.append(currentFormat).append(letterEnum.getLetter()).append(NEGATIVE_SPACE.getLetter());
             } else {
-                result.append(c).append(NEGATIVE_SPACE.getLetter());
+                result.append(currentFormat).append(c).append(NEGATIVE_SPACE.getLetter());
             }
-
-            i++;
         }
 
         return result.toString();
