@@ -1,142 +1,85 @@
 package me.hektortm.woSSystems.time;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.wosCore.LangManager;
-import me.hektortm.wosCore.WoSCore;
-import org.bukkit.Bukkit;
-import org.bukkit.configuration.MemorySection;
-import org.bukkit.configuration.file.YamlConfiguration;
+import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.utils.dataclasses.Activity;
 import org.bukkit.entity.Player;
 
-import java.io.File;
-import java.util.Map;
+import java.util.List;
 
 public class TimeEvents {
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final DAOHub hub;
+    private final BossBarManager bossBarManager;
 
-    private final WoSSystems plugin;
-    private final TimeManager manager;
-    private final WoSCore core = WoSCore.getPlugin(WoSCore.class);
-    private final LangManager lang = new LangManager(core);
-
-    public TimeEvents(WoSSystems plugin, TimeManager manager) {
-        this.plugin = plugin;
-        this.manager = manager;
-
-        loadConfiguration();
+    public TimeEvents(DAOHub hub, BossBarManager bossBarManager) {
+        this.hub = hub;
+        this.bossBarManager = bossBarManager;
     }
 
-    private void loadConfiguration() {
-        // Load the activities.yml file
-        File configFile = new File(manager.timeFolder, "activities.yml");
-        if (!configFile.exists()) {
-            plugin.saveResource(manager.timeFolder + File.separator+"activities.yml", false);
-        }
-        manager.timeConfig = YamlConfiguration.loadConfiguration(configFile);
-    }
+    public void checkForActivity(int hour, String time, String formattedDate) {
+        List<Activity> activities = hub.getTimeDAO().getAllActivities();
+        String date = String.format("%02d-%02d", plugin.getTimeManager().getInGameMonth(), plugin.getTimeManager().getInGameDayOfMonth());
 
-    public void checkScheduledEvents(int inGameTimeMinutes) {
-        int h = inGameTimeMinutes / 60;
-        int m = inGameTimeMinutes % 60;
+        boolean foundMatchingActivity = false;
 
-        int inGameDayOfMonth = manager.getInGameDayOfMonth();
-        int inGameMonth = manager.getInGameMonth();
+        for (Activity activity : activities) {
+            boolean isEnabled = activity.getIsEnabled();
+            String activityDate = activity.getDate();
+            int startTime = activity.getStartTime();
+            int endTime = activity.getEndTime();
+            boolean isDefault = activity.isDefault();
+            String startInteraction = activity.getStartInteraction();
+            String endInteraction = activity.getEndInteraction();
+            if (!isEnabled) {
+                continue;
+            }
+            boolean dateMatches = isDefault || (activityDate != null && activityDate.equals(date));
+            boolean isWithinTime = hour >= startTime && hour < endTime;
 
-        String dateKey = String.format("%02d-%02d", inGameMonth, inGameDayOfMonth);
+            if (dateMatches && isWithinTime) {
+                foundMatchingActivity = true;
 
-        Map<String, Object> specificActivities = getActivitiesForDate(dateKey);
-        Map<String, Object> defaultActivities = getActivitiesForDate("default");
-        if (specificActivities != null) {
-            // If there are specific activities for this day, trigger them.
-
-            triggerActivities(specificActivities, h, m);
-        } else {
-            // If no specific activities, trigger default activities.
-
-            triggerActivities(defaultActivities, h, m);
-        }
-    }
-
-    public String getActiveActivity(int inGameTimeMinutes) {
-        int h = inGameTimeMinutes / 60;
-        int m = inGameTimeMinutes % 60;
-
-        int inGameDayOfMonth = manager.getInGameDayOfMonth();
-        int inGameMonth = manager.getInGameMonth();
-
-        String dateKey = String.format("%02d-%02d", inGameMonth, inGameDayOfMonth);
-
-        Map<String, Object> specificActivities = getActivitiesForDate(dateKey);
-        Map<String, Object> defaultActivities = getActivitiesForDate("default");
-
-        String activeActivityName = null;
-
-        if (specificActivities != null) {
-            activeActivityName = getActivityName(specificActivities, h, m);
-        }
-
-        if (activeActivityName == null && defaultActivities != null) {
-            activeActivityName = getActivityName(defaultActivities, h, m);
-        }
-
-        return activeActivityName;
-    }
-
-
-    private String getActivityName(Map<String, Object> activities, int h, int m) {
-        for (Map.Entry<String, Object> entry : activities.entrySet()) {
-            if (entry.getValue() instanceof MemorySection) {
-                MemorySection activityDetails = (MemorySection) entry.getValue();
-                int startTime = activityDetails.getInt("time.start");
-                int endTime = activityDetails.getInt("time.end");
-
-                if (h >= startTime && h < endTime) {
-                    return activityDetails.getString("name");
+                for (Player player : plugin.getServer().getOnlinePlayers()) {
+                    bossBarManager.updateBossBar(player, time, formattedDate, activity.getName());
                 }
             }
-        }
-        return null;
-    }
 
+            // Trigger start interaction/messages only once per hour at exact start
+            if (dateMatches && hour == startTime && plugin.getTimeManager().getInGameTimeMinutes() % 60 == 0) {
+                for (Player player : plugin.getServer().getOnlinePlayers()) {
+                    if (startInteraction != null && !startInteraction.isEmpty()) {
+                        plugin.getInteractionManager().triggerInteraction(startInteraction, player);
+                    }
 
-    private void triggerActivities(Map<String, Object> activities, int h, int m) {
-        for (Map.Entry<String, Object> entry : activities.entrySet()) {
-            String activityName = entry.getKey();
-
-            // Check if the value is a MemorySection
-            if (entry.getValue() instanceof MemorySection) {
-                MemorySection activityDetailsSection = (MemorySection) entry.getValue();
-
-                int startTime = activityDetailsSection.getInt("time.start");
-                int endTime = activityDetailsSection.getInt("time.end");
-                String msg = activityDetailsSection.getString("message");
-                String action = activityDetailsSection.getString("action");
-
-                // Trigger the event only at the start time (h == startTime) and on the first minute (m == 0)
-                if (h == startTime && m == 0) {
-                    triggerEvent(activityName, lang.getMessage("general", "prefix.general") + msg, action);
+                    String message = activity.getMessage();
+                    if (message != null && !message.isEmpty()) {
+                        player.sendMessage(message);
+                    }
                 }
+            }
+
+            // Trigger end interaction at end time
+            if (dateMatches && hour == endTime && plugin.getTimeManager().getInGameTimeMinutes() % 60 == 0) {
+                plugin.getLogger().info("[DEBUG] Triggering END for activity: " + activity.getName());
+                for (Player player : plugin.getServer().getOnlinePlayers()) {
+                    if (endInteraction != null && !endInteraction.isEmpty()) {
+                        plugin.getInteractionManager().triggerInteraction(endInteraction, player);
+                    }
+                }
+            }
+
+            if (!dateMatches) {
+            }
+        }
+
+        if (!foundMatchingActivity) {
+            for (Player p : plugin.getServer().getOnlinePlayers()) {
+                bossBarManager.updateBossBar(p, time, formattedDate, null);
             }
         }
     }
 
 
-
-    private void triggerEvent(String eventName, String message, String action) {
-        Bukkit.broadcastMessage(message);
-        if (action == null) {
-            return;
-        }
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), action.replace("%all%", p.getName()));
-        }
-    }
-
-    private Map<String, Object> getActivitiesForDate(String dateKey) {
-        if (manager.timeConfig.isConfigurationSection("activities." + dateKey)) {
-            return manager.timeConfig.getConfigurationSection("activities." + dateKey).getValues(false);
-        }
-
-        return manager.timeConfig.getConfigurationSection("activities.default").getValues(false);
-    }
 
 }

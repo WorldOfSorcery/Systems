@@ -1,31 +1,38 @@
 package me.hektortm.woSSystems.time;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.Letters_bg;
+import me.hektortm.woSSystems.utils.dataclasses.Activity;
+import me.hektortm.wosCore.Utils;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
 import java.time.DayOfWeek;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class TimeManager {
 
-    private final WoSSystems plugin;
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final TimeEvents timeEvents;
+    private final DAOHub hub;
 
     private boolean timeFrozen = false;
     public File timeFolder = new File(WoSSystems.getPlugin(WoSSystems.class).getDataFolder(), "time");
     private File gameStateFile;
     private File timeConfigFile;
-    public File activitiesFile;
     private FileConfiguration gameStateConfig;
     public FileConfiguration timeConfig;
-    public FileConfiguration activitiesConfig;
 
     private static final int MINUTES_IN_A_DAY = 1440;
     private static final int DAYS_IN_MONTH = 30;
@@ -39,17 +46,14 @@ public class TimeManager {
     private Map<Integer, String> monthNames;
 
 
-    private BossBarManager bossBarManager;
 
-    public TimeManager(WoSSystems plugin, BossBarManager bossBarManager) {
-        this.plugin = plugin;
-        this.bossBarManager = bossBarManager;
+    public TimeManager(TimeEvents timeEvents, DAOHub hub) {
+        this.timeEvents = timeEvents;
+        this.hub = hub;
         gameStateFile = new File(timeFolder, "gamestate.yml");
         timeConfigFile = new File(timeFolder, "time-config.yml");
-        activitiesFile = new File(timeFolder, "activities.yml");
         gameStateConfig = YamlConfiguration.loadConfiguration(gameStateFile);
         timeConfig = YamlConfiguration.loadConfiguration(timeConfigFile);
-        activitiesConfig = YamlConfiguration.loadConfiguration(activitiesFile);
 
         checkFiles();
 
@@ -58,7 +62,6 @@ public class TimeManager {
     private void checkFiles() {
         checkAndCreateFile(gameStateFile, "focused.yml");
         checkAndCreateFile(timeConfigFile, "time-config.yml");
-        checkAndCreateFile(activitiesFile, "activities.yml");
     }
 
     private void checkAndCreateFile(File file, String fileName) {
@@ -101,6 +104,92 @@ public class TimeManager {
     }
 
 
+    public Inventory createCalenderInventory() {
+        Inventory calendarInventory = Bukkit.createInventory(null, 54, "Calendar");
+
+        int currentDay = getInGameDayOfMonth();
+        int currentMonth = getInGameMonth();
+        int currentYear = inGameYear;
+        int maxDays = getMaxDaysInMonth(currentMonth);
+
+        // Slot 4: Show Month and Year
+        ItemStack monthItem = new ItemStack(Material.CLOCK);
+        ItemMeta monthMeta = monthItem.getItemMeta();
+        if (monthMeta != null) {
+            monthMeta.setDisplayName(ChatColor.GOLD + getMonthName(currentMonth) + " " + currentYear);
+            monthItem.setItemMeta(monthMeta);
+        }
+        calendarInventory.setItem(4, monthItem);
+
+        // Prepare default activities and dated activities
+        List<Activity> defaultActivities = new ArrayList<>();
+        Map<Integer, List<Activity>> dayToActivities = new HashMap<>();
+
+        for (Activity activity : hub.getTimeDAO().getAllActivities()) {
+            if (!activity.getIsEnabled()) continue;
+
+            if (activity.isDefault()) {
+                defaultActivities.add(activity);
+            } else if (activity.getDate() != null) {
+                String[] parts = activity.getDate().split("-");
+                if (parts.length != 2) continue;
+                try {
+                    int month = Integer.parseInt(parts[0]);
+                    int day = Integer.parseInt(parts[1]);
+                    if (month == currentMonth) {
+                        dayToActivities.computeIfAbsent(day, k -> new ArrayList<>()).add(activity);
+                    }
+                } catch (NumberFormatException e) {
+                    plugin.getLogger().warning("Invalid activity date: " + activity.getDate());
+                }
+            }
+        }
+
+        // Fill in the day slots
+        for (int day = 1; day <= maxDays; day++) {
+            int slot = 8 + day;
+
+            List<Activity> combinedActivities = new ArrayList<>(defaultActivities);
+            if (dayToActivities.containsKey(day)) {
+                combinedActivities.addAll(dayToActivities.get(day));
+            }
+
+            Material mat;
+            if (day == currentDay) {
+                mat = Material.LIME_STAINED_GLASS_PANE;
+            } else if (!combinedActivities.isEmpty()) {
+                mat = Material.YELLOW_STAINED_GLASS_PANE;
+            } else {
+                mat = Material.LIGHT_GRAY_STAINED_GLASS_PANE;
+            }
+
+            ItemStack dayItem = new ItemStack(mat, 1);
+            ItemMeta meta = dayItem.getItemMeta();
+            meta.setDisplayName(ChatColor.WHITE + "Day " + day);
+
+            if (!combinedActivities.isEmpty()) {
+                combinedActivities.sort(Comparator.comparingInt(Activity::getStartTime));
+                List<String> lore = new ArrayList<>();
+                for (Activity a : combinedActivities) {
+                    int hours = a.getStartTime();
+                    int minutes = 0;
+                    String time = String.format("%02d:%02d", hours, minutes);
+                    lore.add(ChatColor.YELLOW + time + " - " + Utils.parseColorCodeString(a.getName()));
+                }
+                meta.setLore(lore);
+            }
+
+            dayItem.setItemMeta(meta);
+            if (slot < calendarInventory.getSize()) {
+                calendarInventory.setItem(slot, dayItem);
+            }
+        }
+
+        return calendarInventory;
+    }
+
+
+
 
     public boolean isTimeFrozen() { return timeFrozen; }
 
@@ -114,10 +203,6 @@ public class TimeManager {
             @Override
             public void run() {
                 if(timeFrozen) {
-                    return;
-                }
-                if (bossBarManager == null) {
-                    Bukkit.getLogger().warning("bossbar manager = null");
                     return;
                 }
 
@@ -134,12 +219,8 @@ public class TimeManager {
                 String dayOfWeek = capitalizeFirstLetter(inGameDayOfWeek.name().toLowerCase());
                 String formattedDate = String.format("%s"+ Letters_bg.COMMA.getLetter() +" %s %02d", dayOfWeek, monthNames.get(inGameMonth), inGameDayOfMonth);
 
-                String activeActivity = new TimeEvents(plugin, TimeManager.this).getActiveActivity(inGameTimeMinutes);
+                timeEvents.checkForActivity(hours, time, formattedDate);
 
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    bossBarManager.updateBossBar(player, time, formattedDate, activeActivity);
-                }
-                new TimeEvents(plugin, TimeManager.this).checkScheduledEvents(inGameTimeMinutes);
             }
         }.runTaskTimer(plugin, 0L, ticks); // Update every second (2 ticks)
     }
