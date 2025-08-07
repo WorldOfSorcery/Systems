@@ -1,8 +1,8 @@
 package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 
-import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
-import me.hektortm.woSSystems.systems.citems.CitemManager;
+import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.utils.Keys;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
@@ -15,17 +15,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.io.File;
+public class Save extends SubCommand {
 
-public class SaveCommand extends SubCommand {
+    private final DAOHub hub;
 
-    private final CitemCommand cmd;
-    private final CitemManager data;
-
-    public SaveCommand(CitemCommand cmd, CitemManager data) {
-        this.cmd = cmd;
-        this.data = data;
+    public Save(DAOHub hub) {
+        this.hub = hub;
     }
+
     @Override
     public String getName() {
         return "save";
@@ -49,14 +46,17 @@ public class SaveCommand extends SubCommand {
             return;
         }
 
-        if(!data.getErrorHandler().handleCitemErrors(itemInHand, p)) return;
+        if (itemInHand.getType() == Material.AIR) {
+            Utils.error(p, "citems", "error.holding-item");
+            return;
+        }
 
         String id = args[0];
         ItemMeta meta = itemInHand.getItemMeta();
         PersistentDataContainer container = meta.getPersistentDataContainer();
-        container.set(data.getIdKey(), PersistentDataType.STRING, id);
+        container.set(Keys.ID.get(), PersistentDataType.STRING, id);
         itemInHand.setItemMeta(meta);
-        data.getCitemDAO().saveCitem(id, itemInHand);
+        hub.getCitemDAO().saveCitem(id, itemInHand);
         Utils.successMsg1Value(p, "citems", "saved", "%id%", id);
     }
 }

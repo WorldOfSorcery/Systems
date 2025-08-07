@@ -1,15 +1,16 @@
 package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
+import me.hektortm.woSSystems.utils.HelpUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.command.CommandSender;
 
-public class HelpCommand extends SubCommand {
+public class Help extends SubCommand {
 
     private final CitemCommand cmd;
 
-    public HelpCommand(CitemCommand cmd) {
+    public Help(CitemCommand cmd) {
         this.cmd = cmd;
     }
 
@@ -25,6 +26,6 @@ public class HelpCommand extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        cmd.citemHelp(sender);
+        HelpUtil.sendHelp(cmd.permCmds, sender, "citems");
     }
 }

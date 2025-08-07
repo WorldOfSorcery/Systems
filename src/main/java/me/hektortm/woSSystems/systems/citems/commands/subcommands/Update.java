@@ -1,8 +1,7 @@
 package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 
-import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
-import me.hektortm.woSSystems.systems.citems.CitemManager;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
@@ -11,17 +10,13 @@ import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
-import java.io.File;
+public class Update extends SubCommand {
 
-public class UpdateCommand extends SubCommand {
+    private final DAOHub hub;
 
-    private final CitemCommand citem;
-    private final CitemManager data;
-    public UpdateCommand(CitemCommand citem, CitemManager data) {
-        this.citem = citem;
-        this.data = data;
+    public Update(DAOHub hub) {
+        this.hub = hub;
     }
 
     @Override
@@ -46,16 +41,19 @@ public class UpdateCommand extends SubCommand {
             return;
         }
 
-        if (!data.getErrorHandler().handleCitemErrors(itemInHand, p)) return;
+        if (itemInHand.getType() == Material.AIR) {
+            Utils.error(p, "citems", "error.holding-item");
+            return;
+        }
 
         String id = args[0];
 
-        if (!data.getCitemDAO().citemExists(id)) {
+        if (!hub.getCitemDAO().citemExists(id)) {
             Utils.error(p, "citems", "error.not-found");
             return;
         }
 
-        data.getCitemDAO().updateCitem(id, itemInHand);
+        hub.getCitemDAO().updateCitem(id, itemInHand);
         Utils.successMsg(p, "citems", "updated");
     }
 }

@@ -1,17 +1,11 @@
 package me.hektortm.woSSystems.systems.citems.commands;
 
-
-import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.citems.commands.subcommands.*;
-import me.hektortm.woSSystems.systems.citems.CitemManager;
-import me.hektortm.woSSystems.systems.interactions.InteractionManager;
-import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
-import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
-import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -23,25 +17,33 @@ import java.util.Map;
 public class CitemCommand implements CommandExecutor {
 
     private final Map<String, SubCommand> subCommands = new HashMap<>();
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final CitemManager data;
-    private final StatsManager statsManager = plugin.getStatsManager();
-    private final InteractionManager interactionManager = plugin.getInteractionManager();
-    private final LangManager lang = plugin.getLangManager();
-    private final LogManager log = plugin.getLogManager();
+    public Map<Permissions, String> permCmds = new HashMap<>();
+    private final DAOHub hub;
 
-    public CitemCommand(CitemManager data) {
-        this.data = data;
 
-        subCommands.put("save", new SaveCommand(this, data));
-        subCommands.put("rename", new NameCommand(data));
-        subCommands.put("update", new UpdateCommand(this, data));
-        subCommands.put("lore", new LoreCommand(data));
-        subCommands.put("flag", new FlagCommand(data));
-        subCommands.put("action", new ActionCommand(data));
-        subCommands.put("tag", new Tag(data));
-        subCommands.put("info", new Info(data));
-        subCommands.put("help", new HelpCommand(this));
+    public CitemCommand(DAOHub hub) {
+        this.hub = hub;
+
+        subCommands.put("save", new Save(hub));
+        subCommands.put("update", new Update(hub));
+        subCommands.put("rename", new Name());
+        subCommands.put("lore", new Lore());
+        subCommands.put("flag", new Flag());
+        subCommands.put("action", new Action());
+        subCommands.put("tooltip", new Tooltip());
+        subCommands.put("model", new Model());
+        subCommands.put("color", new Color());
+        subCommands.put("tag", new Tag());
+        subCommands.put("info", new Info());
+
+
+
+        for (SubCommand subCommand : subCommands.values()) {
+            permCmds.put(subCommand.getPermission(), subCommand.getName());
+        }
+
+        subCommands.put("help", new Help(this));
+
     }
 
     @Override
@@ -68,7 +70,7 @@ public class CitemCommand implements CommandExecutor {
         if (PermissionUtil.hasAnyPermission(sender, Permissions.CITEM_SAVE, Permissions.CITEM_RENAME,
                 Permissions.CITEM_UPDATE, Permissions.CITEM_LORE, Permissions.CITEM_FLAGS, Permissions.CITEM_ACTIONS,
                 Permissions.CITEM_TAG, Permissions.CITEM_INFO, Permissions.CITEM_GIVE, Permissions.CITEM_REMOVE)) {
-            Utils.info(sender, "unlockables", "help.header");
+            Utils.info(sender, "citems", "help.header");
 
             if (PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_SAVE))
                 Utils.noPrefix(sender, "citems", "help.save");

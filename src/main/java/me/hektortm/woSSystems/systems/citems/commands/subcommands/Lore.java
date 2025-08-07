@@ -1,12 +1,10 @@
 package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 
-import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -16,12 +14,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LoreCommand extends SubCommand {
-    private final CitemManager manager;
-
-    public LoreCommand(CitemManager manager) {
-        this.manager = manager;
-    }
+@SuppressWarnings("DuplicatedCode")
+public class Lore extends SubCommand {
 
     @Override
     public String getName() {
@@ -41,7 +35,10 @@ public class LoreCommand extends SubCommand {
 
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
 
-        if (!manager.getErrorHandler().handleCitemErrors(itemInHand, p)) return;
+        if (itemInHand.getType() == Material.AIR) {
+            Utils.error(p, "citems", "error.holding-item");
+            return;
+        }
 
         if (args.length < 1) {
             Utils.info(sender, "citems", "info.usage.lore");
@@ -67,7 +64,7 @@ public class LoreCommand extends SubCommand {
                     addLoreText.append(args[i]);
                 }
 
-                lore.add(ChatColor.translateAlternateColorCodes('&', addLoreText.toString()));
+                lore.add(Utils.parseColorCodeString(addLoreText.toString()));
                 meta.setLore(lore);
                 itemInHand.setItemMeta(meta);
                 Utils.success(p, "citems", "lore.added");
@@ -100,7 +97,7 @@ public class LoreCommand extends SubCommand {
                     editLoreText.append(args[i]);
                 }
 
-                lore.set(row, ChatColor.translateAlternateColorCodes('&', editLoreText.toString()));
+                lore.set(row, Utils.parseColorCodeString(editLoreText.toString()));
                 meta.setLore(lore);
                 itemInHand.setItemMeta(meta);
                 Utils.success(p, "citems", "lore.edited");

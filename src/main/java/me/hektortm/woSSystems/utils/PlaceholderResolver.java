@@ -9,10 +9,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.io.File;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
 
 import static java.lang.Long.parseLong;
 
@@ -85,11 +83,11 @@ public class PlaceholderResolver {
             }
         }
         if(text.contains("{citems.")) {
-            for (String citemId : citemsManager.getCitemDAO().getCitemIds()) {
+            for (String citemId : hub.getCitemDAO().getCitemIds()) {
                 String namePlaceholder = "{citems.name:"+citemId+"}";
                 String lorePlaceholder = "{citems.lore:"+citemId+"}";
 
-                ItemStack citem = citemsManager.getCitemDAO().getCitem(citemId);
+                ItemStack citem = hub.getCitemDAO().getCitem(citemId);
                 ItemMeta meta = citem.getItemMeta();
                 if (text.contains(namePlaceholder)) {
                     String name = meta.getDisplayName();

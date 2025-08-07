@@ -2,14 +2,13 @@ package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
+import me.hektortm.woSSystems.utils.Keys;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
-import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
-import org.bukkit.NamespacedKey;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -18,22 +17,10 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 @SuppressWarnings("DuplicatedCode")
-public class ActionCommand extends SubCommand {
+public class Action extends SubCommand {
 
-    private final NamespacedKey leftActionKey;
-    private final NamespacedKey rightActionKey;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final CitemManager citemManager;
     private final InteractionManager manager = plugin.getInteractionManager();
-    private final LangManager lang = plugin.getLangManager();
-
-
-    public ActionCommand(CitemManager citemManager) {
-        this.citemManager = citemManager;
-        leftActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-left");
-        rightActionKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "action-right");
-
-    }
 
     @Override
     public String getName() {
@@ -52,12 +39,15 @@ public class ActionCommand extends SubCommand {
         Player p = (Player) sender;
         ItemStack itemInHand = p.getInventory().getItemInMainHand();
 
+        if (itemInHand.getType() == Material.AIR) {
+            Utils.error(p, "citems", "error.holding-item");
+            return;
+        }
+
         if (args.length == 0) {
             Utils.info(p, "citems", "info.usage.action");
             return;
         }
-
-        if (!citemManager.getErrorHandler().handleCitemErrors(itemInHand, p)) return;
 
         String action = args[0].toLowerCase();
         String actionID = args[1].toLowerCase();
@@ -68,17 +58,15 @@ public class ActionCommand extends SubCommand {
         }
 
         ItemMeta meta = itemInHand.getItemMeta();
-
-
         PersistentDataContainer data = meta.getPersistentDataContainer();
 
         switch (action) {
             case "left":
-                data.set(leftActionKey, PersistentDataType.STRING, actionID);
+                data.set(Keys.LEFT_ACTION.get(), PersistentDataType.STRING, actionID);
                 Utils.success(p, "citems", "action.set.left", "%action%", actionID);
                 break;
             case "right":
-                data.set(rightActionKey, PersistentDataType.STRING, actionID);
+                data.set(Keys.RIGHT_ACTION.get(), PersistentDataType.STRING, actionID);
                 Utils.success(p, "citems", "action.set.right", "%action%", actionID);
                 break;
             default:

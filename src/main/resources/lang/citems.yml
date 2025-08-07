@@ -8,6 +8,8 @@ error:
   inter-not-found: "Interaction not found: %id%"
   invalid-icon: "Invalid Icon."
   invalid-item: "Invalid item."
+  invalid-color: "Hex color must be 6 characters long (e.g. #FF8800)"
+  invalid-color-format: "Invalid hex color format: %color%"
   not-citem: "This item is not a valid Citem."
   lore:
     invalid-row: "Invalid row number."
@@ -21,34 +23,21 @@ info:
     lore-add: "Usage: /citem lore add <text>"
     lore-edit: "Usage: /citem lore edit <row> <text>"
     lore-remove: "Usage: /citem lore remove <row>"
+    models: "Usage: /citem model <model id>"
     rename: "Usage: /citem rename <name>"
     save: "Usage: /citem save <id>"
     update: "Usage: /citem update <id>"
     cgive: "Usage: /cgive <player> <id> [amount]"
     cremove: "Usage: /cremove <player> <id> [amount]"
     tag: "Usage: /citem tag <tag1> <tag2>"
+    tooltip: "Usage: /citem tooltip <hide/tooltip id>"
   placeable-flag: "Use: /citem flag add placeable <small/normal>"
 
 stamp: "§aSuccessfully signed the current item."
 
-delete:
-  confirm: "§7Confirm deletion with: /citem delete %id% confirm"
-  success: "§aYou have deleted the Citem with the ID: §e%id%"
-
 flag:
-  add:
-    undroppable: "§aUndroppable flag added."
-    unbreakable: "§aUnbreakable flag added."
-    unusable: "§aUnusable flag added."
-    hide: "§aHide flags added."
-    placeable-small: "§aPlaceable flag(small) added."
-    placeable-normal: "§aPlaceable flag(normal) added."
-  remove:
-    undroppable: "§cUndroppable flag removed."
-    unbreakable: "§cUnbreakable flag removed."
-    unusable: "§cUnusable flag removed."
-    hide: "§cHide flags removed."
-    placeable: "§cPlaceable flag removed."
+  add: "§aFlag added: %flag%"
+  remove: "§cFlag removed: %flag%"
   list:
     undroppable: "%cyan_300%- Undroppable"
     unbreakable: "%cyan_300%- Unbreakable"
@@ -64,13 +53,23 @@ help:
   update: "%cyan_300%/citem update <id> §7- Update an existing Citem."
   rename: "%cyan_300%/citem rename <name> §7- Rename the item in your hand."
   lore: "%cyan_300%/citem lore <add|edit|remove> §7- Modify the lore of an item."
-  flags: "%cyan_300%/citem flag <add|remove> §7- Add flags to the item in your hand."
-  actions: "%cyan_300%/citem action <left|right> <inter-id> §7- Add an interaction to an Item."
+  flag: "%cyan_300%/citem flag <add|remove> §7- Add flags to the item in your hand."
+  action: "%cyan_300%/citem action <left|right> <inter-id> §7- Add an interaction to an Item."
+  tooltip: "%cyan_300%/citem tooltip <hide|tooltip_id> §7- hide or change the tooltip of the item."
+  model: "%cyan_300%/citem model <model_id> §7- Set the model of the item in your hand."
   tag: "%cyan_300%/citem tag <tag> §7- Add tags to an item."
   info: "%cyan_300%/citem info §7- Displays info of the held Citem."
   give: "%cyan_300%/cgive <player> <id> [amount] §7- Give a player a Citem."
   remove: "%cyan_300%/cremove <player> <id> [amount] §7- Remove a Citem from a player."
   help: "%cyan_300%/citem help §7- Displays this help message."
+
+model: "§aYou have configured the model to: §e%model_id%§a."
+color: "§aYou have configured the color to: §e%color%§a."
+
+tooltip:
+  hidden: "§aTooltip hidden."
+  shown: "§aTooltip shown."
+  set: "§aTooltip set to: §e%tooltip_id%§a."
 
 lore:
   added: "§aLore added."
@@ -86,7 +85,7 @@ action:
     right: "§aRightclick action set to §e%action%§a Interaction."
 
 renamed: "§aItem name set to: %name%"
-saved: "§aItem saved successfully as §e%id%.json"
+saved: "§aItem saved successfully as §e%id%"
 updated: "§aItem updated successfully."
 given: "§aGiven §e%amount% %id% §ato §e%player%§a."
 removed: "§aRemoved §e%amount% %id% §afrom §e%player%§a."

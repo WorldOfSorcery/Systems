@@ -13,6 +13,9 @@ public enum Permissions {
     CITEM_REMOVE("citem.remove"),
     CITEM_TAG("citem.tag"),
     CITEM_INFO("citem.info"),
+    CITEM_MODEL("citem.modify.model"),
+    CITEM_COLOR("citem.modify.color"),
+    CITEM_TOOLTIP("citem.modify.tooltip"),
     CITEM_SIGN("citem.sign"),
 
     CRECIPE_CREATE("crecipe.create"),

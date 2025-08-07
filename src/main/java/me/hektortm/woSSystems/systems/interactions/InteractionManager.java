@@ -74,10 +74,7 @@ public class InteractionManager {
 
     public boolean interactionExist(String id) {
         Interaction inter = hub.getInteractionDAO().getInteractionByID(id);
-        if (inter == null) {
-            return false;
-        }
-        return true;
+        return inter != null;
     }
 
     public void blockBind(String id, Location loc) {

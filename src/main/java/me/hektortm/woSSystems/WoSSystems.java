@@ -182,8 +182,6 @@ public final class WoSSystems extends JavaPlugin {
 
         interactionManager = new InteractionManager(daoHub);
         cooldownManager = new CooldownManager(daoHub);
-        // Ensure interactionManager is null-safe.
-        citemManager.setInteractionManager(interactionManager);
         channelManager = new ChannelManager(this, daoHub);
         nickManager = new NicknameManager(daoHub);
 
@@ -332,9 +330,9 @@ public final class WoSSystems extends JavaPlugin {
 
         //cmdReg("opengui", new GUIcommand(guiManager, interactionManager));
         cmdReg("interaction", new InteractionCommand());
-        cmdReg("citem", new CitemCommand(citemManager));
+        cmdReg("citem", new CitemCommand(daoHub));
         cmdReg("cgive", new CgiveCommand(citemManager));
-        cmdReg("cremove", new CremoveCommand(citemManager, lang));
+        cmdReg("cremove", new CremoveCommand(daoHub));
         cmdReg("stats", new StatsCommand(statsManager));
         cmdReg("globalstats", new GlobalStatCommand(statsManager));
         cmdReg("unlockable", new UnlockableCommand(daoHub));

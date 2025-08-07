@@ -5,6 +5,7 @@ import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
+import me.hektortm.woSSystems.utils.Keys;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -34,12 +35,9 @@ public class InterListener implements Listener {
     private final Map<Location, Long> blockCooldowns = new HashMap<>();
     private final Map<String, Long> npcCooldowns = new HashMap<>();
     private final Map<UUID, Long> displayCooldowns = new HashMap<>();
-    private final NamespacedKey unusableKey;
-    private NamespacedKey placeableKey = citemManager.getPlaceableKey();
 
     public InterListener(DAOHub hub) {
         this.hub = hub;
-        unusableKey = new NamespacedKey(WoSSystems.getPlugin(WoSSystems.class), "unusable");
     }
     
 
@@ -125,8 +123,8 @@ public class InterListener implements Listener {
         if (citemManager.isCitem(item)) {
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer data = meta.getPersistentDataContainer();
-            String id = data.get(citemManager.getIdKey(), PersistentDataType.STRING);
-            int dataKey = data.get(placeableKey, PersistentDataType.INTEGER);
+            String id = data.get(Keys.ID.get(), PersistentDataType.STRING);
+            int dataKey = data.get(Keys.PLACEABLE.get(), PersistentDataType.INTEGER);
 
             if (dataKey > 0) {
 
@@ -162,7 +160,7 @@ public class InterListener implements Listener {
                         // Spawn an ItemDisplay entity
                         spawnItemDisplay(spawnLocation, id, p.getUniqueId()); // Set the transformation (scale, rotation, etc.)
                         // Spawn a Barrier block
-                        if (data.get(placeableKey, PersistentDataType.INTEGER) == 1) {
+                        if (data.get(Keys.PLACEABLE.get(), PersistentDataType.INTEGER) == 1) {
                             Material setMat = Material.DEAD_TUBE_CORAL_FAN;
 
                             Block tBlock = targetBlock.getWorld().getBlockAt(spawnLocation);
@@ -171,7 +169,7 @@ public class InterListener implements Listener {
                                 wL.setWaterlogged(false);
                                 tBlock.setBlockData(wL);
                             }
-                        } else if (data.get(placeableKey, PersistentDataType.INTEGER) == 2) {
+                        } else if (data.get(Keys.PLACEABLE.get(), PersistentDataType.INTEGER) == 2) {
                             targetBlock.getWorld().getBlockAt(spawnLocation).setType(Material.BARRIER);
                         }
                         p.playSound(locClicked, Sound.BLOCK_CANDLE_PLACE, 1L, 1L);
@@ -191,17 +189,17 @@ public class InterListener implements Listener {
             switch (action) {
                 case RIGHT_CLICK_AIR:
                 case RIGHT_CLICK_BLOCK:
-                    citemManager.rightClickAction(p);
+                    rightClickAction(p);
                     break;
                 case LEFT_CLICK_AIR:
                 case LEFT_CLICK_BLOCK:
-                    citemManager.leftClickAction(p);
+                    leftClickAction(p);
                     break;
             }
 
             if (meta != null) {
 
-                if (data.get(unusableKey, PersistentDataType.BOOLEAN) == true) {
+                if (Boolean.TRUE.equals(data.get(Keys.UNUSABLE.get(), PersistentDataType.BOOLEAN))) {
                     e.setCancelled(true); // Prevent the item from being dropped
                 }
             }
@@ -373,6 +371,33 @@ public class InterListener implements Listener {
 
         // 🌟 Extra sparkle effect
         world.spawnParticle(Particle.CRIT, location.clone().add(0.5, 0.5, 0.5), 15, 0.3, 0.3, 0.3, 0.1);
+    }
+
+
+    public void leftClickAction(Player p) {
+        ItemStack item = p.getInventory().getItemInMainHand();
+        if (item == null || !item.hasItemMeta()) return;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        PersistentDataContainer data = meta.getPersistentDataContainer();
+        String actionId = data.get(Keys.LEFT_ACTION.get(), PersistentDataType.STRING);
+        if (actionId != null) {
+            interactionManager.triggerInteraction(actionId, p);
+        }
+    }
+
+    public void rightClickAction(Player p) {
+        ItemStack item = p.getInventory().getItemInMainHand();
+        if (item == null || !item.hasItemMeta()) return;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        PersistentDataContainer data = meta.getPersistentDataContainer();
+        String actionId = data.get(Keys.RIGHT_ACTION.get(), PersistentDataType.STRING);
+        if (actionId != null) {
+            interactionManager.triggerInteraction(actionId, p);
+        }
     }
 
 

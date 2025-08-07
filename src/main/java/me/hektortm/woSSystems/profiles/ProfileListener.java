@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.profiles;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.utils.Keys;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -42,8 +43,8 @@ public class ProfileListener implements Listener {
                 PersistentDataContainer backgroundData = backgroundMeta.getPersistentDataContainer();
 
                 // Retrieve the background unique identifier
-                if (backgroundData.has(plugin.getCitemManager().getProfileBgKey(), PersistentDataType.STRING)) {
-                    backgroundUni = backgroundData.get(plugin.getCitemManager().getProfileBgKey(), PersistentDataType.STRING);
+                if (backgroundData.has(Keys.LEFT_ACTION.get(), PersistentDataType.STRING)) {
+                    backgroundUni = backgroundData.get(Keys.LEFT_ACTION.get(), PersistentDataType.STRING);
                 } else {
                     p.sendMessage("§cInvalid Background Item!");
                 }
@@ -56,15 +57,15 @@ public class ProfileListener implements Listener {
                 PersistentDataContainer pictureData = pictureMeta.getPersistentDataContainer();
 
                 // Retrieve the picture unique identifier
-                if (pictureData.has(plugin.getCitemManager().getProfilePicKey(), PersistentDataType.STRING)) {
-                    pictureUni = pictureData.get(plugin.getCitemManager().getProfilePicKey(), PersistentDataType.STRING);
+                if (pictureData.has(Keys.LEFT_ACTION.get(), PersistentDataType.STRING)) { // TODO REPLACE THIS WITH ACTUAL KEYS
+                    pictureUni = pictureData.get(Keys.LEFT_ACTION.get(), PersistentDataType.STRING);
                 } else {
                     p.sendMessage("§cInvalid Picture Item!");
                 }
 
                 // Retrieve the picture ID
-                if (pictureData.has(plugin.getCitemManager().getIdKey(), PersistentDataType.STRING)) {
-                    pictureID = pictureData.get(plugin.getCitemManager().getIdKey(), PersistentDataType.STRING);
+                if (pictureData.has(Keys.ID.get(), PersistentDataType.STRING)) {
+                    pictureID = pictureData.get(Keys.ID.get(), PersistentDataType.STRING);
                 }
             }
 

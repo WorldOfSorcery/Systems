@@ -1,11 +1,12 @@
 package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
-import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.Icons;
+import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -15,11 +16,6 @@ import java.util.List;
 import java.util.logging.Level;
 
 public class Tag extends SubCommand {
-    private final CitemManager manager;
-
-    public Tag(CitemManager manager) {
-        this.manager = manager;
-    }
 
     @Override
     public String getName() {
@@ -33,9 +29,9 @@ public class Tag extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player p)) {
-            return;
-        }
+        if(!PermissionUtil.isPlayer(sender)) return;
+
+        Player p = (Player) sender;
 
         if (args.length < 1) {
             Utils.info(p, "citems", "info.usage.tag");
@@ -44,7 +40,10 @@ public class Tag extends SubCommand {
 
         ItemStack item = p.getInventory().getItemInMainHand();
 
-        if (manager.getErrorHandler().handleCitemErrors(item, p)) return;
+        if (item.getType() == Material.AIR) {
+            Utils.error(p, "citems", "error.holding-item");
+            return;
+        }
 
         Icons firstIcon = parseIcon(args[0]);
         Icons secondIcon = args.length > 1 ? parseIcon(args[1]) : null;

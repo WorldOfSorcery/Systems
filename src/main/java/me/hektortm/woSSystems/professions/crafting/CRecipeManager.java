@@ -23,7 +23,6 @@ public class CRecipeManager {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final CitemManager citemManager = plugin.getCitemManager();
-    private final CitemCommand cmd = new CitemCommand(citemManager);
     private final LogManager logManager = plugin.getLogManager();
     private final Map<NamespacedKey, RecipeData> recipeMap = new HashMap<>();
     private final DAOHub hub;
@@ -41,7 +40,7 @@ public class CRecipeManager {
         for (RecipeDAO.RecipeRecord record : records) {
             try {
                 NamespacedKey key = new NamespacedKey(plugin, record.id);
-                ItemStack resultItem = citemManager.getCitemDAO().getCitem(record.output);
+                ItemStack resultItem = null;
                 if (resultItem == null) {
                     logManager.sendWarning("Failed to load result item (" + record.output + ") for recipe: \"" + record.id + "\"");
                     continue;
@@ -83,7 +82,7 @@ public class CRecipeManager {
         for (int i = 0; i < Math.min(parts.length, 9); i++) {
             String itemId = parts[i];
             if (!itemId.equalsIgnoreCase("null")) {
-                ItemStack ingredient = citemManager.getCitemDAO().getCitem(itemId);
+                ItemStack ingredient = null;
                 if (ingredient != null) {
                     recipe.setIngredient(chars[i], new RecipeChoice.ExactChoice(ingredient));
                 }
@@ -97,7 +96,7 @@ public class CRecipeManager {
         String[] parts = slots.split(",");
         for (String itemId : parts) {
             if (!itemId.equalsIgnoreCase("null")) {
-                ItemStack ingredient = citemManager.getCitemDAO().getCitem(itemId);
+                ItemStack ingredient = null;
                 if (ingredient != null) {
                     recipe.addIngredient(new RecipeChoice.ExactChoice(ingredient));
                 }

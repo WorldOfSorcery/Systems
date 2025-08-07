@@ -101,7 +101,7 @@ public class LoottableManager {
                         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), action.replace("{player}", p.getName()));
                         break;
                     case "citem":
-                        citemManager.giveCitem(Bukkit.getConsoleSender(), p, action, 1);
+                        //citemManager.giveCitem(Bukkit.getConsoleSender(), p, action, 1);
                         break;
                     case "interaction":
                         //interManager.triggerInteraction(p, action);

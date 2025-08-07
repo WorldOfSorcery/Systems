@@ -50,7 +50,7 @@ public class SignCommand implements CommandExecutor {
             Utils.error(target, "economy", "error.funds");
             return true;
         }
-        manager.createStamp(target, item, quote);
+      //  manager.createStamp(target, item, quote);
         eco.modifyCurrency(target.getUniqueId(), "signature_token", 1, Operations.TAKE);
         Utils.successMsg(target, "citems", "stamp");
 

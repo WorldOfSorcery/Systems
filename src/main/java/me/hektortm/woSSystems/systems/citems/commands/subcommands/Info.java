@@ -1,9 +1,9 @@
 package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
-import me.hektortm.woSSystems.systems.citems.CitemManager;
+import me.hektortm.woSSystems.utils.Keys;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
-import me.hektortm.wosCore.Utils;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -12,12 +12,6 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 public class Info extends SubCommand {
-
-    private final CitemManager manager;
-
-    public Info(CitemManager citemManager) {
-        this.manager = citemManager;
-    }
 
     @Override
     public String getName() {
@@ -32,22 +26,18 @@ public class Info extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
         Player p = (Player) sender;
-        ItemStack item = p.getItemInHand();
-
-        if (manager.getErrorHandler().handleCitemErrors(item, p)) return;
+        ItemStack item = p.getInventory().getItemInMainHand();
 
         ItemMeta meta = item.getItemMeta();
         PersistentDataContainer data = meta.getPersistentDataContainer();
-        String itemId = data.get(manager.getIdKey(), PersistentDataType.STRING);
+        String itemId = data.get(Keys.ID.get(), PersistentDataType.STRING);
 
         p.sendMessage("§aCitem Information:");
-        p.sendMessage("§7ID: §f" + itemId);
+        p.sendMessage("§7Identifier: §f" + itemId);
 
         // Display custom flags
-        boolean undroppable = data.has(manager.getUndroppableKey(), PersistentDataType.BYTE) &&
-                data.get(manager.getUndroppableKey(), PersistentDataType.BYTE) == 1;
-        boolean unusable = data.has(manager.getUnusableKey(), PersistentDataType.BYTE) &&
-                data.get(manager.getUnusableKey(), PersistentDataType.BYTE) == 1;
+        boolean undroppable = data.has(Keys.UNDROPPABLE.get(), PersistentDataType.BOOLEAN);
+        boolean unusable = data.has(Keys.UNUSABLE.get(), PersistentDataType.BOOLEAN);
 
         p.sendMessage("§7Flags:");
         p.sendMessage(" §7- §eUndroppable: §f" + (undroppable ? "Yes" : "No"));
@@ -55,9 +45,17 @@ public class Info extends SubCommand {
         boolean hasHideFlags = !meta.getItemFlags().isEmpty();
         p.sendMessage(" §7- §eHide Flags: §f" + (hasHideFlags ? "Yes" : "No"));
 
+        NamespacedKey modelKey = meta.getItemModel();
+        NamespacedKey tooltip = meta.getTooltipStyle();
+        boolean hiddenTooltip = meta.isHideTooltip();
+
+        p.sendMessage("§7Model: §f" + (modelKey != null ? modelKey.toString() : "None"));
+        p.sendMessage("§7Tooltip Style: §f" + (tooltip != null ? tooltip.toString() : "None"));
+        p.sendMessage("§7Hidden Tooltip: §f" + (hiddenTooltip ? "Yes" : "No"));
+
         // Display actions
-        String leftAction = data.get(manager.getLeftActionKey(), PersistentDataType.STRING);
-        String rightAction = data.get(manager.getRightActionKey(), PersistentDataType.STRING);
+        String leftAction = data.get(Keys.LEFT_ACTION.get(), PersistentDataType.STRING);
+        String rightAction = data.get(Keys.RIGHT_ACTION.get(), PersistentDataType.STRING);
 
         p.sendMessage("§7Actions:");
         p.sendMessage(" §7- §eLeft-Click Action: §f" + (leftAction != null ? leftAction : "None"));
