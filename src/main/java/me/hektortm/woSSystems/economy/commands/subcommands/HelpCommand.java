@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.economy.commands.subcommands;
 
 import me.hektortm.woSSystems.economy.commands.EcoCommand;
+import me.hektortm.woSSystems.utils.HelpUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.command.CommandSender;
@@ -24,6 +25,6 @@ public class HelpCommand extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        cmd.ecoHelp(sender);
+        HelpUtil.sendHelp(cmd.permCmds, sender, "economy");
     }
 }

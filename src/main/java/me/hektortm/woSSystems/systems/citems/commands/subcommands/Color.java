@@ -54,7 +54,6 @@ public class Color extends SubCommand {
             return;
         }
 
-        ItemMeta meta = item.getItemMeta();
 
         DyedItemColor dyedColor = dyedItemColor(hexToBukkitColor(color, p));
 

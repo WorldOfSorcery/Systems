@@ -61,4 +61,4 @@ help:
   balance: "§e/balance §7- Show your balance."
   balance.others: "§e/balance [player] §7- Show your or a players balance"
   pay: "§e/pay <player> <currency> <amount> §7- Pay a player."
-  list: "§e/economy help §7- Display this help message."
+  help: "§e/economy help §7- Display this help message."

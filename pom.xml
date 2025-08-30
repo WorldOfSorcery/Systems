@@ -8,12 +8,20 @@
     <artifactId>WoSSystems</artifactId>
     <version>1.21.8-0.0.2</version>
     <packaging>jar</packaging>
-
     <name>WoSSystems</name>
 
+    <!-- Target Java 17 bytecode for server compatibility -->
     <properties>
-        <java.version>21</java.version>
+        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Centralize versions (optional) -->
+        <paper.version>1.21.1-R0.1-SNAPSHOT</paper.version>
+        <worldguard.version>7.0.14</worldguard.version>
+        <citizens.version>2.0.39-SNAPSHOT</citizens.version>
+        <permissionlib.version>v1.0.3</permissionlib.version> <!-- NOTE: leading 'v' -->
     </properties>
 
     <build>
@@ -24,10 +32,12 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <release>${maven.compiler.release}</release>
+                    <showWarnings>true</showWarnings>
                 </configuration>
             </plugin>
+
+            <!-- Shade if you plan to relocate or embed libs -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -35,13 +45,22 @@
                 <executions>
                     <execution>
                         <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
+                        <goals><goal>shade</goal></goals>
+                        <!-- Optional: relocate your own library deps to avoid conflicts
+                        <configuration>
+                          <relocations>
+                            <relocation>
+                              <pattern>dev.hektortm.permissionlib</pattern>
+                              <shadedPattern>me.hektortm.wossystems.libs.permissionlib</shadedPattern>
+                            </relocation>
+                          </relocations>
+                        </configuration>
+                        -->
                     </execution>
                 </executions>
             </plugin>
         </plugins>
+
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -52,8 +71,16 @@
 
     <repositories>
         <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+        <repository>
             <id>github</id>
             <url>https://maven.pkg.github.com/worldofsorcery/core</url>
+        </repository>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/hektortm/permissionlib</url>
         </repository>
         <repository>
             <id>sk89q-repo</id>
@@ -71,10 +98,7 @@
             <id>sonatype</id>
             <url>https://oss.sonatype.org/content/groups/public/</url>
         </repository>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
+
         <repository>
             <id>codemc-releases</id>
             <url>https://repo.codemc.io/repository/maven-releases/</url>
@@ -84,6 +108,7 @@
             <url>https://repo.dmulloy2.net/repository/public/</url>
         </repository>
     </repositories>
+
 
     <dependencies>
         <dependency>
