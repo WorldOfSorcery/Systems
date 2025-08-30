@@ -1,5 +1,8 @@
 package me.hektortm.woSSystems.utils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public enum Permissions {
 
     CITEM_SAVE("citem.save"),
@@ -81,10 +84,13 @@ public enum Permissions {
     CHANNEL_LIST("chat.channel.list"),
     CHANNEL_BROADCAST("chat.channel.broadcast"),
     CHANNEL_MODIFY("chat.channel.modify"),
+    CHANNEL_DELETE("chat.channel.delete"),
 
     COSMETIC_TAKE("cosmetic.take"),
     COSMETIC_GIVE("cosmetic.give"),
     COSMETIC_SET("cosmetic.set"),
+    COSMETC_MODIFY("cosmetic.modify"),
+    COSMETIC_DELETE("cosmetic.delete"),
 
     LOOTTABLE_GIVE("loottable.give"),
     LOOTTABLE_RELOAD("loottable.reload"),
@@ -93,16 +99,82 @@ public enum Permissions {
     COOLDOWNS_REMOVE("cooldowns.remove"),
     COOLDOWNS_VIEW("cooldowns.view"),
 
-    SYSTEMS("systems");
+    PORTAL_CHANNELS_VIEW("portal.channels.view"),
+    PORTAL_CHANNELS_CREATE("portal.channels.create"),
+    PORTAL_CHANNELS_DELETE("portal.channels.delete"),
+    PORTAL_CHANNELS_MODIFY("portal.channels.modify"),
 
+    PORTAL_CITEMS_VIEW("portal.citems.view"),
 
+    PORTAL_COOLDOWNS_CREATE("portal.cooldowns.create"),
+    PORTAL_COOLDOWNS_DELETE("portal.cooldowns.delete"),
+    PORTAL_COOLDOWNS_MODIFY("portal.cooldowns.modify"),
+    PORTAL_COOLDOWNS_VIEW("portal.cooldowns.view"),
 
+    PORTAL_COSMETICS_VIEW("portal.cosmetics.view"),
+    PORTAL_COSMETICS_CREATE("portal.cosmetics.create"),
+    PORTAL_COSMETICS_DELETE("portal.cosmetics.delete"),
+    PORTAL_COSMETICS_MODIFY("portal.cosmetics.modify"),
+
+    PORTAL_CURRENCIES_VIEW("portal.currencies.view"),
+    PORTAL_CURRENCIES_CREATE("portal.currencies.create"),
+    PORTAL_CURRENCIES_DELETE("portal.currencies.delete"),
+    PORTAL_CURRENCIES_MODIFY("portal.currencies.modify"),
+
+    PORTAL_FISHING_VIEW("portal.fishing.view"),
+    PORTAL_FISHING_CREATE("portal.fishing.create"),
+    PORTAL_FISHING_DELETE("portal.fishing.delete"),
+    PORTAL_FISHING_MODIFY("portal.fishing.modify"),
+
+    PORTAL_GUIS_VIEW("portal.guis.view"),
+    PORTAL_GUIS_CREATE("portal.guis.create"),
+    PORTAL_GUIS_DELETE("portal.guis.delete"),
+    PORTAL_GUIS_MODIFY("portal.guis.modify"),
+
+    PORTAL_INTERACTIONS_VIEW("portal.interactions.view"),
+    PORTAL_INTERACTIONS_CREATE("portal.interactions.create"),
+    PORTAL_INTERACTIONS_DELETE("portal.interactions.delete"),
+    PORTAL_INTERACTIONS_MODIFY("portal.interactions.modify"),
+
+    PORTAL_LOOTTABLES_VIEW("portal.loottables.view"),
+    PORTAL_LOOTTABLES_CREATE("portal.loottables.create"),
+    PORTAL_LOOTTABLES_DELETE("portal.loottables.delete"),
+    PORTAL_LOOTTABLES_MODIFY("portal.loottables.modify"),
+
+    PORTAL_RECIPES_VIEW("portal.recipes.view"),
+    PORTAL_RECIPES_CREATE("portal.recipes.create"),
+    PORTAL_RECIPES_DELETE("portal.recipes.delete"),
+    PORTAL_RECIPES_MODIFY("portal.recipes.modify"),
+
+    PORTAL_STATS_VIEW("portal.stats.view"),
+    PORTAL_STATS_CREATE("portal.stats.create"),
+    PORTAL_STATS_DELETE("portal.stats.delete"),
+    PORTAL_STATS_MODIFY("portal.stats.modify"),
+
+    PORTAL_TIMEEVENTS_VIEW("portal.timeevents.view"),
+    PORTAL_TIMEEVENTS_CREATE("portal.timeevents.create"),
+    PORTAL_TIMEEVENTS_DELETE("portal.timeevents.delete"),
+    PORTAL_TIMEEVENTS_MODIFY("portal.timeevents.modify"),
+
+    PORTAL_UNLOCKABLES_VIEW("portal.unlockables.view"),
+    PORTAL_UNLOCKABLES_CREATE("portal.unlockables.create"),
+    PORTAL_UNLOCKABLES_DELETE("portal.unlockables.delete"),
+    PORTAL_UNLOCKABLES_MODIFY("portal.unlockables.modify"),
+
+    PORTAL_PERMISSIONS_GROUPS_VIEW("portal.permissions.groups.view"),
+    PORTAL_PERMISSIONS_GROUPS_CREATE("portal.permissions.groups.create"),
+    PORTAL_PERMISSIONS_GROUPS_DELETE("portal.permissions.groups.delete"),
+    PORTAL_PERMISSIONS_GROUPS_MODIFY("portal.permissions.groups.modify"),
+
+    PORTAL_PERMISSIONS_USERS_VIEW("portal.permissions.users.view"),
+    PORTAL_PERMISSIONS_USERS_MODIFY("portal.permissions.users.modify");
 
     private final String permission;
 
     Permissions(String permission) {
         this.permission = permission;
     }
+
 
     public String getPermission() {
         return permission;

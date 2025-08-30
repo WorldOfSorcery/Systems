@@ -22,6 +22,7 @@ import me.hektortm.woSSystems.economy.commands.BalanceCommand;
 import me.hektortm.woSSystems.economy.commands.Coinflip;
 import me.hektortm.woSSystems.economy.commands.EcoCommand;
 import me.hektortm.woSSystems.economy.commands.PayCommand;
+import me.hektortm.woSSystems.linking.LinkCommand;
 import me.hektortm.woSSystems.listeners.*;
 import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
 import me.hektortm.woSSystems.profiles.ProfileCommand;
@@ -58,6 +59,8 @@ import me.hektortm.woSSystems.systems.stats.commands.StatsCommand;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableCommand;
 import me.hektortm.woSSystems.utils.ConditionHandler;
+import me.hektortm.woSSystems.utils.PermissionRegistry;
+import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
@@ -74,6 +77,7 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -115,6 +119,7 @@ public final class WoSSystems extends JavaPlugin {
     private TablistManager tab;
     private CosmeticManager cosmeticManager;
     private ProfileManager profileManager;
+
 
     public static StringFlag DISPLAY_NAME;
     public static StringFlag ENTER_INTERACTION;
@@ -170,15 +175,11 @@ public final class WoSSystems extends JavaPlugin {
         ecoManager = new EcoManager(daoHub);
         unlockableManager = new UnlockableManager(daoHub);
 
-
         citemManager = new CitemManager(daoHub);
 
         resolver = new PlaceholderResolver(daoHub);
         conditionHandler = new ConditionHandler(daoHub);
         guiManager = new GUIManager(daoHub);
-
-
-
 
         interactionManager = new InteractionManager(daoHub);
         cooldownManager = new CooldownManager(daoHub);
@@ -238,6 +239,7 @@ public final class WoSSystems extends JavaPlugin {
         tab.runTablist();
         cooldownManager.start();
 
+        PermissionRegistry.registerAll(this, PermissionDefault.FALSE);
     }
 
     @Override
@@ -248,6 +250,8 @@ public final class WoSSystems extends JavaPlugin {
             regionBossBarManager.removeBossBar(p);
         }
         timeManager.saveGameState();
+
+        PermissionRegistry.unregisterAll();
     }
 
     @Override
@@ -295,7 +299,6 @@ public final class WoSSystems extends JavaPlugin {
             }
         }
     }
-
 
     private void registerChannelCommands() {
         for (Channel channel : channelManager.getChannels()) {
@@ -356,6 +359,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("debugcmd", new debug(daoHub));
         cmdReg("cooldown", new CooldownCommand(daoHub));
         cmdReg("calendar", new Calender());
+        cmdReg("link", new LinkCommand());
     }
 
     private void registerEvents() {
