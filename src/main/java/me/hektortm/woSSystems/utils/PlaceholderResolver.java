@@ -4,6 +4,7 @@ import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
+import me.hektortm.woSSystems.utils.dataclasses.Constant;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -109,6 +110,14 @@ public class PlaceholderResolver {
 
             }
 
+        }
+        if (text.contains("{")) {
+            for (Constant constant : hub.getConstantDAO().getAllConstants()) {
+                String id = constant.getId();
+                String value = constant.getValue();
+                String placeholder = "{"+id+"}";
+                text = text.replace(placeholder, value);
+            }
         }
         return text;
     }
