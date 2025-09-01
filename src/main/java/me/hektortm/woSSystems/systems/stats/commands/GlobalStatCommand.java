@@ -17,6 +17,7 @@ import java.util.Map;
 public class GlobalStatCommand implements CommandExecutor {
 
     private final Map<String, SubCommand> subCommands = new HashMap<>();
+    public final Map<Permissions, String> permCmds = new HashMap<>();
     private final StatsManager manager;
 
     public GlobalStatCommand(StatsManager manager) {
@@ -28,6 +29,10 @@ public class GlobalStatCommand implements CommandExecutor {
         subCommands.put("reset", new GlobalResetCommand(manager));
         subCommands.put("view", new GlobalViewCommand(manager));
         subCommands.put("help", new GlobalHelpCommand(this));
+
+        for (SubCommand subCommand : subCommands.values()) {
+            permCmds.put(subCommand.getPermission(), subCommand.getName());
+        }
     }
     // TODO: GlobalStats Messages
     @Override

@@ -20,6 +20,7 @@ import java.util.Map;
 public class CooldownCommand implements CommandExecutor {
 
     private final Map<String, SubCommand> subCommands = new HashMap<>();
+    public Map<Permissions, String> permCmds = new HashMap<>();
     private final DAOHub hub;
 
     public CooldownCommand(DAOHub hub) {
@@ -28,7 +29,14 @@ public class CooldownCommand implements CommandExecutor {
         subCommands.put("give", new Give(hub));
         subCommands.put("remove", new Remove(hub));
         subCommands.put("view", new View(hub));
+
+
+        for (SubCommand subCommand : subCommands.values()) {
+            permCmds.put(subCommand.getPermission(), subCommand.getName());
+        }
+
         subCommands.put("help", new Help(this));
+
 
     }
 
@@ -52,25 +60,4 @@ public class CooldownCommand implements CommandExecutor {
 
         return true;
     }
-
-    public void cooldownHelp(CommandSender sender) {
-        if (PermissionUtil.hasAnyPermission(sender, Permissions.COOLDOWNS_GIVE, Permissions.COOLDOWNS_REMOVE,
-                Permissions.COOLDOWNS_VIEW)) {
-            Utils.info(sender, "cooldowns", "help.header");
-
-            if (PermissionUtil.hasPermissionNoMsg(sender, Permissions.COOLDOWNS_GIVE))
-                Utils.noPrefix(sender, "cooldowns", "help.give");
-
-            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.COOLDOWNS_REMOVE))
-                Utils.noPrefix(sender, "cooldowns", "help.remove");
-
-            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.COOLDOWNS_VIEW))
-                Utils.noPrefix(sender, "cooldowns", "help.view");
-
-            Utils.noPrefix(sender, "cooldowns", "help.help");
-        } else {
-            Utils.error(sender, "general", "error.perms");
-        }
-    }
-
 }

@@ -46,6 +46,8 @@ public class CitemCommand implements CommandExecutor {
 
     }
 
+    // /citem -> rename <-
+
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if (args.length == 0) {
