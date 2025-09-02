@@ -8,6 +8,9 @@ import me.hektortm.wosCore.database.IDAO;
 import org.bukkit.entity.Player;
 
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -36,6 +39,7 @@ public class CosmeticsDAO implements IDAO {
                     id VARCHAR(255) NOT NULL,
                     display VARCHAR(255) NOT NULL,
                     description VARCHAR(255),
+                    permission VARCHAR(255),
                     PRIMARY KEY (id, type)
                 )
             """);
@@ -47,7 +51,8 @@ public class CosmeticsDAO implements IDAO {
                     cosmetic_id VARCHAR(255) NOT NULL,
                     cosmetic_type VARCHAR(255) NOT NULL,
                     equipped BOOLEAN NOT NULL,
-                    PRIMARY KEY (uuid, cosmetic_id, cosmetic_type),
+                    obtained_at VARCHAR(255) NOT NULL,
+                    PRIMARY KEY (uuid, cosmetic_id),
                     FOREIGN KEY (cosmetic_id, cosmetic_type) REFERENCES cosmetics(id, type)
                 )
             """);
@@ -55,12 +60,19 @@ public class CosmeticsDAO implements IDAO {
     }
 
     public void giveCosmetic(CosmeticType type, String id, UUID uuid) {
-        String sql = "INSERT INTO player_cosmetics (uuid, cosmetic_id, cosmetic_type, equipped) VALUES (?, ?, ?, ?)";
+        LocalDate date = LocalDate.now();
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, MMM dd yyyy");
+
+        String now = formatter.format(date);
+
+        String sql = "INSERT INTO player_cosmetics (uuid, cosmetic_id, cosmetic_type, equipped, obtained_at) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, uuid.toString());
             pstmt.setString(2, id);
             pstmt.setString(3, type.name());
             pstmt.setBoolean(4, false); // Default to unequipped
+            pstmt.setString(5, now);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to give Cosmetic: " + e);
@@ -157,6 +169,23 @@ public class CosmeticsDAO implements IDAO {
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to equip Cosmetic: " + e);
         }
+    }
+
+    public String getPlayerObtainedTime(Player p, String id) {
+        String uuid = p.getUniqueId().toString();
+        String sql = "SELECT obtained_at FROM player_cosmetics WHERE uuid = ? and cosmetic_id = ?";
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, uuid);
+            pstmt.setString(2, id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("obtained_at");
+            }
+        } catch (SQLException e) {
+            plugin.writeLog(logName, Level.SEVERE, "Failed to obtain Cosmetic: " + e);
+
+        }
+        return null;
     }
 
     public List<String> getPlayerCosmetics(Player p, CosmeticType type) {

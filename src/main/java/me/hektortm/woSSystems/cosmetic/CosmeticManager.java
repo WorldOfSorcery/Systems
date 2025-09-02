@@ -48,6 +48,7 @@ public class CosmeticManager {
             List<String> lore = new ArrayList<>();
             plugin.writeLog("CosmeticManager", Level.INFO, hub.getCosmeticsDAO().getCurrentCosmeticId(p, CosmeticType.TITLE) + " | " + titles.get(i));
             lore.add(Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDescription(CosmeticType.TITLE, titles.get(i))));
+            lore.add("§6"+hub.getCosmeticsDAO().getPlayerObtainedTime(p, titles.get(i)));
             lore.add("§7");
             if (Objects.equals(hub.getCosmeticsDAO().getCurrentCosmeticId(p, CosmeticType.TITLE), titles.get(i))) {
                 lore.add("§cCurrently selected");
@@ -73,6 +74,7 @@ public class CosmeticManager {
         for (int i = 0; i < prefixes.size(); i++) {
             List<String> lore = new ArrayList<>();
             lore.add(Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDescription(CosmeticType.PREFIX, prefixes.get(i))));
+            lore.add("§6"+hub.getCosmeticsDAO().getPlayerObtainedTime(p, prefixes.get(i)));
             lore.add("§7");
             if (Objects.equals(hub.getCosmeticsDAO().getCurrentCosmeticId(p, CosmeticType.PREFIX), prefixes.get(i))) {
                 lore.add("§cCurrently selected");
@@ -98,6 +100,7 @@ public class CosmeticManager {
         for (int i = 0; i < badges.size(); i++) {
             List<String> lore = new ArrayList<>();
             lore.add(Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDescription(CosmeticType.BADGE, badges.get(i))));
+            lore.add("§6"+hub.getCosmeticsDAO().getPlayerObtainedTime(p, badges.get(i)));
             lore.add("§7");
             if (Objects.equals(hub.getCosmeticsDAO().getCurrentCosmeticId(p, CosmeticType.BADGE), badges.get(i))) {
                 lore.add("§cCurrently selected");
