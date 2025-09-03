@@ -17,6 +17,7 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 
@@ -43,6 +44,21 @@ public class CosmeticManager {
     public void openTitlesPage(Player p) {
         titlesPage = Bukkit.createInventory(null, 9*5, "§6Titles");
         List<String> titles = hub.getCosmeticsDAO().getPlayerCosmetics(p, CosmeticType.TITLE);
+        Map<String, String> permissionTitles = hub.getCosmeticsDAO().getPermissionCosmetics(CosmeticType.TITLE);
+        for (Map.Entry<String, String> entry : permissionTitles.entrySet()) {
+            String id = entry.getKey();
+            String permNode = entry.getValue();
+
+            if (permNode == null || id == null) {
+                plugin.writeLog("CosmeticManager", Level.WARNING, "Null permission node or id for prefix: " + entry);
+                continue;
+            }
+
+            if (p.hasPermission(permNode) && !titles.contains(id)) {
+                titles.add(id);
+                plugin.writeLog("CosmeticManager", Level.INFO, "Added prefix " + id + " for player " + p.getName());
+            }
+        }
 
         for (int i = 0; i < titles.size(); i++) {
             List<String> lore = new ArrayList<>();
@@ -70,6 +86,22 @@ public class CosmeticManager {
     public void openPrefixPage(Player p) {
         prefixPage  = Bukkit.createInventory(null, 9*5, "§6Prefixes");
         List<String> prefixes = hub.getCosmeticsDAO().getPlayerCosmetics(p, CosmeticType.PREFIX);
+        Map<String, String> permissionPrefix = hub.getCosmeticsDAO().getPermissionCosmetics(CosmeticType.PREFIX);
+        for (Map.Entry<String, String> entry : permissionPrefix.entrySet()) {
+            String id = entry.getKey();
+            String permNode = entry.getValue();
+
+            if (permNode == null || id == null) {
+                plugin.writeLog("CosmeticManager", Level.WARNING, "Null permission node or id for prefix: " + entry);
+                continue;
+            }
+
+            if (p.hasPermission(permNode) && !prefixes.contains(id)) {
+                prefixes.add(id);
+                plugin.writeLog("CosmeticManager", Level.INFO, "Added prefix " + id + " for player " + p.getName());
+            }
+        }
+
 
         for (int i = 0; i < prefixes.size(); i++) {
             List<String> lore = new ArrayList<>();
@@ -96,6 +128,22 @@ public class CosmeticManager {
     public void openBadgePage(Player p) {
         badgesPage  = Bukkit.createInventory(null, 9*5, "§6Badges");
         List<String> badges = hub.getCosmeticsDAO().getPlayerCosmetics(p, CosmeticType.BADGE);
+        Map<String, String> permissionBadge = hub.getCosmeticsDAO().getPermissionCosmetics(CosmeticType.BADGE);
+        for (Map.Entry<String, String> entry : permissionBadge.entrySet()) {
+            String id = entry.getKey();
+            String permNode = entry.getValue();
+
+            if (permNode == null || id == null) {
+                plugin.writeLog("CosmeticManager", Level.WARNING, "Null permission node or id for prefix: " + entry);
+                continue;
+            }
+
+            if (p.hasPermission(permNode) && !badges.contains(id)) {
+                badges.add(id);
+                plugin.writeLog("CosmeticManager", Level.INFO, "Added prefix " + id + " for player " + p.getName());
+            }
+        }
+
 
         for (int i = 0; i < badges.size(); i++) {
             List<String> lore = new ArrayList<>();

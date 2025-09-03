@@ -32,7 +32,7 @@ public class TablistManager {
         Component footer = Component.text("Online Players: " + Bukkit.getOnlinePlayers().size());
 
         String prefix = hub.getCosmeticsDAO().getCurrentCosmeticId(player, CosmeticType.PREFIX);
-        String prefixDisplay = hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.PREFIX, prefix);
+        String prefixDisplay = hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.PREFIX, prefix) != null ? hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.PREFIX, prefix) : "";
 
         net.kyori.adventure.text.Component comp = Component.empty().append(Utils.parseColorCodes(prefixDisplay + " " + player.getName()));
 

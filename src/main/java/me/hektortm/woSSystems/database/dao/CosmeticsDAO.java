@@ -11,9 +11,7 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 
 public class CosmeticsDAO implements IDAO {
@@ -62,7 +60,7 @@ public class CosmeticsDAO implements IDAO {
     public void giveCosmetic(CosmeticType type, String id, UUID uuid) {
         LocalDate date = LocalDate.now();
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, MMM dd yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, MMM dd yyyy", Locale.ENGLISH);
 
         String now = formatter.format(date);
 
@@ -186,6 +184,21 @@ public class CosmeticsDAO implements IDAO {
 
         }
         return null;
+    }
+
+    public Map<String, String> getPermissionCosmetics(CosmeticType type) {
+        String sql = "SELECT id, permission FROM cosmetics WHERE type = ? AND permission IS NOT NULL";
+        Map<String, String> cosmetics = new HashMap<>();
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, type.name());
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                cosmetics.put(rs.getString("id"), rs.getString("permission"));
+            }
+        } catch (SQLException e) {
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Permission Cosmetics: " + e);
+        }
+        return cosmetics;
     }
 
     public List<String> getPlayerCosmetics(Player p, CosmeticType type) {
