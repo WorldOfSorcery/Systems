@@ -14,7 +14,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
-public class Flag extends SubCommand {
+public class  Flag extends SubCommand {
 
     @Override
     public String getName() {

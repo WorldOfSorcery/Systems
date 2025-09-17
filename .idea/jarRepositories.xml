@@ -32,14 +32,14 @@
       <option name="url" value="https://maven.pkg.github.com/hektortm/permissionlibmaven" />
     </remote-repository>
     <remote-repository>
-      <option name="id" value="github" />
-      <option name="name" value="github" />
-      <option name="url" value="https://maven.pkg.github.com/worldofsorcery/core" />
-    </remote-repository>
-    <remote-repository>
       <option name="id" value="papermc-repo" />
       <option name="name" value="papermc-repo" />
       <option name="url" value="https://repo.papermc.io/repository/maven-public/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="github" />
+      <option name="name" value="github" />
+      <option name="url" value="https://maven.pkg.github.com/worldofsorcery/core" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="central" />
@@ -75,6 +75,11 @@
       <option name="id" value="jboss.community" />
       <option name="name" value="JBoss Community repository" />
       <option name="url" value="https://repository.jboss.org/nexus/content/repositories/public/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="aselstudios-repository" />
+      <option name="name" value="Asel Studios Repository" />
+      <option name="url" value="https://repo.aselstudios.com/releases" />
     </remote-repository>
   </component>
 </project>

@@ -50,38 +50,7 @@ public class TimeManager {
     public TimeManager(TimeEvents timeEvents, DAOHub hub) {
         this.timeEvents = timeEvents;
         this.hub = hub;
-        gameStateFile = new File(timeFolder, "gamestate.yml");
-        timeConfigFile = new File(timeFolder, "time-config.yml");
-        gameStateConfig = YamlConfiguration.loadConfiguration(gameStateFile);
-        timeConfig = YamlConfiguration.loadConfiguration(timeConfigFile);
-
-        checkFiles();
-
     }
-
-    private void checkFiles() {
-        checkAndCreateFile(gameStateFile, "focused.yml");
-        checkAndCreateFile(timeConfigFile, "time-config.yml");
-    }
-
-    private void checkAndCreateFile(File file, String fileName) {
-        if (!file.exists()) {
-            try {
-                if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
-                    plugin.getLogger().severe("Could not create parent directories for " + fileName);
-                    return;
-                }
-
-                if (!file.createNewFile()) {
-                    plugin.getLogger().severe("Could not create " + fileName);
-                }
-            } catch (IOException e) {
-                plugin.getLogger().severe("An error occurred while creating the " + fileName);
-                e.printStackTrace();
-            }
-        }
-    }
-
 
     public void initializeMonthNames() {
         monthNames = new HashMap<>();

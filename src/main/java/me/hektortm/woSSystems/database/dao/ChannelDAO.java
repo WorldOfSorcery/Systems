@@ -19,8 +19,6 @@ import java.util.logging.Level;
 public class ChannelDAO implements IDAO {
     private final DatabaseManager db;
     private final DAOHub daoHub;
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final String logName = "ChannelDAO";
 
     public ChannelDAO(DatabaseManager db, DAOHub daoHub) {
         this.db = db;
@@ -74,8 +72,7 @@ public class ChannelDAO implements IDAO {
             pstmt.setInt(11, channel.getRadius());
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().severe("Error inserting channel: " + e.getMessage());
-            plugin.writeLog(logName, Level.SEVERE, "Failed to insert Channel: " + e);
+            WoSSystems.discordLog(Level.SEVERE, "CHD:b0b86e0d", "Failed to insert Channel: ", e);
         }
     }
 
@@ -95,17 +92,7 @@ public class ChannelDAO implements IDAO {
             pstmt.setString(11, channel.getName());
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to update Channel: " + e);
-        }
-    }
-
-    public void deleteChannel(String name) {
-        String sql = "DELETE FROM channels WHERE name = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, name);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to delete Channel: " + e);
+            WoSSystems.discordLog(Level.SEVERE, "CHD:e4380afc", "Failed to update Channel: ", e);
         }
     }
 
@@ -131,7 +118,7 @@ public class ChannelDAO implements IDAO {
                 channels.add(channel);
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get all Channels: " + e);
+            WoSSystems.discordLog(Level.SEVERE, "CHD:bbcacc87", "Failed to get all Channels: ", e);
         }
         return channels;
     }
@@ -146,7 +133,7 @@ public class ChannelDAO implements IDAO {
                 recipients.add(UUID.fromString(rs.getString("uuid")));
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get Recipients: " + e);
+            WoSSystems.discordLog(Level.SEVERE, "CHD:84a7455b", "Failed to get all Recipients: ", e);
         }
         return recipients;
     }
@@ -167,7 +154,7 @@ public class ChannelDAO implements IDAO {
             pstmt.executeUpdate();
             Utils.success(p, "channel", "joined", "%channel%", getChannelColor(channelName) + channelName);
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to add Recipients: " + e);
+            WoSSystems.discordLog(Level.SEVERE, "CHD:45982ca4", "Failed to add Recipients: ", e);
         }
     }
 
@@ -180,7 +167,7 @@ public class ChannelDAO implements IDAO {
                 return rs.getString("color");
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get Channel Color: " + e);
+            WoSSystems.discordLog(Level.SEVERE, "CHD:ff921f54", "Failed to get Channel Color: ", e);
         }
         return "";
     }
@@ -205,7 +192,7 @@ public class ChannelDAO implements IDAO {
                 }
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to remove Recipients: " + e);
+            WoSSystems.discordLog(Level.SEVERE, "CHD:6cdcea77", "Failed to remove Recipients: ", e);
         }
     }
 
@@ -216,7 +203,7 @@ public class ChannelDAO implements IDAO {
             ResultSet rs = pstmt.executeQuery();
             return rs.next() ? rs.getString("permission") : null;
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get Channel Permission: " + e);
+            WoSSystems.discordLog(Level.SEVERE, "CHD:f83cba00", "Failed to get Channel Permission: ", e);
             return null;
         }
     }
@@ -240,7 +227,7 @@ public class ChannelDAO implements IDAO {
             pstmt.executeUpdate();
             Utils.success(p, "channel", "focused", "%channel%", getChannelColor(channelName) + channelName);
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to set focused Channel: " + e);
+            WoSSystems.discordLog(Level.SEVERE, "CHD:26fa1ea1", "Failed to set focused Channel: ", e);
         }
     }
 
@@ -253,7 +240,7 @@ public class ChannelDAO implements IDAO {
             pstmt.setString(2, channelName);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to unfocus Channel: " + e);
+            WoSSystems.discordLog(Level.SEVERE, "CHD:0cec198f", "Failed to unfocus Channel: ", e);
         }
     }
 
@@ -266,7 +253,7 @@ public class ChannelDAO implements IDAO {
                 return rs.getString("channel_name");
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get focused Channel: " + e);
+            WoSSystems.discordLog(Level.SEVERE, "CHD:655992fd", "Failed to get focused Channel: ", e);
         }
         return null;
     }
@@ -279,7 +266,7 @@ public class ChannelDAO implements IDAO {
             ResultSet rs = pstmt.executeQuery();
             return rs.next();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to check if player is in Channel: " + e);
+            WoSSystems.discordLog(Level.SEVERE, "CHD:39b72deb", "Failed to check if player is in Channel: ", e);
             return false;
         }
     }

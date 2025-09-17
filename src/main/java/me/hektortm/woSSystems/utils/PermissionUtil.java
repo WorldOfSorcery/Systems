@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.utils;
 
 import me.hektortm.wosCore.Utils;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 public class PermissionUtil {
@@ -16,6 +17,10 @@ public class PermissionUtil {
     }
 
     public static boolean hasPermission(CommandSender sender, Permissions permission) {
+        if (sender instanceof ConsoleCommandSender) {
+            return true;
+        }
+
         if (permission == null) {
             return true;
         }

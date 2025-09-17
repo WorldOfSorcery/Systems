@@ -7,6 +7,7 @@ import me.hektortm.woSSystems.systems.cooldowns.CooldownManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.utils.dataclasses.Condition;
+import me.hektortm.wosCore.discord.DiscordLog;
 import me.hektortm.wosCore.discord.DiscordLogger;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -100,7 +101,12 @@ public class ConditionHandler {
                     return false;
             }
         } catch (Exception e) {
-            DiscordLogger.log("WoSSystems: ConditionHandler", Level.SEVERE, "Error evaluating condition: " + condition.getName() + " for player: " + player.getName() + ". Error: ", e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE,
+                    plugin,
+                    "CH:61ed507d",
+                    "Error evaluating condition: " + condition.getName() + " for player: " + player.getName() + ". Error: ", e
+                    ));
             plugin.writeLog("ConditionHandler", Level.SEVERE, "Error evaluating condition: " + condition.getName() + " for player: " + player.getName() + ". Error: " + e.getMessage());
             return false;
         }

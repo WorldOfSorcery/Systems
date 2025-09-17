@@ -68,7 +68,11 @@ import me.hektortm.wosCore.WoSCore;
 
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
+import me.hektortm.wosCore.discord.DiscordLog;
+import me.hektortm.wosCore.discord.DiscordLogger;
 import me.hektortm.wosCore.logging.LogManager;
+import org.aselstudios.luxdialoguesapi.DialogueProvider;
+import org.aselstudios.luxdialoguesapi.LuxDialoguesAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandMap;
@@ -80,6 +84,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -119,6 +124,7 @@ public final class WoSSystems extends JavaPlugin {
     private TablistManager tab;
     private CosmeticManager cosmeticManager;
     private ProfileManager profileManager;
+    private LuxDialoguesAPI luxApi;
 
 
     public static StringFlag DISPLAY_NAME;
@@ -130,6 +136,7 @@ public final class WoSSystems extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+        luxApi = LuxDialoguesAPI.getAPI();
         try {
             core = WoSCore.getPlugin(WoSCore.class);
             if (core == null) {
@@ -210,7 +217,6 @@ public final class WoSSystems extends JavaPlugin {
             lang.loadLangFileExternal(this, "loottables", core);
             lang.loadLangFileExternal(this, "cosmetics", core);
             lang.loadLangFileExternal(this, "cooldowns", core);
-            lang.loadLangFileExternal(this, "systems", core);
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }
@@ -410,6 +416,16 @@ public final class WoSSystems extends JavaPlugin {
         sender.sendMessage(Utils.replaceColorPlaceholders(newMessage));
     }
 
+    public static void discordLog(Level level, String uuid, String message, @Nullable Exception e) {
+        DiscordLogger.log(new DiscordLog(
+                level,
+                WoSSystems.getPlugin(WoSSystems.class),
+                uuid,
+                message,
+                e
+        ));
+    }
+
     public WoSCore getCore() {
         return core;
     }
@@ -469,6 +485,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public NicknameManager getNickManager() {
         return nickManager;
+    }
+    public DialogueProvider getDialogueApi() {
+        return LuxDialoguesAPI.getProvider();
     }
 
     public Map<UUID, String> getPlayerRegions() {
