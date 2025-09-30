@@ -163,6 +163,8 @@ public final class WoSSystems extends JavaPlugin {
             registerAndInitDAO(databaseManager, daoHub.getFishingDAO());
             registerAndInitDAO(databaseManager, daoHub.getCooldownDAO());
             registerAndInitDAO(databaseManager, daoHub.getTimeDAO());
+            registerAndInitDAO(databaseManager, daoHub.getConstantDAO());
+            registerAndInitDAO(databaseManager, daoHub.getDialogDAO());
 
             databaseManager.initializeAllDAOs();
         } catch (SQLException e) {
@@ -366,6 +368,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("cooldown", new CooldownCommand(daoHub));
         cmdReg("calendar", new Calender());
         cmdReg("link", new LinkCommand());
+        cmdReg("dialog", new me.hektortm.woSSystems.systems.dialogs.cmd.DialogCommand(daoHub));
     }
 
     private void registerEvents() {

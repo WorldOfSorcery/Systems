@@ -6,6 +6,11 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextReplacementConfig;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.aselstudios.luxdialoguesapi.Builders.Answer;
+import org.aselstudios.luxdialoguesapi.Builders.Dialogue;
+import org.aselstudios.luxdialoguesapi.Builders.Page;
+import org.aselstudios.luxdialoguesapi.DialogueProvider;
+import org.aselstudios.luxdialoguesapi.LuxDialoguesAPI;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -37,27 +42,11 @@ public class debug implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
 
         Player p = (Player) commandSender;
-
-        ItemStack itemStack = p.getInventory().getItemInMainHand();
-        try {
-            p.sendMessage(itemStackToBase64(itemStack));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-
+        hub.getDialogDAO().getDialog("test", commandSender, p);
         return true;
     }
 
-    public String itemStackToBase64(ItemStack item) throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        BukkitObjectOutputStream dataOutput = new BukkitObjectOutputStream(outputStream);
 
-        dataOutput.writeObject(item);
-        dataOutput.close();
-
-        return Base64.getEncoder().encodeToString(outputStream.toByteArray());
-    }
 
 
 }

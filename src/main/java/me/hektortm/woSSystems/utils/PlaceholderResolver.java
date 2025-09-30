@@ -30,6 +30,9 @@ public class PlaceholderResolver {
     public String resolvePlaceholders(String text, Player player) {
         UUID playerUUID = player.getUniqueId();
 
+        if(text.contains("{player_name}")) {
+            text = text.replace("{player_name}", player.getName());
+        }
 
         if(text.contains("{stats.")) {
             for (String statId : statsManager.getStats().keySet()) {

@@ -1,0 +1,14 @@
+info:
+  usage:
+    dialogs: "Usage: /dialogs <trigger|help>"
+    trigger: "Usage: /dialogs trigger <player> <id>"
+
+error:
+  notfound: "No dialog found with ID §e%id%§c."
+
+trigger: "§aDialog §e%dialog_id%§a triggered for §e%player%§a."
+
+help:
+  header: "Dialog Commands:"
+  trigger: "%cyan_300%/dialog trigger <player> <id> §7- Trigger a dialog for a player."
+  help: "%cyan_300%/dialog help §7- Displays this help message."

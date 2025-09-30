@@ -79,10 +79,6 @@
             <url>https://maven.pkg.github.com/worldofsorcery/core</url>
         </repository>
         <repository>
-            <id>github</id>
-            <url>https://maven.pkg.github.com/hektortm/permissionlib</url>
-        </repository>
-        <repository>
             <id>sk89q-repo</id>
             <url>https://maven.enginehub.org/repo/</url>
         </repository>

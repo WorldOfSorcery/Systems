@@ -132,3 +132,7 @@ commands:
     description: link management
     usage: /<command> <website|discord> [code]
     permission:
+
+  dialog:
+    description: Dialog Command
+    usage: /<command> <start|stop|reload> [player|id]

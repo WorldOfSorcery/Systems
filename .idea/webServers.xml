@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="25f56769-ee9e-4ef2-8dce-cd10536f8b57" name="85.214.6.22" url="http://85.214.6.22">
+        <fileTransfer rootFolder="/paper/plugins" host="85.214.6.22" port="21">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

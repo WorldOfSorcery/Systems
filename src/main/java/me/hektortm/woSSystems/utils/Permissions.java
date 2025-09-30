@@ -20,6 +20,7 @@ public enum Permissions {
     CITEM_COLOR("citem.modify.color"),
     CITEM_TOOLTIP("citem.modify.tooltip"),
     CITEM_SIGN("citem.sign"),
+    CITEM_EQUIPPABLE("citem.modify.equippable"),
 
     CRECIPE_CREATE("crecipe.create"),
     CRECIPE_DELETE("crecipe.delete"),
@@ -92,6 +93,8 @@ public enum Permissions {
     COSMETC_MODIFY("cosmetic.modify"),
     COSMETIC_DELETE("cosmetic.delete"),
 
+    DIALOG_TRIGGER("dialog.trigger"),
+
     LOOTTABLE_GIVE("loottable.give"),
     LOOTTABLE_RELOAD("loottable.reload"),
 
@@ -161,10 +164,19 @@ public enum Permissions {
     PORTAL_UNLOCKABLES_DELETE("portal.unlockables.delete"),
     PORTAL_UNLOCKABLES_MODIFY("portal.unlockables.modify"),
 
+    PORTAL_DIALOGS_VIEW("portal.dialogs.view"),
+    PORTAL_DIALOGS_CREATE("portal.dialogs.create"),
+    PORTAL_DIALOGS_DELETE("portal.dialogs.delete"),
+    PORTAL_DIALOGS_MODIFY("portal.dialogs.modify"),
+
     PORTAL_PERMISSIONS_GROUPS_VIEW("portal.permissions.groups.view"),
     PORTAL_PERMISSIONS_GROUPS_CREATE("portal.permissions.groups.create"),
     PORTAL_PERMISSIONS_GROUPS_DELETE("portal.permissions.groups.delete"),
     PORTAL_PERMISSIONS_GROUPS_MODIFY("portal.permissions.groups.modify"),
+
+    PORTAL_UNLOCK("portal.unlock"),
+    PORTAL_REQUEST_APPROVE("portal.request.approve"),
+    PORTAL_REQUEST_DENY("portal.request.deny"),
 
     PORTAL_PERMISSIONS_USERS_VIEW("portal.permissions.users.view"),
     PORTAL_PERMISSIONS_USERS_MODIFY("portal.permissions.users.modify");
