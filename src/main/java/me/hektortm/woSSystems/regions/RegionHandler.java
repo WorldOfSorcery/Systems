@@ -72,4 +72,22 @@ public class RegionHandler implements Listener {
         }
         plugin.getPlayerRegions().put(player.getUniqueId(), newRegionId);
     }
+
+    public static String getRegionDisplayName(Player player) {
+        LocalPlayer localPlayer = WorldGuardPlugin.getPlugin(WorldGuardPlugin.class).wrapPlayer(player);
+        RegionManager regionManager = WorldGuard.getInstance().getPlatform().getRegionContainer().get(localPlayer.getWorld());
+
+        if (regionManager == null) {
+            return "§6Unknown";
+        }
+
+        BlockVector3 blockVector3 = localPlayer.getBlockLocation().toVector().toBlockPoint();
+        ApplicableRegionSet regions = regionManager.getApplicableRegions(blockVector3);
+        String displayName = null;
+        for (ProtectedRegion region : regions) {
+            displayName = region.getFlag(WoSSystems.DISPLAY_NAME);
+
+        }
+        return displayName != null ? displayName : "§6Unknown";
+    }
 }
