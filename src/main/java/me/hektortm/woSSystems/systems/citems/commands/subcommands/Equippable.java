@@ -32,9 +32,10 @@ public class Equippable extends SubCommand {
             Utils.info(sender, "citems", "info.usage.equippable");
             return;
         }
-// TODO
         String slotArg = args[0];
         EquipmentSlot slot;
+
+
         switch (slotArg) {
             case "head" -> slot = EquipmentSlot.HEAD;
             case "chest" -> slot = EquipmentSlot.CHEST;
@@ -57,8 +58,9 @@ public class Equippable extends SubCommand {
         }
 
         ItemMeta meta = item.getItemMeta();
-
-        meta.getEquippable().setSlot(slot);
+        EquippableComponent comp = item.getItemMeta().getEquippable();
+        comp.setSlot(slot);
+        meta.setEquippable(comp);
         item.setItemMeta(meta);
         Utils.success(p, "citems", "equippable", "%slot%", slotArg);
     }
