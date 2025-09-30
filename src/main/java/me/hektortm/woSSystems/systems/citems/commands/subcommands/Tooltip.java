@@ -53,7 +53,7 @@ public class Tooltip extends SubCommand {
             }
             return;
         }
-        NamespacedKey tooltip = new NamespacedKey("wos", parameter);
+        NamespacedKey tooltip = new NamespacedKey("minecraft", parameter);
         meta.setTooltipStyle(tooltip);
         item.setItemMeta(meta);
         Utils.success(p, "citems", "tooltip.set", "%tooltip_id%", parameter);
