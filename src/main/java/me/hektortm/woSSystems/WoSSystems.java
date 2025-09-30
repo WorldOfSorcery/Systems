@@ -30,6 +30,7 @@ import me.hektortm.woSSystems.profiles.ProfileListener;
 import me.hektortm.woSSystems.profiles.ProfileManager;
 import me.hektortm.woSSystems.regions.RegionHandler;
 import me.hektortm.woSSystems.regions.RegionBossBar;
+import me.hektortm.woSSystems.systems.citems.CitemDisplays;
 import me.hektortm.woSSystems.systems.citems.commands.SignCommand;
 import me.hektortm.woSSystems.systems.cooldowns.CooldownManager;
 import me.hektortm.woSSystems.systems.cooldowns.cmd.CooldownCommand;
@@ -125,6 +126,7 @@ public final class WoSSystems extends JavaPlugin {
     private CosmeticManager cosmeticManager;
     private ProfileManager profileManager;
     private LuxDialoguesAPI luxApi;
+    private CitemDisplays citemDisplays;
 
 
     public static StringFlag DISPLAY_NAME;
@@ -185,6 +187,7 @@ public final class WoSSystems extends JavaPlugin {
         unlockableManager = new UnlockableManager(daoHub);
 
         citemManager = new CitemManager(daoHub);
+        citemDisplays = new CitemDisplays(daoHub);
 
         resolver = new PlaceholderResolver(daoHub);
         conditionHandler = new ConditionHandler(daoHub);
@@ -219,6 +222,7 @@ public final class WoSSystems extends JavaPlugin {
             lang.loadLangFileExternal(this, "loottables", core);
             lang.loadLangFileExternal(this, "cosmetics", core);
             lang.loadLangFileExternal(this, "cooldowns", core);
+            lang.loadLangFileExternal(this, "interactions", core);
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }
@@ -340,7 +344,7 @@ public final class WoSSystems extends JavaPlugin {
     private void registerCommands() {
 
         //cmdReg("opengui", new GUIcommand(guiManager, interactionManager));
-        cmdReg("interaction", new InteractionCommand());
+        cmdReg("interaction", new InteractionCommand(daoHub));
         cmdReg("citem", new CitemCommand(daoHub));
         cmdReg("cgive", new CgiveCommand(citemManager));
         cmdReg("cremove", new CremoveCommand(daoHub));
@@ -375,6 +379,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new InterListener(daoHub));
         eventReg(new DropListener());
         eventReg(new HoverListener(citemManager));
+        eventReg(new CitemListener(daoHub));
         eventReg(new QuitListener(core, unlockableManager, daoHub, coinflipCommand, this));
         eventReg(new FishingListener(daoHub));
         eventReg(new JoinListener(this));
@@ -455,6 +460,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public CitemManager getCitemManager() {
         return citemManager;
+    }
+    public CitemDisplays getCitemDisplays() {
+        return citemDisplays;
     }
     public BossBarManager getBossBarManager() {
         return bossBarManager;

@@ -1,0 +1,36 @@
+error:
+  npc-has: "This NPC already has an interaction bound to it."
+  block-has: "This block already has an interaction bound to it."
+  not-exist: "This interaction does not exist."
+  block-air: "This is not a fitting block. (air)"
+  failed: "Failed to %param%. (internal)"
+
+info:
+  no-npc: "You don't have an NPC selected."
+  no-bound: "There is no interaction bound to this %type%."
+  usage:
+    interaction: "Usage: /interaction <trigger|bind|npcbind|unbind|npcunbind|info|help>"
+    trigger: "Usage: /interaction trigger <player> <ID>"
+    bind: "Usage: /interaction bind <ID>"
+    unbind: "Usage: /interaction unbind"
+    npcbind: "Usage: /interaction npcbind <ID>"
+    npcunbind: "Usage: /interaction npcunbind"
+    info: "Usage: /interaction info <npc|block"
+
+
+bind: "§aYou have bound §e%id%§a to the target block."
+unbind: "§aYou have unbound the interaction of the target block."
+npcbind: "§aYou have bound §e%id%§a to an NPC(§e%npc%§a)."
+npcunbind: "§aYou have unbound the interaction on an NPC(§e%npc%§a)."
+trigger: "§aTriggered Interaction '§e%id%§a' for §e%player%$a."
+info-output: "§aBound Interaction of the target %type%: §e%id%"
+
+help:
+  header: "Interaction Commands:"
+  trigger: "%cyan_300%/inter trigger <player> <id> §7- Trigger an interaction for a player."
+  bind: "%cyan_300%/inter bind <id> §7- Bind an interaction to the block you're looking at."
+  unbind: "%cyan_300%/inter unbind §7- Unbind the interaction of the block you're looking at."
+  npcbind: "%cyan_300%/inter npcbind §7- Bind an interaction to your selected NPC."
+  npcunbind: "%cyan_300%/inter npcunbind §7- Unbind the interaction of your selected NPC."
+  info: "%cyan_300%/inter info <npc|block> §7- Get information on the bound interaction."
+  help: "%cyan_300%/inter help §7- Display this help message."
