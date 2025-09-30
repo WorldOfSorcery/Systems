@@ -72,19 +72,6 @@ public class InteractionManager {
         }.runTaskTimer(plugin, 0L, 50L);
     }
 
-    public boolean interactionExist(String id) {
-        Interaction inter = hub.getInteractionDAO().getInteractionByID(id);
-        return inter != null;
-    }
-
-    public void blockBind(String id, Location loc) {
-        hub.getInteractionDAO().bindBlock(id, loc);
-    }
-
-    public void npcBind(String id, int npcId) {
-        hub.getInteractionDAO().bindNPC(id, npcId);
-    }
-
     public void triggerInteraction(String interactionId, Player player) {
         Interaction inter = getInteraction(interactionId);
         if (inter == null) return;

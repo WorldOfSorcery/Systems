@@ -1,27 +1,27 @@
 package me.hektortm.woSSystems.systems.interactions.commands.subcommands;
 
-import me.hektortm.woSSystems.WoSSystems;
+
 import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.systems.interactions.InteractionManager;
+import me.hektortm.woSSystems.utils.BlockChecks;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
-import net.citizensnpcs.api.CitizensAPI;
-import net.citizensnpcs.api.npc.NPC;
+import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class NPCBind extends SubCommand {
+public class Bind extends SubCommand {
     private final DAOHub hub;
 
-    public NPCBind(DAOHub hub) {
+    public Bind(DAOHub hub) {
         this.hub = hub;
     }
 
+
     @Override
     public String getName() {
-        return "npcbind";
+        return "bind";
     }
 
     @Override
@@ -33,24 +33,23 @@ public class NPCBind extends SubCommand {
     public void execute(CommandSender sender, String[] args) {
         if(!PermissionUtil.isPlayer(sender)) return;
         Player p = (Player) sender;
-        NPC npc = CitizensAPI.getDefaultNPCSelector().getSelected(p);
-
         if (args.length < 1) {
-            Utils.info(p, "interactions", "info.usage.npcbind");
-            return;
-        }
-        if (npc == null) {
-            Utils.info(p, "interactions", "info.no-npc");
+            Utils.info(p, "interactions", "info.usage.bind");
             return;
         }
 
-        int npcId = npc.getId();
         String interactionId = args[0];
         if (!hub.getInteractionDAO().interactionExists(interactionId, p)) return;
 
-        if (hub.getInteractionDAO().bindNPC(interactionId, npcId))
-            Utils.success(p, "interactions", "interaction.npcbind", "%id%", interactionId, "%npc%", String.valueOf(npcId));
+        Location loc = BlockChecks.getTargetBlock(p);
+        if (BlockChecks.isBlockAir(loc.getBlock(), p)) return;
+
+        if (hub.getInteractionDAO().bindBlock(interactionId, loc))
+            Utils.success(p, "interactions", "bind", "%id%", interactionId);
         else
-            Utils.error(p, "interactions", "error.failed", "%param%", "bind interaction to npc");
+            Utils.error(p, "interactions", "error.failed", "%param%", "bind interaction to Block");
     }
+
+
+
 }

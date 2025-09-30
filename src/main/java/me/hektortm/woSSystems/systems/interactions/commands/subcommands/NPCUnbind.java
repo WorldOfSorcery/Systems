@@ -1,17 +1,22 @@
 package me.hektortm.woSSystems.systems.interactions.commands.subcommands;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
+import me.hektortm.wosCore.Utils;
 import net.citizensnpcs.api.CitizensAPI;
+import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class NPCUnbind extends SubCommand {
-    // TODO: Interactions
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final DAOHub hub;
 
+    public NPCUnbind(DAOHub hub) {
+        this.hub = hub;
+    }
 
     @Override
     public String getName() {
@@ -20,27 +25,30 @@ public class NPCUnbind extends SubCommand {
 
     @Override
     public Permissions getPermission() {
-        return null;
+        return Permissions.INTER_UNBIND;
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
         if(!PermissionUtil.isPlayer(sender)) return;
-
         Player p = (Player) sender;
-
-        Integer npcId = CitizensAPI.getDefaultNPCSelector().getSelected(p).getId();
-        if (npcId == null) {
-            p.sendMessage("You dont have an npc selected");
-            return;
-        }
-
+        NPC npc = CitizensAPI.getDefaultNPCSelector().getSelected(p);
 
         if (args.length == 1) {
-            String interactionId = args[0];
-            //manager.unbindNPC(p, interactionId, npcId);
-        } else {
-            sender.sendMessage("/interaction bind <id>");
+            Utils.info(p, "interactions", "info.usage.npcunbind");
+            return;
         }
+        if (npc == null) {
+            Utils.info(p, "interactions", "info.no-npc");
+            return;
+        }
+        int npcId = npc.getId();
+        String interactionId = args[0];
+        if (!hub.getInteractionDAO().interactionExists(interactionId, p)) return;
+
+        if(hub.getInteractionDAO().unbindNpc(npcId))
+            Utils.success(p, "interactions", "npcunbind", "%npc%", String.valueOf(npcId));
+        else
+            Utils.error(p, "interactions", "error.failed", "%param%", "unbind interaction from NPC");
     }
 }

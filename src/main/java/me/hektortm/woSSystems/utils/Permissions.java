@@ -31,6 +31,7 @@ public enum Permissions {
     INTER_RELOAD_SINGLE("interaction.reload.single"),
     INTER_RELOAD_ALL("interaction.reload.all"),
     INTER_TRIGGER("interaction.trigger"),
+    INTER_INFO("interaction.info"),
 
     GUI_OPEN("gui.open"),
 

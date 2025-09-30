@@ -2,16 +2,17 @@ package me.hektortm.woSSystems.systems.interactions.commands.subcommands;
 
 
 import me.hektortm.woSSystems.systems.interactions.commands.InteractionCommand;
+import me.hektortm.woSSystems.utils.HelpUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.command.CommandSender;
 
-public class HelpCommand extends SubCommand {
+public class Help extends SubCommand {
 
-    private final InteractionCommand command;
+    private final InteractionCommand cmd;
 
-    public HelpCommand(InteractionCommand command) {
-        this.command = command;
+    public Help(InteractionCommand cmd) {
+        this.cmd = cmd;
     }
 
     @Override
@@ -26,6 +27,6 @@ public class HelpCommand extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        command.sendHelp(sender);
+        HelpUtil.sendHelp(cmd.permCmds, sender, "interactions");
     }
 }

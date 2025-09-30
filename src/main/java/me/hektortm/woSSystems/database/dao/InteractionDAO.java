@@ -7,9 +7,14 @@ import me.hektortm.woSSystems.utils.dataclasses.Interaction;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionAction;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionHologram;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionParticles;
+import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
+import me.hektortm.wosCore.discord.DiscordLog;
+import me.hektortm.wosCore.discord.DiscordLogger;
 import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.sql.*;
 import java.util.*;
@@ -179,14 +184,16 @@ public class InteractionDAO implements IDAO {
     }
 
 
-    public void bindNPC(String id, int npcId) {
+    public boolean bindNPC(String id, int npcId) {
         String sql = "INSERT INTO inter_npcs (npc_id, interaction_id) VALUES (?, ?)";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, npcId);
             pstmt.setString(2, id);
             pstmt.executeUpdate();
+            return true;
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to bind NPC: " + e);
+            return false;
         }
     }
 
@@ -221,16 +228,19 @@ public class InteractionDAO implements IDAO {
         return null;
     }
 
-    public void bindBlock(String id, Location loc) {
+    public boolean bindBlock(String id, Location loc) {
         String block = Parsers.locationToString(loc);
         String sql = "INSERT INTO inter_blocks (location, interaction_id) VALUES (?, ?)";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, block);
             pstmt.setString(2, id);
             pstmt.executeUpdate();
+            return true;
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to bind block: " + e);
+            return false;
         }
+
     }
 
     public List<Location> getBlocks(String id) {
@@ -317,6 +327,74 @@ public class InteractionDAO implements IDAO {
             plugin.writeLog(logName, Level.SEVERE, "Failed to get interactions: " + e);
         }
         return interactions;
+    }
+
+    public boolean unbindNpc(int id) {
+        String sql = "DELETE FROM inter_npcs WHERE npc_id = ?";
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            pstmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "TODO", "Could not unbind Interaction from Npc("+id+"): ", e
+            ));
+            return false;
+        }
+    }
+
+    public boolean unbindBlock(Location loc) {
+        String sql = "DELETE FROM inter_blocks WHERE location = ?";
+        String location = Parsers.locationToString(loc);
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, location);
+            pstmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "TODO", "Could not unbind Interaction from block("+location+"): ", e
+            ));
+            return false;
+        }
+    }
+
+    public String getBound(Location loc) {
+        String sql = "SELECT interaction_id FROM inter_blocks WHERE location = ?";
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, Parsers.locationToString(loc));
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("interaction_id");
+            }
+        } catch (SQLException e) {
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "TODO", "Could not get Block bound interaction: ", e
+            ));
+        }
+        return null;
+    }
+    public String getNpcBound(int id) {
+        String sql = "SELECT interaction_id FROM inter_npc WHERE npc_id = ?";
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("interaction_id");
+            }
+        } catch (SQLException e) {
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "TODO", "Could not get NPC bound interaction: ", e
+            ));
+        }
+        return null;
+    }
+
+
+    public boolean interactionExists(String id, CommandSender s) {
+        Interaction inter = getInteractionByID(id);
+        if (inter != null) return true;
+        Utils.error(s, "interactions", "error.not-exist");
+        return false;
     }
 
 }
