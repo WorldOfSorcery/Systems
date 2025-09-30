@@ -13,14 +13,17 @@ public class GUISlot {
     private final Material material;
     private final String displayName;
     private final List<String> lore;
-    private final int customModelData;
+    private final String model;
+    private final String color;
+    private final int amount;
+    private final String tooltip;
     private final boolean enchanted;
     private final List<String> right_actions;
     private final List<String> left_actions;
     private final boolean visible;
 
 
-    public GUISlot(String guiId, int slot, int slot_id, String matchType, Material material, String displayName, List<String> lore, int customModelData, boolean enchanted, List<String> rightActions, List<String> leftActions, boolean visible) {
+    public GUISlot(String guiId, int slot, int slot_id, String matchType, Material material, String displayName, List<String> lore, String model, String color, int amount, String tooltip, boolean enchanted, List<String> rightActions, List<String> leftActions, boolean visible) {
         this.guiId = guiId;
         this.slot = slot;
         this.slot_id = slot_id;
@@ -28,7 +31,10 @@ public class GUISlot {
         this.material = material;
         this.displayName = displayName;
         this.lore = lore;
-        this.customModelData = customModelData;
+        this.model = model;
+        this.color = color;
+        this.amount = amount;
+        this.tooltip = tooltip;
         this.enchanted = enchanted;
         right_actions = rightActions;
         left_actions = leftActions;
@@ -68,11 +74,23 @@ public class GUISlot {
         return lore;
     }
 
-    public int getCustomModelData() {
-        return customModelData;
-    }
-
     public boolean isEnchanted() {
         return enchanted;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public int getAmount() {
+        return amount;
+    }
+
+    public String getTooltip() {
+        return tooltip;
     }
 }

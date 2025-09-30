@@ -46,16 +46,6 @@
                     <execution>
                         <phase>package</phase>
                         <goals><goal>shade</goal></goals>
-                        <!-- Optional: relocate your own library deps to avoid conflicts
-                        <configuration>
-                          <relocations>
-                            <relocation>
-                              <pattern>dev.hektortm.permissionlib</pattern>
-                              <shadedPattern>me.hektortm.wossystems.libs.permissionlib</shadedPattern>
-                            </relocation>
-                          </relocations>
-                        </configuration>
-                        -->
                     </execution>
                 </executions>
             </plugin>
@@ -77,10 +67,6 @@
         <repository>
             <id>github</id>
             <url>https://maven.pkg.github.com/worldofsorcery/core</url>
-        </repository>
-        <repository>
-            <id>github</id>
-            <url>https://maven.pkg.github.com/hektortm/permissionlib</url>
         </repository>
         <repository>
             <id>sk89q-repo</id>

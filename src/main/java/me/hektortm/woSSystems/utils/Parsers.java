@@ -1,9 +1,11 @@
 package me.hektortm.woSSystems.utils;
 
+import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 
 import static me.hektortm.woSSystems.utils.Letters.*;
 import static me.hektortm.woSSystems.utils.Letters.STAR;
@@ -187,6 +189,26 @@ public class Parsers {
         }
         return String.format("%02d", seconds);
 
+    }
+
+    public static org.bukkit.Color hexToBukkitColor(String hex) {
+        if (hex.startsWith("#")) {
+            hex = hex.substring(1);
+        }
+
+        if (hex.length() != 6) {
+            return null;
+        }
+
+        try {
+            int red = Integer.parseInt(hex.substring(0, 2), 16);
+            int green = Integer.parseInt(hex.substring(2, 4), 16);
+            int blue = Integer.parseInt(hex.substring(4, 6), 16);
+
+            return org.bukkit.Color.fromRGB(red, green, blue);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
 }

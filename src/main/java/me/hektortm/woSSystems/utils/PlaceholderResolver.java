@@ -1,11 +1,14 @@
 package me.hektortm.woSSystems.utils;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.DyedItemColor;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.utils.dataclasses.Constant;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -87,6 +90,9 @@ public class PlaceholderResolver {
             for (String citemId : hub.getCitemDAO().getCitemIds()) {
                 String namePlaceholder = "{citems.name:"+citemId+"}";
                 String lorePlaceholder = "{citems.lore:"+citemId+"}";
+                String materialPlaceholder = "{citems.material:"+citemId+"}";
+                String modelPlaceholder = "{citems.model:"+citemId+"}";
+                String tooltipPlaceholder = "{citems.tooltip:"+citemId+"}";
 
                 ItemStack citem = hub.getCitemDAO().getCitem(citemId);
                 ItemMeta meta = citem.getItemMeta();
@@ -106,6 +112,18 @@ public class PlaceholderResolver {
 
                     }
                     text = text.replace(lorePlaceholder, builder.toString());
+                }
+                if(text.contains(materialPlaceholder)) {
+                    String material = citem.getType().toString();
+                    text = text.replace(materialPlaceholder, material);
+                }
+                if(text.contains(modelPlaceholder)) {
+                    NamespacedKey model = meta.getItemModel();
+                    text = text.replace(modelPlaceholder, model.getKey() != null ? model.getKey() : "");
+                }
+                if(text.contains(tooltipPlaceholder)) {
+                    NamespacedKey tooltip = meta.getTooltipStyle();
+                    text = text.replace(tooltipPlaceholder, tooltip.getKey() != null ? tooltip.getKey() : "");
                 }
 
             }

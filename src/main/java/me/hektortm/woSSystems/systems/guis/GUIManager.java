@@ -1,5 +1,7 @@
 package me.hektortm.woSSystems.systems.guis;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.DyedItemColor;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.ActionHandler;
@@ -11,6 +13,8 @@ import me.hektortm.woSSystems.utils.dataclasses.GUI;
 import me.hektortm.woSSystems.utils.dataclasses.GUISlot;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -26,6 +30,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 import java.util.logging.Level;
+
+import static io.papermc.paper.datacomponent.item.DyedItemColor.dyedItemColor;
+import static me.hektortm.woSSystems.utils.Parsers.hexToBukkitColor;
 
 public class GUIManager implements Listener {
 
@@ -78,7 +85,7 @@ public class GUIManager implements Listener {
             }
 
 
-            ItemStack item = new ItemStack(slot.getMaterial());
+            ItemStack item = new ItemStack(Objects.requireNonNull(Material.getMaterial(placeholderResolver.resolvePlaceholders(slot.getMaterial().toString(), player))));
             ItemMeta meta = item.getItemMeta();
 
             if (slot.getDisplayName() != null) {
@@ -95,8 +102,18 @@ public class GUIManager implements Listener {
                 meta.setLore(slotLore);
             }
 
-            if (slot.getCustomModelData() != 0) {
-                meta.setCustomModelData(slot.getCustomModelData());
+            if (slot.getModel() != null) {
+                meta.setItemModel(new NamespacedKey("wos", placeholderResolver.resolvePlaceholders(slot.getModel(), player)));
+            }
+
+            if(slot.getColor() != null) {
+                DyedItemColor dyedColor = dyedItemColor(hexToBukkitColor(slot.getColor()));
+                item.setData(DataComponentTypes.DYED_COLOR, dyedColor);
+            }
+
+            if(slot.getTooltip() != null) {
+                if (slot.getTooltip() == "hidden") meta.setHideTooltip(true);
+                else meta.setTooltipStyle(new NamespacedKey("wos", placeholderResolver.resolvePlaceholders(slot.getTooltip(), player)));
             }
 
             if (slot.isEnchanted()) {
@@ -105,6 +122,7 @@ public class GUIManager implements Listener {
             }
 
             item.setItemMeta(meta);
+            item.setAmount(slot.getAmount());
             inventory.setItem(slot.getSlot(), item);
         }
         if (gui.getOpenActions() != null && !gui.getOpenActions().isEmpty()) {
