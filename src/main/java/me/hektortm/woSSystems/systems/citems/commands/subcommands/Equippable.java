@@ -47,8 +47,6 @@ public class Equippable extends SubCommand {
             }
         }
 
-
-
         Player p = (Player) sender;
         ItemStack item = p.getInventory().getItemInMainHand();
 

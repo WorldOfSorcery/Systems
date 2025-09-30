@@ -68,41 +68,4 @@ public class CitemCommand implements CommandExecutor {
 
         return true;
     }
-
-    public void citemHelp(CommandSender sender) {
-        if (PermissionUtil.hasAnyPermission(sender, Permissions.CITEM_SAVE, Permissions.CITEM_RENAME,
-                Permissions.CITEM_UPDATE, Permissions.CITEM_LORE, Permissions.CITEM_FLAGS, Permissions.CITEM_ACTIONS,
-                Permissions.CITEM_TAG, Permissions.CITEM_INFO, Permissions.CITEM_GIVE, Permissions.CITEM_REMOVE)) {
-            Utils.info(sender, "citems", "help.header");
-
-            if (PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_SAVE))
-                Utils.noPrefix(sender, "citems", "help.save");
-
-            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_UPDATE))
-                Utils.noPrefix(sender, "citems", "help.update");
-
-            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_RENAME))
-                Utils.noPrefix(sender, "citems", "help.rename");
-
-            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_LORE))
-                Utils.noPrefix(sender, "citems", "help.lore");
-            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_FLAGS))
-                Utils.noPrefix(sender, "citems", "help.flags");
-            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_ACTIONS))
-                Utils.noPrefix(sender, "citems", "help.actions");
-            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_TAG))
-                Utils.noPrefix(sender, "citems", "help.tag");
-            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_INFO))
-                Utils.noPrefix(sender, "citems", "help.info");
-            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_GIVE))
-                Utils.noPrefix(sender, "citems", "help.give");
-            if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.CITEM_REMOVE))
-                Utils.noPrefix(sender, "citems", "help.remove");
-
-            Utils.noPrefix(sender, "citems", "help.help");
-        } else {
-            Utils.error(sender, "general", "error.perms");
-        }
-    }
-
 }

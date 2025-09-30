@@ -10,15 +10,19 @@ import me.hektortm.wosCore.WoSCore;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.util.Transformation;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-
+import java.util.UUID;
 
 
 public class CitemManager {
@@ -64,27 +68,26 @@ public class CitemManager {
     public void updateItem(Player p) {
         ItemStack item = p.getInventory().getItemInMainHand();
         int amount = item.getAmount();
-        if (item.getType() == Material.AIR) {
-            return;
-        }
+        if (item.getType() == Material.AIR) return;
+
         ItemMeta meta = item.getItemMeta();
 
-        if (meta == null) {
-            return;
-        }
+        if (meta == null) return;
+
 
         PersistentDataContainer data = meta.getPersistentDataContainer();
         String itemId = data.get(Keys.ID.get(), PersistentDataType.STRING);
+        if (itemId == null) return;
 
         ItemStack dbItem = hub.getCitemDAO().getCitem(itemId);
-        if (itemId != null) {
+
             if (dbItem == null) {
                 p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 Utils.success(p, "citems", "update.removed", "%item%", meta.getDisplayName());
                 p.getInventory().remove(item);
                 return;
             }
-        }
+
 
 
         if (!dbItem.isSimilar(item)) {
@@ -92,13 +95,6 @@ public class CitemManager {
             Utils.success(p, "citems", "update.updated", "%item%", meta.getDisplayName());
 
             // Update the item in hand with the new data
-            ItemMeta newMeta = dbItem.getItemMeta();
-            if (newMeta != null) {
-                newMeta.setDisplayName(meta.getDisplayName());
-                newMeta.setLore(meta.getLore());
-                newMeta.getPersistentDataContainer().set(Keys.ID.get(), PersistentDataType.STRING, itemId);
-                dbItem.setItemMeta(newMeta);
-            }
             dbItem.setAmount(amount);
             p.getInventory().setItemInMainHand(dbItem);
         }
@@ -128,9 +124,39 @@ public class CitemManager {
     }
 
 
+    public void leftClickAction(Player p) {
+        ItemStack item = p.getInventory().getItemInMainHand();
+        if (item == null || !item.hasItemMeta()) return;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        PersistentDataContainer data = meta.getPersistentDataContainer();
+        String actionId = data.get(Keys.LEFT_ACTION.get(), PersistentDataType.STRING);
+        if (actionId != null) {
+            interactionManager.triggerInteraction(actionId, p);
+        }
+    }
+
+    public void rightClickAction(Player p) {
+        ItemStack item = p.getInventory().getItemInMainHand();
+        if (item == null || !item.hasItemMeta()) return;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        PersistentDataContainer data = meta.getPersistentDataContainer();
+        String actionId = data.get(Keys.RIGHT_ACTION.get(), PersistentDataType.STRING);
+        if (actionId != null) {
+            interactionManager.triggerInteraction(actionId, p);
+        }
+    }
+
+
     private String parseTime() {
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         return now.format(formatter);
     }
+
+
+
 }

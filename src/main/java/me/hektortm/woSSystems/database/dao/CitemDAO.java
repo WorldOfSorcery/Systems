@@ -93,7 +93,7 @@ public class CitemDAO implements IDAO {
     public void updateCitem(String id, ItemStack item) {
         String itemData = itemStackToBase64(item);
         JsonObject webData = itemStackToJson(item);
-        String sql = "UPDATE items SET item_data = ? AND web_data = ? WHERE id = ?";
+        String sql = "UPDATE items SET item_data = ?, web_data = ? WHERE id = ?";
 
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, itemData);
