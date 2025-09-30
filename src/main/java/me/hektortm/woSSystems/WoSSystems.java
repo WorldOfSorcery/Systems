@@ -247,7 +247,7 @@ public final class WoSSystems extends JavaPlugin {
         tab.runTablist();
         cooldownManager.start();
 
-        PermissionRegistry.registerAll(this, PermissionDefault.FALSE);
+        PermissionRegistry.registerAll(this, PermissionDefault.OP);
     }
 
     @Override
