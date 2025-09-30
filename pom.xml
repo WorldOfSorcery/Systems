@@ -46,16 +46,6 @@
                     <execution>
                         <phase>package</phase>
                         <goals><goal>shade</goal></goals>
-                        <!-- Optional: relocate your own library deps to avoid conflicts
-                        <configuration>
-                          <relocations>
-                            <relocation>
-                              <pattern>dev.hektortm.permissionlib</pattern>
-                              <shadedPattern>me.hektortm.wossystems.libs.permissionlib</shadedPattern>
-                            </relocation>
-                          </relocations>
-                        </configuration>
-                        -->
                     </execution>
                 </executions>
             </plugin>

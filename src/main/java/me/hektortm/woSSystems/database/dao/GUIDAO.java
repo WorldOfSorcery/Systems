@@ -44,7 +44,10 @@ public class GUIDAO implements IDAO {
                     "material VARCHAR(255)," +
                     "display_name VARCHAR(255)," +
                     "lore TEXT," +
-                    "custom_model_data INTEGER," +
+                    "model VARCHAR(255)," +
+                    "amount INTEGER NOT NULL," +
+                    "color VARCHAR(7)," +
+                    "tooltip VARCHAR(255)," +
                     "enchanted BOOLEAN,"+
                     "right_click TEXT," +
                     "left_click TEXT," +
@@ -66,7 +69,10 @@ public class GUIDAO implements IDAO {
                 Material material = Material.getMaterial(rs.getString("material"));
                 String displayName = rs.getString("display_name");
                 String loreRaw = rs.getString("lore");
-                int customModelData = rs.getInt("custom_model_data");
+                String model = rs.getString("model");
+                String color = rs.getString("color");
+                int amount = rs.getInt("amount");
+                String tooltip = rs.getString("tooltip");
                 boolean enchanted = rs.getBoolean("enchanted");
                 String rightClickRaw = rs.getString("right_click");
                 String leftClickRaw = rs.getString("left_click");
@@ -88,7 +94,7 @@ public class GUIDAO implements IDAO {
 
 
 
-                slots.add(new GUISlot(id, slot, slotId, matchType, material, displayName, lore, customModelData, enchanted, parsedRightClick, parsedLeftClick, visible));
+                slots.add(new GUISlot(id, slot, slotId, matchType, material, displayName, lore, model, color, amount, tooltip, enchanted, parsedRightClick, parsedLeftClick, visible));
             }
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to get Slots for "+id+": "+e);

@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.channels;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.ChannelDAO;
+import me.hektortm.woSSystems.regions.RegionHandler;
 import me.hektortm.woSSystems.utils.CosmeticType;
 import me.hektortm.woSSystems.utils.Parsers;
 import me.hektortm.wosCore.Utils;
@@ -350,6 +351,7 @@ public class ChannelManager {
     private @NotNull Component getPlayerStats(Player player) {
         String nickname = hub.getNicknameDAO().getNickname(player.getUniqueId());
         String shownName = nickname != null ? nickname : player.getName();
+        String location = plugin.playerRegions.get(player.getUniqueId());
         Component display = hub.getCosmeticsDAO().getCurrentCosmetic(player, CosmeticType.PREFIX) == null
                 ? Utils.parseColorCodes(shownName)
                 : Utils.parseColorCodes(hub.getCosmeticsDAO().getCurrentCosmetic(player, CosmeticType.PREFIX) + " " + shownName);
@@ -362,6 +364,11 @@ public class ChannelManager {
         Component username = Component.text()
                 .append(Component.text("§7"+Parsers.parseUniStatic("Username:"+" ")))
                 .append(Component.text(player.getName()))
+                .build();
+
+        Component locationComponent = Component.text()
+                .append(Component.text("§7"+Parsers.parseUniStatic("Location:"+ " ")))
+                .append(Component.text(RegionHandler.getRegionDisplayName(player)))
                 .build();
 
         // Build the title line
@@ -379,7 +386,7 @@ public class ChannelManager {
                 .build();
 
         // Combine all components into a single component
-        return Component.join(JoinConfiguration.newlines(), playerInfo, username, title, gold);
+        return Component.join(JoinConfiguration.newlines(), playerInfo, username, locationComponent, title, gold);
     }
 
     private Component fromString(String string) {
