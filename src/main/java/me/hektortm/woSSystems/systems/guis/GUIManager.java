@@ -105,15 +105,15 @@ public class GUIManager implements Listener {
             if (slot.getModel() != null) {
                 meta.setItemModel(new NamespacedKey("wos", placeholderResolver.resolvePlaceholders(slot.getModel(), player)));
             }
-
+            DyedItemColor dyedColor = null;
             if(slot.getColor() != null) {
-                DyedItemColor dyedColor = dyedItemColor(hexToBukkitColor(slot.getColor()));
-                item.setData(DataComponentTypes.DYED_COLOR, dyedColor);
+                dyedColor = dyedItemColor(hexToBukkitColor(slot.getColor()));
+
             }
 
-            if(slot.getTooltip() != null) {
-                if (slot.getTooltip() == "hidden") meta.setHideTooltip(true);
-                else meta.setTooltipStyle(new NamespacedKey("wos", placeholderResolver.resolvePlaceholders(slot.getTooltip(), player)));
+            if(slot.getTooltip() != null && slot.getTooltip().isEmpty()) {
+                if (Objects.equals(slot.getTooltip(), "hidden")) meta.setHideTooltip(true);
+                else if(slot.getTooltip() != null && !slot.getTooltip().isEmpty()) meta.setTooltipStyle(new NamespacedKey("minecraft", placeholderResolver.resolvePlaceholders(slot.getTooltip(), player)));
             }
 
             if (slot.isEnchanted()) {
@@ -121,8 +121,12 @@ public class GUIManager implements Listener {
                 meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             }
 
+            plugin.writeLog("GuiDAO", Level.INFO, "["+slot.getGuiId() +" | "+slot.getSlot()+ " | "+slot.getSlotId() +"]" +
+                   "Tooltip:" +slot.getTooltip()+ " | Model: " + slot.getModel()+ " | Color: " + slot.getColor());
+
             item.setItemMeta(meta);
             item.setAmount(slot.getAmount());
+            if (dyedColor != null) item.setData(DataComponentTypes.DYED_COLOR, dyedColor);
             inventory.setItem(slot.getSlot(), item);
         }
         if (gui.getOpenActions() != null && !gui.getOpenActions().isEmpty()) {
