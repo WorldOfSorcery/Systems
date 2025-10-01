@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.Keys;
 import me.hektortm.woSSystems.utils.PermissionUtil;
@@ -21,6 +22,11 @@ public class Action extends SubCommand {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final InteractionManager manager = plugin.getInteractionManager();
+    private final DAOHub hub;
+
+    public Action(DAOHub hub) {
+        this.hub = hub;
+    }
 
     @Override
     public String getName() {
@@ -52,10 +58,7 @@ public class Action extends SubCommand {
         String action = args[0].toLowerCase();
         String actionID = args[1].toLowerCase();
 
-        if (!manager.interactionExist(actionID)) {
-            Utils.error(p, "citems", "error.inter-not-found", "%id%", actionID);
-            return;
-        }
+        if (!hub.getInteractionDAO().interactionExists(actionID, sender)) return;
 
         ItemMeta meta = itemInHand.getItemMeta();
         PersistentDataContainer data = meta.getPersistentDataContainer();

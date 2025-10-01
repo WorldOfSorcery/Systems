@@ -31,10 +31,6 @@ public class Unbind extends SubCommand {
     public void execute(CommandSender sender, String[] args) {
         if(!PermissionUtil.isPlayer(sender)) return;
         Player p = (Player) sender;
-        if (args.length < 1) {
-            Utils.info(p, "interactions", "info.usage.unbind");
-            return;
-        }
 
         Location loc = BlockChecks.getTargetBlock(p);
         if (BlockChecks.isBlockAir(loc.getBlock(), p)) return;

@@ -34,10 +34,6 @@ public class NPCUnbind extends SubCommand {
         Player p = (Player) sender;
         NPC npc = CitizensAPI.getDefaultNPCSelector().getSelected(p);
 
-        if (args.length == 1) {
-            Utils.info(p, "interactions", "info.usage.npcunbind");
-            return;
-        }
         if (npc == null) {
             Utils.info(p, "interactions", "info.no-npc");
             return;
