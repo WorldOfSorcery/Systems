@@ -57,6 +57,11 @@
       <option name="url" value="https://maven.pkg.github.com/hektortm/permissionlib" />
     </remote-repository>
     <remote-repository>
+      <option name="id" value="codemc-snapshots" />
+      <option name="name" value="codemc-snapshots" />
+      <option name="url" value="https://repo.codemc.io/repository/maven-snapshots/" />
+    </remote-repository>
+    <remote-repository>
       <option name="id" value="codemc-releases" />
       <option name="name" value="codemc-releases" />
       <option name="url" value="https://repo.codemc.io/repository/maven-releases/" />

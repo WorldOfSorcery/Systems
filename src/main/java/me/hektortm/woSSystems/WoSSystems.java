@@ -1,11 +1,14 @@
 package me.hektortm.woSSystems;
 
+import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.PacketEventsAPI;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
+import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import me.hektortm.woSSystems.channels.Channel;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.channels.cmd.ChannelCommand;
@@ -36,7 +39,7 @@ import me.hektortm.woSSystems.systems.cooldowns.CooldownManager;
 import me.hektortm.woSSystems.systems.cooldowns.cmd.CooldownCommand;
 import me.hektortm.woSSystems.systems.guis.GUIManager;
 import me.hektortm.woSSystems.systems.guis.command.GUICommand;
-import me.hektortm.woSSystems.systems.interactions.HologramHandler;
+//import me.hektortm.woSSystems.systems.interactions.HologramHandler;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.systems.loottables.LoottableManager;
 import me.hektortm.woSSystems.systems.loottables.commands.LoottableCommand;
@@ -72,6 +75,9 @@ import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
 import me.hektortm.wosCore.discord.DiscordLogger;
 import me.hektortm.wosCore.logging.LogManager;
+import me.tofaa.entitylib.APIConfig;
+import me.tofaa.entitylib.EntityLib;
+import me.tofaa.entitylib.spigot.SpigotEntityLibPlatform;
 import org.aselstudios.luxdialoguesapi.DialogueProvider;
 import org.aselstudios.luxdialoguesapi.LuxDialoguesAPI;
 import org.bukkit.Bukkit;
@@ -99,11 +105,12 @@ import java.util.logging.Logger;
 public final class WoSSystems extends JavaPlugin {
 
     private static WoSSystems instance;
+    private PacketEventsAPI packetEventsApi;
     private DAOHub daoHub;
     private WoSCore core;
     private static LangManager lang;
     private LogManager log;
-    private HologramHandler hologramHandler;
+ //   private HologramHandler hologramHandler;
     private CitemManager citemManager;
     private CooldownManager cooldownManager;
     private EcoManager ecoManager;
@@ -138,6 +145,16 @@ public final class WoSSystems extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+//        PacketEvents.getAPI().init();
+//        packetEventsApi =  PacketEvents.getAPI();
+//        SpigotEntityLibPlatform platform = new SpigotEntityLibPlatform(this);
+//        APIConfig settings = new APIConfig(PacketEvents.getAPI())
+//                .debugMode()
+//                .tickTickables()
+//                .trackPlatformEntities()
+//                .usePlatformLogger();
+//
+//        EntityLib.init(platform, settings);
         luxApi = LuxDialoguesAPI.getAPI();
         try {
             core = WoSCore.getPlugin(WoSCore.class);
@@ -173,7 +190,7 @@ public final class WoSSystems extends JavaPlugin {
             System.out.println("Failed to connect to Database"+ e.getMessage());
             Bukkit.getPluginManager().disablePlugin(this);
         }
-        hologramHandler = new HologramHandler(daoHub);
+     //   hologramHandler = new HologramHandler(daoHub);
         bossBarManager = new BossBarManager();
         regionBossBarManager = new RegionBossBar();
         tab = new TablistManager(daoHub);
@@ -262,12 +279,15 @@ public final class WoSSystems extends JavaPlugin {
             regionBossBarManager.removeBossBar(p);
         }
         timeManager.saveGameState();
-
+//        PacketEvents.getAPI().terminate();
         PermissionRegistry.unregisterAll();
     }
 
     @Override
     public void onLoad() {
+//        PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
+//        PacketEvents.getAPI().load();
+
         FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
 
         DISPLAY_NAME = registerStringFlag("display-name", registry);
@@ -499,6 +519,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public DialogueProvider getDialogueApi() {
         return LuxDialoguesAPI.getProvider();
+    }
+    public PacketEventsAPI getPacketEventsAPI() {
+        return packetEventsApi;
     }
 
     public Map<UUID, String> getPlayerRegions() {

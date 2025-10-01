@@ -6,8 +6,10 @@ import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.Keys;
+import me.hektortm.woSSystems.utils.dataclasses.Interaction;
 import net.citizensnpcs.api.event.CitizensEvent;
 import net.citizensnpcs.api.event.NPCClickEvent;
+import net.citizensnpcs.api.event.NPCRightClickEvent;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.npc.ai.NPCHolder;
 import org.bukkit.*;
@@ -30,6 +32,7 @@ import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 
 import java.util.*;
+import java.util.logging.Level;
 
 public class InterListener implements Listener {
 
@@ -88,9 +91,11 @@ public class InterListener implements Listener {
     }
 
     @EventHandler
-    public void NPCClick(NPCClickEvent e) {
+    public void NPCClick(NPCRightClickEvent e) {
         int npcid = e.getNPC().getId();
+        String id = hub.getInteractionDAO().getNPCInteraction(npcid);
 
+        interactionManager.triggerInteraction(id, e.getClicker());
     }
 
     @EventHandler

@@ -15,7 +15,7 @@ info:
     unbind: "Usage: /interaction unbind"
     npcbind: "Usage: /interaction npcbind <ID>"
     npcunbind: "Usage: /interaction npcunbind"
-    info: "Usage: /interaction info <npc|block"
+    info: "Usage: /interaction info <npc|block>"
 
 
 bind: "§aYou have bound §e%id%§a to the target block."

@@ -1,7 +1,7 @@
 package me.hektortm.woSSystems;
 
 import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.systems.interactions.HologramHandler;
+//import me.hektortm.woSSystems.systems.interactions.HologramHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextReplacementConfig;
 import net.kyori.adventure.text.format.TextColor;
@@ -28,11 +28,11 @@ import java.util.regex.Pattern;
 public class debug implements CommandExecutor {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DAOHub hub;
-    private final HologramHandler hologramHandler;
+    //private final HologramHandler hologramHandler;
 
     public debug(DAOHub hub) {
         this.hub = hub;
-         hologramHandler = new HologramHandler(hub);
+    //     hologramHandler = new HologramHandler(hub);
     }
 
 

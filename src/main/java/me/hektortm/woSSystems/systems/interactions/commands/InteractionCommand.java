@@ -27,6 +27,7 @@ public class InteractionCommand implements CommandExecutor {
         subCommands.put("unbind", new Unbind(hub));
         subCommands.put("npcbind", new NPCBind(hub));
         subCommands.put("npcunbind", new NPCUnbind(hub));
+        subCommands.put("info", new Info(hub));
 
         for(SubCommand subCommand : subCommands.values()) {
             permCmds.put(subCommand.getPermission(), subCommand.getName());
@@ -39,7 +40,7 @@ public class InteractionCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if (args.length == 0) {
-            Utils.info(sender, "interactions", "info.usage.interactions");
+            Utils.info(sender, "interactions", "info.usage.interaction");
             return true;
         }
 
@@ -53,7 +54,7 @@ public class InteractionCommand implements CommandExecutor {
                 return true;
             }
         } else {
-            Utils.info(sender, "interactions", "info.usage.interactions");
+            Utils.info(sender, "interactions", "info.usage.interaction");
         }
 
 

@@ -35,7 +35,7 @@ public class InteractionManager {
 
     public void interactionTask() {
         ParticleHandler particleHandler = new ParticleHandler(hub);
-        HologramHandler hologramHandler = new HologramHandler(hub);
+        //HologramHandler hologramHandler = new HologramHandler(hub);
 
 
         new BukkitRunnable() {

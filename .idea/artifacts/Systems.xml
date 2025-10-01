@@ -56,6 +56,21 @@
       <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpcore:4.4.16" />
       <element id="library" level="project" name="Maven: commons-codec:commons-codec:1.16.0" />
       <element id="library" level="project" name="Maven: org.slf4j:jcl-over-slf4j:1.7.36" />
+      <element id="library" level="project" name="Maven: net.kyori:adventure-api:4.24.0" />
+      <element id="library" level="project" name="Maven: net.kyori:adventure-text-minimessage:4.24.0" />
+      <element id="library" level="project" name="Maven: net.kyori:adventure-text-serializer-gson:4.24.0" />
+      <element id="library" level="project" name="Maven: net.kyori:adventure-text-serializer-json:4.24.0" />
+      <element id="library" level="project" name="Maven: net.kyori:adventure-text-serializer-commons:4.24.0" />
+      <element id="library" level="project" name="Maven: net.kyori:adventure-text-serializer-legacy:4.24.0" />
+      <element id="library" level="project" name="Maven: net.kyori:adventure-text-serializer-plain:4.24.0" />
+      <element id="library" level="project" name="Maven: net.kyori:adventure-text-logger-slf4j:4.24.0" />
+      <element id="library" level="project" name="Maven: com.github.Tofaa2:EntityLib:2.4.11" />
+      <element id="library" level="project" name="Maven: com.github.Tofaa2.EntityLib:api:2.4.11" />
+      <element id="library" level="project" name="Maven: com.github.Tofaa2.EntityLib:common:2.4.11" />
+      <element id="library" level="project" name="Maven: com.github.Tofaa2.EntityLib:spigot:2.4.11" />
+      <element id="library" level="project" name="Maven: com.github.Tofaa2.EntityLib:standalone:2.4.11" />
+      <element id="library" level="project" name="Maven: com.github.Tofaa2.EntityLib:velocity:2.4.11" />
+      <element id="library" level="project" name="Maven: org.aselstudios:LuxDialoguesAPI:2.0.1" />
     </root>
   </artifact>
 </component>

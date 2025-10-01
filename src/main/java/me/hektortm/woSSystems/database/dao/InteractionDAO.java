@@ -395,7 +395,7 @@ public class InteractionDAO implements IDAO {
         return null;
     }
     public String getNpcBound(int id) {
-        String sql = "SELECT interaction_id FROM inter_npc WHERE npc_id = ?";
+        String sql = "SELECT interaction_id FROM inter_npcs WHERE npc_id = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             ResultSet rs = pstmt.executeQuery();

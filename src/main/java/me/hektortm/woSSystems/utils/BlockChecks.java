@@ -9,7 +9,8 @@ import org.bukkit.entity.Player;
 public class BlockChecks {
 
     public static boolean isBlockAir(Block block, Player p) {
-        Utils.error(p, "interactions", "error.block-air");
+        if (block.getType() == Material.AIR)
+            Utils.error(p, "interactions", "error.block-air");
         return block.getType() == Material.AIR;
     }
 

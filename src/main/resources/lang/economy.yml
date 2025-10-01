@@ -2,6 +2,7 @@ error:
   player-notfound: "Player not found."
   funds: "You do not have enough funds."
   data: "Could not load player Data"
+  currency-exist: "This currency does not exist."
   currencies: "No currencies have been set up"
   give-usage: "Usage: /economy give <player> <currency> <amount>"
   take-usage: "Usage: /economy take <player> <currency> <amount>"

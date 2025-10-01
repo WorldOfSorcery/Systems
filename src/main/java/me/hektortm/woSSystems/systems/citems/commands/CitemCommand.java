@@ -29,7 +29,7 @@ public class CitemCommand implements CommandExecutor {
         subCommands.put("rename", new Name());
         subCommands.put("lore", new Lore());
         subCommands.put("flag", new Flag());
-        subCommands.put("action", new Action());
+        subCommands.put("action", new Action(hub));
         subCommands.put("tooltip", new Tooltip());
         subCommands.put("model", new Model());
         subCommands.put("color", new Color());
