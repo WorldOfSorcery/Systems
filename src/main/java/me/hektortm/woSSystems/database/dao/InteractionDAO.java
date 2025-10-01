@@ -124,7 +124,9 @@ public class InteractionDAO implements IDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "6cb8760c", "Failed to get Actions for Interaction ID("+interactionId+"): ", e
+            ));
         }
 
         return actions;
@@ -149,7 +151,9 @@ public class InteractionDAO implements IDAO {
             }
             return particles;
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get particles: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "5b32a7e5", "Failed to get Particles for Interaction ID("+id+"): ", e
+            ));
         }
         return null;
     }
@@ -192,7 +196,9 @@ public class InteractionDAO implements IDAO {
             pstmt.executeUpdate();
             return true;
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to bind NPC: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "6e81e051", "Failed to bind Interaction ID("+id+") to NPC: ", e
+            ));
             return false;
         }
     }
@@ -207,22 +213,25 @@ public class InteractionDAO implements IDAO {
                 npcs.add(rs.getInt("npc_id"));
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get NPCs: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "9efbf58a", "Failed to get NPCs for Interaction ID("+id+"): ", e
+            ));
         }
         return npcs;
     }
 
-    public String getNPCInteraction(Location loc) {
-        String location = Parsers.locationToString(loc);
+    public String getNPCInteraction(int id) {
         String sql = "SELECT interaction_id FROM inter_npcs WHERE npc_id = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, location);
+            pstmt.setInt(1, id);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 return rs.getString("interaction_id");
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get NPC interaction: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "8b80892f", "Failed to get NPC Interaction ID("+id+"): ", e
+            ));
             return null;
         }
         return null;
@@ -237,7 +246,9 @@ public class InteractionDAO implements IDAO {
             pstmt.executeUpdate();
             return true;
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to bind block: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "8b80892f", "Failed to bind ID("+id+") to block: ", e
+            ));
             return false;
         }
 
@@ -255,7 +266,9 @@ public class InteractionDAO implements IDAO {
                 blocks.add(loc);
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get blocks: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "90441c51", "Failed to get Block Locations for ID("+id+"): ", e
+            ));
         }
         return blocks;
     }
@@ -272,7 +285,9 @@ public class InteractionDAO implements IDAO {
             }
             return locations;
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get all block locations: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "364d5b8e", "Failed to get all Block Locations: ", e
+            ));
         }
         return List.of();
     }
@@ -287,7 +302,9 @@ public class InteractionDAO implements IDAO {
                 return rs.getString("interaction_id");
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get block interaction: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "364d5b8e", "Failed to get Interactions for Block("+location+"): ", e
+            ));
             return null;
         }
         return null;
@@ -309,7 +326,9 @@ public class InteractionDAO implements IDAO {
                 return new Interaction(interactionId, actions, holograms, particles, blockLocations, npcIDs);
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get interaction: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "d993e0c9", "Failed to get Interactions for ID("+id+"): ", e
+            ));
         }
         return null;
     }
@@ -324,7 +343,9 @@ public class InteractionDAO implements IDAO {
                 interactions.add(getInteractionByID(interactionId));
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get interactions: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "c3956d21", "Failed to get Interactions: ", e
+            ));
         }
         return interactions;
     }
@@ -337,7 +358,7 @@ public class InteractionDAO implements IDAO {
             return true;
         } catch (SQLException e) {
             DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "TODO", "Could not unbind Interaction from Npc("+id+"): ", e
+                    Level.SEVERE, plugin, "ca6c88bb", "Failed to unbind Interaction from Npc("+id+"): ", e
             ));
             return false;
         }
@@ -352,7 +373,7 @@ public class InteractionDAO implements IDAO {
             return true;
         } catch (SQLException e) {
             DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "TODO", "Could not unbind Interaction from block("+location+"): ", e
+                    Level.SEVERE, plugin, "465cda2f", "Failed to unbind Interaction from block("+location+"): ", e
             ));
             return false;
         }
@@ -368,7 +389,7 @@ public class InteractionDAO implements IDAO {
             }
         } catch (SQLException e) {
             DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "TODO", "Could not get Block bound interaction: ", e
+                    Level.SEVERE, plugin, "0d47d170", "Failed to get Block bound interaction: ", e
             ));
         }
         return null;
@@ -383,7 +404,7 @@ public class InteractionDAO implements IDAO {
             }
         } catch (SQLException e) {
             DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "TODO", "Could not get NPC bound interaction: ", e
+                    Level.SEVERE, plugin, "af1a69b4", "Failed to get NPC bound interaction: ", e
             ));
         }
         return null;

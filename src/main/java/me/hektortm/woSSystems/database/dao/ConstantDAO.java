@@ -5,6 +5,8 @@ import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.dataclasses.Constant;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
+import me.hektortm.wosCore.discord.DiscordLog;
+import me.hektortm.wosCore.discord.DiscordLogger;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -46,8 +48,10 @@ public class ConstantDAO implements IDAO {
                 constants.add(new Constant(rs.getString("id"), rs.getString("value")));
             }
             return constants;
-        } catch (SQLException ex) {
-            plugin.writeLog(logName, Level.SEVERE, "Could not get all constants");
+        } catch (SQLException e) {
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "9a49f645", "Failed to get all Constants: ", e
+            ));
             return null;
         }
     }
@@ -64,7 +68,9 @@ public class ConstantDAO implements IDAO {
             }
             return constant;
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Could not get constant by id");
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "0e9cba06", "Failed to get Constants for ID("+id+"): ", e
+            ));
             return null;
         }
     }

@@ -6,6 +6,8 @@ import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.dataclasses.Currency;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
+import me.hektortm.wosCore.discord.DiscordLog;
+import me.hektortm.wosCore.discord.DiscordLogger;
 import org.bukkit.entity.Player;
 
 import java.sql.*;
@@ -67,7 +69,9 @@ public class EconomyDAO implements IDAO {
             prepStmt.setString(7, source);
             prepStmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to log economy change: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "9e047279", "Failed to write eco log: ", e
+            ));
         }
     }
 
@@ -79,7 +83,9 @@ public class EconomyDAO implements IDAO {
             prepStmt.setString(2, currency);
             prepStmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to ensure DB Entry: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "fa0f93cd", "Failed to ensure DB Entry: ", e
+            ));
         }
     }
 
@@ -92,7 +98,9 @@ public class EconomyDAO implements IDAO {
             prepStmt.setString(3, currency);
             prepStmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to update Player Currency: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "59dfee1c", "Failed to update Player Currency("+currency+"): ", e
+            ));
         }
     }
 
@@ -108,7 +116,9 @@ public class EconomyDAO implements IDAO {
                 return 0;
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get Player Currency: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "27afb2aa", "Failed to get Player Currency("+currency+"): ", e
+            ));
             return 0;
         }
     }
@@ -125,7 +135,9 @@ public class EconomyDAO implements IDAO {
             stmt.setBoolean(6, currency.isHiddenIfZero());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to add Player Currency: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "cb77a2a2", "Failed to add Player Currency("+currency+"): ", e
+            ));
         }
     }
 
@@ -147,7 +159,9 @@ public class EconomyDAO implements IDAO {
                 currenciesMap.put(id, currency);
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get Currencies: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "10a473af", "Failed to get Currencies: ", e
+            ));
         }
         return currenciesMap;
     }
@@ -161,7 +175,9 @@ public class EconomyDAO implements IDAO {
                 return rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to check if currency exists: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "73701ec6", "Failed to check if Currency("+id+") exists: ", e
+            ));
             return false;
         }
         return false;

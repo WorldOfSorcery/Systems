@@ -227,7 +227,7 @@ public class ChannelDAO implements IDAO {
             pstmt.executeUpdate();
             Utils.success(p, "channel", "focused", "%channel%", getChannelColor(channelName) + channelName);
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CHD:26fa1ea1", "Failed to set focused Channel: ", e);
+            WoSSystems.discordLog(Level.SEVERE, "26fa1ea1", "Failed to set focused Channel: ", e);
         }
     }
 
@@ -240,7 +240,7 @@ public class ChannelDAO implements IDAO {
             pstmt.setString(2, channelName);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CHD:0cec198f", "Failed to unfocus Channel: ", e);
+            WoSSystems.discordLog(Level.SEVERE, "0cec198f", "Failed to unfocus Channel: ", e);
         }
     }
 
@@ -253,7 +253,7 @@ public class ChannelDAO implements IDAO {
                 return rs.getString("channel_name");
             }
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CHD:655992fd", "Failed to get focused Channel: ", e);
+            WoSSystems.discordLog(Level.SEVERE, "655992fd", "Failed to get focused Channel: ", e);
         }
         return null;
     }
@@ -266,7 +266,7 @@ public class ChannelDAO implements IDAO {
             ResultSet rs = pstmt.executeQuery();
             return rs.next();
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CHD:39b72deb", "Failed to check if player is in Channel: ", e);
+            WoSSystems.discordLog(Level.SEVERE, "39b72deb", "Failed to check if player is in Channel: ", e);
             return false;
         }
     }

@@ -6,6 +6,8 @@ import me.hektortm.woSSystems.utils.dataclasses.Cooldown;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionAction;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
+import me.hektortm.wosCore.discord.DiscordLog;
+import me.hektortm.wosCore.discord.DiscordLogger;
 import org.bukkit.OfflinePlayer;
 
 import java.sql.*;
@@ -51,7 +53,9 @@ public class CooldownDAO implements IDAO {
             }
             return null;
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to fetch all Cooldowns");
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "9a771b92", "Failed to fetch all Cooldowns: ", e
+            ));
             return null;
         }
     }
@@ -64,7 +68,9 @@ public class CooldownDAO implements IDAO {
             stmt.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
             stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to give cooldown");
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "bb176a6d", "Failed to give cooldown for ID("+id+"): ", e
+            ));
         }
     }
 
@@ -78,7 +84,9 @@ public class CooldownDAO implements IDAO {
             }
             return 0;
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to fetch cooldown duration");
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "47688a99", "Failed to fetch cooldown duration for ID("+id+"): ", e
+            ));
             return 0;
         }
     }
@@ -94,7 +102,9 @@ public class CooldownDAO implements IDAO {
             }
             return null;
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to fetch Timestamp");
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "02ac3572", "Failed to fetch Timestamp for ID("+id+"): ", e
+            ));
             return null;
         }
     }
@@ -189,7 +199,9 @@ public class CooldownDAO implements IDAO {
                 cooldowns.put(id, new Cooldown(id, duration, startInteraction, endInteraction));
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to fetch all Cooldowns: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "02ac3572", "Failed to fetch all Cooldowns: ", e
+            ));
         }
         return cooldowns;
     }

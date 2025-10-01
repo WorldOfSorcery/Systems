@@ -90,7 +90,7 @@ public class DialogDAO implements IDAO {
             DiscordLogger.log(new DiscordLog(
                     Level.SEVERE,
                     WoSSystems.getPlugin(WoSSystems.class),
-                    "DID:cfb1f3e2",
+                    "cfb1f3e2",
                     "Failed to get column " + col + " from ResultSet, returning default value: " + def,
                     e
             ));
@@ -190,7 +190,7 @@ public class DialogDAO implements IDAO {
             DiscordLogger.log(new DiscordLog(
                     Level.SEVERE,
                     plugin,
-                    "DID:65765d89",
+                    "65765d89",
                     "Failed to load dialog pages for dialog ID: " + dialogId,
                     e
             ));
@@ -222,7 +222,7 @@ public class DialogDAO implements IDAO {
             DiscordLogger.log(new DiscordLog(
                     Level.SEVERE,
                     plugin,
-                    "DID:da60aeb2",
+                    "da60aeb2",
                     "Failed to load dialog answers for dialog ID: " + dialogId,
                     e
             ));
@@ -244,7 +244,7 @@ public class DialogDAO implements IDAO {
             DiscordLogger.log(new DiscordLog(
                     Level.SEVERE,
                     plugin,
-                    "DID:869cdc5b",
+                    "869cdc5b",
                     "Failed to load page lines for dialog ID: " + dialogId,
                     e
             ));

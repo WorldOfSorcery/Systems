@@ -5,6 +5,8 @@ import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.dataclasses.FishingItem;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
+import me.hektortm.wosCore.discord.DiscordLog;
+import me.hektortm.wosCore.discord.DiscordLogger;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -83,7 +85,9 @@ public class FishingDAO implements IDAO {
             }
 
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get Item By Rarity: "+e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "c64040b8", "Failed to get Fish by Rarity("+rarity+"): ", e
+            ));
         }
 
         return items;

@@ -86,7 +86,7 @@ public class CitemDAO implements IDAO {
             stmt.setString(3, webData.toString());
             stmt.execute();
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:e70ccfb9", "Failed to save Citem: ", e);
+            WoSSystems.discordLog(Level.SEVERE, "e70ccfb9", "Failed to save Citem: ", e);
         }
     }
 
@@ -101,7 +101,7 @@ public class CitemDAO implements IDAO {
             stmt.setString(3, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:24835abe", "Failed to update Citem: ", e);
+            WoSSystems.discordLog(Level.SEVERE, "24835abe", "Failed to update Citem: ", e);
         }
     }
 
@@ -123,7 +123,7 @@ public class CitemDAO implements IDAO {
             conn.close();
             return item;
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:de1adeb7", "Failed to retrieve Citem: ", e);
+            WoSSystems.discordLog(Level.SEVERE, "de1adeb7", "Failed to retrieve Citem: ", e);
             return null;
         }
     }
@@ -134,7 +134,7 @@ public class CitemDAO implements IDAO {
             ResultSet resultSet = preparedStatement.executeQuery();
             return resultSet.next();
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:ce7f7083", "Failed to check existing Citem: ", e);
+            WoSSystems.discordLog(Level.SEVERE, "ce7f7083", "Failed to check existing Citem: ", e);
             return false;
         }
     }
@@ -150,7 +150,7 @@ public class CitemDAO implements IDAO {
             return Base64.getEncoder().encodeToString(outputStream.toByteArray());
 
         } catch (IOException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:9592f4b1", "Failed to build Base64 String", e);
+            WoSSystems.discordLog(Level.SEVERE, "9592f4b1", "Failed to build Base64 String", e);
             throw new RuntimeException(e);
 
         }
@@ -166,7 +166,7 @@ public class CitemDAO implements IDAO {
             inputStream.close();
             return item;
         } catch (IOException | ClassNotFoundException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:d270e031", "Failed to deserialize Itemstack from Base64 String", e);
+            WoSSystems.discordLog(Level.SEVERE, "d270e031", "Failed to deserialize Itemstack from Base64 String", e);
             throw new RuntimeException("Failed to deserialize ItemStack from Base64: " + e.getMessage(), e);
         }
     }
@@ -183,7 +183,7 @@ public class CitemDAO implements IDAO {
             pstmt.setString(4, dLoc);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:9e2bb566", "Failed to create Item Display", e);
+            WoSSystems.discordLog(Level.SEVERE, "9e2bb566", "Failed to create Item Display", e);
         }
     }
 
@@ -195,7 +195,7 @@ public class CitemDAO implements IDAO {
             pstmt.setString(2, loc);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:4e63206a", "Failed to remove Item Display", e);
+            WoSSystems.discordLog(Level.SEVERE, "4e63206a", "Failed to remove Item Display", e);
         }
     }
 
@@ -209,7 +209,7 @@ public class CitemDAO implements IDAO {
                 return UUID.fromString(rs.getString("owner_uuid"));
             }
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:b1ebfe0d", "Failed to get Owner UUID", e);
+            WoSSystems.discordLog(Level.SEVERE, "b1ebfe0d", "Failed to get Owner UUID", e);
         }
         return null; // Return null if no result
     }
@@ -223,7 +223,7 @@ public class CitemDAO implements IDAO {
             pstmt.setString(2, oldLoc);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:621ebf18", "Failed to change Item Display", e);
+            WoSSystems.discordLog(Level.SEVERE, "621ebf18", "Failed to change Item Display", e);
         }
     }
 
@@ -239,7 +239,7 @@ public class CitemDAO implements IDAO {
                 return null;
             }
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:cbf86e39", "Failed to get Item Display Location", e);
+            WoSSystems.discordLog(Level.SEVERE, "cbf86e39", "Failed to get Item Display Location", e);
             return null;
         }
     }
@@ -254,7 +254,7 @@ public class CitemDAO implements IDAO {
                 return rs.getString("citem_id");
             }
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:9b378252", "Failed to get Item Display ID", e);
+            WoSSystems.discordLog(Level.SEVERE, "9b378252", "Failed to get Item Display ID", e);
         }
         return null; // Return null if not found
     }
@@ -268,7 +268,7 @@ public class CitemDAO implements IDAO {
             ResultSet rs = pstmt.executeQuery();
             return rs.next();
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:593f879f", "Failed to check Item Display", e);
+            WoSSystems.discordLog(Level.SEVERE, "593f879f", "Failed to check Item Display", e);
             return false;
         }
     }
@@ -282,7 +282,7 @@ public class CitemDAO implements IDAO {
             ResultSet rs = pstmt.executeQuery();
             return rs.next(); // If there's a result, return true
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:f2863bfe", "Failed to check Item Display Owner", e);
+            WoSSystems.discordLog(Level.SEVERE, "f2863bfe", "Failed to check Item Display Owner", e);
         }
         return false;
     }

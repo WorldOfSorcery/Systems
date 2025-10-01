@@ -56,7 +56,7 @@ public class ConditionDAO implements IDAO {
             }
 
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "COD:3800b1ef", "Failed to load conditions for [" + type + "/" + id + "]:", e);
+            WoSSystems.discordLog(Level.SEVERE, "3800b1ef", "Failed to load conditions for [" + type + "/" + id + "]:", e);
         }
 
         return result;

@@ -5,6 +5,8 @@ import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.Operations;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
+import me.hektortm.wosCore.discord.DiscordLog;
+import me.hektortm.wosCore.discord.DiscordLogger;
 import org.bukkit.OfflinePlayer;
 
 import java.sql.*;
@@ -34,7 +36,9 @@ public class UnlockableDAO implements IDAO {
                     "temp BOOLEAN," +
                     "PRIMARY KEY (uuid, id))");
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to initialize unlockables tables: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "608ad2f4", "Failed to intialize Unlockable Tables: ", e
+            ));
         }
     }
 
@@ -45,7 +49,10 @@ public class UnlockableDAO implements IDAO {
             ResultSet resultSet = stmt.executeQuery();
             return resultSet.next();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to check unlockable existence: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "b1f4958c", "Failed to check if Unlockable exists: "
+                    + "\n ID: "+id, e
+            ));
             return false;
         }
     }
@@ -59,7 +66,10 @@ public class UnlockableDAO implements IDAO {
                 return resultSet.getBoolean("temp");
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get unlockable state: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "0188787c", "Failed to get Unlockable state: "
+                    + "\n ID: "+id, e
+            ));
         }
         return false;
     }
@@ -80,6 +90,12 @@ public class UnlockableDAO implements IDAO {
                     stmt.executeUpdate();
                 } catch (SQLException e) {
                     plugin.writeLog(logName, Level.SEVERE, "Failed to give unlockable: " + e);
+                    DiscordLogger.log(new DiscordLog(
+                            Level.SEVERE, plugin, "97e418ac", "Failed to give Unlockable: "
+                            + "\n UUID: "+uuid
+                            + "\n ID: "+id
+                            + "\n Operation: "+action, e
+                    ));
                 }
                 break;
             case TAKE:
@@ -90,7 +106,12 @@ public class UnlockableDAO implements IDAO {
                     stmt.setString(2, id);
                     stmt.executeUpdate();
                 } catch (SQLException e) {
-                    plugin.writeLog(logName, Level.SEVERE, "Failed to take unlockable: " + e);
+                    DiscordLogger.log(new DiscordLog(
+                            Level.SEVERE, plugin, "5f14b691", "Failed to take Unlockable: "
+                            + "\n UUID: "+uuid
+                            + "\n ID: "+id
+                            + "\n Operation: "+action, e
+                    ));
                 }
                 break;
         }
@@ -103,6 +124,10 @@ public class UnlockableDAO implements IDAO {
             stmt.executeUpdate();
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to remove all temp unlockables: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "ddc0a9ef", "Failed to remove all temp Unlockable: "
+                    + "\n UUID: "+uuid, e
+            ));
         }
     }
 
@@ -114,7 +139,13 @@ public class UnlockableDAO implements IDAO {
             ResultSet resultSet = stmt.executeQuery();
             return resultSet.next();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get Player Unlockable: " + e);
+            plugin.writeLog(logName, Level.SEVERE, "Failed to get Player unlockables: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "34e85b61", "Failed to remove all temp Unlockable: "
+                    + "\n Offline Player: "+p
+                    + "\n UUID: "+p.getUniqueId()
+                    + "\n ID: "+id, e
+            ));
             return false;
         }
     }
@@ -127,6 +158,12 @@ public class UnlockableDAO implements IDAO {
             return resultSet.next();
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to get Player TempUnlockable: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "d23abf7a", "Failed to get Player temp Unlockable: "
+                    + "\n Offline Player: "+p
+                    + "\n UUID: "+p.getUniqueId()
+                    + "\n ID: "+id, e
+            ));
             return false;
         }
     }

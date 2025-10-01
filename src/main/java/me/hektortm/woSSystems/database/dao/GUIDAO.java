@@ -5,6 +5,8 @@ import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.dataclasses.*;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
+import me.hektortm.wosCore.discord.DiscordLog;
+import me.hektortm.wosCore.discord.DiscordLogger;
 import org.bukkit.Location;
 import org.bukkit.Material;
 
@@ -97,7 +99,9 @@ public class GUIDAO implements IDAO {
                 slots.add(new GUISlot(id, slot, slotId, matchType, material, displayName, lore, model, color, amount, tooltip, enchanted, parsedRightClick, parsedLeftClick, visible));
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get Slots for "+id+": "+e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "857985d7", "Failed to get Slots for GUI("+id+"): ", e
+            ));
         }
         return slots;
     }
@@ -137,7 +141,9 @@ public class GUIDAO implements IDAO {
                 return new GUI(id, size, title, slots, parsedOpenActions, parsedCloseActions);
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get GUI for " + id + ": " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "08812b49", "Failed to get GUI("+id+"): ", e
+            ));
         }
         return null;
     }
@@ -153,7 +159,9 @@ public class GUIDAO implements IDAO {
                 guis.add(getGUIbyId(id));
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get GUIs: "+e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "b1c1eec1", "Failed to get GUIs: ", e
+            ));
         }
         return guis;
     }

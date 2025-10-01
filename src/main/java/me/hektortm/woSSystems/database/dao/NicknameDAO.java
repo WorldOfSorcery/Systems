@@ -4,6 +4,8 @@ import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
+import me.hektortm.wosCore.discord.DiscordLog;
+import me.hektortm.wosCore.discord.DiscordLogger;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
@@ -56,7 +58,9 @@ public class NicknameDAO implements IDAO {
             stmt.setString(4, nickname + ",");
             stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to insert nickname: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "7e93a1b8", "Failed to save Nickname: \n User: "+username+" \n Nick: "+nickname, e
+            ));
         }
 
         // Always update
@@ -68,7 +72,9 @@ public class NicknameDAO implements IDAO {
             stmt.setString(4, uuid.toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to update nickname: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "234c2ba5", "Failed to update Nickname: \n User: "+username+" \n Nick: "+nickname, e
+            ));
         }
     }
 
@@ -78,7 +84,9 @@ public class NicknameDAO implements IDAO {
             stmt.setString(1, uuid.toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to reset nickname: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "cd77afd2", "Failed to reset Nickname: \n UUID: "+uuid, e
+            ));
         }
     }
 
@@ -91,7 +99,9 @@ public class NicknameDAO implements IDAO {
                 return rs.getString("nickname");
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get nickname: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "4a789df0", "Failed to get Nickname: \n UUID: "+uuid, e
+            ));
         }
         return null;
     }
@@ -108,7 +118,9 @@ public class NicknameDAO implements IDAO {
                 return nickname != null ? nickname : username;
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get real or nickname: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "5f9e4aea", "Failed to get real- or nickname: \n Query: "+input, e
+            ));
         }
         return null;
     }
@@ -121,7 +133,9 @@ public class NicknameDAO implements IDAO {
             stmt.setString(2, nickname);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to request nickname change: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "a70497da", "Failed to request nickname change: \n UUID: "+uuid+" \n Nickname: "+nickname, e
+            ));
         }
     }
 
@@ -141,7 +155,9 @@ public class NicknameDAO implements IDAO {
                 removeNicknameRequest(uuid);
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to approve nickname: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "7aec601a", "Failed to approve nickname: \n UUID: "+uuid, e
+            ));
         }
     }
 
@@ -155,7 +171,9 @@ public class NicknameDAO implements IDAO {
             stmt.setString(1, uuid.toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to remove nickname request: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "0936e8f4", "Failed to remove nickname request: \n UUID: "+uuid, e
+            ));
         }
     }
 
@@ -168,7 +186,9 @@ public class NicknameDAO implements IDAO {
                 requests.put(UUID.fromString(rs.getString("uuid")), rs.getString("nickname"));
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get nickname request: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "748598ef", "Failed to get nickname requests:", e
+            ));
         }
         return requests;
     }
@@ -181,7 +201,9 @@ public class NicknameDAO implements IDAO {
             stmt.setString(2, nickname);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to reserve nickname: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "94ffe050", "Failed to get reserve nickname: \n UUID: "+uuid+" \n Nickname: "+nickname, e
+            ));
         }
     }
 
@@ -191,7 +213,9 @@ public class NicknameDAO implements IDAO {
             stmt.setString(1, uuid.toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to unreserve nickname: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "56847cd8", "Failed to unreserve nickname: \n UUID: "+uuid, e
+            ));
         }
     }
 
@@ -202,7 +226,9 @@ public class NicknameDAO implements IDAO {
             ResultSet rs = stmt.executeQuery();
             return rs.next();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to check if nickname is reserved: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "32cf0db6", "Failed to check if nickname is reserved: \n Nickname: "+nickname, e
+            ));
         }
         return false;
     }
@@ -216,7 +242,9 @@ public class NicknameDAO implements IDAO {
                 reservedNicks.put(UUID.fromString(rs.getString("uuid")), rs.getString("nickname"));
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get reserved nicknames: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "32cf0db6", "Failed to get reserved nicknames: ", e
+            ));
         }
         return reservedNicks;
     }

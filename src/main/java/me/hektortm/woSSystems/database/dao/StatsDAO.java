@@ -7,6 +7,8 @@ import me.hektortm.woSSystems.utils.dataclasses.GlobalStat;
 import me.hektortm.woSSystems.utils.dataclasses.Stat;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
+import me.hektortm.wosCore.discord.DiscordLog;
+import me.hektortm.wosCore.discord.DiscordLogger;
 
 import java.sql.*;
 import java.util.HashMap;
@@ -119,7 +121,13 @@ public class StatsDAO implements IDAO {
 
             stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to modify Stat: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "15049217", "Failed to modify Stat: "
+                    + "\n UUID: "+uuid
+                    + "\n ID: "+statId
+                    + "\n Amount: "+amount
+                    + "\n Operation: "+operation, e
+            ));
         }
     }
 
@@ -147,7 +155,12 @@ public class StatsDAO implements IDAO {
             stmt.setString(2, statId);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to modify Global Stat: "+e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "ee540c82", "Failed to modify global Stat: "
+                    + "\n ID: "+statId
+                    + "\n Amount: "+amount
+                    + "\n Operation: "+operation, e
+            ));
         }
     }
 
@@ -166,6 +179,9 @@ public class StatsDAO implements IDAO {
             }
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to get Stats: "+e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "bbbbf9f5", "Failed to get all Stats: ", e
+            ));
         }
         return stats;
     }
@@ -184,7 +200,9 @@ public class StatsDAO implements IDAO {
                 ));
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get Global Stat: "+e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "3e124896", "Failed to get all Global Stats: ", e
+            ));
         }
         return stats;
     }
@@ -200,7 +218,11 @@ public class StatsDAO implements IDAO {
                 return rs.getLong("value");
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get Stat Value: "+e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "ca5cb436", "Failed to get Stat Value: "
+                    + "\n UUID: "+uuid
+                    + "\n ID: "+statId, e
+            ));
         }
         return 0;
     }
@@ -215,7 +237,10 @@ public class StatsDAO implements IDAO {
                 return rs.getLong("value");
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get Global Stat Value: "+e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "e3e23ccd", "Failed to get Global Stat Value: "
+                    + "\n ID: "+statId, e
+            ));
         }
         return 0;
     }

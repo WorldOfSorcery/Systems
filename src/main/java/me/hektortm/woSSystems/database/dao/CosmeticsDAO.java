@@ -5,6 +5,8 @@ import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.CosmeticType;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
+import me.hektortm.wosCore.discord.DiscordLog;
+import me.hektortm.wosCore.discord.DiscordLogger;
 import org.bukkit.entity.Player;
 
 import java.sql.*;
@@ -73,7 +75,9 @@ public class CosmeticsDAO implements IDAO {
             pstmt.setString(5, now);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to give Cosmetic: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "72dd1794", "Failed to give Cosmetic(type: "+type.name()+") ID("+id+"): ", e
+            ));
         }
     }
 
@@ -85,7 +89,9 @@ public class CosmeticsDAO implements IDAO {
             pstmt.setString(3, type.name());
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to take Cosmetic: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "1f2c1ce8", "Failed to take Cosmetic(type: "+type.name()+") ID("+id+"): ", e
+            ));
         }
     }
 
@@ -99,7 +105,9 @@ public class CosmeticsDAO implements IDAO {
             pstmt.setString(3, type.name());
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to set Cosmetic: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "84e13729", "Failed to set Cosmetic(type: "+type.name()+") ID("+id+"): ", e
+            ));
         }
     }
 
@@ -119,7 +127,9 @@ public class CosmeticsDAO implements IDAO {
                 return rs.getString("display");
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get current Cosmetic: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "5ff7bce2", "Failed to get Cosmetic(type: "+type.name()+"): ", e
+            ));
         }
         return null;
     }
@@ -139,7 +149,9 @@ public class CosmeticsDAO implements IDAO {
                 return rs.getString("cosmetic_id");
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get current Cosmetic ID: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "bcee9aa2", "Failed to get Cosmetic(type: "+type.name()+") ID: ", e
+            ));
         }
         return null;
     }
@@ -154,7 +166,9 @@ public class CosmeticsDAO implements IDAO {
             pstmt.setString(2, type.name());
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to unequip Cosmetic: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "cb649023", "Failed to unequip Cosmetic(type: "+type.name()+") ID: ", e
+            ));
         }
 
         // Equip the selected cosmetic
@@ -165,7 +179,9 @@ public class CosmeticsDAO implements IDAO {
             pstmt.setString(3, type.name());
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to equip Cosmetic: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "a229d69c", "Failed to equip Cosmetic(type: "+type.name()+") ID: ", e
+            ));
         }
     }
 
@@ -180,8 +196,9 @@ public class CosmeticsDAO implements IDAO {
                 return rs.getString("obtained_at");
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to obtain Cosmetic: " + e);
-
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "4d4c8392", "Failed to fetch Cosmetic ID("+id+") Obtained time: ", e
+            ));
         }
         return null;
     }
@@ -196,7 +213,9 @@ public class CosmeticsDAO implements IDAO {
                 cosmetics.put(rs.getString("id"), rs.getString("permission"));
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get Permission Cosmetics: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "4d4c8392", "Failed to fetch Cosmetic for Permission: ", e
+            ));
         }
         return cosmetics;
     }
@@ -213,7 +232,9 @@ public class CosmeticsDAO implements IDAO {
                 cosmetics.add(rs.getString("cosmetic_id"));
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get Player Cosmetics: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "502824a2", "Failed to fetch Player Cosmetic: ", e
+            ));
         }
         return cosmetics;
     }
@@ -228,7 +249,9 @@ public class CosmeticsDAO implements IDAO {
                 return rs.getString("description");
             }
         } catch (SQLException e) {
-            plugin.writeLog("CosmeticsDAO", Level.SEVERE, "Failed to retrieve description for cosmetic ID: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "b8dbd364", "Failed to fetch description for Cosmetic ID("+id+"): ", e
+            ));
         }
         return "§7Default";
     }
@@ -241,7 +264,9 @@ public class CosmeticsDAO implements IDAO {
             ResultSet rs = pstmt.executeQuery();
             return rs.next();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to check if Cosmetic exists: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "afcf3b82", "Failed to check if Cosmetic ID("+id+") exists: ", e
+            ));
         }
         return false;
     }
@@ -256,7 +281,9 @@ public class CosmeticsDAO implements IDAO {
                 return rs.getString("display");
             }
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get Cosmetic Display: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "ee187dde", "Failed to fetch Cosmetic ID("+id+") Display: ", e
+            ));
         }
         return null;
     }
@@ -270,7 +297,9 @@ public class CosmeticsDAO implements IDAO {
             ResultSet rs = pstmt.executeQuery();
             return rs.next();
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to check if player has cosmetic: " + e);
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "a9a1f260", "Failed to check if Player has Cosmetic ID("+id+"): ", e
+            ));
             return false;
         }
     }

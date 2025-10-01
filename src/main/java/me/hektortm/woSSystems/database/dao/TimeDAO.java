@@ -5,6 +5,8 @@ import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.dataclasses.Activity;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
+import me.hektortm.wosCore.discord.DiscordLog;
+import me.hektortm.wosCore.discord.DiscordLogger;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -63,7 +65,9 @@ public class TimeDAO implements IDAO {
             }
             return activities;
         } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Error retrieving all activities: " + e.getMessage());
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "5843eb20", "Failed to get all activities: ", e
+            ));
             return null;
         }
     }
