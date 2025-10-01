@@ -48,14 +48,17 @@ public class GiveCommand extends SubCommand {
         String playerName = args[0];
         String currencyID = args[1];
         int amount;
+        if(!ecoManager.currencyExists(currencyID)) {
+            error(sender, "economy", "currency-exist");
+            return;
+        }
         Currency currency = ecoManager.getCurrencies().get(currencyID.toLowerCase());
         String name = currency.getName();
         String color = currency.getColor();
         String icon = currency.getIcon();
 
-        if (icon == null || icon.isBlank()) {
-            icon = "";
-        }
+        if (icon == null || icon.isBlank()) icon = "";
+
 
 
         try {

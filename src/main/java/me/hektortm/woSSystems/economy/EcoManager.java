@@ -63,6 +63,10 @@ public class EcoManager {
 
     }
 
+    public boolean currencyExists(String id) {
+        return hub.getEconomyDAO().currencyExists(id);
+    }
+
     public boolean hasEnoughCurrency(UUID uuid, String currency, long amount) {
         return getCurrencyBalance(uuid, currency) >= amount;
     }

@@ -52,6 +52,10 @@ public class RandomCommand extends SubCommand {
         String currencyID = args[1];
         int amount1;
         int amount2;
+        if(!ecoManager.currencyExists(currencyID)) {
+            error(sender, "economy", "currency-exist");
+            return;
+        }
         Random random = new Random();
         int randomNumber;
         Currency currency = ecoManager.getCurrencies().get(currencyID.toLowerCase());
@@ -59,9 +63,8 @@ public class RandomCommand extends SubCommand {
         String color = currency.getColor();
         String icon = currency.getIcon();
 
-        if (icon == null || icon.isBlank()) {
-            icon = "";
-        }
+        if (icon == null || icon.isBlank()) icon = "";
+
 
         try {
             amount1 = Integer.parseInt(args[2]);

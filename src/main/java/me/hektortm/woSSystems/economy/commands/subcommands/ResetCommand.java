@@ -43,8 +43,12 @@ public class ResetCommand extends SubCommand {
         }
 
         String playerName = args[0];
-        String currencyName = args[1];
-        Currency currency = ecoManager.getCurrencies().get(currencyName.toLowerCase());
+        String currencyID = args[1];
+        if(!ecoManager.currencyExists(currencyID)) {
+            error(sender, "economy", "currency-exist");
+            return;
+        }
+        Currency currency = ecoManager.getCurrencies().get(currencyID.toLowerCase());
         String name = currency.getName();
         String color = currency.getColor();
 
@@ -59,7 +63,7 @@ public class ResetCommand extends SubCommand {
             log.writeLog(p, "-> "+ target.getName() +": Reset "+name);
         }
 
-        ecoManager.modifyCurrency(target.getUniqueId(), currencyName, 0, Operations.RESET);
+        ecoManager.modifyCurrency(target.getUniqueId(), currencyID, 0, Operations.RESET);
         WoSSystems.ecoMsg2Values(sender, "economy", "currency.reset",  "%currency%", color+name, "%player%", playerName);
 
     }

@@ -47,16 +47,19 @@ public class TakeCommand extends SubCommand {
         }
 
         String playerName = args[0];
-        String currencyName = args[1];
+        String currencyID = args[1];
+        if(!ecoManager.currencyExists(currencyID)) {
+            error(sender, "economy", "currency-exist");
+            return;
+        }
         int amount;
-        Currency currency = ecoManager.getCurrencies().get(currencyName.toLowerCase());
+        Currency currency = ecoManager.getCurrencies().get(currencyID.toLowerCase());
         String name = currency.getName();
         String color = currency.getColor();
         String icon = currency.getIcon();
 
-        if (icon == null || icon.isBlank()) {
-            icon = "";
-        }
+        if (icon == null || icon.isBlank()) icon = "";
+
 
         try {
             amount = Integer.parseInt(args[2]);
@@ -71,7 +74,7 @@ public class TakeCommand extends SubCommand {
             return;
         }
 
-        if(!ecoManager.hasEnoughCurrency(target.getUniqueId(), currencyName, amount)) {
+        if(!ecoManager.hasEnoughCurrency(target.getUniqueId(), currencyID, amount)) {
             error(sender, "economy", "error.funds");
             return;
         }
@@ -81,7 +84,7 @@ public class TakeCommand extends SubCommand {
             log.writeLog(p, "-> "+ target.getName() +": Took "+amount+" "+name);
         }
 
-        ecoManager.modifyCurrency(target.getUniqueId(), currencyName, amount, Operations.TAKE);
+        ecoManager.modifyCurrency(target.getUniqueId(), currencyID, amount, Operations.TAKE);
         WoSSystems.ecoMsg3Values(sender, "economy", "currency.taken", "%amount%", String.valueOf(amount), "%currency%", color+name, "%player%", playerName);
 
         String actionbar = lang.getMessage("economy", "actionbar.taken")
