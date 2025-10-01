@@ -39,8 +39,6 @@ public class NPCUnbind extends SubCommand {
             return;
         }
         int npcId = npc.getId();
-        String interactionId = args[0];
-        if (!hub.getInteractionDAO().interactionExists(interactionId, p)) return;
 
         if(hub.getInteractionDAO().unbindNpc(npcId))
             Utils.success(p, "interactions", "npcunbind", "%npc%", String.valueOf(npcId));

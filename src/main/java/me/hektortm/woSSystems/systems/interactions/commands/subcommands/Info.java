@@ -45,12 +45,12 @@ public class Info extends SubCommand {
             return;
         }
         NPC npc = CitizensAPI.getDefaultNPCSelector().getSelected(p);
-        if (npc == null) {
+        if (npc == null && type.equalsIgnoreCase("npc")) {
             Utils.info(p, "interactions", "info.no-npc");
             return;
         }
         Location loc = BlockChecks.getTargetBlock(p);
-        if (BlockChecks.isBlockAir(loc.getBlock(), p)) return;
+        if (type.equalsIgnoreCase("block") && BlockChecks.isBlockAir(loc.getBlock(), p)) return;
 
         String boundId = "";
         switch (type) {
@@ -58,7 +58,7 @@ public class Info extends SubCommand {
             case "block" -> boundId = hub.getInteractionDAO().getBound(loc);
         }
 
-        if (boundId.isEmpty())
+        if (boundId == null || boundId.isEmpty() )
             Utils.info(p, "interactions", "info.no-bound", "%type%", type);
         else
             Utils.success(p, "interactions", "info-output", "%id%", boundId, "%type%", type);
