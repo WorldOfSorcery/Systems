@@ -121,9 +121,6 @@ public class GUIManager implements Listener {
                 meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             }
 
-            plugin.writeLog("GuiDAO", Level.INFO, "["+slot.getGuiId() +" | "+slot.getSlot()+ " | "+slot.getSlotId() +"]" +
-                   "Tooltip:" +slot.getTooltip()+ " | Model: " + slot.getModel()+ " | Color: " + slot.getColor());
-
             item.setItemMeta(meta);
             item.setAmount(slot.getAmount());
             if (dyedColor != null) item.setData(DataComponentTypes.DYED_COLOR, dyedColor);
@@ -133,8 +130,6 @@ public class GUIManager implements Listener {
             actionHandler.executeActions(player, gui.getOpenActions(), ActionHandler.SourceType.GUI, guiId);
         }
         player.openInventory(inventory);
-
-
     }
 
 

@@ -115,6 +115,11 @@ public enum Permissions {
     PORTAL_COOLDOWNS_MODIFY("portal.cooldowns.modify"),
     PORTAL_COOLDOWNS_VIEW("portal.cooldowns.view"),
 
+    PORTAL_CONSTANTS_CREATE("portal.constants.create"),
+    PORTAL_CONSTANTS_DELETE("portal.constants.delete"),
+    PORTAL_CONSTANTS_MODIFY("portal.constants.modify"),
+    PORTAL_CONSTANTS_VIEW("portal.constants.view"),
+
     PORTAL_COSMETICS_VIEW("portal.cosmetics.view"),
     PORTAL_COSMETICS_CREATE("portal.cosmetics.create"),
     PORTAL_COSMETICS_DELETE("portal.cosmetics.delete"),
@@ -124,6 +129,11 @@ public enum Permissions {
     PORTAL_CURRENCIES_CREATE("portal.currencies.create"),
     PORTAL_CURRENCIES_DELETE("portal.currencies.delete"),
     PORTAL_CURRENCIES_MODIFY("portal.currencies.modify"),
+
+    PORTAL_DIALOGS_VIEW("portal.dialogs.view"),
+    PORTAL_DIALOGS_CREATE("portal.dialogs.create"),
+    PORTAL_DIALOGS_DELETE("portal.dialogs.delete"),
+    PORTAL_DIALOGS_MODIFY("portal.dialogs.modify"),
 
     PORTAL_FISHING_VIEW("portal.fishing.view"),
     PORTAL_FISHING_CREATE("portal.fishing.create"),
@@ -164,11 +174,6 @@ public enum Permissions {
     PORTAL_UNLOCKABLES_CREATE("portal.unlockables.create"),
     PORTAL_UNLOCKABLES_DELETE("portal.unlockables.delete"),
     PORTAL_UNLOCKABLES_MODIFY("portal.unlockables.modify"),
-
-    PORTAL_DIALOGS_VIEW("portal.dialogs.view"),
-    PORTAL_DIALOGS_CREATE("portal.dialogs.create"),
-    PORTAL_DIALOGS_DELETE("portal.dialogs.delete"),
-    PORTAL_DIALOGS_MODIFY("portal.dialogs.modify"),
 
     PORTAL_PERMISSIONS_GROUPS_VIEW("portal.permissions.groups.view"),
     PORTAL_PERMISSIONS_GROUPS_CREATE("portal.permissions.groups.create"),

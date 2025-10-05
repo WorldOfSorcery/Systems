@@ -94,7 +94,7 @@ public class InteractionManager {
                 if (!shouldRun) continue;
             }
 
-            actionHandler.executeActions(player, action.getActions(), ActionHandler.SourceType.INTERACTION, interactionId);
+            Bukkit.getScheduler().runTask(WoSSystems.getPlugin(WoSSystems.class), () -> {actionHandler.executeActions(player, action.getActions(), ActionHandler.SourceType.INTERACTION, interactionId);});
 
             if (action.getBehaviour().equalsIgnoreCase("continue")) {
                 continue;

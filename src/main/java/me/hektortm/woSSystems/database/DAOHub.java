@@ -26,6 +26,7 @@ public class DAOHub {
     private final TimeDAO timeDAO;
     private final ConstantDAO constantDAO;
     private final DialogDAO dialogDAO;
+    private final LoottablesDAO loottablesDAO;
 
     private final FriendLink friendLink;
 
@@ -50,6 +51,7 @@ public class DAOHub {
         this.citemDAO = new CitemDAO(databaseManager, this);
         this.constantDAO = new ConstantDAO(databaseManager, this);
         this.dialogDAO = new DialogDAO(databaseManager, this);
+        this.loottablesDAO = new LoottablesDAO(databaseManager, this);
     }
     public EconomyDAO getEconomyDAO() {
         return economyDAO;
@@ -101,6 +103,9 @@ public class DAOHub {
     }
     public DialogDAO getDialogDAO() {
         return dialogDAO;
+    }
+    public LoottablesDAO getLoottablesDAO() {
+        return loottablesDAO;
     }
 
     public FriendLink getFriendLink() {

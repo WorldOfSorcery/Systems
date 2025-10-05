@@ -22,7 +22,7 @@ bind: "§aYou have bound §e%id%§a to the target block."
 unbind: "§aYou have unbound the interaction of the target block."
 npcbind: "§aYou have bound §e%id%§a to an NPC(§e%npc%§a)."
 npcunbind: "§aYou have unbound the interaction on an NPC(§e%npc%§a)."
-trigger: "§aTriggered Interaction '§e%id%§a' for §e%player%$a."
+trigger: "§aTriggered Interaction '§e%id%§a' for §e%player%§a."
 info-output: "§aBound Interaction of the target %type%: §e%id%"
 
 help:

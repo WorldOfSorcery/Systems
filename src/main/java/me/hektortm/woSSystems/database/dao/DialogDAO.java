@@ -15,6 +15,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
+import javax.annotation.Nullable;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -98,7 +99,7 @@ public class DialogDAO implements IDAO {
         }
     }
 
-    public void getDialog(String dialogId, CommandSender source, Player target) {
+    public void getDialog(String dialogId, @Nullable CommandSender source, Player target) {
         String sql = "SELECT * FROM dialogs WHERE dialog_id = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, dialogId);

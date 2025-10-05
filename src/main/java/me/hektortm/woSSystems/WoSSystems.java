@@ -184,6 +184,7 @@ public final class WoSSystems extends JavaPlugin {
             registerAndInitDAO(databaseManager, daoHub.getTimeDAO());
             registerAndInitDAO(databaseManager, daoHub.getConstantDAO());
             registerAndInitDAO(databaseManager, daoHub.getDialogDAO());
+            registerAndInitDAO(databaseManager, daoHub.getLoottablesDAO());
 
             databaseManager.initializeAllDAOs();
         } catch (SQLException e) {
@@ -215,7 +216,7 @@ public final class WoSSystems extends JavaPlugin {
         channelManager = new ChannelManager(this, daoHub);
         nickManager = new NicknameManager(daoHub);
 
-        lootTableManager = new LoottableManager(citemManager);
+        lootTableManager = new LoottableManager(daoHub);
         coinflipCommand = new Coinflip(ecoManager, this, lang);
         cosmeticManager = new CosmeticManager(daoHub);
         profileManager = new ProfileManager(daoHub);

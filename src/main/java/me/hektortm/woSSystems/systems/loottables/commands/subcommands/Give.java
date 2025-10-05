@@ -36,7 +36,7 @@ public class Give extends SubCommand {
         Player p = Bukkit.getPlayer(args[0]);
         String id = args[1].toLowerCase();
 
-        manager.giveLoottables(p, id);
+        manager.triggerLoottable(p, sender, id);
         Utils.successMsg2Values(sender, "loottables", "given", "%player%", p.getName(), "%id%", id);
 
 

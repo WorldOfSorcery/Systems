@@ -46,7 +46,7 @@ public class ActionHandler {
                         return;
                     }
                 }
-                Bukkit.dispatchCommand(player, parts[1]);
+                Bukkit.getScheduler().runTask(WoSSystems.getPlugin(WoSSystems.class), () -> {Bukkit.dispatchCommand(player, parts[1]);});
                 continue;
             }
             if (cmd.startsWith("empty_line")) {
