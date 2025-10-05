@@ -3,7 +3,6 @@ package me.hektortm.woSSystems.systems.loottables.commands;
 
 import me.hektortm.woSSystems.systems.loottables.LoottableManager;
 import me.hektortm.woSSystems.systems.loottables.commands.subcommands.Give;
-import me.hektortm.woSSystems.systems.loottables.commands.subcommands.Reload;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
@@ -24,8 +23,6 @@ public class LoottableCommand implements CommandExecutor {
         this.loottableManager = loottableManager;
 
         subCommands.put("give", new Give(loottableManager));
-        subCommands.put("reload", new Reload(loottableManager));
-
     }
 
     @Override
@@ -47,5 +44,4 @@ public class LoottableCommand implements CommandExecutor {
 
         return true;
     }
-
 }

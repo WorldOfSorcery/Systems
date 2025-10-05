@@ -1,11 +1,20 @@
 package me.hektortm.woSSystems.systems.loottables;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
+import me.hektortm.woSSystems.utils.LoottableItemType;
+import me.hektortm.woSSystems.utils.dataclasses.Loottable;
+import me.hektortm.woSSystems.utils.dataclasses.LoottableItem;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.WoSCore;
+import me.hektortm.wosCore.discord.DiscordLog;
+import me.hektortm.wosCore.discord.DiscordLogger;
 import me.hektortm.wosCore.logging.LogManager;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 import java.io.File;
@@ -14,108 +23,35 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.logging.Level;
 
 public class LoottableManager {
+    private final DAOHub hub;
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
 
-    private final CitemManager citemManager;
-    private final WoSSystems woSSystems = WoSSystems.getPlugin(WoSSystems.class);
-    private final WoSCore core = WoSCore.getPlugin(WoSCore.class);
-    private final LogManager log = new LogManager(new LangManager(core), core);
-    private final File loottableFolder = new File(woSSystems.getDataFolder(), "loottables");
-  //  public final Map<String, JSONObject> loottableMap = new HashMap<>();
-
-    public LoottableManager(CitemManager citemManager) {
-        this.citemManager = citemManager;
-
-        if (!loottableFolder.exists()) {
-            loottableFolder.mkdir();
-        }
-
-        loadLoottables();
-    }
-
-    public void loadLoottables() {
-        File[] lootTableFiles = loottableFolder.listFiles((dir, name) -> name.endsWith(".json"));
-        if (lootTableFiles == null || lootTableFiles.length == 0) {
-            Bukkit.getLogger().warning("No valid loot tables found in folder: " + loottableFolder.getPath());
-            return;
-        }
-
-        for (File file : lootTableFiles) {
-            String lootTableId = file.getName().replace(".json", "");
-            try (FileReader reader = new FileReader(file)) {
-              //  JSONObject lootTableJson = (JSONObject) new JSONParser().parse(reader);
-
-                // Validate and store the loot table
-              //  loottableMap.put(lootTableId, lootTableJson);
-
-                Bukkit.getLogger().info("Loaded loot table: " + lootTableId);
-
-            } catch (Exception e) {
-                Bukkit.getLogger().warning("Error loading loot table from file " + file.getName() + ": " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
+    public LoottableManager(DAOHub hub) {
+        this.hub = hub;
     }
 
 
+    public void triggerLoottable(OfflinePlayer player, CommandSender source, String id) {
 
-    public void giveLoottables(Player p, String id) {
-       // JSONObject lootTable = loottableMap.get(id);
+        Loottable lt = hub.getLoottablesDAO().getLoottable(id);
 
-//        if (lootTable == null || lootTable.isEmpty()) {
-//            Bukkit.getLogger().warning("Loot table with ID '"+id+"' not found or is empty");
-//
-//            return;
-//        }
+        LoottableItem item = lt.getRandom();
 
-        Map<String, Integer> weightedActions = new HashMap<>();
-       // lootTable.forEach((category, value) -> {
-       //     JSONObject categoryItems = (JSONObject) value;
-       //     categoryItems.forEach((action, weight) -> {
-       //         weightedActions.put(category + ":" + action, ((Long) weight).intValue());
-       //     });
-       // });
-
-        int totalWeight = weightedActions.values().stream().mapToInt(Integer::intValue).sum();
-
-        if (totalWeight <= 0) {
-            Bukkit.getLogger().warning("Loot table with ID '" + id + "' has no valid chances.");
-            return;
-        }
-
-        // Generate a random value
-        int randomValue = new Random().nextInt(totalWeight);
-
-        // Determine which action to execute
-        int currentWeight = 0;
-        for (Map.Entry<String, Integer> entry : weightedActions.entrySet()) {
-            currentWeight += entry.getValue();
-            if (randomValue < currentWeight) {
-                String[] parts = entry.getKey().split(":");
-                String category = parts[0];
-                String action = parts[1];
-
-                switch (category) {
-                    case "command":
-                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), action.replace("{player}", p.getName()));
-                        break;
-                    case "citem":
-                        //citemManager.giveCitem(Bukkit.getConsoleSender(), p, action, 1);
-                        break;
-                    case "interaction":
-                        //interManager.triggerInteraction(p, action);
-                        break;
-                    default:
-                        Bukkit.getLogger().warning("Unrecognized category: " + category);
-                        break;
-                }
-                return; // Exit after executing one action
-            }
+        switch (item.getType()) {
+            case DIALOG -> hub.getDialogDAO().getDialog(item.getValue(), source, (Player) player);
+            case CITEM -> plugin.getCitemManager().giveCitem(source, (Player) player, item.getValue(), item.getParameter());
+            case GUI -> plugin.getGuiManager().openGUI((Player) player, item.getValue());
+            case INTERACTION -> plugin.getInteractionManager().triggerInteraction(item.getValue(), (Player) player);
+            case COMMAND -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), item.getValue());
+            default -> DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE,
+                    plugin,
+                    "f7b6954f",
+                    "Loottable type not recognized.", null
+            ));
         }
     }
-
-
-
-
 }
