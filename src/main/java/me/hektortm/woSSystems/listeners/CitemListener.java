@@ -31,6 +31,7 @@ import java.util.UUID;
 public class CitemListener implements Listener {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final CitemManager citemManager = plugin.getCitemManager();
+    private final InteractionManager interactionManager = plugin.getInteractionManager();
     private final CitemDisplays citemDisplays = plugin.getCitemDisplays();
     private final DAOHub hub;
     private final Map<Location, Long> blockCooldowns = new HashMap<>();
@@ -192,17 +193,43 @@ public class CitemListener implements Listener {
             switch (action) {
                 case RIGHT_CLICK_AIR:
                 case RIGHT_CLICK_BLOCK:
-                    citemManager.rightClickAction(p);
+                    rightClickAction(p);
                     break;
                 case LEFT_CLICK_AIR:
                 case LEFT_CLICK_BLOCK:
-                    citemManager.leftClickAction(p);
+                    leftClickAction(p);
                     break;
             }
 
             if (Boolean.TRUE.equals(data.get(Keys.UNUSABLE.get(), PersistentDataType.BOOLEAN))) {
                 e.setCancelled(true); // Prevent the item from being dropped
             }
+        }
+    }
+
+    public void leftClickAction(Player p) {
+        ItemStack item = p.getInventory().getItemInMainHand();
+        if (item == null || !item.hasItemMeta()) return;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        PersistentDataContainer data = meta.getPersistentDataContainer();
+        String actionId = data.get(Keys.LEFT_ACTION.get(), PersistentDataType.STRING);
+        if (actionId != null) {
+            interactionManager.triggerInteraction(actionId, p);
+        }
+    }
+
+    public void rightClickAction(Player p) {
+        ItemStack item = p.getInventory().getItemInMainHand();
+        if (item == null || !item.hasItemMeta()) return;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        PersistentDataContainer data = meta.getPersistentDataContainer();
+        String actionId = data.get(Keys.RIGHT_ACTION.get(), PersistentDataType.STRING);
+        if (actionId != null) {
+            interactionManager.triggerInteraction(actionId, p);
         }
     }
 

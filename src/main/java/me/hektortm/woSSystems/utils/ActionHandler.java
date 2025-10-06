@@ -18,6 +18,7 @@ public class ActionHandler {
     public enum SourceType {
         INTERACTION("interaction"),
         GUI("gui"),
+        DIALOG("dialog"),
         LOOTTABLE("loottable");
 
         private final String type;

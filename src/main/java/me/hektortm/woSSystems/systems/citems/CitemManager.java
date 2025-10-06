@@ -28,14 +28,12 @@ import java.util.UUID;
 public class CitemManager {
 
     private final DAOHub hub;
-    private InteractionManager interactionManager = WoSSystems.getPlugin(WoSSystems.class).getInteractionManager();
+
     private final LogManager log = new LogManager(new LangManager(WoSCore.getPlugin(WoSCore.class)),WoSCore.getPlugin(WoSCore.class));
 
 
     public CitemManager(DAOHub hub) {
         this.hub = hub;
-        WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-
     }
 
 
@@ -121,33 +119,6 @@ public class CitemManager {
         }
 
         return false;
-    }
-
-
-    public void leftClickAction(Player p) {
-        ItemStack item = p.getInventory().getItemInMainHand();
-        if (item == null || !item.hasItemMeta()) return;
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return;
-
-        PersistentDataContainer data = meta.getPersistentDataContainer();
-        String actionId = data.get(Keys.LEFT_ACTION.get(), PersistentDataType.STRING);
-        if (actionId != null) {
-            interactionManager.triggerInteraction(actionId, p);
-        }
-    }
-
-    public void rightClickAction(Player p) {
-        ItemStack item = p.getInventory().getItemInMainHand();
-        if (item == null || !item.hasItemMeta()) return;
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return;
-
-        PersistentDataContainer data = meta.getPersistentDataContainer();
-        String actionId = data.get(Keys.RIGHT_ACTION.get(), PersistentDataType.STRING);
-        if (actionId != null) {
-            interactionManager.triggerInteraction(actionId, p);
-        }
     }
 
 

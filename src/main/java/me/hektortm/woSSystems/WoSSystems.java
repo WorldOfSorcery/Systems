@@ -240,6 +240,7 @@ public final class WoSSystems extends JavaPlugin {
             lang.loadLangFileExternal(this, "cosmetics", core);
             lang.loadLangFileExternal(this, "cooldowns", core);
             lang.loadLangFileExternal(this, "interactions", core);
+            lang.loadLangFileExternal(this, "dialogs", core);
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }

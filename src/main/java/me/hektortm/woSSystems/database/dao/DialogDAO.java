@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.utils.ActionHandler;
 import me.hektortm.woSSystems.utils.dataclasses.Interaction;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.database.DatabaseManager;
@@ -208,13 +209,15 @@ public class DialogDAO implements IDAO {
             pstmt.setString(1, dialogId);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
+
                 String action = rs.getString("answer_action");
+                List<String> helperArray = new ArrayList<>();
+                helperArray.add(action);
                 Answer.Builder answerBuilder = new Answer.Builder()
                         .setAnswerID(String.valueOf(rs.getInt("answer_id")))
                         .setAnswerText(rs.getString("answer_text"))
-                        .addReplyMessage(rs.getString("answer_reply"))
                         .addCallback(player -> {
-                            plugin.getInteractionManager().triggerInteraction(action, player);
+                            plugin.getActionHandler().executeActions(player, helperArray, ActionHandler.SourceType.DIALOG, dialogId);
                         });
                 answers.add(answerBuilder.build());
             }
