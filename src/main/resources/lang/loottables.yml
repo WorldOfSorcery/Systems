@@ -1,7 +1,6 @@
 error:
   usage:
-    loottable: "Usage: /loottable <give|reload>"
-    give: "Usage: /loottable give <player> <id>"
+    loottable: "Usage: /loottable <trigger>"
+    give: "Usage: /loottable trigger <player> <id>"
 
-reload: "§aReloaded Loot tables."
-given: "§aYou have given §e%player%§a the loot table §e\"%id%\"§a."
+given: "§aYou have triggered the loot table §e'%id%' §afor §e%player%§a."

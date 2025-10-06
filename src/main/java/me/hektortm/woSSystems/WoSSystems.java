@@ -62,10 +62,7 @@ import me.hektortm.woSSystems.systems.stats.commands.GlobalStatCommand;
 import me.hektortm.woSSystems.systems.stats.commands.StatsCommand;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableCommand;
-import me.hektortm.woSSystems.utils.ConditionHandler;
-import me.hektortm.woSSystems.utils.PermissionRegistry;
-import me.hektortm.woSSystems.utils.Permissions;
-import me.hektortm.woSSystems.utils.PlaceholderResolver;
+import me.hektortm.woSSystems.utils.*;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
@@ -116,6 +113,7 @@ public final class WoSSystems extends JavaPlugin {
     private EcoManager ecoManager;
     private StatsManager statsManager;
     private UnlockableManager unlockableManager;
+    private ActionHandler actionHandler;
     private InteractionManager interactionManager;
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
@@ -211,6 +209,7 @@ public final class WoSSystems extends JavaPlugin {
         conditionHandler = new ConditionHandler(daoHub);
         guiManager = new GUIManager(daoHub);
 
+        actionHandler = new ActionHandler();
         interactionManager = new InteractionManager(daoHub);
         cooldownManager = new CooldownManager(daoHub);
         channelManager = new ChannelManager(this, daoHub);
@@ -508,6 +507,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public ConditionHandler getConditionHandler() {
         return conditionHandler;
+    }
+    public ActionHandler getActionHandler() {
+        return actionHandler;
     }
     public InteractionManager getInteractionManager() {
         return interactionManager;

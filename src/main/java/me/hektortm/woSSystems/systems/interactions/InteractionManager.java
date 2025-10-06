@@ -20,7 +20,7 @@ public class InteractionManager {
     private final DAOHub hub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final ConditionHandler conditions = plugin.getConditionHandler();
-    private final ActionHandler actionHandler = new ActionHandler();
+    private final ActionHandler actionHandler = plugin.getActionHandler();
 
 
 

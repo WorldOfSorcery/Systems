@@ -8,17 +8,17 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class Give extends SubCommand {
+public class Trigger extends SubCommand {
 
     private final LoottableManager manager;
 
-    public Give(LoottableManager manager) {
+    public Trigger(LoottableManager manager) {
         this.manager = manager;
     }
 
     @Override
     public String getName() {
-        return "give";
+        return "trigger";
     }
 
     @Override
@@ -29,7 +29,7 @@ public class Give extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            Utils.error(sender, "loottables", "error.usage.give");
+            Utils.error(sender, "loottables", "error.usage.trigger");
             return;
         }
 
@@ -37,7 +37,7 @@ public class Give extends SubCommand {
         String id = args[1].toLowerCase();
 
         manager.triggerLoottable(p, sender, id);
-        Utils.successMsg2Values(sender, "loottables", "given", "%player%", p.getName(), "%id%", id);
+        Utils.successMsg2Values(sender, "loottables", "triggered", "%player%", p.getName(), "%id%", id);
 
 
     }

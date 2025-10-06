@@ -17,7 +17,8 @@ public class ActionHandler {
     private final List<String> blacklist = Arrays.asList("op", "gmc", "gamemode");
     public enum SourceType {
         INTERACTION("interaction"),
-        GUI("gui");
+        GUI("gui"),
+        LOOTTABLE("loottable");
 
         private final String type;
         SourceType(String type) {

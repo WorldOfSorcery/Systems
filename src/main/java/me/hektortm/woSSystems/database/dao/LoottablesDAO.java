@@ -39,12 +39,11 @@ public class LoottablesDAO implements IDAO {
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS `loottable_items` (
                     `loottable_id` VARCHAR(60) NOT NULL,
-                    `id` INT NOT NULL,
+                    `item_id` INT NOT NULL,
                     `weight` INT NOT NULL,
                     `type` VARCHAR(255) NOT NULL,
                     `value` VARCHAR(255) NOT NULL,
-                    `parameter` INT,
-                    PRIMARY KEY (`id`)
+                    `parameter` INT
                 )
                """);
         }

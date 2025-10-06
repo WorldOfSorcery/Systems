@@ -2,7 +2,7 @@ package me.hektortm.woSSystems.systems.loottables.commands;
 
 
 import me.hektortm.woSSystems.systems.loottables.LoottableManager;
-import me.hektortm.woSSystems.systems.loottables.commands.subcommands.Give;
+import me.hektortm.woSSystems.systems.loottables.commands.subcommands.Trigger;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
@@ -22,13 +22,13 @@ public class LoottableCommand implements CommandExecutor {
     public LoottableCommand(LoottableManager loottableManager) {
         this.loottableManager = loottableManager;
 
-        subCommands.put("give", new Give(loottableManager));
+        subCommands.put("trigger", new Trigger(loottableManager));
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if (args.length == 0) {
-            Utils.error(sender, "loottables", "error.usage.loottable");
+            Utils.info(sender, "loottables", "error.usage.loottable");
             return true;
         }
 
@@ -39,7 +39,7 @@ public class LoottableCommand implements CommandExecutor {
             if(!(PermissionUtil.hasPermission(sender, subCommand.getPermission()))) return true;
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));
         } else {
-            Utils.error(sender, "loottables", "error.usage.loottable");
+            Utils.info(sender, "loottables", "error.usage.loottable");
         }
 
         return true;
