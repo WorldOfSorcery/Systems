@@ -38,7 +38,8 @@ public class LoottablesDAO implements IDAO {
 
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS `loottable_items` (
-                    `id` VARCHAR(60) NOT NULL,
+                    `loottable_id` VARCHAR(60) NOT NULL,
+                    `id` INT NOT NULL,
                     `weight` INT NOT NULL,
                     `type` VARCHAR(255) NOT NULL,
                     `value` VARCHAR(255) NOT NULL,
@@ -51,7 +52,7 @@ public class LoottablesDAO implements IDAO {
 
     public Loottable getLoottable(String id) {
         Loottable lt = null;
-        String sql = "SELECT * FROM loottable_items WHERE id = ?";
+        String sql = "SELECT * FROM loottable_items WHERE loottable_id = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
 
