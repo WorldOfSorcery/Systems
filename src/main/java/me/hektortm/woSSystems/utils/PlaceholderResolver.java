@@ -37,6 +37,28 @@ public class PlaceholderResolver {
             text = text.replace("{player_name}", player.getName());
         }
 
+        if(text.contains("{player_nick}")) {
+            text = text.replace("{player_nick}", hub.getNicknameDAO().getNickname(player.getUniqueId()));
+        }
+
+        if(text.contains("{player_cosmetic.")) {
+            String badgePlaceholder = "{player_cosmetic.badge}";
+            String prefixPlaceholder = "{player_cosmetic.prefix}";
+            String titlePlaceholder = "{player_cosmetic.title}";
+            if (text.contains(badgePlaceholder)) {
+                String badge = hub.getCosmeticsDAO().getCurrentCosmetic(player, CosmeticType.BADGE);
+                text = text.replace(badgePlaceholder, badge);
+            }
+            if (text.contains(prefixPlaceholder)) {
+                String prefix = hub.getCosmeticsDAO().getCurrentCosmetic(player, CosmeticType.PREFIX);
+                text = text.replace(prefixPlaceholder, prefix);
+            }
+            if (text.contains(titlePlaceholder)) {
+                String title = hub.getCosmeticsDAO().getCurrentCosmetic(player, CosmeticType.TITLE);
+                text = text.replace(titlePlaceholder, title);
+            }
+        }
+
         if(text.contains("{stats.")) {
             for (String statId : statsManager.getStats().keySet()) {
                 String amountPlaceholder = "{stats.amount:" + statId +"}";
@@ -89,6 +111,7 @@ public class PlaceholderResolver {
                 }
             }
         }
+
         if(text.contains("{citems.")) {
             for (String citemId : hub.getCitemDAO().getCitemIds()) {
                 String namePlaceholder = "{citems.name:"+citemId+"}";
