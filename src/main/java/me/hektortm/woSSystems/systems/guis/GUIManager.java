@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.systems.guis;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.DyedItemColor;
+import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.ActionHandler;
@@ -28,6 +29,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import javax.swing.text.html.HTML;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -120,6 +122,16 @@ public class GUIManager implements Listener {
                 meta.addEnchant(Enchantment.UNBREAKING, 1, true);
                 meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             }
+
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES,
+                    ItemFlag.HIDE_ENCHANTS,
+                    ItemFlag.HIDE_UNBREAKABLE,
+                    ItemFlag.HIDE_ADDITIONAL_TOOLTIP,
+                    ItemFlag.HIDE_DESTROYS,
+                    ItemFlag.HIDE_ARMOR_TRIM,
+                    ItemFlag.HIDE_PLACED_ON,
+                    ItemFlag.HIDE_STORED_ENCHANTS,
+                    ItemFlag.HIDE_DYE);
 
             item.setItemMeta(meta);
             item.setAmount(slot.getAmount());
