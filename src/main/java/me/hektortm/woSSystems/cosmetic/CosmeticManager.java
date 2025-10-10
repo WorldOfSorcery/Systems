@@ -49,7 +49,7 @@ public class CosmeticManager {
             String id = entry.getKey();
             String permNode = entry.getValue();
 
-            if (permNode == null || id == null) {
+            if (permNode == null || permNode.isBlank() || id == null) {
                 plugin.writeLog("CosmeticManager", Level.WARNING, "Null permission node or id for prefix: " + entry);
                 continue;
             }
@@ -97,7 +97,7 @@ public class CosmeticManager {
             String id = entry.getKey();
             String permNode = entry.getValue();
 
-            if (permNode == null || id == null) {
+            if (permNode == null || permNode.isBlank() ||  id == null) {
                 plugin.writeLog("CosmeticManager", Level.WARNING, "Null permission node or id for prefix: " + entry);
                 continue;
             }
@@ -143,7 +143,7 @@ public class CosmeticManager {
             String id = entry.getKey();
             String permNode = entry.getValue();
 
-            if (permNode == null || id == null) {
+            if (permNode == null || permNode.isBlank() || id == null) {
                 plugin.writeLog("CosmeticManager", Level.WARNING, "Null permission node or id for prefix: " + entry);
                 continue;
             }
