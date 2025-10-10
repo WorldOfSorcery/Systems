@@ -67,7 +67,15 @@ public class  Flag extends SubCommand {
                     }
                     case "hide" -> {
                         Utils.success(p, "citems", "flag.add", "%flag%", flag) ;
-                        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_UNBREAKABLE);
+                        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES,
+                                ItemFlag.HIDE_ENCHANTS,
+                                ItemFlag.HIDE_UNBREAKABLE,
+                                ItemFlag.HIDE_ADDITIONAL_TOOLTIP,
+                                ItemFlag.HIDE_DESTROYS,
+                                ItemFlag.HIDE_ARMOR_TRIM,
+                                ItemFlag.HIDE_PLACED_ON,
+                                ItemFlag.HIDE_STORED_ENCHANTS,
+                                ItemFlag.HIDE_DYE);
                     }
                     case "placeable" -> {
                         if (args.length < 3) {
