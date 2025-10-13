@@ -214,7 +214,7 @@ public class CosmeticsDAO implements IDAO {
             }
         } catch (SQLException e) {
             DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "4d4c8392", "Failed to fetch Cosmetic for Permission: ", e
+                    Level.SEVERE, plugin, "203458f8", "Failed to fetch Cosmetic for Permission: ", e
             ));
         }
         return cosmetics;
