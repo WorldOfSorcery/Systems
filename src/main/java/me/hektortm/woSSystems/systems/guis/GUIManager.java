@@ -90,9 +90,8 @@ public class GUIManager implements Listener {
             ItemStack item = new ItemStack(Objects.requireNonNull(Material.getMaterial(placeholderResolver.resolvePlaceholders(slot.getMaterial().toString(), player))));
             ItemMeta meta = item.getItemMeta();
 
-            if (slot.getDisplayName() != null) {
-                meta.setDisplayName(Utils.parseColorCodeString(placeholderResolver.resolvePlaceholders(slot.getDisplayName(), player)));
-            }
+            if (slot.getDisplayName() != null) meta.setDisplayName(Utils.parseColorCodeString(placeholderResolver.resolvePlaceholders(slot.getDisplayName(), player)));
+
 
             if (slot.getLore() != null && !slot.getLore().isEmpty()) {
 
@@ -104,14 +103,12 @@ public class GUIManager implements Listener {
                 meta.setLore(slotLore);
             }
 
-            if (slot.getModel() != null) {
-                meta.setItemModel(new NamespacedKey("wos", placeholderResolver.resolvePlaceholders(slot.getModel(), player)));
-            }
-            DyedItemColor dyedColor = null;
-            if(slot.getColor() != null) {
-                dyedColor = dyedItemColor(hexToBukkitColor(slot.getColor()));
+            if (slot.getModel() != null) meta.setItemModel(new NamespacedKey("wos", placeholderResolver.resolvePlaceholders(slot.getModel(), player)));
 
-            }
+            DyedItemColor dyedColor = null;
+            if(slot.getColor() != null) dyedColor = dyedItemColor(hexToBukkitColor(slot.getColor()));
+
+
 
             if(slot.getTooltip() != null && slot.getTooltip().isEmpty()) {
                 if (Objects.equals(slot.getTooltip(), "hidden")) meta.setHideTooltip(true);
