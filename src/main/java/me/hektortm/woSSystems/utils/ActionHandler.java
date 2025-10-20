@@ -119,7 +119,7 @@ public class ActionHandler {
                 continue;
             }
 
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand);
+            Bukkit.getScheduler().runTask(WoSSystems.getPlugin(WoSSystems.class), () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand));
         }
     }
 
