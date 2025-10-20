@@ -56,6 +56,7 @@ public class CitemListener implements Listener {
             if ((e.getClickedBlock().getType() == Material.BARRIER || e.getClickedBlock().getType() == Material.DEAD_TUBE_CORAL_FAN) && p.getInventory().getItemInMainHand().isEmpty()) {
                 if (action.isRightClick() && !p.isSneaking()) {
                     if (hub.getCitemDAO().isItemDisplay(locClicked)) {
+                        if (hub.getCitemDAO().isCreativePlaced(locClicked) && p.getGameMode() != GameMode.CREATIVE) return;
                         if (hub.getCitemDAO().isItemDisplayOwner(locClicked, p.getUniqueId()) || p.getGameMode() == GameMode.CREATIVE) {
                             long currentTime = System.currentTimeMillis();
                             long cooldownTime = 250; // 250 ms cooldown
@@ -77,6 +78,7 @@ public class CitemListener implements Listener {
                 }
                 if ((action.isRightClick() && p.isSneaking()) && p.getInventory().getItemInMainHand().isEmpty()) {
                     if (hub.getCitemDAO().isItemDisplay(locClicked)) {
+                        if (hub.getCitemDAO().isCreativePlaced(locClicked) && p.getGameMode() != GameMode.CREATIVE) return;
                         if (hub.getCitemDAO().isItemDisplayOwner(locClicked, p.getUniqueId()) || p.getGameMode() == GameMode.CREATIVE) {
 
                             long currentTime = System.currentTimeMillis();
@@ -162,7 +164,7 @@ public class CitemListener implements Listener {
                         displayCooldowns.put(p.getUniqueId(), currentTime);
 
                         // Spawn an ItemDisplay entity
-                        citemDisplays.spawnItemDisplay(spawnLocation, id, p.getUniqueId()); // Set the transformation (scale, rotation, etc.)
+                        citemDisplays.spawnItemDisplay(spawnLocation, id, p); // Set the transformation (scale, rotation, etc.)
                         // Spawn a Barrier block
                         if (data.get(Keys.PLACEABLE.get(), PersistentDataType.INTEGER) == 1) {
                             Material setMat = Material.DEAD_TUBE_CORAL_FAN;

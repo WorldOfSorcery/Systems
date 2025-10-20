@@ -1,12 +1,10 @@
 package me.hektortm.woSSystems.systems.citems;
 
 import me.hektortm.woSSystems.database.DAOHub;
-import org.bukkit.Color;
-import org.bukkit.Location;
-import org.bukkit.Particle;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Transformation;
 import org.joml.AxisAngle4f;
@@ -68,7 +66,7 @@ public class CitemDisplays {
     }
 
 
-    public void spawnItemDisplay(Location blockLocation, String id, UUID uuid) {
+    public void spawnItemDisplay(Location blockLocation, String id, Player p) {
         ItemStack item = hub.getCitemDAO().getCitem(id);
         if (blockLocation == null || item == null) {
             System.out.println("Spawn location or item is null!");
@@ -100,7 +98,7 @@ public class CitemDisplays {
             return;
         }
 
-        hub.getCitemDAO().createItemDisplay(id, uuid, blockLocation, displayLocation);
+        hub.getCitemDAO().createItemDisplay(id, p.getUniqueId(), blockLocation, displayLocation, p.getGameMode() == GameMode.CREATIVE);
 
     }
 

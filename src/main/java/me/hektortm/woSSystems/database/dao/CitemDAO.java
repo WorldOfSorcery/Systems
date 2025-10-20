@@ -53,6 +53,7 @@ public class CitemDAO implements IDAO {
                     "owner_uuid CHAR(36) NOT NULL, " +
                     "block_location VARCHAR(255) NOT NULL, " +
                     "display_location VARCHAR(255) NOT NULL," +
+                    "creative_placed BOOLEAN NOT NULL DEFAULT FALSE," +
                     "PRIMARY KEY (citem_id))");
         } catch (SQLException e) {
             WoSSystems.discordLog(Level.SEVERE, "CID:adc901cc", "Failed to intiialize CitemDAO table: ", e);
@@ -172,15 +173,16 @@ public class CitemDAO implements IDAO {
     }
 
 
-    public void createItemDisplay(String id, UUID ownerUUID, Location blockLocation, Location displayLocation) {
+    public void createItemDisplay(String id, UUID ownerUUID, Location blockLocation, Location displayLocation, boolean isCreative) {
         String bLoc = Parsers.locationToString(blockLocation);
         String dLoc = Parsers.locationToString(displayLocation);
-        String sql = "INSERT INTO placed_citems (citem_id, owner_uuid, block_location, display_location) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO placed_citems (citem_id, owner_uuid, block_location, display_location, creative_placed) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
             pstmt.setString(2, ownerUUID.toString());
             pstmt.setString(3, bLoc);
             pstmt.setString(4, dLoc);
+            pstmt.setBoolean(5, isCreative);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             WoSSystems.discordLog(Level.SEVERE, "9e2bb566", "Failed to create Item Display", e);
@@ -225,6 +227,22 @@ public class CitemDAO implements IDAO {
         } catch (SQLException e) {
             WoSSystems.discordLog(Level.SEVERE, "621ebf18", "Failed to change Item Display", e);
         }
+    }
+
+    public boolean isCreativePlaced(Location location) {
+        String loc = Parsers.locationToString(location);
+        String sql = "SELECT * FROM placed_citems WHERE block_location = ? AND creative_placed = true";
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, loc);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getBoolean("creative_placed");
+            }
+        } catch (SQLException e) {
+            WoSSystems.discordLog(Level.SEVERE, "d3041663", "Failed to check if Creative Placed", e);
+            return false;
+        }
+        return false;
     }
 
     public Location getDisplayLocation(Location location) {
