@@ -97,7 +97,7 @@ public enum Permissions {
     DIALOG_TRIGGER("dialog.trigger"),
 
     LOOTTABLE_GIVE("loottable.give"),
-    LOOTTABLE_RELOAD("loottable.reload"),
+    LOOTTABLE_CHEST("loottable.chest"),
 
     COOLDOWNS_GIVE("cooldowns.give"),
     COOLDOWNS_REMOVE("cooldowns.remove"),
@@ -164,6 +164,11 @@ public enum Permissions {
     PORTAL_STATS_CREATE("portal.stats.create"),
     PORTAL_STATS_DELETE("portal.stats.delete"),
     PORTAL_STATS_MODIFY("portal.stats.modify"),
+
+    PORTAL_GLOBALSTATS_VIEW("portal.globalstats.view"),
+    PORTAL_GLOBALSTATS_CREATE("portal.globalstats.create"),
+    PORTAL_GLOBALSTATS_DELETE("portal.globalstats.delete"),
+    PORTAL_GLOBALSTATS_MODIFY("portal.globalstats.modify"),
 
     PORTAL_TIMEEVENTS_VIEW("portal.timeevents.view"),
     PORTAL_TIMEEVENTS_CREATE("portal.timeevents.create"),

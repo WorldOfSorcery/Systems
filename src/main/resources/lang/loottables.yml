@@ -1,6 +1,13 @@
 error:
+  not-number: "The row Parameter has to be a number. (1-6)"
+info:
+  invalid-rows: "Invalid Number of rows. Use 1-6 Rows"
   usage:
-    loottable: "Usage: /loottable <trigger>"
+    loottable: "Usage: /loottable <trigger|chest>"
     give: "Usage: /loottable trigger <player> <id>"
+    chest: "Usage: /loottable chest <rows> <player> <id>"
+
+
 
 given: "§aYou have triggered the loot table §e'%id%' §afor §e%player%§a."
+chest: "§aYou have opened the chest LT §e'%id%' §afor §e%player%§a."

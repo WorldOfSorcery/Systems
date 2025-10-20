@@ -29,7 +29,7 @@ public class Trigger extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            Utils.error(sender, "loottables", "error.usage.trigger");
+            Utils.info(sender, "loottables", "error.usage.trigger");
             return;
         }
 

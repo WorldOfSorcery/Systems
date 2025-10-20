@@ -379,7 +379,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("crecipe", new CRecipeCommand(this, recipeManager, lang));
         cmdReg("channel", new ChannelCommand());
         cmdReg("nickname", new NicknameCommand());
-        cmdReg("loottable", new LoottableCommand(lootTableManager));
+        cmdReg("loottable", new LoottableCommand(daoHub, lootTableManager));
         cmdReg("sign", new SignCommand(citemManager, ecoManager));
         cmdReg("time", new TimeCommand(timeManager, this, lang));
         cmdReg("internalviewitem", new InternalViewItemCommand(this));

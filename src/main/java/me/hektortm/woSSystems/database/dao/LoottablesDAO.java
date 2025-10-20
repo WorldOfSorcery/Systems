@@ -9,6 +9,7 @@ import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
 import me.hektortm.wosCore.discord.DiscordLogger;
+import org.bukkit.inventory.ItemStack;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ public class LoottablesDAO implements IDAO {
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS loottables (
                     id VARCHAR(60) NOT NULL,
+                    amount INT NOT NULL DEFAULT 1,
                     PRIMARY KEY (id)
                 )
             """);
@@ -49,6 +51,45 @@ public class LoottablesDAO implements IDAO {
         }
     }
 
+    public int getAmount(String id) {
+        String sql = "SELECT amount FROM loottables WHERE id = ?";
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("amount");
+            }
+        } catch (SQLException e) {
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE,
+                    plugin,
+                    "30d8689d",
+                    "Failed to get Loottable Amount: " +
+                            "\nID: "+id, e
+            ));
+        }
+        return 0;
+    }
+    public String getName(String id) {
+        String sql = "SELECT name FROM loottables WHERE id = ?";
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("name") != null ? rs.getString("name") : null;
+            }
+        } catch (SQLException e) {
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE,
+                    plugin,
+                    "30d8689d",
+                    "Failed to get Loottable Name: " +
+                            "\nID: "+id, e
+            ));
+        }
+        return null;
+    }
+
     public Loottable getLoottable(String id) {
         Loottable lt = null;
         String sql = "SELECT * FROM loottable_items WHERE loottable_id = ?";
@@ -60,6 +101,7 @@ public class LoottablesDAO implements IDAO {
             while (rs.next()) {
                 int weight = rs.getInt("weight");
                 String value = rs.getString("value");
+                String name = getName(id);
                 LoottableItemType type = parseItemType(rs.getString("type"));
                 if (type == null) {
                     DiscordLogger.log(new DiscordLog(Level.WARNING, plugin, "8e7aaad0", "Invalid Item Type", null));
@@ -72,7 +114,7 @@ public class LoottablesDAO implements IDAO {
 
 
                 items.add(new LoottableItem(weight, type, value, parameter));
-                lt = new Loottable(id, items);
+                lt = new Loottable(id, getAmount(id),name != null ? name : id,items);
             }
 
         } catch(SQLException e) {
@@ -86,6 +128,7 @@ public class LoottablesDAO implements IDAO {
         }
         return lt;
     }
+
 
     private LoottableItemType parseItemType(String itemType) {
         if (itemType == null) return null;
