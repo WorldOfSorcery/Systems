@@ -9,6 +9,7 @@ public enum Keys {
     UNUSABLE("unusable"),
     UNDROPPABLE("undroppable"),
     LEFT_ACTION("action-left"),
+    PLACED_ACTION("action-placed"),
     RIGHT_ACTION("action-right"),
     PLACEABLE("placeable");
     

@@ -35,6 +35,8 @@ import me.hektortm.woSSystems.regions.RegionHandler;
 import me.hektortm.woSSystems.regions.RegionBossBar;
 import me.hektortm.woSSystems.systems.citems.CitemDisplays;
 import me.hektortm.woSSystems.systems.citems.commands.SignCommand;
+import me.hektortm.woSSystems.systems.commands.BasicCommandExecutor;
+import me.hektortm.woSSystems.systems.commands.BasicCommandManager;
 import me.hektortm.woSSystems.systems.cooldowns.CooldownManager;
 import me.hektortm.woSSystems.systems.cooldowns.cmd.CooldownCommand;
 import me.hektortm.woSSystems.systems.guis.GUIManager;
@@ -63,6 +65,7 @@ import me.hektortm.woSSystems.systems.stats.commands.StatsCommand;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.systems.unlockables.commands.UnlockableCommand;
 import me.hektortm.woSSystems.utils.*;
+import me.hektortm.woSSystems.utils.dataclasses.BasicCommand;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
@@ -78,10 +81,7 @@ import me.tofaa.entitylib.spigot.SpigotEntityLibPlatform;
 import org.aselstudios.luxdialoguesapi.DialogueProvider;
 import org.aselstudios.luxdialoguesapi.LuxDialoguesAPI;
 import org.bukkit.Bukkit;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandMap;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.PluginCommand;
+import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
@@ -261,6 +261,7 @@ public final class WoSSystems extends JavaPlugin {
         }
         channelManager.loadChannels();
         registerChannelCommands();
+        registerBasicCommands();
         //recipeManager.loadRecipes();
         registerCommands();
         registerEvents();
@@ -336,6 +337,12 @@ public final class WoSSystems extends JavaPlugin {
     private void registerChannelCommands() {
         for (Channel channel : channelManager.getChannels()) {
             registerCommand(channel.getShortName(), new ChannelCommandExecutor(channelManager, channel));
+        }
+    }
+
+    private void registerBasicCommands() {
+        for (BasicCommand command : daoHub.getCommandsDAO().getCommands()) {
+            registerCommand(command.getCommand(), new BasicCommandExecutor(command));
         }
     }
 
@@ -455,6 +462,9 @@ public final class WoSSystems extends JavaPlugin {
         ));
     }
 
+    public static WoSSystems getInstance() {
+        return instance;
+    }
     public WoSCore getCore() {
         return core;
     }

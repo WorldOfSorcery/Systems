@@ -74,7 +74,7 @@ public class InteractionManager {
 
     public void triggerInteraction(String interactionId, Player player) {
         Interaction inter = getInteraction(interactionId);
-        if (inter == null) return;
+        if (inter == null) player.sendMessage("§cThis is not configured correctly. Please message a Staff member.");
 
         List<InteractionAction> actions = inter.getActions();
 
