@@ -87,6 +87,7 @@ action:
   set:
     left: "§aLeftclick action set to §e%action%§a Interaction."
     right: "§aRightclick action set to §e%action%§a Interaction."
+    placed: "§aPlaced action set to §e%action%§a Interaction."
 
 renamed: "§aItem name set to: %name%"
 saved: "§aItem saved successfully as §e%id%"

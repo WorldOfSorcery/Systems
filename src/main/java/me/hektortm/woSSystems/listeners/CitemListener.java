@@ -74,6 +74,16 @@ public class CitemListener implements Listener {
                             citemDisplays.rotateItemDisplay(locClicked);
                             p.playSound(locClicked, Sound.ITEM_SPYGLASS_USE, 1L, 1L);
                         }
+
+                        String id = hub.getCitemDAO().getItemDisplayID(locClicked);
+                        ItemStack citem = hub.getCitemDAO().getCitem(id);
+                        PersistentDataContainer data = citem.getItemMeta().getPersistentDataContainer();
+                        String interId = data.get(Keys.PLACED_ACTION.get(), PersistentDataType.STRING);
+                        if (interId != null) {
+                            plugin.getInteractionManager().triggerInteraction(interId, e.getPlayer());
+                        }
+                        else return;
+
                     }
                 }
                 if ((action.isRightClick() && p.isSneaking()) && p.getInventory().getItemInMainHand().isEmpty()) {
