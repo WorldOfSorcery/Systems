@@ -1,5 +1,7 @@
 package me.hektortm.woSSystems.systems.guis;
 
+import com.destroystokyo.paper.profile.PlayerProfile;
+import com.destroystokyo.paper.profile.ProfileProperty;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.DyedItemColor;
 import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
@@ -28,6 +30,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import javax.swing.text.html.HTML;
 import java.util.*;
@@ -86,51 +89,25 @@ public class GUIManager implements Listener {
                 preLore.set(i, placeholderResolver.resolvePlaceholders(preLore.get(i), player).replace("&", "§"));
             }
 
-
             ItemStack item = new ItemStack(Objects.requireNonNull(Material.getMaterial(placeholderResolver.resolvePlaceholders(slot.getMaterial().toString(), player))));
-            ItemMeta meta = item.getItemMeta();
-
-            if (slot.getDisplayName() != null) meta.setDisplayName(Utils.parseColorCodeString(placeholderResolver.resolvePlaceholders(slot.getDisplayName(), player)));
-
-
-            if (slot.getLore() != null && !slot.getLore().isEmpty()) {
-
-                List<String> slotLore = slot.getLore();
-                for (int i = 0; i < slotLore.size(); i++) {
-                    slotLore.set(i, Utils.parseColorCodeString(placeholderResolver.resolvePlaceholders(slotLore.get(i), player)));
-                }
-
-                meta.setLore(slotLore);
+            SkullMeta sMeta = null;
+            ItemMeta iMeta = null;
+            if (item.getType() == Material.PLAYER_HEAD) {
+                sMeta = (SkullMeta) item.getItemMeta();
+            } else {
+                iMeta = item.getItemMeta();
             }
 
-            if (slot.getModel() != null) meta.setItemModel(new NamespacedKey("wos", placeholderResolver.resolvePlaceholders(slot.getModel(), player)));
 
             DyedItemColor dyedColor = null;
             if(slot.getColor() != null) dyedColor = dyedItemColor(hexToBukkitColor(slot.getColor()));
 
 
-
-            if(slot.getTooltip() != null && slot.getTooltip().isEmpty()) {
-                if (Objects.equals(slot.getTooltip(), "hidden")) meta.setHideTooltip(true);
-                else if(slot.getTooltip() != null && !slot.getTooltip().isEmpty()) meta.setTooltipStyle(new NamespacedKey("minecraft", placeholderResolver.resolvePlaceholders(slot.getTooltip(), player)));
+            if (sMeta != null) {
+                item.setItemMeta(generateSkullMeta(sMeta, slot, player));
+            } else if (iMeta != null) {
+                item.setItemMeta(generateItemMeta(iMeta, slot, player));
             }
-
-            if (slot.isEnchanted()) {
-                meta.addEnchant(Enchantment.UNBREAKING, 1, true);
-                meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-            }
-
-            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES,
-                    ItemFlag.HIDE_ENCHANTS,
-                    ItemFlag.HIDE_UNBREAKABLE,
-                    ItemFlag.HIDE_ADDITIONAL_TOOLTIP,
-                    ItemFlag.HIDE_DESTROYS,
-                    ItemFlag.HIDE_ARMOR_TRIM,
-                    ItemFlag.HIDE_PLACED_ON,
-                    ItemFlag.HIDE_STORED_ENCHANTS,
-                    ItemFlag.HIDE_DYE);
-
-            item.setItemMeta(meta);
             item.setAmount(slot.getAmount());
             if (dyedColor != null) item.setData(DataComponentTypes.DYED_COLOR, dyedColor);
             inventory.setItem(slot.getSlot(), item);
@@ -219,4 +196,89 @@ public class GUIManager implements Listener {
             return null;
         }
     }
+
+    private ItemMeta generateItemMeta(ItemMeta meta, GUISlot slot, Player player) {
+        if (slot.getDisplayName() != null) meta.setDisplayName(Utils.parseColorCodeString(placeholderResolver.resolvePlaceholders(slot.getDisplayName(), player)));
+
+
+        if (slot.getLore() != null && !slot.getLore().isEmpty()) {
+
+            List<String> slotLore = slot.getLore();
+            for (int i = 0; i < slotLore.size(); i++) {
+                slotLore.set(i, Utils.parseColorCodeString(placeholderResolver.resolvePlaceholders(slotLore.get(i), player)));
+            }
+
+            meta.setLore(slotLore);
+        }
+        if (slot.getModel() != null) {
+            meta.setItemModel(new NamespacedKey("wos", placeholderResolver.resolvePlaceholders(slot.getModel(), player)));
+        }
+
+        if(slot.getTooltip() != null && slot.getTooltip().isEmpty()) {
+            if (Objects.equals(slot.getTooltip(), "hidden")) meta.setHideTooltip(true);
+            else if(slot.getTooltip() != null && !slot.getTooltip().isEmpty()) meta.setTooltipStyle(new NamespacedKey("minecraft", placeholderResolver.resolvePlaceholders(slot.getTooltip(), player)));
+        }
+
+        if (slot.isEnchanted()) {
+            meta.addEnchant(Enchantment.UNBREAKING, 1, true);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES,
+                ItemFlag.HIDE_ENCHANTS,
+                ItemFlag.HIDE_UNBREAKABLE,
+                ItemFlag.HIDE_ADDITIONAL_TOOLTIP,
+                ItemFlag.HIDE_DESTROYS,
+                ItemFlag.HIDE_ARMOR_TRIM,
+                ItemFlag.HIDE_PLACED_ON,
+                ItemFlag.HIDE_STORED_ENCHANTS,
+                ItemFlag.HIDE_DYE);
+
+        return meta;
+    }
+
+    private SkullMeta generateSkullMeta(SkullMeta meta, GUISlot slot, Player player) {
+
+        if (slot.getDisplayName() != null) meta.setDisplayName(Utils.parseColorCodeString(placeholderResolver.resolvePlaceholders(slot.getDisplayName(), player)));
+
+
+        if (slot.getLore() != null && !slot.getLore().isEmpty()) {
+
+            List<String> slotLore = slot.getLore();
+            for (int i = 0; i < slotLore.size(); i++) {
+                slotLore.set(i, Utils.parseColorCodeString(placeholderResolver.resolvePlaceholders(slotLore.get(i), player)));
+            }
+
+            meta.setLore(slotLore);
+        }
+        if (slot.getModel() != null) {
+            String model = slot.getModel();
+            PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+            profile.setProperty(new ProfileProperty("textures", model));
+            meta.setPlayerProfile(profile);
+        }
+
+        if(slot.getTooltip() != null && slot.getTooltip().isEmpty()) {
+            if (Objects.equals(slot.getTooltip(), "hidden")) meta.setHideTooltip(true);
+            else if(slot.getTooltip() != null && !slot.getTooltip().isEmpty()) meta.setTooltipStyle(new NamespacedKey("minecraft", placeholderResolver.resolvePlaceholders(slot.getTooltip(), player)));
+        }
+
+        if (slot.isEnchanted()) {
+            meta.addEnchant(Enchantment.UNBREAKING, 1, true);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES,
+                ItemFlag.HIDE_ENCHANTS,
+                ItemFlag.HIDE_UNBREAKABLE,
+                ItemFlag.HIDE_ADDITIONAL_TOOLTIP,
+                ItemFlag.HIDE_DESTROYS,
+                ItemFlag.HIDE_ARMOR_TRIM,
+                ItemFlag.HIDE_PLACED_ON,
+                ItemFlag.HIDE_STORED_ENCHANTS,
+                ItemFlag.HIDE_DYE);
+
+        return meta;
+    }
+
 }
