@@ -46,7 +46,7 @@ public class GUIDAO implements IDAO {
                     "material VARCHAR(255)," +
                     "display_name VARCHAR(255)," +
                     "lore TEXT," +
-                    "model VARCHAR(255)," +
+                    "model TEXT," +
                     "amount INTEGER NOT NULL," +
                     "color VARCHAR(7)," +
                     "tooltip VARCHAR(255)," +
