@@ -147,23 +147,4 @@ public class GUIDAO implements IDAO {
         }
         return null;
     }
-
-
-    public List<GUI> getGUIs() {
-        List<GUI> guis = new ArrayList<>();
-        String sql = "SELECT * FROM gui";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                String id = rs.getString("id");
-                guis.add(getGUIbyId(id));
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "b1c1eec1", "Failed to get GUIs: ", e
-            ));
-        }
-        return guis;
-    }
-
 }

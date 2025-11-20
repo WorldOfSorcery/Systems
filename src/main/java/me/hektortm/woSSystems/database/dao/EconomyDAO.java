@@ -123,24 +123,6 @@ public class EconomyDAO implements IDAO {
         }
     }
 
-    public void addCurrency(String id, Currency currency) {
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(
-                "INSERT INTO currencies (id, name, short_name, icon, color, hidden_if_zero) VALUES (?, ?, ?, ?, ?, ?)"
-        )) {
-            stmt.setString(1, id);
-            stmt.setString(2, currency.getName());
-            stmt.setString(3, currency.getShortName());
-            stmt.setString(4, currency.getIcon());
-            stmt.setString(5, currency.getColor());
-            stmt.setBoolean(6, currency.isHiddenIfZero());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "cb77a2a2", "Failed to add Player Currency("+currency+"): ", e
-            ));
-        }
-    }
-
     public Map<String, Currency> getCurrencies() {
         Map<String, Currency> currenciesMap = new HashMap<>();
         try (Connection conn = db.getConnection();

@@ -205,11 +205,4 @@ public class CooldownDAO implements IDAO {
         }
         return cooldowns;
     }
-
-    public String formatRemainingTime(long seconds) {
-        long minutes = seconds / 60;
-        long remainingSeconds = seconds % 60;
-        return String.format("%d min %d sec", minutes, remainingSeconds);
-    }
-
 }
