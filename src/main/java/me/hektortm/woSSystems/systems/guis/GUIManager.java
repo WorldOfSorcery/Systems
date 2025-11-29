@@ -55,7 +55,6 @@ public class GUIManager implements Listener {
     public void openGUI(Player player, String guiId) {
         GUI gui = hub.getGuiDAO().getGUIbyId(guiId);
         if (gui == null) {
-            plugin.writeLog("GUIManager", Level.WARNING, "GUI not found: " + guiId);
             return;
         }
 
@@ -132,13 +131,11 @@ public class GUIManager implements Listener {
 
         int slot = event.getRawSlot();
         if (slot < 0 || slot >= event.getInventory().getSize()) return;
-        plugin.writeLog("GUIManager", Level.INFO, gui.getSlots().toString());
         for (GUISlot guiSlot : gui.getSlots()) {
             List<Condition> conditionList = hub.getConditionDAO().getConditions(
                     ConditionType.GUISLOT,
                     holder.getGuiId() + ":"+guiSlot.getSlot()+":"+guiSlot.getSlotId()
             );
-            plugin.writeLog("GUIManager", Level.INFO, holder.getGuiId()+":"+guiSlot.getSlot()+":"+guiSlot.getSlotId() + " - Conditions: " + conditionList.toString());
             if (!conditionList.isEmpty()) {
                 boolean shouldRun;
                 if ("one".equalsIgnoreCase(guiSlot.getMatchType())) {
@@ -215,9 +212,14 @@ public class GUIManager implements Listener {
             meta.setItemModel(new NamespacedKey("wos", placeholderResolver.resolvePlaceholders(slot.getModel(), player)));
         }
 
-        if(slot.getTooltip() != null && slot.getTooltip().isEmpty()) {
-            if (Objects.equals(slot.getTooltip(), "hidden")) meta.setHideTooltip(true);
-            else if(slot.getTooltip() != null && !slot.getTooltip().isEmpty()) meta.setTooltipStyle(new NamespacedKey("minecraft", placeholderResolver.resolvePlaceholders(slot.getTooltip(), player)));
+        if(slot.getTooltip() != null && !slot.getTooltip().isEmpty()) {
+            if (Objects.equals(slot.getTooltip(), "hidden")) {
+                meta.setHideTooltip(true);
+            }
+            else if (slot.getTooltip() != null && !slot.getTooltip().isEmpty()) {
+                NamespacedKey tooltip = new NamespacedKey("minecraft", placeholderResolver.resolvePlaceholders(slot.getTooltip(), player));
+                meta.setTooltipStyle(tooltip);
+            }
         }
 
         if (slot.isEnchanted()) {
@@ -259,7 +261,7 @@ public class GUIManager implements Listener {
             meta.setPlayerProfile(profile);
         }
 
-        if(slot.getTooltip() != null && slot.getTooltip().isEmpty()) {
+        if(slot.getTooltip() != null && !slot.getTooltip().isEmpty()) {
             if (Objects.equals(slot.getTooltip(), "hidden")) meta.setHideTooltip(true);
             else if(slot.getTooltip() != null && !slot.getTooltip().isEmpty()) meta.setTooltipStyle(new NamespacedKey("minecraft", placeholderResolver.resolvePlaceholders(slot.getTooltip(), player)));
         }
