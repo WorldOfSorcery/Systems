@@ -7,6 +7,7 @@ import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.Keys;
 import me.hektortm.woSSystems.utils.dataclasses.Interaction;
+import me.hektortm.woSSystems.utils.dataclasses.InteractionKey;
 import net.citizensnpcs.api.event.CitizensEvent;
 import net.citizensnpcs.api.event.NPCClickEvent;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
@@ -78,11 +79,13 @@ public class InterListener implements Listener {
 
             // Process interactions
             if (hub.getInteractionDAO().getInterOnBlock(blockLocation) != null) {
+                e.setCancelled(true);
+                InteractionKey key = buildKey(blockLocation);
 
                 switch (e.getAction()) {
                     case RIGHT_CLICK_BLOCK:
                     case LEFT_CLICK_BLOCK:
-                        interactionManager.triggerInteraction(hub.getInteractionDAO().getInterOnBlock(blockLocation), p);
+                        interactionManager.triggerInteraction(hub.getInteractionDAO().getInterOnBlock(blockLocation), p, key);
                         break;
                 }
             }
@@ -94,8 +97,17 @@ public class InterListener implements Listener {
     public void NPCClick(NPCRightClickEvent e) {
         int npcid = e.getNPC().getId();
         String id = hub.getInteractionDAO().getNPCInteraction(npcid);
+        InteractionKey key = new InteractionKey("npc:"+npcid);
+        interactionManager.triggerInteraction(id, e.getClicker(), key);
+    }
 
-        interactionManager.triggerInteraction(id, e.getClicker());
+    public static InteractionKey buildKey (Location loc) {
+        String world = loc.getWorld().getName();
+        String x = String.valueOf(loc.getX());
+        String y = String.valueOf(loc.getY());
+        String z = String.valueOf(loc.getZ());
+
+        return new InteractionKey("block:" + world + ":" + x + ":" + y + ":" + z);
     }
 
     @EventHandler

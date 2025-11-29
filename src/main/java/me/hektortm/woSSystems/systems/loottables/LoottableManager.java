@@ -47,8 +47,8 @@ public class LoottableManager {
             case DIALOG -> hub.getDialogDAO().getDialog(item.getValue(), source, (Player) player);
             case CITEM -> plugin.getCitemManager().giveCitem(source, (Player) player, item.getValue(), item.getParameter());
             case GUI -> plugin.getGuiManager().openGUI((Player) player, item.getValue());
-            case INTERACTION -> plugin.getInteractionManager().triggerInteraction(item.getValue(), (Player) player);
-            case COMMAND -> actionHandler.executeActions((Player) player, helperArray, ActionHandler.SourceType.LOOTTABLE, id);
+            case INTERACTION -> plugin.getInteractionManager().triggerInteraction(item.getValue(), (Player) player, null);
+            case COMMAND -> actionHandler.executeActions((Player) player, helperArray, ActionHandler.SourceType.LOOTTABLE, id, null);
             default -> DiscordLogger.log(new DiscordLog(
                     Level.SEVERE,
                     plugin,

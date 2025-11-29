@@ -97,5 +97,5 @@ removed: "§aRemoved §e%amount% %id% §afrom §e%player%§a."
 equippable: "§aThis item is now equippable in the §e%slot%§a slot."
 
 update:
-  removed: "§7Your Item (%item%§7) has been removed as it is outdated."
+  removed: "§7Your Item (%item%§7) has been removed as it was outdated."
   updated: "§7Your Item (%item%§7) has been updated."

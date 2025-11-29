@@ -56,10 +56,12 @@ public class Info extends SubCommand {
         // Display actions
         String leftAction = data.get(Keys.LEFT_ACTION.get(), PersistentDataType.STRING);
         String rightAction = data.get(Keys.RIGHT_ACTION.get(), PersistentDataType.STRING);
+        String placedAction = data.get(Keys.PLACED_ACTION.get(), PersistentDataType.STRING);
 
         p.sendMessage("§7Actions:");
         p.sendMessage(" §7- §eLeft-Click Action: §f" + (leftAction != null ? leftAction : "None"));
         p.sendMessage(" §7- §eRight-Click Action: §f" + (rightAction != null ? rightAction : "None"));
+        p.sendMessage(" §7- §ePlaced Action: §f"+ (placedAction != null ? placedAction : "None"));
     }
 
 

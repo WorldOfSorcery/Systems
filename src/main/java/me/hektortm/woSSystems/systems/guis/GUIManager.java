@@ -44,11 +44,12 @@ public class GUIManager implements Listener {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final PlaceholderResolver placeholderResolver = plugin.getPlaceholderResolver();
     private final ConditionHandler conditions = plugin.getConditionHandler();
-    private final ActionHandler actionHandler = new ActionHandler();
     private final DAOHub hub;
+    private final ActionHandler actionHandler;
 
     public GUIManager(DAOHub hub) {
         this.hub = hub;
+         actionHandler = new ActionHandler(hub);
     }
 
     public void openGUI(Player player, String guiId) {
@@ -74,9 +75,9 @@ public class GUIManager implements Listener {
             if (!conditionList.isEmpty()) {
                 boolean shouldRun;
                 if ("one".equalsIgnoreCase(slot.getMatchType())) {
-                    shouldRun = conditionList.isEmpty() || conditionList.stream().anyMatch(cond -> conditions.evaluate(player, cond));
+                    shouldRun = conditionList.isEmpty() || conditionList.stream().anyMatch(cond -> conditions.evaluate(player, cond, null));
                 } else {
-                    shouldRun = conditions.checkConditions(player, conditionList);
+                    shouldRun = conditions.checkConditions(player, conditionList, null);
                 }
 
                 if (!shouldRun) continue;
@@ -113,7 +114,7 @@ public class GUIManager implements Listener {
             inventory.setItem(slot.getSlot(), item);
         }
         if (gui.getOpenActions() != null && !gui.getOpenActions().isEmpty()) {
-            actionHandler.executeActions(player, gui.getOpenActions(), ActionHandler.SourceType.GUI, guiId);
+            actionHandler.executeActions(player, gui.getOpenActions(), ActionHandler.SourceType.GUI, guiId, null);
         }
         player.openInventory(inventory);
     }
@@ -141,9 +142,9 @@ public class GUIManager implements Listener {
             if (!conditionList.isEmpty()) {
                 boolean shouldRun;
                 if ("one".equalsIgnoreCase(guiSlot.getMatchType())) {
-                    shouldRun = conditionList.isEmpty() || conditionList.stream().anyMatch(cond -> conditions.evaluate(player, cond));
+                    shouldRun = conditionList.isEmpty() || conditionList.stream().anyMatch(cond -> conditions.evaluate(player, cond, null));
                 } else {
-                    shouldRun = conditions.checkConditions(player, conditionList);
+                    shouldRun = conditions.checkConditions(player, conditionList, null);
                 }
 
                 if (!shouldRun) continue;
@@ -163,7 +164,7 @@ public class GUIManager implements Listener {
         };
 
         if (actions == null || actions.isEmpty()) return;
-        actionHandler.executeActions(player, actions, ActionHandler.SourceType.GUI, null);
+        actionHandler.executeActions(player, actions, ActionHandler.SourceType.GUI, slot.getGuiId(), null);
 
     }
 
@@ -175,7 +176,7 @@ public class GUIManager implements Listener {
         GUI gui = hub.getGuiDAO().getGUIbyId(holder.getGuiId());
         if (gui != null) {
             if (gui.getCloseActions() != null && gui.getCloseActions().isEmpty()) {
-                actionHandler.executeActions(player, gui.getCloseActions(), ActionHandler.SourceType.GUI, gui.getGuiId());
+                actionHandler.executeActions(player, gui.getCloseActions(), ActionHandler.SourceType.GUI, gui.getGuiId(), null);
             }
         }
     }

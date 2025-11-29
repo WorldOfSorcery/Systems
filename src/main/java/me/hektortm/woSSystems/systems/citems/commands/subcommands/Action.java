@@ -74,7 +74,8 @@ public class Action extends SubCommand {
                 break;
             case "placed":
                 data.set(Keys.PLACED_ACTION.get(), PersistentDataType.STRING, actionID);
-                Utils.success(p, "citems", "action.set.right", "%action%", actionID);
+                Utils.success(p, "citems", "action.set.placed", "%action%", actionID);
+                break;
             default:
                 Utils.error(p, "citems", "error.wrong-action");
                 return;

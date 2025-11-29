@@ -183,6 +183,7 @@ public final class WoSSystems extends JavaPlugin {
             registerAndInitDAO(databaseManager, daoHub.getConstantDAO());
             registerAndInitDAO(databaseManager, daoHub.getDialogDAO());
             registerAndInitDAO(databaseManager, daoHub.getLoottablesDAO());
+            registerAndInitDAO(databaseManager, daoHub.getCommandsDAO());
 
             databaseManager.initializeAllDAOs();
         } catch (SQLException e) {
@@ -209,7 +210,7 @@ public final class WoSSystems extends JavaPlugin {
         conditionHandler = new ConditionHandler(daoHub);
         guiManager = new GUIManager(daoHub);
 
-        actionHandler = new ActionHandler();
+        actionHandler = new ActionHandler(daoHub);
         interactionManager = new InteractionManager(daoHub);
         cooldownManager = new CooldownManager(daoHub);
         channelManager = new ChannelManager(this, daoHub);
@@ -241,6 +242,7 @@ public final class WoSSystems extends JavaPlugin {
             lang.loadLangFileExternal(this, "cooldowns", core);
             lang.loadLangFileExternal(this, "interactions", core);
             lang.loadLangFileExternal(this, "dialogs", core);
+            lang.loadLangFileExternal(this, "global_stats", core);
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }

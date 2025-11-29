@@ -56,7 +56,7 @@ public class RegionHandler implements Listener {
 
             }
             if (enterInteraction != null && !plugin.getPlayerRegions().containsValue(newRegionId)) {
-                plugin.getInteractionManager().triggerInteraction(enterInteraction, player);
+                plugin.getInteractionManager().triggerInteraction(enterInteraction, player, null);
 
             }
         }

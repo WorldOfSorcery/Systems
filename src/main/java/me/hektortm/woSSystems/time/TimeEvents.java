@@ -49,7 +49,7 @@ public class TimeEvents {
             if (dateMatches && hour == startTime && plugin.getTimeManager().getInGameTimeMinutes() % 60 == 0) {
                 for (Player player : plugin.getServer().getOnlinePlayers()) {
                     if (startInteraction != null && !startInteraction.isEmpty()) {
-                        plugin.getInteractionManager().triggerInteraction(startInteraction, player);
+                        plugin.getInteractionManager().triggerInteraction(startInteraction, player, null);
                     }
 
                     String message = activity.getMessage();
@@ -64,7 +64,7 @@ public class TimeEvents {
                 plugin.getLogger().info("[DEBUG] Triggering END for activity: " + activity.getName());
                 for (Player player : plugin.getServer().getOnlinePlayers()) {
                     if (endInteraction != null && !endInteraction.isEmpty()) {
-                        plugin.getInteractionManager().triggerInteraction(endInteraction, player);
+                        plugin.getInteractionManager().triggerInteraction(endInteraction, player, null);
                     }
                 }
             }

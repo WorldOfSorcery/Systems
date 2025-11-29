@@ -346,7 +346,7 @@ public class ChannelManager {
         return finalMessage;
     }
 
-
+    // TODO clear null cases
 
     private @NotNull Component getPlayerStats(Player player) {
         String nickname = hub.getNicknameDAO().getNickname(player.getUniqueId());
@@ -368,7 +368,7 @@ public class ChannelManager {
 
         Component locationComponent = Component.text()
                 .append(Component.text("§7"+Parsers.parseUniStatic("Location:"+ " ")))
-                .append(Component.text(RegionHandler.getRegionDisplayName(player)))
+                .append(Component.text(Utils.parseColorCodeString(RegionHandler.getRegionDisplayName(player))))
                 .build();
 
         // Build the title line

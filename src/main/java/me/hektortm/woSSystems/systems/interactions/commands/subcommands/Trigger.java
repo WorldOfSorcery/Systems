@@ -46,7 +46,7 @@ public class Trigger extends SubCommand {
             return;
         }
 
-        manager_new.triggerInteraction(interactionId, targetPlayer);
+        manager_new.triggerInteraction(interactionId, targetPlayer, null);
         Utils.success(sender, "interactions", "trigger", "%id%", interactionId, "%player%", targetPlayer.getName());
 
 

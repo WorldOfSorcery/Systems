@@ -180,8 +180,8 @@ public class DialogDAO implements IDAO {
                 String preAction = rs.getString("pre_action");
                 String postAction = rs.getString("post_action");
                 Page.Builder pageBuilder = new Page.Builder();
-                if (rs.getString("pre_action") != null) pageBuilder.addPreCallback(player -> plugin.getInteractionManager().triggerInteraction(preAction, player));
-                if (rs.getString("post_action") != null) pageBuilder.addPostCallback(player -> plugin.getInteractionManager().triggerInteraction(postAction, player));
+                if (rs.getString("pre_action") != null) pageBuilder.addPreCallback(player -> plugin.getInteractionManager().triggerInteraction(preAction, player, null));
+                if (rs.getString("post_action") != null) pageBuilder.addPostCallback(player -> plugin.getInteractionManager().triggerInteraction(postAction, player, null));
 
                 for (String line : getPageLines(dialogId, rs.getInt("page_id"), target)) {
                     pageBuilder.addLine(line);
@@ -217,7 +217,7 @@ public class DialogDAO implements IDAO {
                         .setAnswerID(String.valueOf(rs.getInt("answer_id")))
                         .setAnswerText(rs.getString("answer_text"))
                         .addCallback(player -> {
-                            plugin.getActionHandler().executeActions(player, helperArray, ActionHandler.SourceType.DIALOG, dialogId);
+                            plugin.getActionHandler().executeActions(player, helperArray, ActionHandler.SourceType.DIALOG, dialogId, null);
                         });
                 answers.add(answerBuilder.build());
             }

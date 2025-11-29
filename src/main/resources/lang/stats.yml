@@ -16,23 +16,6 @@ set: "§aYou have set the stat §e'%stat%'§a of §e%player%§a to §e%amount%§
 reset: "§aYou have reset the stat §e'%stat%'§a for §e%player%§a."
 create: "§aSuccessfully created stat §e'%stat%'§a with a maximum of §e%max%§a."
 view: "§e%player%§7 has the value §e%value%§7 of Stat §e'%id%'§7."
-delete:
-  confirm: "§7Confirm deletion with: /stats delete %id% confirm"
-  success: "§aYou have deleted the Stat with the ID: §e%id%"
-
-reload:
-  single: "§aReloaded Stat: §e%id%"
-  all: "§aReloaded all Stats."
-
-global:
-  give: "§aYou have given §e%amount% §aof stat §e'%stat%'§a to the Server."
-  take: "§aYou have taken §e%amount% §aof stat §e'%stat%'§a from the Server."
-  set: "§aYou have set the stat §e'%stat%'§a of the Server to §e%amount%§a."
-  create: "§aSuccessfully created global stat §e'%stat%'§a with a maximum of §e%max%§a."
-  view: "§e%player%§7 has the value §e%value%§7 of Stat §e'%id%'§7."
-  delete:
-    confirm: "§7Confirm deletion with: /stats delete %id% confirm"
-    success: "§aYou have deleted the Stat with the ID: §e%id%"
 
 help:
   header: "%type% Commands:"

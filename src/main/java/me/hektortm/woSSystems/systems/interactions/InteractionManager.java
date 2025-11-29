@@ -15,6 +15,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.List;
 
+import static me.hektortm.woSSystems.listeners.InterListener.buildKey;
+
 public class InteractionManager {
 
     private final DAOHub hub;
@@ -45,7 +47,7 @@ public class InteractionManager {
                     for (Location location : inter.getBlockLocations()) {
                         if (location != null) {
                             for (Player player : Bukkit.getOnlinePlayers()) {
-                                particleHandler.spawnParticlesForPlayer(player, inter, location, false);
+                                particleHandler.spawnParticlesForPlayer(player, inter, location, false, buildKey(location));
 
 //                                Bukkit.getScheduler().runTask(plugin, () -> {
 //                                    hologramHandler.handleHolograms(player, inter, location, false);
@@ -60,7 +62,7 @@ public class InteractionManager {
                                 continue;
                             }
                             Location location = npc1.getEntity().getLocation().getBlock().getLocation();
-                            particleHandler.spawnParticlesForPlayer(player, inter, npc1.getEntity().getLocation(), true);
+                            particleHandler.spawnParticlesForPlayer(player, inter, npc1.getEntity().getLocation(), true, new InteractionKey("npc:"+id));
                             //spawnTextDisplay(location, inter, id, true);
 //                            Bukkit.getScheduler().runTask(plugin, () -> {
 //                                hologramHandler.handleHolograms(player, inter, location, false);
@@ -72,9 +74,12 @@ public class InteractionManager {
         }.runTaskTimer(plugin, 0L, 50L);
     }
 
-    public void triggerInteraction(String interactionId, Player player) {
+    public void triggerInteraction(String interactionId, Player player, InteractionKey key) {
         Interaction inter = getInteraction(interactionId);
-        if (inter == null) player.sendMessage("§cThis is not configured correctly. Please message a Staff member.");
+        if (inter == null) {
+            player.sendMessage("§cThis is not configured correctly. Please message a Staff member.");
+            return;
+        }
 
         List<InteractionAction> actions = inter.getActions();
 
@@ -86,15 +91,15 @@ public class InteractionManager {
             if (!conditionList.isEmpty()) {
                 boolean shouldRun;
                 if ("one".equalsIgnoreCase(action.getMatchType())) {
-                    shouldRun = conditionList.isEmpty() || conditionList.stream().anyMatch(cond -> conditions.evaluate(player, cond));
+                    shouldRun = conditionList.isEmpty() || conditionList.stream().anyMatch(cond -> conditions.evaluate(player, cond, key));
                 } else {
-                    shouldRun = conditions.checkConditions(player, conditionList);
+                    shouldRun = conditions.checkConditions(player, conditionList, key);
                 }
 
                 if (!shouldRun) continue;
             }
 
-            Bukkit.getScheduler().runTask(WoSSystems.getPlugin(WoSSystems.class), () -> {actionHandler.executeActions(player, action.getActions(), ActionHandler.SourceType.INTERACTION, interactionId);});
+            Bukkit.getScheduler().runTask(WoSSystems.getPlugin(WoSSystems.class), () -> {actionHandler.executeActions(player, action.getActions(), ActionHandler.SourceType.INTERACTION, interactionId, key);});
 
             if (action.getBehaviour().equalsIgnoreCase("continue")) {
                 continue;

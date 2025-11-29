@@ -3,7 +3,7 @@ error:
   internal: "An internal error has occured."
 info:
   usage:
-    give: "Usage: /cooldown give <Player> <ID>"
+    give: "Usage: /cooldown give <Player> <ID> [%local%]"
     remove: "Usage: /cooldown remove <Player> <ID>"
     view: "Usage: /cooldown view <Player> <ID>"
     general: "Usage: /cooldown <give|remove|view> <Player> <ID>"
@@ -17,7 +17,7 @@ view:
 
 help:
   header: "Cooldown Commands:"
-  give: "%cyan_300%/cooldown give <Player> <ID> §7- Give a Player a Cooldown."
+  give: "%cyan_300%/cooldown give <Player> <ID> [%local%] §7- Give a Player a Cooldown."
   remove: "%cyan_300%/cooldown remove <Player> <ID> §7- Remove a Cooldown from a Player."
   view: "%cyan_300%/cooldown view <Player> <ID> §7- View a Cooldown of a Player."
   help: "%cyan_300%/cooldown help §7- Display this help message."

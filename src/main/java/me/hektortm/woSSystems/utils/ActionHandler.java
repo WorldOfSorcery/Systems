@@ -1,7 +1,9 @@
 package me.hektortm.woSSystems.utils;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.dataclasses.Interaction;
+import me.hektortm.woSSystems.utils.dataclasses.InteractionKey;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -15,6 +17,12 @@ public class ActionHandler {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final PlaceholderResolver resolver = plugin.getPlaceholderResolver();
     private final List<String> blacklist = Arrays.asList("op", "gmc", "gamemode");
+    private final DAOHub hub;
+
+    public ActionHandler(DAOHub hub) {
+        this.hub = hub;
+    }
+
     public enum SourceType {
         INTERACTION("interaction"),
         GUI("gui"),
@@ -31,7 +39,7 @@ public class ActionHandler {
     }
 
 
-    public void executeActions(Player player, List<String> actions, SourceType sourceType, String sourceID) {
+    public void executeActions(Player player, List<String> actions, SourceType sourceType, String sourceID, @Nullable InteractionKey key) {
         for (String cmd : actions) {
             String parsedCommand = cmd.replace("@p", player.getName());
             if (cmd.startsWith("send_message")) {
@@ -48,12 +56,28 @@ public class ActionHandler {
                         return;
                     }
                 }
-                Bukkit.getScheduler().runTask(WoSSystems.getPlugin(WoSSystems.class), () -> {Bukkit.dispatchCommand(player, parts[1]);});
+                Bukkit.getScheduler().runTask(plugin, () -> {Bukkit.dispatchCommand(player, parts[1]);});
                 continue;
             }
             if (cmd.startsWith("empty_line")) {
                 player.sendMessage("");
                 continue;
+            }
+            // cooldown[0] give[1] @p[2] id[3] local[4]
+            if (cmd.startsWith("cooldown")) {
+                String[] parts = cmd.split(" ");
+                if (parts[1].contains("give") && parts[4].contains("%local%")) {
+                    plugin.writeLog("InteractionManager", Level.WARNING, "giving local cooldown...");
+                    if (key != null) {
+                        hub.getCooldownDAO().giveLocalCooldown(player, parts[3], key);
+                        String interId = hub.getCooldownDAO().getCooldownByID(parts[3]).getStart_interaction();
+                        if (interId != null) {
+                            plugin.getInteractionManager().triggerInteraction(interId, player, null);
+                        }
+
+                        continue;
+                    }
+                }
             }
             if (cmd.startsWith("send_actionbar")) {
                 String message = cmd.replace("send_actionbar ", "").replace("&", "§");
@@ -98,19 +122,19 @@ public class ActionHandler {
                 String currency = parts[3];
                 int amount = Integer.parseInt(parts[4]);
                 if (actionType.equalsIgnoreCase("give")) {
-                    WoSSystems.getPlugin(WoSSystems.class).getEcoManager().ecoLog(player.getUniqueId(), currency, amount, sourceType.getType(), sourceID);
+                    plugin.getEcoManager().ecoLog(player.getUniqueId(), currency, amount, sourceType.getType(), sourceID);
 
                 }
                 if (actionType.equalsIgnoreCase("take")) {
-                    WoSSystems.getPlugin(WoSSystems.class).getEcoManager().ecoLog(player.getUniqueId(), currency, -amount, sourceType.getType(), sourceID);
+                    plugin.getEcoManager().ecoLog(player.getUniqueId(), currency, -amount, sourceType.getType(), sourceID);
 
                 }
                 if (actionType.equalsIgnoreCase("set")) {
-                    WoSSystems.getPlugin(WoSSystems.class).getEcoManager().ecoLog(player.getUniqueId(), currency, amount, sourceType.getType(), sourceID);
+                    plugin.getEcoManager().ecoLog(player.getUniqueId(), currency, amount, sourceType.getType(), sourceID);
 
                 }
                 if (actionType.equalsIgnoreCase("reset")) {
-                    WoSSystems.getPlugin(WoSSystems.class).getEcoManager().ecoLog(player.getUniqueId(), currency, 0, sourceType.getType(), sourceID);
+                    plugin.getEcoManager().ecoLog(player.getUniqueId(), currency, 0, sourceType.getType(), sourceID);
 
                 }
             }
@@ -119,7 +143,8 @@ public class ActionHandler {
                 continue;
             }
 
-            Bukkit.getScheduler().runTask(WoSSystems.getPlugin(WoSSystems.class), () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand));
+            if (sourceType == SourceType.DIALOG) Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand));
+            else Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand);
         }
     }
 

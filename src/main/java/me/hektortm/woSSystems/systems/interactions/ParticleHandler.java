@@ -6,6 +6,7 @@ import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.utils.ConditionType;
 import me.hektortm.woSSystems.utils.dataclasses.Condition;
 import me.hektortm.woSSystems.utils.dataclasses.Interaction;
+import me.hektortm.woSSystems.utils.dataclasses.InteractionKey;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionParticles;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -25,7 +26,7 @@ public class ParticleHandler {
         this.hub = hub;
     }
 
-    public void spawnParticlesForPlayer(Player player, Interaction inter, Location location, boolean npc) {
+    public void spawnParticlesForPlayer(Player player, Interaction inter, Location location, boolean npc, InteractionKey key) {
         List<InteractionParticles> particlesList = inter.getParticles();
 
         if (particlesList == null || particlesList.isEmpty()) {
@@ -48,9 +49,9 @@ public class ParticleHandler {
                 boolean shouldRun;
                 if ("one".equalsIgnoreCase(matchType)) {
                     shouldRun = conditionList.isEmpty() || conditionList.stream()
-                            .anyMatch(cond -> conditionHandler.evaluate(player, cond));
+                            .anyMatch(cond -> conditionHandler.evaluate(player, cond, key));
                 } else {
-                    shouldRun = conditionHandler.checkConditions(player, conditionList);
+                    shouldRun = conditionHandler.checkConditions(player, conditionList, key);
                 }
 
                 if (!shouldRun) {

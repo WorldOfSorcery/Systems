@@ -45,7 +45,7 @@ public class CommandsDAO implements IDAO {
             pstmt.executeQuery();
             ResultSet rs = pstmt.getResultSet();
             while (rs.next()) {
-                commands.add(new BasicCommand(rs.getString("command"), rs.getString("permission"), rs.getString("interaction")));
+                commands.add(new BasicCommand(rs.getString("command"), rs.getString("interaction"), rs.getString("permission")));
             }
             return commands;
         } catch (SQLException e) {

@@ -1,11 +1,9 @@
 package me.hektortm.woSSystems.time.cmd;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.time.TimeEvents;
 import me.hektortm.woSSystems.time.TimeManager;
 import me.hektortm.woSSystems.time.cmd.subcmd.DateCommand;
 import me.hektortm.woSSystems.time.cmd.subcmd.FreezeCommand;
-import me.hektortm.woSSystems.time.cmd.subcmd.ReloadCommand;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.LangManager;
 import org.bukkit.command.Command;
@@ -30,7 +28,6 @@ public class TimeCommand implements CommandExecutor {
         this.plugin = plugin;
         this.lang = lang;
 
-        subCommands.put("reload", new ReloadCommand(manager));
         subCommands.put("date", new DateCommand(manager));
         subCommands.put("freeze", new FreezeCommand(manager));
 

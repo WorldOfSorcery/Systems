@@ -37,10 +37,9 @@ public class Chest extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
 
-        Player p = (Player) sender;
 
         if (args.length < 3) {
-            Utils.info(p, "loottables", "info.usage.chest");
+            Utils.info(sender, "loottables", "info.usage.chest");
             return;
         }
 
@@ -48,26 +47,26 @@ public class Chest extends SubCommand {
         try {
             rows = Integer.parseInt(args[0]);
             if (rows > 6 || rows < 1) {
-                Utils.info(p, "loottables", "info.invalid-rows");
+                Utils.info(sender, "loottables", "info.invalid-rows");
                 return;
             }
         } catch (NumberFormatException e) {
-            Utils.error(p, "loottables", "info.not-number");
+            Utils.error(sender, "loottables", "info.not-number");
             return;
         }
         Player target = Bukkit.getPlayer(args[1]);
         String id = args[2];
         if (target == null) {
-            Utils.error(p, "general", "error.online");
+            Utils.error(sender, "general", "error.online");
             return;
         }
-        Inventory inv = getChest(rows, id);
+        Inventory inv = getChest(rows, id, target);
         target.openInventory(inv);
-        Utils.success(p, "loottables", "chest", "%id%", id, "%player%", target.getName());
+        Utils.success(sender, "loottables", "chest", "%id%", id, "%player%", target.getName());
     }
 
 
-    private Inventory getChest(int rows, String id) {
+    private Inventory getChest(int rows, String id, Player target) {
         Loottable lt = hub.getLoottablesDAO().getLoottable(id);
         List<LoottableItem> items = lt.getRandomItems(lt.getAmount());
 
@@ -76,6 +75,10 @@ public class Chest extends SubCommand {
         for (LoottableItem item : items) {
             if (item.getType() == LoottableItemType.CITEM) {
                 ItemStack i = hub.getCitemDAO().getCitem(item.getValue());
+                if (i == null) {
+                    Utils.error(target, "loottables", "error.item", "%id%", item.getValue());
+                    continue;
+                }
                 int am = item.getParameter();
                 i.setAmount(am);
                 itemStacks.add(i);

@@ -44,7 +44,7 @@ public class FishingListener implements Listener {
 
                         if (citem != null) {
                             caughtItemEntity.setItemStack(citem);
-                            interactionManager.triggerInteraction(fishingItem.getInteraction(), player);
+                            interactionManager.triggerInteraction(fishingItem.getInteraction(), player, null);
                         } else fallback(player, event);
                     } else fallback(player, event);
                 } else fallback(player, event);
