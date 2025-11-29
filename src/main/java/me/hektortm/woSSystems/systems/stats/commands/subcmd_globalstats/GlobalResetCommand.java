@@ -33,28 +33,22 @@ public class GlobalResetCommand extends SubCommand {
     public void execute(CommandSender sender, String[] args) {
 
         if (args.length < 1 || args.length > 2) {
-            Utils.info(sender, "stats", "error.usage.reset", "%type%", "globalstats");
+            Utils.info(sender, "global_stats", "error.usage.reset");
             return;
         }
 
 
 
-        OfflinePlayer p = Bukkit.getOfflinePlayer(args[0]);
-        String id = args[1].toLowerCase();
+        String id = args[0].toLowerCase();
 
-        if (!manager.getStats().containsKey(id)) {
-            Utils.error(sender, "stats", "error.not-found");
-            return;
-        }
-
-        if (!manager.getStats().containsKey(id)) {
-            Utils.error(sender, "stats", "error.not-found");
+        if (!manager.getGlobalStats().containsKey(id)) {
+            Utils.error(sender, "global_stats", "error.not-found");
             return;
         }
 
         manager.modifyGlobalStat(id, 0, RESET);
         if (sender instanceof Player) {
-            Utils.success(sender, "stats", "global.reset", "%player%", p.getName(),"%stat%", id);
+            Utils.success(sender, "global_stats", "reset", "%stat%", id);
         }
     }
 }

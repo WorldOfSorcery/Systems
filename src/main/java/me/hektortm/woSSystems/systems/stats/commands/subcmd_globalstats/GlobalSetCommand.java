@@ -32,41 +32,35 @@ public class GlobalSetCommand extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length < 2 || args.length > 3) {
-            Utils.info(sender, "stats", "error.usage.take", "%type%", "globalstats");
+            Utils.info(sender, "global_stats", "error.usage.take");
             return;
         }
 
 
 
-        OfflinePlayer p = Bukkit.getOfflinePlayer(args[0]);
-        String id = args[1].toLowerCase();
+        String id = args[0].toLowerCase();
         long amount = 0;
 
-        if (!manager.getStats().containsKey(id)) {
-            Utils.error(sender, "stats", "error.not-found");
+        if (!manager.getGlobalStats().containsKey(id)) {
+            Utils.error(sender, "global_stats", "error.not-found");
             return;
         }
 
         try {
             amount = Long.parseLong(args[2]);
         } catch (NumberFormatException e) {
-            Utils.error(sender, "stats", "error.invalid-amount");
+            Utils.error(sender, "global_stats", "error.invalid-amount");
             return;
         }
 
         if (amount < 0) {
-            Utils.error(sender, "stats", "error.invalid-amount");
-            return;
-        }
-
-        if (!manager.getStats().containsKey(id)) {
-            Utils.error(sender, "stats", "error.not-found");
+            Utils.error(sender, "global_stats", "error.invalid-amount");
             return;
         }
 
         manager.modifyGlobalStat(id, amount, SET);
         if (sender instanceof Player) {
-            Utils.success(sender, "stats", "global.set", "%player%", p.getName(),"%stat%", id, "%amount%", String.valueOf(amount));
+            Utils.success(sender, "global_stats", "set","%stat%", id, "%amount%", String.valueOf(amount));
         }
     }
 }

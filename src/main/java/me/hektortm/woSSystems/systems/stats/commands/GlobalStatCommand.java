@@ -38,7 +38,7 @@ public class GlobalStatCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if (args.length == 0) {
-            Utils.info(sender, "stats", "error.usage.general", "%type%", "globalstats");
+            Utils.info(sender, "global_stats", "error.usage.general");
             return true;
         }
 
@@ -51,7 +51,7 @@ public class GlobalStatCommand implements CommandExecutor {
             if(!(PermissionUtil.hasPermission(sender, subCommand.getPermission()))) return true;
             subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));
         } else {
-            Utils.info(sender, "stats", "error.usage.general", "%type%", "globalstats");
+            Utils.info(sender, "global_stats", "error.usage.general");
         }
 
         return true;
@@ -60,24 +60,24 @@ public class GlobalStatCommand implements CommandExecutor {
     public void globalStatsHelp(CommandSender sender) {
         if (PermissionUtil.hasAnyPermission(sender, Permissions.STATS_GLOBAL_GIVE, Permissions.STATS_GLOBAL_TAKE, Permissions.STATS_GLOBAL_SET,
                 Permissions.STATS_GLOBAL_RESET, Permissions.STATS_GLOBAL_VIEW)) {
-            Utils.info(sender, "stats", "help.header", "%type%", "Global Stats");
+            Utils.info(sender, "global_stats", "help.header");
 
             if (PermissionUtil.hasPermissionNoMsg(sender, Permissions.STATS_GLOBAL_GIVE))
-                Utils.noPrefix(sender, "stats", "help.give", "%type%", "globalstats");
+                Utils.noPrefix(sender, "global_stats", "help.give");
 
             if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.STATS_GLOBAL_TAKE))
-                Utils.noPrefix(sender, "stats", "help.take", "%type%", "globalstats");
+                Utils.noPrefix(sender, "global_stats", "help.take");
 
             if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.STATS_GLOBAL_SET))
-                Utils.noPrefix(sender, "stats", "help.set", "%type%", "globalstats");
+                Utils.noPrefix(sender, "global_stats", "help.set");
 
             if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.STATS_GLOBAL_RESET))
-                Utils.noPrefix(sender, "stats", "help.reset", "%type%", "globalstats");
+                Utils.noPrefix(sender, "global_stats", "help.reset");
 
             if(PermissionUtil.hasPermissionNoMsg(sender, Permissions.STATS_GLOBAL_VIEW))
-                Utils.noPrefix(sender, "stats", "help.view", "%type%", "globalstats");
+                Utils.noPrefix(sender, "global_stats", "help.view");
 
-            Utils.noPrefix(sender, "stats", "help.help", "%type%", "globalstats");
+            Utils.noPrefix(sender, "global_stats", "help.help");
         } else {
             Utils.error(sender, "general", "error.perms");
         }

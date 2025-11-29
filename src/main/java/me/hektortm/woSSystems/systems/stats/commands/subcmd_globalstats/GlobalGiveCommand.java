@@ -30,7 +30,7 @@ public class GlobalGiveCommand extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length < 2 || args.length > 3) {
-            Utils.info(sender, "stats", "error.usage.give", "%type%", "globalstats");
+            Utils.info(sender, "global_stats", "error.usage.give");
             return;
         }
 
@@ -38,30 +38,25 @@ public class GlobalGiveCommand extends SubCommand {
         long amount = 0L;
 
         if (!manager.getGlobalStats().containsKey(id)) {
-            Utils.error(sender, "stats", "error.not-found");
+            Utils.error(sender, "global_stats", "error.not-found");
             return;
         }
 
         try {
             amount = Long.parseLong(args[1]);
         } catch (NumberFormatException e) {
-            Utils.error(sender, "stats", "error.invalid-amount");
+            Utils.error(sender, "global_stats", "error.invalid-amount");
             return;
         }
 
         if (amount < 0) {
-            Utils.error(sender, "stats", "error.invalid-amount");
-            return;
-        }
-
-        if (!manager.getGlobalStats().containsKey(id)) {
-            Utils.error(sender, "stats", "error.not-found");
+            Utils.error(sender, "global_stats", "error.invalid-amount");
             return;
         }
 
         manager.modifyGlobalStat(id, amount, GIVE);
         if (sender instanceof Player) {
-            Utils.success(sender, "stats", "global.give","%stat%", id, "%amount%", String.valueOf(amount));
+            Utils.success(sender, "global_stats", "give","%stat%", id, "%amount%", String.valueOf(amount));
         }
     }
 }

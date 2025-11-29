@@ -30,22 +30,21 @@ public class GlobalViewCommand extends SubCommand {
     //TODO: WIP needed
     @Override
     public void execute(CommandSender sender, String[] args) {
-        if (args.length < 2 || args.length > 3) {
-            Utils.info(sender, "stats", "error.usage.view", "%type%", "globalstats");
+        if (args.length < 1 || args.length > 2) {
+            Utils.info(sender, "global_stats", "error.usage.view");
             return;
         }
 
-        OfflinePlayer p = Bukkit.getOfflinePlayer(args[0]);
-        String id = args[1];
+        String id = args[0];
 
-        if (!manager.getStats().containsKey(id)) {
-            Utils.error(sender, "stats", "error.not-found");
+        if (!manager.getGlobalStats().containsKey(id)) {
+            Utils.error(sender, "global_stats", "error.not-found");
             return;
         }
 
-        long value = manager.getPlayerStat(p.getUniqueId(), id);
+        long value = manager.getGlobalStatValue(id);
 
-        Utils.success(sender, "stats", "global.view", "%player%", p.getName(), "%value%", String.valueOf(value), "%id%", id);
+        Utils.success(sender, "global_stats", "view", "%value%", String.valueOf(value), "%id%", id);
 
     }
 }

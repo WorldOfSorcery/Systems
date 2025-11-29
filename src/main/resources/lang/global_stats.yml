@@ -1,0 +1,27 @@
+error:
+  invalid-amount: "Invalid amount. Please provide a number."
+  not-found: "Global Stat not found."
+  usage:
+    general: "Usage: /globalstats <give|take|set|reset|view|help>"
+    give: "Usage: /globalstats give <id> <amount>"
+    take: "Usage: /globalstats take <id> <amount>"
+    set: "Usage: /globalstats set  <id> <amount>"
+    reset: "Usage: /globalstats reset <id>"
+    view: "Usage: /globalstats view <id>"
+
+
+give: "§aYou have given §e%amount% §aof stat §e'%stat%'§a to the Server."
+take: "§aYou have taken §e%amount% §aof stat §e'%stat%'§a from the Server."
+reset: "§aYou have reset the Global Stat §e'%stat%'§a."
+set: "§aYou have set the stat §e'%stat%'§a of the Server to §e%amount%§a."
+create: "§aSuccessfully created global stat §e'%stat%'§a with a maximum of §e%max%§a."
+view: "§7The Server has the value §e%value%§7 of Stat §e'%id%'§7."
+
+help:
+  header: "Global Stats Commands:"
+  give: "%cyan_300%/globalstats give <ID> <amount> §7- Give a Global Stat value."
+  take: "%cyan_300%/globalstats take <ID> <amount> §7- Take a Global Stat value."
+  set: "%cyan_300%/globalstats set <ID> <amount> §7- Set a Global Stat value."
+  reset: "%cyan_300%/globalstats reset <ID> §7- Reset a Global Stat."
+  view: "%cyan_300%/globalstats view <ID> §7- View a Global Stat Value."
+  help: "%cyan_300%/globalstats help §7- Display this Help Message."
