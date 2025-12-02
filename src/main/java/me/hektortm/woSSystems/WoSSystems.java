@@ -1,6 +1,5 @@
 package me.hektortm.woSSystems;
 
-import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.PacketEventsAPI;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flag;
@@ -8,7 +7,6 @@ import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
-import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import me.hektortm.woSSystems.channels.Channel;
 import me.hektortm.woSSystems.channels.ChannelManager;
 import me.hektortm.woSSystems.channels.cmd.ChannelCommand;
@@ -27,7 +25,8 @@ import me.hektortm.woSSystems.economy.commands.EcoCommand;
 import me.hektortm.woSSystems.economy.commands.PayCommand;
 import me.hektortm.woSSystems.linking.LinkCommand;
 import me.hektortm.woSSystems.listeners.*;
-import me.hektortm.woSSystems.professions.crafting.CRecipeManager;
+import me.hektortm.woSSystems.professions.crafting.CraftingListener;
+import me.hektortm.woSSystems.professions.crafting.CraftingManager;
 import me.hektortm.woSSystems.profiles.ProfileCommand;
 import me.hektortm.woSSystems.profiles.ProfileListener;
 import me.hektortm.woSSystems.profiles.ProfileManager;
@@ -36,7 +35,6 @@ import me.hektortm.woSSystems.regions.RegionBossBar;
 import me.hektortm.woSSystems.systems.citems.CitemDisplays;
 import me.hektortm.woSSystems.systems.citems.commands.SignCommand;
 import me.hektortm.woSSystems.systems.commands.BasicCommandExecutor;
-import me.hektortm.woSSystems.systems.commands.BasicCommandManager;
 import me.hektortm.woSSystems.systems.cooldowns.CooldownManager;
 import me.hektortm.woSSystems.systems.cooldowns.cmd.CooldownCommand;
 import me.hektortm.woSSystems.systems.guis.GUIManager;
@@ -51,8 +49,6 @@ import me.hektortm.woSSystems.time.TimeEvents;
 import me.hektortm.woSSystems.time.TimeManager;
 import me.hektortm.woSSystems.time.cmd.Calender;
 import me.hektortm.woSSystems.time.cmd.TimeCommand;
-import me.hektortm.woSSystems.professions.crafting.CraftingListener;
-import me.hektortm.woSSystems.professions.crafting.command.CRecipeCommand;
 import me.hektortm.woSSystems.professions.fishing.FishingListener;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.citems.commands.CgiveCommand;
@@ -75,9 +71,6 @@ import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
 import me.hektortm.wosCore.discord.DiscordLogger;
 import me.hektortm.wosCore.logging.LogManager;
-import me.tofaa.entitylib.APIConfig;
-import me.tofaa.entitylib.EntityLib;
-import me.tofaa.entitylib.spigot.SpigotEntityLibPlatform;
 import org.aselstudios.luxdialoguesapi.DialogueProvider;
 import org.aselstudios.luxdialoguesapi.LuxDialoguesAPI;
 import org.bukkit.Bukkit;
@@ -117,7 +110,7 @@ public final class WoSSystems extends JavaPlugin {
     private InteractionManager interactionManager;
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
-    private CRecipeManager recipeManager;
+    private CraftingManager craftingManager;
     private ChannelManager channelManager;
     private NicknameManager nickManager;
     private Coinflip coinflipCommand;
@@ -222,9 +215,9 @@ public final class WoSSystems extends JavaPlugin {
         profileManager = new ProfileManager(daoHub);
 
 // Initialize the remaining managers
-        recipeManager = new CRecipeManager(daoHub); // TODO: interactions
+        craftingManager = new CraftingManager(daoHub); // TODO: interactions
 
-        new CraftingListener(this, recipeManager); // TODO: interactions
+        new CraftingListener(daoHub); // TODO: interactions
 
 
 
@@ -271,6 +264,7 @@ public final class WoSSystems extends JavaPlugin {
         interactionManager.interactionTask();
         tab.runTablist();
         cooldownManager.start();
+        craftingManager.loadAll();
 
         PermissionRegistry.registerAll(this, PermissionDefault.OP);
     }
@@ -385,7 +379,6 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("balance", new BalanceCommand(ecoManager, core));
         cmdReg("pay", new PayCommand(ecoManager, lang));
         cmdReg("coinflip", coinflipCommand);
-        cmdReg("crecipe", new CRecipeCommand(this, recipeManager, lang));
         cmdReg("channel", new ChannelCommand());
         cmdReg("nickname", new NicknameCommand());
         cmdReg("loottable", new LoottableCommand(daoHub, lootTableManager));
@@ -538,6 +531,9 @@ public final class WoSSystems extends JavaPlugin {
     }
     public PacketEventsAPI getPacketEventsAPI() {
         return packetEventsApi;
+    }
+    public CraftingManager getCraftingManager() {
+        return craftingManager;
     }
 
     public Map<UUID, String> getPlayerRegions() {

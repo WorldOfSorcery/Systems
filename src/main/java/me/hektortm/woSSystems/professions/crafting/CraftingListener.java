@@ -1,133 +1,140 @@
 package me.hektortm.woSSystems.professions.crafting;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Keyed;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.database.dao.CitemDAO;
+import me.hektortm.woSSystems.database.dao.CraftingDAO;
+import me.hektortm.woSSystems.utils.dataclasses.CIngredient;
+import me.hektortm.woSSystems.utils.dataclasses.CRecipe;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
-import org.bukkit.inventory.*;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.inventory.CraftingInventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.Recipe;
+import org.bukkit.inventory.RecipeChoice;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class CraftingListener implements Listener {
 
-    private final JavaPlugin plugin;
-    private final CRecipeManager recipeManager;
+    private final DAOHub hub;
+    private List<CRecipe> recipes;
 
-    public CraftingListener(JavaPlugin plugin, CRecipeManager recipeManager) {
-        this.plugin = plugin;
-        this.recipeManager = recipeManager;
-        Bukkit.getPluginManager().registerEvents(this, plugin);
+    public CraftingListener(DAOHub hub) {
+        this.hub = hub;
+        this.recipes = hub.getCraftingDAO().loadAllRecipes();
     }
 
-    @EventHandler
-    public void onPrepareItemCraft(PrepareItemCraftEvent event) {
-        CraftingInventory inventory = event.getInventory();
-        Recipe recipe = inventory.getRecipe();
+    private boolean isExactCItem(ItemStack provided, String citemId) {
+        if (provided == null) return false;
 
-        if (recipe == null) {
-            inventory.setResult(null);
-            return;
-        }
+        ItemStack required = hub.getCitemDAO().getCitem(citemId);
+        if (required == null) return false;
 
-        if (!isCustomRecipe(recipe)) {
-            inventory.setResult(new ItemStack(Material.AIR));
-            return;
-        }
-
-        // Get the key of the recipe
-        NamespacedKey key = null;
-        if (recipe instanceof Keyed keyed) {
-            key = keyed.getKey();
-        }
-
-        if (key == null) {
-            inventory.setResult(new ItemStack(Material.AIR));
-            return;
-        }
-
-        // Retrieve the conditions and success ID
-        //JSONArray conditions = recipeManager.getConditions(key);
-       // String successId = recipeManager.getSuccessId(key);  // Add this method to get success ID
-
-        // Validate the conditions using ConditionHandler
-        if (!event.getViewers().isEmpty() && event.getViewers().get(0) instanceof Player player) {
-            //
-        }
-    }
-    @EventHandler
-    public void onCraftItem(CraftItemEvent event) {
-        // Ensure we're dealing with the right player and recipe
-        if (!(event.getWhoClicked() instanceof Player player)) {
-            return;
-        }
-
-        // Get the recipe used for crafting
-        Recipe recipe = event.getRecipe();
-        if (recipe == null) {
-            return;
-        }
-
-        // Get the key of the recipe
-        NamespacedKey key = null;
-        if (recipe instanceof Keyed) {
-            key = ((Keyed) recipe).getKey();
-        }
-
-        if (key == null) {
-            return;
-        }
-
-        // Retrieve the conditions and success ID
-       // JSONArray conditions = recipeManager.getConditions(key);
-       // String successId = recipeManager.getSuccessId(key);
-
-        // Check if the player is shift-clicking
-        if (event.isShiftClick()) {
-            // Shift-click detected
-            //
-
-            // Allow bulk crafting if conditions are met
-//            if (successId != null) {
-//                triggerSuccessInteraction(player, successId);
-//            }
-//            return;
-        }
-
-        // For regular crafting
-        //
-
-        // If conditions are valid, trigger the success interaction if available
-//        if (successId != null) {
-//            triggerSuccessInteraction(player, successId);
-//        }
+        return provided.isSimilar(required);
     }
 
-    // Helper method to trigger success interaction
-    private void triggerSuccessInteraction(Player player, String successId) {
-        // Retrieve the interaction configuration for the successId
-        //InteractionData interaction = interactionManager.getInteractionByID(successId);
-        //if (interaction != null) {
-            // Trigger the interaction
-            //interactionManager.triggerInteraction(player, successId);
-        //}
-    }
+    private boolean matchesShapedRecipe(CraftingInventory inv, CRecipe recipe) {
 
+        String shape = recipe.shape(); // 9 characters
 
-    private boolean isCustomRecipe(Recipe recipe) {
-        if (recipe instanceof ShapedRecipe shapedRecipe) {
-            if (shapedRecipe.getKey().getNamespace().equals(plugin.getName().toLowerCase())) {
-                return true;
+        for (int slot = 0; slot < 9; slot++) {
+            char key = shape.charAt(slot);
+
+            ItemStack provided = inv.getMatrix()[slot];
+
+            if (key == ' ' || !recipe.ingredients().containsKey(key)) {
+                // Should be empty
+                if (provided != null) return false;
+                continue;
             }
+
+            // Must match a CItem ingredient
+            CIngredient ing = recipe.ingredients().get(key);
+            if (!isExactCItem(provided, ing.citemId())) return false;
         }
 
-        if (recipe instanceof ShapelessRecipe shapelessRecipe) {
-            return shapelessRecipe.getKey().getNamespace().equals(plugin.getName().toLowerCase());
+        return true;
+    }
+
+    // -------------------------------------------------------------
+    // Helper: Check if inventory matches a shapeless recipe
+    // -------------------------------------------------------------
+    private boolean matchesShapelessRecipe(CraftingInventory inv, CRecipe recipe) {
+
+        List<ItemStack> provided = new ArrayList<>();
+        for (ItemStack stack : inv.getMatrix()) {
+            if (stack != null) provided.add(stack);
         }
 
-        return false;
+        List<String> required = recipe.ingredients().values()
+                .stream().map(CIngredient::citemId).collect(Collectors.toList());
+
+        // must have equal count
+        if (provided.size() != required.size()) return false;
+
+        // compare ingredients ignoring order
+        for (String neededId : required) {
+
+            boolean found = false;
+
+            for (ItemStack p : provided) {
+                if (isExactCItem(p, neededId)) {
+                    found = true;
+                    provided.remove(p);
+                    break;
+                }
+            }
+            if (!found) return false;
+        }
+
+        return true;
+    }
+
+    private CRecipe findMatchingRecipe(CraftingInventory inv) {
+        for (CRecipe recipe : recipes) {
+            if (recipe.shaped() && matchesShapedRecipe(inv, recipe))
+                return recipe;
+
+            if (!recipe.shaped() && matchesShapelessRecipe(inv, recipe))
+                return recipe;
+        }
+        return null;
+    }
+
+    @EventHandler
+    public void onPrepareCraft(PrepareItemCraftEvent event) {
+
+        CraftingInventory inv = event.getInventory();
+
+        CRecipe match = findMatchingRecipe(inv);
+
+        if (match != null) {
+            inv.setResult(hub.getCitemDAO().getCitem(match.resultCItemId()));
+        } else {
+            inv.setResult(null); // NOT a valid CRecipe
+        }
+    }
+
+    @EventHandler
+    public void onCraft(CraftItemEvent event) {
+
+        CraftingInventory inv = event.getInventory();
+        CRecipe match = findMatchingRecipe(inv);
+
+        if (match == null) {
+            event.setCancelled(true);
+            return;
+        }
+       // TODO succes inter
     }
 }
