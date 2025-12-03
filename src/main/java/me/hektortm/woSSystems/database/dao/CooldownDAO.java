@@ -35,6 +35,16 @@ public class CooldownDAO implements IDAO {
                     "duration BIGINT," +
                     "start_interaction VARCHAR(255)," +
                     "end_interaction VARCHAR(255))");
+            stmt.execute("CREATE TABLE IF NOT EXISTS global_cooldowns(" +
+                    "id VARCHAR(255)," +
+                    "duration BIGINT," +
+                    "start_interaction VARCHAR(255)," +
+                    "end_interaction VARCHAR(255)" +
+                    ")");
+            stmt.execute("CREATE TABLE IF NOT EXISTS active_global_cooldowns(" +
+                    "id VARCHAR(255)," +
+                    "start_time TIMESTAMP" +
+                    ")" );
             stmt.execute("CREATE TABLE IF NOT EXISTS playerdata_cooldowns(" +
                     "uuid VARCHAR(255)," +
                     "id VARCHAR(255)," +

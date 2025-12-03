@@ -3,10 +3,13 @@ package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.DyedItemColor;
+import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
+import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
+import me.hektortm.wosCore.WoSCore;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -26,6 +29,9 @@ import java.util.List;
 import static io.papermc.paper.datacomponent.item.DyedItemColor.dyedItemColor;
 
 public class Color extends SubCommand {
+    private static final WoSSystems plugin = WoSSystems.getInstance();
+    private static final LangManager lang = plugin.getCore().getLang();
+
     @Override
     public String getName() {
         return "color";
@@ -56,7 +62,7 @@ public class Color extends SubCommand {
 
 
         DyedItemColor dyedColor = dyedItemColor(hexToBukkitColor(color, p));
-
+        if (dyedColor == null) return;
 
         item.setData(DataComponentTypes.DYED_COLOR, dyedColor);
         Utils.success(p, "citems", "color", "%color%", color);
@@ -68,7 +74,7 @@ public class Color extends SubCommand {
         }
 
         if (hex.length() != 6) {
-            Utils.error(p, "citems", "error.invalid-color");
+            p.sendMessage(lang.getMessage("general", "prefix.error") + lang.getMessage("citems", "error.invalid-color"));
             return null;
         }
 
@@ -79,7 +85,7 @@ public class Color extends SubCommand {
 
             return org.bukkit.Color.fromRGB(red, green, blue);
         } catch (NumberFormatException e) {
-            Utils.error(p, "citems", "error.invalid-color-format", "%color%", hex);
+            p.sendMessage(lang.getMessage("general", "prefix.error") + lang.getMessage("citems", "error.invalid-color-format"));
             return null;
         }
     }
