@@ -27,6 +27,7 @@ import me.hektortm.woSSystems.linking.LinkCommand;
 import me.hektortm.woSSystems.listeners.*;
 import me.hektortm.woSSystems.professions.crafting.CraftingListener;
 import me.hektortm.woSSystems.professions.crafting.CraftingManager;
+import me.hektortm.woSSystems.professions.crafting.RecipeCommand;
 import me.hektortm.woSSystems.profiles.ProfileCommand;
 import me.hektortm.woSSystems.profiles.ProfileListener;
 import me.hektortm.woSSystems.profiles.ProfileManager;
@@ -396,6 +397,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("calendar", new Calender());
         cmdReg("link", new LinkCommand());
         cmdReg("dialog", new me.hektortm.woSSystems.systems.dialogs.cmd.DialogCommand(daoHub));
+        cmdReg("unlockrecipe", new RecipeCommand());
     }
 
     private void registerEvents() {

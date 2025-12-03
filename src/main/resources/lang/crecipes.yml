@@ -1,15 +1,9 @@
-error:
+info:
   usage:
-    create: "Usage: /crecipe create <true|false> <id>"
+    unlock: "/unlockrecipe <player> <id>"
+  has_recipe: "%player% already knows the recipe '%id'."
 
-template:
-  shaped: "§aCreated Shaped CRecipe template for: §e%id%"
-  unshaped: "§aCreated Unshaped CRecipe template for: §e%id%"
+error:
+  not_found: "The recipe with the id '%id%' does not exist or the server needs to restart."
 
-reload: "§aReloaded CRecipes."
-
-help:
-  header: "§7CRecipe Commands:"
-  create: "§e/crecipe create <true|false> <id> §7- Create a shaped(t) / unshaped(f) template."
-  reload: "§e/crecipe reload §7- Reload CRecipes."
-  list: "§e/crecipe help §7- Display this help message."
+unlocked: "§aYou have unlocked the recipe '§e%id%§a' for §e%player%§a."

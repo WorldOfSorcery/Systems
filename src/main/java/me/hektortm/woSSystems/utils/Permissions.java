@@ -103,6 +103,8 @@ public enum Permissions {
     COOLDOWNS_REMOVE("cooldowns.remove"),
     COOLDOWNS_VIEW("cooldowns.view"),
 
+    RECIPE_UNLOCK("recipe.unlock"),
+
     PORTAL_CHANNELS_VIEW("portal.channels.view"),
     PORTAL_CHANNELS_CREATE("portal.channels.create"),
     PORTAL_CHANNELS_DELETE("portal.channels.delete"),
