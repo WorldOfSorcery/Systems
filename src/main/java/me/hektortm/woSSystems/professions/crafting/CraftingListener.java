@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 public class CraftingListener implements Listener {
 
     private final DAOHub hub;
+    private final WoSSystems plugin = WoSSystems.getInstance();
     private List<CRecipe> recipes;
 
     public CraftingListener(DAOHub hub) {
@@ -115,11 +116,16 @@ public class CraftingListener implements Listener {
     public void onPrepareCraft(PrepareItemCraftEvent event) {
 
         CraftingInventory inv = event.getInventory();
-
+        Player p = (Player) event.getView().getPlayer();
         CRecipe match = findMatchingRecipe(inv);
 
         if (match != null) {
-            inv.setResult(hub.getCitemDAO().getCitem(match.resultCItemId()));
+            if (plugin.getCraftingManager().hasUnlockedRecipe(match.id(), p)) {
+                inv.setResult(hub.getCitemDAO().getCitem(match.resultCItemId()));
+            }
+            else {
+                inv.setResult(null);
+            }
         } else {
             inv.setResult(null); // NOT a valid CRecipe
         }
@@ -130,11 +136,12 @@ public class CraftingListener implements Listener {
 
         CraftingInventory inv = event.getInventory();
         CRecipe match = findMatchingRecipe(inv);
+        Player p = (Player) event.getView().getPlayer();
 
         if (match == null) {
             event.setCancelled(true);
             return;
         }
-       // TODO succes inter
+       if (match.successId() != null) plugin.getInteractionManager().triggerInteraction(match.successId(), p, null);
     }
 }

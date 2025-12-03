@@ -49,17 +49,8 @@ public class CraftingManager {
     }
 
     public boolean hasUnlockedRecipe(String id, Player p) {
-        Set<NamespacedKey> playerRecipes = p.getDiscoveredRecipes();
-        List<CRecipe> recipes = hub.getCraftingDAO().loadAllRecipes();
-
-        for (CRecipe r : recipes) {
-            if (r.id().equals(id)) {
-                NamespacedKey key = new NamespacedKey(plugin, r.id());
-                if (playerRecipes.contains(key)) return true;
-                else return false;
-            }
-        }
-        return false;
+        NamespacedKey key = new NamespacedKey(plugin, id);
+        return p.getDiscoveredRecipes().contains(key);
     }
 
     private void registerShaped(CRecipe r, NamespacedKey key, ItemStack result) {

@@ -44,7 +44,8 @@ public class CraftingDAO implements IDAO {
                     "result_citem VARCHAR(255) NOT NULL," +
                     "result_amount TINYINT NOT NULL DEFAULT 1," +
                     "shape VARCHAR(9) NULL," +
-                    "ingredients_json JSON NOT NULL)");
+                    "ingredients_json JSON NOT NULL," +
+                    "successid VARCHAR(255) NULL)");
         } catch (SQLException e) {
             // TODO Discord log
         }
@@ -84,7 +85,9 @@ public class CraftingDAO implements IDAO {
         String resultId = rs.getString("result_citem");
         int resultAmount = rs.getInt("result_amount");
 
-        return new CRecipe(id, shaped, shape, ingMap, resultId, resultAmount);
+        String successId = rs.getString("successid");
+
+        return new CRecipe(id, shaped, shape, ingMap, resultId, resultAmount,  successId);
     }
 
     public Map<NamespacedKey, Recipe> getLoadedRecipes() {

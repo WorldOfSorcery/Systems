@@ -9,10 +9,11 @@ public class CRecipe {
     private final Map<Character, CIngredient> ingredients;
     private final String resultCItemId;
     private final int resultAmount;
+    private final String successId;
 
     public CRecipe(String id, boolean shaped, String shape,
                    Map<Character, CIngredient> ingredients,
-                   String resultCItemId, int resultAmount) {
+                   String resultCItemId, int resultAmount, String successId) {
 
         this.id = id;
         this.shaped = shaped;
@@ -20,6 +21,7 @@ public class CRecipe {
         this.ingredients = ingredients;
         this.resultCItemId = resultCItemId;
         this.resultAmount = resultAmount;
+        this.successId = successId;
     }
 
     public String id() { return id; }
@@ -28,4 +30,5 @@ public class CRecipe {
     public Map<Character, CIngredient> ingredients() { return ingredients; }
     public String resultCItemId() { return resultCItemId; }
     public int resultAmount() { return resultAmount; }
+    public String successId() { return successId; }
 }
