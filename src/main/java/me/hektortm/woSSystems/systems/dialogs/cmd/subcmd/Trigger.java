@@ -1,11 +1,13 @@
 package me.hektortm.woSSystems.systems.dialogs.cmd.subcmd;
 
+import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
 import org.aselstudios.luxdialoguesapi.Builders.Dialogue;
+import org.aselstudios.luxdialoguesapi.DialogueProvider;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -41,8 +43,12 @@ public class Trigger extends SubCommand {
                 return;
             }
 
-            hub.getDialogDAO().getDialog(dialogId, sender, targetPlayer);
 
+            if (!WoSSystems.getInstance().getDialogueApi().isInDialogue(targetPlayer)) {
+                hub.getDialogDAO().getDialog(dialogId, sender, targetPlayer);
+            } else {
+                if (sender instanceof Player) Utils.info(sender, "dialogs", "info.isindialog");
+            }
         } else {
             Utils.info(sender, "dialogs", "info.usage.trigger");
         }

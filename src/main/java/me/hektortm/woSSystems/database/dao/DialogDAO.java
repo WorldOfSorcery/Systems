@@ -62,6 +62,7 @@ public class DialogDAO implements IDAO {
                     "FOREIGN KEY (dialog_id, page_id) REFERENCES dialog_pages(dialog_id, page_id) ON DELETE CASCADE)");
             stmt.execute("CREATE TABLE IF NOT EXISTS dialog_answers(" +
                     "dialog_id VARCHAR(255), " +
+                    "page_id INT, " +
                     "answer_id INT," +
                     "answer_text VARCHAR(255)," +
                     "answer_reply TEXT," +
@@ -122,7 +123,6 @@ public class DialogDAO implements IDAO {
                 String selectedColor        = getOrDefault(rs, "selected_color", "#4f4a3e");
 
                 List<Page> pages = getPages(dialogId, target);
-                List<Answer> answers = getAnswers(dialogId);
 
                 Dialogue.Builder dialogBuilder = new Dialogue.Builder().setDialogueID(dialogId)
                         .setDialogueText(textColor, 10)
@@ -130,30 +130,20 @@ public class DialogDAO implements IDAO {
                         .setDialogueBackgroundImage("dialogue-background", backgroundColor, 0)
                         .setDialogueSpeed(1)
 
-                        .setTypingSound("luxdialogues:luxdialogues.sounds.typing")
-                        .setTypingSoundPitch(1.0)
-                        .setTypingSoundVolume(1.0)
+                        .setTypingSound("luxdialogues:luxdialogues.sounds.typing", "master", 1.0, 1.0)
                         .setRange(10.0)
-                        .setNameStartImage("name-start")
-                        .setNameMidImage("name-mid")
-                        .setNameEndImage("name-end")
+                        .setNameImage("name-start", "name-mid", "name-end", "#ffffff", 0)
                         .setFogImage("fog", fogColor)
-                        .setNameImageColor("#ffffff")
                         .setArrowImage("hand", arrowColor, -7)
-                        .setSelectionSound("luxdialogues:luxdialogues.sounds.selection")
+                        .setSelectionSound("luxdialogues:luxdialogues.sounds.selection", "master", 1.0, 1.0)
                         .setAnswerBackgroundImage("answer-background", answerBackgroundColor, 140)
                         .setAnswerText(textColor, 13, selectedColor);
 
                 for (Page page : pages) {
                     dialogBuilder.addPage(page);
                 }
-                if (answers != null) {
-                    for (Answer answer : answers) {
-                        dialogBuilder.addAnswer(answer);
-                    }
-                }
 
-                plugin.getDialogueApi().sendDialogue(target, dialogBuilder.build());
+                plugin.getDialogueApi().sendDialogue(target, dialogBuilder.build(), "1");
                 if (source instanceof Player) Utils.success(source, "dialogs", "info.triggered", "%dialog%", dialogId, "%player%", target.getName());
                 else if (source instanceof ConsoleCommandSender) source.sendMessage("Dialog " + dialogId + " triggered for player " + target.getName());
 
@@ -186,6 +176,10 @@ public class DialogDAO implements IDAO {
                 for (String line : getPageLines(dialogId, rs.getInt("page_id"), target)) {
                     pageBuilder.addLine(line);
                 }
+                for (Answer answer : getAnswers(dialogId, rs.getInt("page_id"))) {
+                    pageBuilder.addAnswer(answer);
+                }
+
                 pages.add(pageBuilder.build());
             }
         } catch (SQLException e) {
@@ -202,11 +196,12 @@ public class DialogDAO implements IDAO {
 
     }
 
-    public List<Answer> getAnswers(String dialogId) {
+    public List<Answer> getAnswers(String dialogId, int page_id) {
         List<Answer> answers = new ArrayList<>();
-        String sql = "SELECT * FROM dialog_answers WHERE dialog_id = ? ORDER BY answer_id ASC";
+        String sql = "SELECT * FROM dialog_answers WHERE dialog_id = ? AND page_id = ? ORDER BY answer_id ASC";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, dialogId);
+            pstmt.setInt(2, page_id);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
 
