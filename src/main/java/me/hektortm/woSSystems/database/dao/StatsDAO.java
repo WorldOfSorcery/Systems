@@ -64,6 +64,15 @@ public class StatsDAO implements IDAO {
         }
     }
 
+    public void resetDailyStats() {
+        String sql = "DELETE FROM playerdata_stats WHERE id LIKE 'daily_%'";
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.execute(sql);
+        } catch (SQLException ex) {
+            // TODO discord log
+        }
+    }
+
     public boolean isStatLimitReached(UUID uuid, String statId) {
         Stat stat = getAllStats().get(statId);
         if (stat == null || !stat.getCapped()) {

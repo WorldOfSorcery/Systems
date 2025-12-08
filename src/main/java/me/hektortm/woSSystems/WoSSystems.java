@@ -126,6 +126,7 @@ public final class WoSSystems extends JavaPlugin {
     private ProfileManager profileManager;
     private LuxDialoguesAPI luxApi;
     private CitemDisplays citemDisplays;
+    private DailyReset dailyReset;
 
 
     public static StringFlag DISPLAY_NAME;
@@ -220,6 +221,8 @@ public final class WoSSystems extends JavaPlugin {
 
         new CraftingListener(daoHub); // TODO: interactions
 
+        dailyReset = new DailyReset(daoHub);
+
 
 
         // Check for core initialization
@@ -266,6 +269,7 @@ public final class WoSSystems extends JavaPlugin {
         tab.runTablist();
         cooldownManager.start();
         craftingManager.loadAll();
+        dailyReset.startResetTimer();
 
         PermissionRegistry.registerAll(this, PermissionDefault.OP);
     }

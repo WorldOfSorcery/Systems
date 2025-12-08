@@ -42,6 +42,15 @@ public class UnlockableDAO implements IDAO {
         }
     }
 
+    public void resetDailyUnlockables() {
+        String sql = "DELTE FROM playerdata_unlockables WHERE id LIKE 'daily_%'";
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.execute(sql);
+        } catch (SQLException e) {
+            // TODO discord log
+        }
+    }
+
     public boolean unlockableExists(String id) {
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT 1 FROM unlockables WHERE id = ?")) {
