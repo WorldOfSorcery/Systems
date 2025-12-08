@@ -11,6 +11,8 @@ import me.hektortm.woSSystems.utils.dataclasses.InteractionKey;
 import me.hektortm.wosCore.discord.DiscordLog;
 import me.hektortm.wosCore.discord.DiscordLogger;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
+import org.bukkit.WorldCreator;
 import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
@@ -83,6 +85,9 @@ public class ConditionHandler {
                 case "has_permission":                  return player.hasPermission(condition.getValue());
 
                 case "in_world":                        return player.getWorld().getName().equalsIgnoreCase(condition.getValue());
+
+                case "is_sneaking":                     return player.isSneaking();
+                case "is_not_sneaking":                 return !player.isSneaking();
 
                 default: return false;
             }
