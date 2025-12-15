@@ -33,6 +33,7 @@ public class CitemCommand implements CommandExecutor {
         subCommands.put("tooltip", new Tooltip());
         subCommands.put("model", new Model());
         subCommands.put("color", new Color());
+        subCommands.put("echant", new Enchant());
         subCommands.put("tag", new Tag());
         subCommands.put("info", new Info());
         subCommands.put("equippable", new Equippable());

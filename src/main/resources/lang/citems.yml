@@ -62,6 +62,7 @@ help:
   equippable: "%cyan_300%/citem equippable <head/chest/legs/feet> §7- Make the item equippable in the specified slot."
   model: "%cyan_300%/citem model <model_id> §7- Set the model of the item in your hand."
   tag: "%cyan_300%/citem tag <tag> §7- Add tags to an item."
+  enchant: "%cyan_300%/citem enchant §7- Toggle the Enchantment glint"
   info: "%cyan_300%/citem info §7- Displays info of the held Citem."
   give: "%cyan_300%/cgive <player> <id> [amount] §7- Give a player a Citem."
   remove: "%cyan_300%/cremove <player> <id> [amount] §7- Remove a Citem from a player."
@@ -69,6 +70,7 @@ help:
 
 model: "§aYou have configured the model to: §e%model_id%§a."
 color: "§aYou have configured the color to: §e%color%§a."
+enchant: "§aYou have toggled the Enchantment Glint."
 
 tooltip:
   hidden: "§aTooltip hidden."
