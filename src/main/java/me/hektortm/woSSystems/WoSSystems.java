@@ -270,7 +270,8 @@ public final class WoSSystems extends JavaPlugin {
         cooldownManager.start();
         craftingManager.loadAll();
         dailyReset.startResetTimer();
-
+        Bukkit.getMessenger().registerOutgoingPluginChannel(this, "wossystems:chat");
+        Bukkit.getMessenger().registerIncomingPluginChannel(this, "wossystems:chat", channelManager);
         PermissionRegistry.registerAll(this, PermissionDefault.OP);
     }
 

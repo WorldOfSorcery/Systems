@@ -136,3 +136,7 @@ commands:
   dialog:
     description: Dialog Command
     usage: /<command> <start|stop|reload> [player|id]
+
+  unlockrecipe:
+    description: unlock recipe
+    usage: /<command>

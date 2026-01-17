@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.channels;
 
+import io.github.retrooper.packetevents.adventure.serializer.gson.GsonComponentSerializer;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.dao.ChannelDAO;
@@ -24,12 +25,14 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
 
-public class ChannelManager {
+public class ChannelManager implements PluginMessageListener {
     public Inventory itemPreview = Bukkit.createInventory(null, InventoryType.DISPENSER, "Viewing Item");
     public final WoSSystems plugin;
     private final Map<String, Channel> channels = new HashMap<>();
@@ -167,51 +170,98 @@ public class ChannelManager {
         return null; // No channel found with the given short name
     }
 
-    public void sendMessage(AsyncPlayerChatEvent event, Player player, String message) {
-        Channel focusedChannel = getFocusedChannel(player);
-        if (focusedChannel != null) {
-            event.setCancelled(true); // Cancel the default chat event
+    public void sendMessage(AsyncPlayerChatEvent event, Player sender, String message) {
+        Channel channel = getFocusedChannel(sender);
+        if (channel == null) return;
 
-            // Get the sender's location
-            Location senderLocation = player.getLocation();
+        event.setCancelled(true);
 
-            // Create the chat component for the message
-            Component chatComponent = getFormattedMessage(focusedChannel, player, message);
+        Component formatted = getFormattedMessage(channel, sender, message);
 
-            // Send the message to recipients based on the channel's radius
-            for (UUID recipientUUID : getChannelDAO().getRecipients(focusedChannel.getName())) {
-                Player recipient = Bukkit.getPlayer(recipientUUID);
-                if (recipient != null) {
-                    // Check if the recipient is within the radius (if radius is enabled)
-                    if (focusedChannel.getRadius() == -1 || isWithinRadius(senderLocation, recipient.getLocation(), focusedChannel.getRadius())) {
-                        recipient.sendMessage(chatComponent);
-                    }
-                }
-            }
+        // LOCAL CHANNEL — radius > 0
+        if (channel.getRadius() != -1) {
+            sendLocal(channel, sender, formatted);
+            return;
+        }
+
+        // GLOBAL CHANNEL — radius == -1 → send to proxy
+        sendToProxy(channel.getName(), sender.getUniqueId(), formatted);
+    }
+
+    private void sendLocal(Channel channel, Player sender, Component msg) {
+        Location senderLoc = sender.getLocation();
+
+        for (UUID uuid : getChannelDAO().getRecipients(channel.getName())) {
+            Player target = Bukkit.getPlayer(uuid);
+            if (target == null) continue;
+
+            if (isWithinRadius(senderLoc, target.getLocation(), channel.getRadius()))
+                target.sendMessage(msg);
         }
     }
 
-    public void sendMessagePerCommand(Player player, String channel, String message) {
-        Channel focusedChannel = getChannel(channel);
-        if (focusedChannel != null) {
+    public void sendToProxy(String channelName, UUID senderUUID, Component component) {
+        String json = GsonComponentSerializer.gson().serialize(component);
 
-            // Get the sender's location
-            Location senderLocation = player.getLocation();
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            DataOutputStream data = new DataOutputStream(out);
 
-            // Create the chat component for the message
-            Component chatComponent = getFormattedMessage(focusedChannel, player, message);
+            data.writeUTF(channelName);
+            data.writeUTF(senderUUID.toString());
+            data.writeUTF(json);
 
-            // Send the message to recipients based on the channel's radius
-            for (UUID recipientUUID : getChannelDAO().getRecipients(focusedChannel.getName())) {
-                Player recipient = Bukkit.getPlayer(recipientUUID);
-                if (recipient != null) {
-                    // Check if the recipient is within the radius (if radius is enabled)
-                    if (focusedChannel.getRadius() == -1 || isWithinRadius(senderLocation, recipient.getLocation(), focusedChannel.getRadius())) {
-                        recipient.sendMessage(chatComponent);
-                    }
+            Bukkit.getServer().sendPluginMessage(plugin, "wossystems:chat", out.toByteArray());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void onPluginMessageReceived(String channel, Player p, byte[] msg) {
+        if (!channel.equals("wossystems:chat"))
+            return;
+
+        try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(msg))) {
+            String channelName = in.readUTF();
+            UUID senderUUID = UUID.fromString(in.readUTF());
+            String json = in.readUTF();
+
+            Component component = GsonComponentSerializer.gson().deserialize(json);
+
+            Channel ch = plugin.getChannelManager().getChannel(channelName);
+            if (ch == null) return;
+
+            // global-only since radius = -1
+            for (UUID uuid : plugin.getChannelManager().getChannelDAO().getRecipients(ch.getName())) {
+                Player target = Bukkit.getPlayer(uuid);
+                if (target != null) {
+                    target.sendMessage(component);
                 }
             }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+    }
+
+
+
+    public void sendMessagePerCommand(Player sender, String channel, String message) {
+        Channel focusedChannel = getChannel(channel);
+        if (channel == null) return;
+
+
+        Component formatted = getFormattedMessage(focusedChannel, sender, message);
+
+        // LOCAL CHANNEL — radius > 0
+        if (focusedChannel.getRadius() != -1) {
+            sendLocal(focusedChannel, sender, formatted);
+            return;
+        }
+
+        // GLOBAL CHANNEL — radius == -1 → send to proxy
+        sendToProxy(focusedChannel.getName(), sender.getUniqueId(), formatted);
     }
 
     private boolean isWithinRadius(Location senderLocation, Location recipientLocation, int radius) {
