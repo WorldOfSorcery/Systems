@@ -280,6 +280,7 @@ public final class WoSSystems extends JavaPlugin {
         for (Player p : Bukkit.getOnlinePlayers()) {
             bossBarManager.removeBossBar(p);
             regionBossBarManager.removeBossBar(p);
+            interactionManager.getHologramManager().removeAllHolograms(p);
         }
         timeManager.saveGameState();
 //        PacketEvents.getAPI().terminate();
@@ -401,7 +402,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("calendar", new Calender());
         cmdReg("link", new LinkCommand());
         cmdReg("dialog", new me.hektortm.woSSystems.systems.dialogs.cmd.DialogCommand(daoHub));
-        cmdReg("unlockrecipe", new RecipeCommand());
+       // cmdReg("unlockrecipe", new RecipeCommand());
     }
 
     private void registerEvents() {

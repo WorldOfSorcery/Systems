@@ -30,140 +30,113 @@ public class PlaceholderResolver {
 
     // TODO UPDATE WHEN INVENTORY IS OPENED AGAIN
 
-    public String resolvePlaceholders(String text, Player player) {
-        UUID playerUUID = player.getUniqueId();
+    public String resolvePlaceholders(String raw, Player player) {
+        UUID uuid = player.getUniqueId();
 
-        if(text.contains("{player_name}")) {
-            text = text.replace("{player_name}", player.getName());
+        // player_name
+        if (!raw.contains(".")) {
+            return switch (raw) {
+                case "player_name" -> player.getName();
+                case "player_nick" -> hub.getNicknameDAO().getNickname(uuid);
+                default -> resolveConstant(raw);
+            };
         }
 
-        if(text.contains("{player_nick}")) {
-            text = text.replace("{player_nick}", hub.getNicknameDAO().getNickname(player.getUniqueId()));
+        // namespace.key:ID
+        String[] dotSplit = raw.split("\\.", 2);
+        String namespace = dotSplit[0];
+        String rest = dotSplit[1];
+
+        String key;
+        String id = null;
+
+        if (rest.contains(":")) {
+            String[] colonSplit = rest.split(":", 2);
+            key = colonSplit[0];
+            id = colonSplit[1];
+        } else {
+            key = rest;
         }
 
-        if(text.contains("{player_cosmetic.")) {
-            String badgePlaceholder = "{player_cosmetic.badge}";
-            String prefixPlaceholder = "{player_cosmetic.prefix}";
-            String titlePlaceholder = "{player_cosmetic.title}";
-            if (text.contains(badgePlaceholder)) {
-                String badge = hub.getCosmeticsDAO().getCurrentCosmetic(player, CosmeticType.BADGE);
-                text = text.replace(badgePlaceholder, badge);
-            }
-            if (text.contains(prefixPlaceholder)) {
-                String prefix = hub.getCosmeticsDAO().getCurrentCosmetic(player, CosmeticType.PREFIX);
-                text = text.replace(prefixPlaceholder, prefix);
-            }
-            if (text.contains(titlePlaceholder)) {
-                String title = hub.getCosmeticsDAO().getCurrentCosmetic(player, CosmeticType.TITLE);
-                text = text.replace(titlePlaceholder, title);
-            }
+        return switch (namespace) {
+            case "player_cosmetic" -> resolveCosmetic(key, player);
+            case "stats" -> resolveStats(key, id, uuid);
+            case "global_stats" -> resolveGlobalStats(key, id);
+            case "cooldowns" -> resolveCooldown(key, id, uuid);
+            case "citems" -> resolveCitem(key, id);
+            default -> "{" + raw + "}";
+        };
+    }
+
+    private String resolveConstant(String id) {
+        Constant constant = hub.getConstantDAO().getConstant(id);
+        return constant == null ? "" : constant.getValue();
+    }
+
+    private String resolveCitem(String key, String id) {
+        if (id == null) return "";
+
+        ItemStack item = hub.getCitemDAO().getCitem(id);
+        if (item == null) return "";
+
+        ItemMeta meta = item.getItemMeta();
+
+        return switch (key) {
+            case "name" -> meta.getDisplayName();
+            case "lore" -> meta.getLore() == null ? "" : String.join("\n", meta.getLore());
+            case "material" -> item.getType().toString();
+            case "model" -> meta.getItemModel() != null ? meta.getItemModel().getKey() : "";
+            case "tooltip" -> meta.getTooltipStyle() != null ? meta.getTooltipStyle().getKey() : "";
+            default -> "";
+        };
+    }
+
+    private String resolveCooldown(String key, String id, UUID uuid) {
+        if (!"duration".equals(key) || id == null) return "";
+
+        Long seconds = hub.getCooldownDAO()
+                .getRemainingSeconds(Bukkit.getOfflinePlayer(uuid), id);
+
+        return seconds == null
+                ? "00:00:00"
+                : Parsers.formatCooldownTime(seconds);
+    }
+
+    private String resolveGlobalStats(String key, String id) {
+        if (id == null) return "";
+
+        return switch (key) {
+            case "amount" -> String.valueOf(
+                    statsManager.getGlobalStatValue(id)
+            );
+            case "max" -> String.valueOf(
+                    statsManager.getGlobalStatMax(id)
+            );
+            default -> "";
+        };
+    }
+
+    private String resolveCosmetic(String key, Player player) {
+        try {
+            CosmeticType type = CosmeticType.valueOf(key.toUpperCase());
+            return hub.getCosmeticsDAO().getCurrentCosmetic(player, type);
+        } catch (IllegalArgumentException e) {
+            return "";
         }
+    }
 
-        if(text.contains("{stats.")) {
-            for (String statId : statsManager.getStats().keySet()) {
-                String amountPlaceholder = "{stats.amount:" + statId +"}";
-                String maxPlaceholder = "{stats.max:" + statId + "}";
+    private String resolveStats(String key, String id, UUID uuid) {
+        if (id == null) return "";
 
-                if (text.contains(amountPlaceholder)) {
-                    long statAmount = statsManager.getPlayerStat(playerUUID, statId);
-                    text = text.replace(amountPlaceholder, String.valueOf(statAmount));
-                }
-
-                if (text.contains(maxPlaceholder)) {
-                    long statMax = statsManager.getStatMax(statId);
-                    text = text.replace(maxPlaceholder, String.valueOf(statMax));
-                }
-            }
-        }
-        if (text.contains("{global_stats.")) {
-            for (String statId : statsManager.getGlobalStats().keySet()) {
-                String amountPlaceholder = "{global_stats.amount:" + statId + "}";
-                String maxPlaceholder = "{global_stats.max:" + statId + "}";
-
-                if (text.contains(amountPlaceholder)) {
-                    long statAmount = statsManager.getGlobalStatValue(statId);
-                    text = text.replace(amountPlaceholder, String.valueOf(statAmount));
-                }
-                if (text.contains(maxPlaceholder)) {
-                    long statMax = statsManager.getGlobalStatMax(statId);
-                    text = text.replace(maxPlaceholder, String.valueOf(statMax));
-                }
-            }
-        }
-        if (text.contains("{cooldowns.")) {
-            for (String cooldownId : hub.getCooldownDAO().getAllCooldowns().keySet()) {
-                String durationPlaceholder = "{cooldowns.duration:" + cooldownId + "}";
-
-                if (text.contains(durationPlaceholder)) {
-                    long duration;
-                    if (hub.getCooldownDAO().getRemainingSeconds(Bukkit.getOfflinePlayer(playerUUID), cooldownId) == null) {
-                        duration = 0;
-                    } else {
-                        duration = hub.getCooldownDAO().getRemainingSeconds(Bukkit.getOfflinePlayer(playerUUID), cooldownId);
-                    }
-                    // Convert duration from seconds to a human-readable format
-                    String formattedDuration = Parsers.formatCooldownTime(duration);
-                    text = text.replace(durationPlaceholder, formattedDuration);
-                    if (hub.getCooldownDAO().getRemainingSeconds(Bukkit.getOfflinePlayer(playerUUID), cooldownId) == null) {
-                        // If the cooldown is expired, replace with "Expired"
-                        text = text.replace(durationPlaceholder, "00:00:00");
-                    }
-                }
-            }
-        }
-
-        if(text.contains("{citems.")) {
-            for (String citemId : hub.getCitemDAO().getCitemIds()) {
-                String namePlaceholder = "{citems.name:"+citemId+"}";
-                String lorePlaceholder = "{citems.lore:"+citemId+"}";
-                String materialPlaceholder = "{citems.material:"+citemId+"}";
-                String modelPlaceholder = "{citems.model:"+citemId+"}";
-                String tooltipPlaceholder = "{citems.tooltip:"+citemId+"}";
-
-                ItemStack citem = hub.getCitemDAO().getCitem(citemId);
-                ItemMeta meta = citem.getItemMeta();
-                if (text.contains(namePlaceholder)) {
-                    String name = meta.getDisplayName();
-                    text = text.replace(namePlaceholder, name);
-                }
-                if (text.contains(lorePlaceholder)) {
-                    List<String> lore = meta.getLore();
-                    StringBuilder builder = new StringBuilder();
-                    for ( int i = 0; i < lore.size(); i++ ) {
-                        if (i != lore.size()-1) {
-                            builder.append(lore.get(i)+"\n");
-                        } else {
-                            builder.append(lore.get(i));
-                        }
-
-                    }
-                    text = text.replace(lorePlaceholder, builder.toString());
-                }
-                if(text.contains(materialPlaceholder)) {
-                    String material = citem.getType().toString();
-                    text = text.replace(materialPlaceholder, material);
-                }
-                if(text.contains(modelPlaceholder)) {
-                    NamespacedKey model = meta.getItemModel();
-                    text = text.replace(modelPlaceholder, model.getKey() != null ? model.getKey() : "");
-                }
-                if(text.contains(tooltipPlaceholder)) {
-                    NamespacedKey tooltip = meta.getTooltipStyle();
-                    text = text.replace(tooltipPlaceholder, tooltip.getKey() != null ? tooltip.getKey() : "");
-                }
-
-            }
-
-        }
-        if (text.contains("{")) {
-            for (Constant constant : hub.getConstantDAO().getAllConstants()) {
-                String id = constant.getId();
-                String value = constant.getValue();
-                String placeholder = "{"+id+"}";
-                text = text.replace(placeholder, value);
-            }
-        }
-        return text;
+        return switch (key) {
+            case "amount" -> String.valueOf(
+                    statsManager.getPlayerStat(uuid, id)
+            );
+            case "max" -> String.valueOf(
+                    statsManager.getStatMax(id)
+            );
+            default -> "";
+        };
     }
 
 }

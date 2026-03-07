@@ -37,6 +37,24 @@ public class ConstantDAO implements IDAO {
         }
     }
 
+    public Constant getConstant(String id) {
+        String sql = "SELECT * FROM constants WHERE id = ?";
+        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, id);
+            ResultSet rs = pstmt.executeQuery();
+            Constant constant = null;
+            if (rs.next()) {
+                constant = new Constant(rs.getString("id"), rs.getString("value"));
+            }
+            return constant;
+        } catch (SQLException ex) {
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "9afb79fr", "Failed to get Constant: ", ex
+            ));
+            return null;
+        }
+    }
+
     public List<Constant> getAllConstants() {
         String sql = "SELECT * FROM constants";
         List<Constant> constants = new ArrayList<>();

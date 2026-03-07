@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import static me.hektortm.woSSystems.listeners.InterListener.buildKey;
 
@@ -23,11 +24,15 @@ public class InteractionManager {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final ConditionHandler conditions = plugin.getConditionHandler();
     private final ActionHandler actionHandler = plugin.getActionHandler();
-
-
+    private final HologramManager hologramManager;
 
     public InteractionManager(DAOHub hub) {
         this.hub = hub;
+        this.hologramManager = new HologramManager(hub);
+    }
+
+    public HologramManager getHologramManager() {
+        return hologramManager;
     }
 
     private Interaction getInteraction(String id) {
@@ -37,21 +42,20 @@ public class InteractionManager {
 
     public void interactionTask() {
         ParticleHandler particleHandler = new ParticleHandler(hub);
-        //HologramHandler hologramHandler = new HologramHandler(hub);
-
+        plugin.getLogger().info("[InteractionManager] Starting interaction task.");
 
         new BukkitRunnable() {
             @Override
             public void run() {
-                for (Interaction inter : hub.getInteractionDAO().getInteractions()) {
+                List<Interaction> interactions = hub.getInteractionDAO().getInteractions();
+                plugin.getLogger().fine("[InteractionManager] Tick — loaded " + interactions.size() + " interaction(s).");
+                for (Interaction inter : interactions) {
                     for (Location location : inter.getBlockLocations()) {
                         if (location != null) {
                             for (Player player : Bukkit.getOnlinePlayers()) {
-                                particleHandler.spawnParticlesForPlayer(player, inter, location, false, buildKey(location));
-
-//                                Bukkit.getScheduler().runTask(plugin, () -> {
-//                                    hologramHandler.handleHolograms(player, inter, location, false);
-//                                });
+                                InteractionKey key = buildKey(location);
+                                particleHandler.spawnParticlesForPlayer(player, inter, location, false, key);
+                                hologramManager.handleHolograms(player, inter, location, false, key);
                             }
                         }
                     }
@@ -61,12 +65,10 @@ public class InteractionManager {
                             if (npc1 == null || !npc1.isSpawned() || npc1.getEntity() == null) {
                                 continue;
                             }
-                            Location location = npc1.getEntity().getLocation().getBlock().getLocation();
-                            particleHandler.spawnParticlesForPlayer(player, inter, npc1.getEntity().getLocation(), true, new InteractionKey("npc:"+id));
-                            //spawnTextDisplay(location, inter, id, true);
-//                            Bukkit.getScheduler().runTask(plugin, () -> {
-//                                hologramHandler.handleHolograms(player, inter, location, false);
-//                            });
+                            Location location = npc1.getEntity().getLocation();
+                            InteractionKey key = new InteractionKey("npc:" + id);
+                            particleHandler.spawnParticlesForPlayer(player, inter, location, true, key);
+                            hologramManager.handleHolograms(player, inter, location, true, key);
                         }
                     }
                 }

@@ -43,6 +43,7 @@ public class QuitListener implements Listener {
 
         plugin.getBossBarManager().removeBossBar(p);
         hub.getUnlockableDAO().removeAllTemps(p.getUniqueId());
+        plugin.getInteractionManager().getHologramManager().removeAllHolograms(p);
 
 
 
