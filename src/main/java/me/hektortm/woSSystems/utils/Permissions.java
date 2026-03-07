@@ -21,6 +21,7 @@ public enum Permissions {
     CITEM_TOOLTIP("citem.modify.tooltip"),
     CITEM_SIGN("citem.sign"),
     CITEM_EQUIPPABLE("citem.modify.equippable"),
+    CITEM_ENCHANT("citem.modify.enchant"),
 
     CRECIPE_CREATE("crecipe.create"),
     CRECIPE_DELETE("crecipe.delete"),
