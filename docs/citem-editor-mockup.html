@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citem Editor</title>
+  <style>
+    :root {
+      --bg:         #0d1117;
+      --surface:    #161b22;
+      --surface2:   #21262d;
+      --border:     #30363d;
+      --accent:     #58a6ff;
+      --accent-dim: #1c2e47;
+      --green:      #3fb950;
+      --red:        #f85149;
+      --yellow:     #d29922;
+      --purple:     #bc8cff;
+      --text:       #e6edf3;
+      --text-dim:   #8b949e;
+      --mono:       'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; font-size: 14px; min-height: 100vh; }
+
+    /* ── Header ─────────────────────────────────────── */
+    .header {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 10px 20px; display: flex; align-items: center; gap: 12px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .header-back { color: var(--text-dim); text-decoration: none; font-size: 18px; line-height: 1; }
+    .header-back:hover { color: var(--text); }
+    .header-title { font-size: 15px; font-weight: 600; }
+    .header-id { color: var(--accent); font-family: var(--mono); }
+    .header-actions { margin-left: auto; display: flex; gap: 8px; }
+
+    /* ── Buttons ─────────────────────────────────────── */
+    .btn {
+      padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--text); cursor: pointer;
+      font-size: 13px; font-family: inherit; transition: border-color .15s, background .15s;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .btn:hover { border-color: var(--accent); background: var(--accent-dim); }
+    .btn-primary { background: var(--green); border-color: var(--green); color: #000; font-weight: 600; }
+    .btn-primary:hover { background: #45c158; border-color: #45c158; }
+    .btn-danger  { background: transparent; border-color: var(--red); color: var(--red); }
+    .btn-danger:hover  { background: rgba(248,81,73,.12); }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .btn-icon { padding: 3px 8px; font-size: 14px; line-height: 1; }
+
+    /* ── Layout ──────────────────────────────────────── */
+    .layout { display: grid; grid-template-columns: 276px 1fr; min-height: calc(100vh - 49px); }
+
+    /* ── Left panel ──────────────────────────────────── */
+    .left-panel {
+      background: var(--surface); border-right: 1px solid var(--border);
+      padding: 16px; display: flex; flex-direction: column; gap: 18px;
+      position: sticky; top: 49px; height: calc(100vh - 49px); overflow-y: auto;
+    }
+    .panel-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-dim); margin-bottom: 7px; }
+
+    /* ── Minecraft tooltip ───────────────────────────── */
+    .mc-tooltip {
+      background: #100c1a; border: 1px solid #5a1db0;
+      box-shadow: inset 0 0 0 1px #100c1a, 3px 3px 8px rgba(0,0,0,.7);
+      border-radius: 3px; padding: 8px 10px;
+      font-family: var(--mono); font-size: 13px; min-height: 90px;
+    }
+    .mc-item-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .mc-icon { width: 32px; height: 32px; background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .mc-name { font-size: 14px; font-weight: bold; word-break: break-all; }
+    .mc-divider { height: 1px; background: linear-gradient(to right, #5a1db0, #1a0840); margin: 5px 0; }
+    .mc-line { font-size: 12px; display: block; line-height: 1.5; }
+    .mc-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+    .mc-badge { font-size: 10px; font-family: system-ui; background: rgba(88,166,255,.12); border: 1px solid rgba(88,166,255,.3); color: var(--accent); border-radius: 3px; padding: 1px 6px; }
+
+    /* ── Right panel ─────────────────────────────────── */
+    .right-panel { padding: 20px; }
+
+    /* ── Tabs ─────────────────────────────────────────── */
+    .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+    .tab {
+      padding: 7px 15px; border-radius: 6px 6px 0 0; cursor: pointer; color: var(--text-dim);
+      font-size: 13px; transition: color .15s; border: 1px solid transparent; border-bottom: none;
+      position: relative; bottom: -1px; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .tab:hover { color: var(--text); background: var(--surface2); }
+    .tab.active { color: var(--text); background: var(--bg); border-color: var(--border); border-bottom-color: var(--bg); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Cards ───────────────────────────────────────── */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 14px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .card-title { font-size: 13px; font-weight: 600; }
+    .card-subtitle { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; }
+
+    /* ── Form ─────────────────────────────────────────── */
+    .form-group { margin-bottom: 14px; }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 5px; font-weight: 500; }
+    .form-input {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); padding: 7px 10px; border-radius: 6px;
+      font-family: var(--mono); font-size: 13px; transition: border-color .15s;
+    }
+    .form-input:focus { outline: none; border-color: var(--accent); }
+    .form-input::placeholder { color: var(--text-dim); }
+    .form-select {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); padding: 7px 10px; border-radius: 6px;
+      font-family: inherit; font-size: 13px;
+    }
+    .form-select:focus { outline: none; border-color: var(--accent); }
+    .form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .form-row-4 { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 8px; align-items: center; }
+
+    /* ── Dynamic entries ─────────────────────────────── */
+    .dyn-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+    .dyn-entry {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+      padding: 9px 12px; display: flex; align-items: flex-start; gap: 10px;
+    }
+    .dyn-entry-info { flex: 1; min-width: 0; }
+    .dyn-chips { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 4px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 3px;
+      border-radius: 4px; padding: 1px 7px; font-size: 11px; font-family: var(--mono);
+      border: 1px solid;
+    }
+    .chip-cond   { color: var(--purple); border-color: rgba(188,140,255,.4); background: rgba(188,140,255,.08); }
+    .chip-value  { color: var(--accent);  border-color: rgba(88,166,255,.4);  background: rgba(88,166,255,.08); }
+    .chip-param  { color: var(--yellow);  border-color: rgba(210,153,34,.4);  background: rgba(210,153,34,.08); }
+    .dyn-result  { font-family: var(--mono); font-size: 13px; }
+    .dyn-actions { display: flex; gap: 3px; flex-shrink: 0; }
+
+    /* ── Add-condition form ──────────────────────────── */
+    .add-form { background: var(--surface2); border: 1px dashed var(--border); border-radius: 6px; padding: 12px; margin-top: 8px; }
+    .add-form.hidden { display: none; }
+
+    /* ── Lore editor ─────────────────────────────────── */
+    .lore-item {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+      padding: 5px 8px; margin-bottom: 5px; cursor: grab;
+    }
+    .lore-item.drag-over { border-color: var(--accent); border-style: dashed; }
+    .drag-handle { color: var(--text-dim); cursor: grab; font-size: 13px; user-select: none; }
+    .lore-input { flex: 1; background: transparent; border: none; color: #aaa; font-family: var(--mono); font-size: 13px; outline: none; }
+    .lore-del { color: var(--text-dim); cursor: pointer; font-size: 17px; line-height: 1; padding: 1px 3px; }
+    .lore-del:hover { color: var(--red); }
+    .lore-hint { font-size: 11px; color: var(--text-dim); margin-top: 6px; }
+
+    /* ── Rarity picker ───────────────────────────────── */
+    .rarity-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .rarity-opt {
+      padding: 7px 4px; text-align: center; border-radius: 6px;
+      border: 1px solid var(--border); cursor: pointer; font-size: 12px; font-weight: 600;
+      background: var(--surface2); transition: all .15s;
+    }
+    .rarity-opt.sel { border-width: 2px; }
+    .r-common    { color:#aaa; }    .r-common.sel    { border-color:#aaa;    background:rgba(170,170,170,.1); }
+    .r-uncommon  { color:#5f5; }    .r-uncommon.sel  { border-color:#5f5;    background:rgba(85,255,85,.1); }
+    .r-rare      { color:#5ff; }    .r-rare.sel      { border-color:#5ff;    background:rgba(85,255,255,.1); }
+    .r-epic      { color:#a0a; }    .r-epic.sel      { border-color:#a0a;    background:rgba(170,0,170,.1); }
+    .r-legendary { color:#fa0; }    .r-legendary.sel { border-color:#fa0;    background:rgba(255,170,0,.1); }
+    .r-ancient   { color:#f55; }    .r-ancient.sel   { border-color:#f55;    background:rgba(255,85,85,.1); }
+    .r-mythic    { color:#f5f; }    .r-mythic.sel    { border-color:#f5f;    background:rgba(255,85,255,.1); }
+
+    /* ── Flag toggles ────────────────────────────────── */
+    .flags-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    .flag-btn {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 10px; cursor: pointer; user-select: none;
+      transition: border-color .15s, background .15s;
+    }
+    .flag-btn.on { border-color: var(--accent); background: var(--accent-dim); }
+    .flag-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex-shrink: 0; transition: background .15s; }
+    .flag-btn.on .flag-dot { background: var(--accent); }
+    .flag-name { font-size: 12px; font-weight: 500; }
+
+    /* ── Color picker ────────────────────────────────── */
+    .color-row { display: flex; gap: 8px; align-items: center; }
+    .color-swatch { width: 34px; height: 34px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
+
+    /* ── Attribute rows ──────────────────────────────── */
+    .attr-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 28px; gap: 8px; padding: 0 4px; margin-bottom: 6px; }
+    .attr-col-label { font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+    .attr-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 28px; gap: 8px; align-items: center; margin-bottom: 7px; }
+    .attr-del { color: var(--text-dim); cursor: pointer; font-size: 18px; line-height: 1; text-align: center; }
+    .attr-del:hover { color: var(--red); }
+
+    /* ── Info box ────────────────────────────────────── */
+    .info-box { background: rgba(88,166,255,.07); border: 1px solid rgba(88,166,255,.22); border-radius: 6px; padding: 10px 12px; font-size: 12px; color: var(--text-dim); margin-bottom: 14px; display: flex; gap: 8px; }
+    .info-icon { color: var(--accent); flex-shrink: 0; font-style: normal; }
+
+    /* ── Badge ───────────────────────────────────────── */
+    .badge { padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .badge-new { background: rgba(63,185,80,.18); color: var(--green); border: 1px solid rgba(63,185,80,.35); }
+
+    /* ── Slot selector ───────────────────────────────── */
+    .slot-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    .slot-btn { padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-dim); cursor: pointer; font-size: 12px; transition: all .15s; }
+    .slot-btn.sel { border-color: var(--accent); background: var(--accent-dim); color: var(--text); }
+
+    /* ── Scrollbar ───────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════ HEADER ══════════════════════ -->
+<div class="header">
+  <a href="#" class="header-back">←</a>
+  <span class="header-title">Item Editor — <span class="header-id" id="headerId">my_sword</span></span>
+  <div class="header-actions">
+    <button class="btn btn-danger btn-sm" onclick="confirmDelete()">🗑 Delete</button>
+    <button class="btn btn-sm" onclick="history.back()">Cancel</button>
+    <button class="btn btn-primary" id="saveBtn" onclick="saveItem()">Save Changes</button>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ══════════════════ LEFT PANEL ══════════════════ -->
+  <div class="left-panel">
+
+    <!-- Tooltip preview -->
+    <div>
+      <div class="panel-label">Preview</div>
+      <div class="mc-tooltip">
+        <div class="mc-item-row">
+          <div class="mc-icon" id="prevIcon">⚔️</div>
+          <span class="mc-name" id="prevName" style="color:#fa0">My Sword</span>
+        </div>
+        <div class="mc-divider"></div>
+        <span class="mc-line" id="prevRarity" style="color:#fa0">✦ Legendary</span>
+        <span class="mc-line" style="color:#aaa">A legendary blade forged in</span>
+        <span class="mc-line" style="color:#aaa">the depths of the nether.</span>
+        <span class="mc-line" style="color:#555;font-style:italic">Legendary Weapon</span>
+        <div class="mc-divider"></div>
+        <div class="mc-badges">
+          <span class="mc-badge">⚡ 2 dynamic names</span>
+          <span class="mc-badge">📜 3 dynamic lore</span>
+          <span class="mc-badge">🎭 1 dynamic model</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Material -->
+    <div>
+      <div class="panel-label">Material</div>
+      <select class="form-select" id="materialSel" onchange="updateMaterialPreview()">
+        <option value="DIAMOND_SWORD"    data-icon="⚔️">DIAMOND_SWORD</option>
+        <option value="NETHERITE_SWORD"  data-icon="⚔️">NETHERITE_SWORD</option>
+        <option value="GOLDEN_SWORD"     data-icon="⚔️">GOLDEN_SWORD</option>
+        <option value="BOW"              data-icon="🏹">BOW</option>
+        <option value="CROSSBOW"         data-icon="🏹">CROSSBOW</option>
+        <option value="DIAMOND_HELMET"   data-icon="⛑️">DIAMOND_HELMET</option>
+        <option value="DIAMOND_CHESTPLATE" data-icon="🛡️">DIAMOND_CHESTPLATE</option>
+        <option value="DIAMOND_LEGGINGS" data-icon="🛡️">DIAMOND_LEGGINGS</option>
+        <option value="DIAMOND_BOOTS"    data-icon="👟">DIAMOND_BOOTS</option>
+        <option value="NETHER_STAR"      data-icon="⭐">NETHER_STAR</option>
+        <option value="PAPER"            data-icon="📄">PAPER</option>
+        <option value="BOOK"             data-icon="📖">BOOK</option>
+        <option value="COMPASS"          data-icon="🧭">COMPASS</option>
+        <option value="BLAZE_ROD"        data-icon="🔥">BLAZE_ROD</option>
+      </select>
+    </div>
+
+    <!-- Item ID (read-only) -->
+    <div>
+      <div class="panel-label">Item ID</div>
+      <input type="text" class="form-input" id="itemIdField" value="my_sword" style="background:var(--surface)">
+      <div style="font-size:11px;color:var(--text-dim);margin-top:4px">ID cannot be changed after creation.</div>
+    </div>
+
+    <!-- Quick actions -->
+    <div>
+      <div class="panel-label">Quick Actions</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="btn btn-sm" onclick="copyJson()">📋 Copy JSON</button>
+        <button class="btn btn-sm">🔄 Reload from DB</button>
+        <button class="btn btn-sm">👁️ Test Give (yourself)</button>
+      </div>
+    </div>
+
+  </div><!-- /left-panel -->
+
+  <!-- ══════════════════ RIGHT PANEL ══════════════════ -->
+  <div class="right-panel">
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('display',this)">Display</div>
+      <div class="tab" onclick="switchTab('dynamic',this)">Dynamic <span class="badge badge-new">NEW</span></div>
+      <div class="tab" onclick="switchTab('properties',this)">Properties</div>
+      <div class="tab" onclick="switchTab('attributes',this)">Attributes</div>
+      <div class="tab" onclick="switchTab('actions',this)">Actions &amp; Flags</div>
+    </div>
+
+    <!-- ═══════════════ TAB: DISPLAY ════════════════ -->
+    <div class="tab-content active" id="tab-display">
+
+      <!-- Default Name -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Default Display Name</span>
+        </div>
+        <p class="card-subtitle">Shown when no dynamic name condition matches.</p>
+        <div class="form-group" style="margin-bottom:0">
+          <input type="text" class="form-input" id="nameInput" value="§6My Sword"
+                 oninput="updateNamePreview(this.value)" placeholder="§6Item Name">
+        </div>
+      </div>
+
+      <!-- Lore -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Static Lore</span>
+          <button class="btn btn-sm" onclick="addLoreLine()">+ Add Line</button>
+        </div>
+        <div id="loreList">
+          <div class="lore-item" draggable="true" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)" ondragleave="dragLeave(event)">
+            <span class="drag-handle">⠿</span>
+            <input class="lore-input" value="§7A legendary blade forged in" type="text">
+            <span class="lore-del" onclick="this.parentElement.remove()">×</span>
+          </div>
+          <div class="lore-item" draggable="true" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)" ondragleave="dragLeave(event)">
+            <span class="drag-handle">⠿</span>
+            <input class="lore-input" value="§7the depths of the nether." type="text">
+            <span class="lore-del" onclick="this.parentElement.remove()">×</span>
+          </div>
+          <div class="lore-item" draggable="true" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)" ondragleave="dragLeave(event)">
+            <span class="drag-handle">⠿</span>
+            <input class="lore-input" value="" type="text" placeholder="§7(empty line)">
+            <span class="lore-del" onclick="this.parentElement.remove()">×</span>
+          </div>
+          <div class="lore-item" draggable="true" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)" ondragleave="dragLeave(event)">
+            <span class="drag-handle">⠿</span>
+            <input class="lore-input" value="§8§oLegendary Weapon" type="text">
+            <span class="lore-del" onclick="this.parentElement.remove()">×</span>
+          </div>
+        </div>
+        <p class="lore-hint">Drag to reorder · §0-§f colors · §l bold · §o italic · §r reset</p>
+      </div>
+
+      <!-- Rarity -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Rarity</span>
+          <button class="btn btn-sm btn-danger" onclick="clearRarity()">Clear</button>
+        </div>
+        <div class="rarity-grid">
+          <div class="rarity-opt r-common"    onclick="selectRarity(this)">Common</div>
+          <div class="rarity-opt r-uncommon"  onclick="selectRarity(this)">Uncommon</div>
+          <div class="rarity-opt r-rare"      onclick="selectRarity(this)">Rare</div>
+          <div class="rarity-opt r-epic"      onclick="selectRarity(this)">Epic</div>
+          <div class="rarity-opt r-legendary sel" onclick="selectRarity(this)">Legendary</div>
+          <div class="rarity-opt r-ancient"   onclick="selectRarity(this)">Ancient</div>
+          <div class="rarity-opt r-mythic"    onclick="selectRarity(this)">Mythic</div>
+        </div>
+      </div>
+
+      <!-- Dye Color -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Dye / Leather Color</span>
+          <button class="btn btn-sm btn-danger" onclick="clearColor()">Clear</button>
+        </div>
+        <div class="color-row">
+          <div class="color-swatch" id="colorSwatch" style="background:#FF8800"
+               onclick="document.getElementById('colorPicker').click()"></div>
+          <input type="color" id="colorPicker" value="#FF8800" style="display:none"
+                 oninput="syncColor(this.value,'hex')">
+          <input type="text" class="form-input" id="colorHex" value="#FF8800" placeholder="#FF8800"
+                 oninput="syncColor(this.value,'swatch')">
+        </div>
+      </div>
+
+    </div><!-- /tab-display -->
+
+    <!-- ═══════════════ TAB: DYNAMIC ════════════════ -->
+    <div class="tab-content" id="tab-dynamic">
+
+      <div class="info-box">
+        <i class="info-icon">ℹ</i>
+        <span>Entries are evaluated top-to-bottom. For <strong>Name</strong> and <strong>Model</strong>, the first match wins. For <strong>Lore</strong>, all matching lines are appended.</span>
+      </div>
+
+      <!-- Dynamic Name (NEW) -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Dynamic Name <span class="badge badge-new" style="margin-left:4px">NEW</span></span>
+        </div>
+        <p class="card-subtitle">Override the item name per-player. Falls back to the default name if nothing matches.</p>
+
+        <div class="dyn-list" id="dynNameList">
+          <div class="dyn-entry">
+            <div class="dyn-entry-info">
+              <div class="dyn-chips">
+                <span class="chip chip-cond">has_stats_greater_than</span>
+                <span class="chip chip-value">kills</span>
+                <span class="chip chip-param">≥ 100</span>
+              </div>
+              <div class="dyn-result" style="color:#f55">§c§lBloodthirsty Blade</div>
+            </div>
+            <div class="dyn-actions">
+              <button class="btn btn-icon" onclick="moveEntry(this,-1)">↑</button>
+              <button class="btn btn-icon" onclick="moveEntry(this,1)">↓</button>
+              <button class="btn btn-icon btn-danger" onclick="this.closest('.dyn-entry').remove()">×</button>
+            </div>
+          </div>
+          <div class="dyn-entry">
+            <div class="dyn-entry-info">
+              <div class="dyn-chips">
+                <span class="chip chip-cond">has_permission</span>
+                <span class="chip chip-value">citem.vip</span>
+              </div>
+              <div class="dyn-result" style="color:#fa0">§6§l✦ Golden Blade [VIP]</div>
+            </div>
+            <div class="dyn-actions">
+              <button class="btn btn-icon" onclick="moveEntry(this,-1)">↑</button>
+              <button class="btn btn-icon" onclick="moveEntry(this,1)">↓</button>
+              <button class="btn btn-icon btn-danger" onclick="this.closest('.dyn-entry').remove()">×</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="addNameForm" class="add-form hidden">
+          <div class="form-row-3" style="margin-bottom:10px">
+            <div>
+              <label class="form-label">Condition</label>
+              <select class="form-select" id="nc_key">
+                <option>has_stats_greater_than</option>
+                <option>has_stats_less_than</option>
+                <option>has_permission</option>
+                <option>is_sneaking</option>
+                <option>has_currency</option>
+                <option>is_in_region</option>
+                <option>has_unlockable</option>
+                <option>has_citem</option>
+                <option>is_in_world</option>
+                <option>has_cosmetic</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Value <span style="color:var(--text-dim)">(or blank)</span></label>
+              <input class="form-input" id="nc_val" placeholder="kills">
+            </div>
+            <div>
+              <label class="form-label">Parameter <span style="color:var(--text-dim)">(or blank)</span></label>
+              <input class="form-input" id="nc_param" placeholder="100">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Name (with color codes)</label>
+            <input class="form-input" id="nc_result" placeholder="§c§lBloodthirsty Blade">
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-sm" onclick="addDynName()">Add</button>
+            <button class="btn btn-sm" onclick="hideForm('addNameForm')">Cancel</button>
+          </div>
+        </div>
+        <button class="btn btn-sm" onclick="toggleForm('addNameForm')" style="margin-top:4px">+ Add Name Condition</button>
+      </div>
+
+      <!-- Dynamic Lore -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Dynamic Lore</span>
+        </div>
+        <p class="card-subtitle">Lines appended to lore when the condition is met. All matching entries are shown.</p>
+
+        <div class="dyn-list" id="dynLoreList">
+          <div class="dyn-entry">
+            <div class="dyn-entry-info">
+              <div class="dyn-chips">
+                <span class="chip chip-cond">has_stats_greater_than</span>
+                <span class="chip chip-value">kills</span>
+                <span class="chip chip-param">≥ 50</span>
+              </div>
+              <div class="dyn-result" style="color:#5f5">§aVerified Killer</div>
+            </div>
+            <div class="dyn-actions">
+              <button class="btn btn-icon btn-danger" onclick="this.closest('.dyn-entry').remove()">×</button>
+            </div>
+          </div>
+          <div class="dyn-entry">
+            <div class="dyn-entry-info">
+              <div class="dyn-chips">
+                <span class="chip chip-cond">is_sneaking</span>
+              </div>
+              <div class="dyn-result" style="color:#f55">§c[Sneaking]</div>
+            </div>
+            <div class="dyn-actions">
+              <button class="btn btn-icon btn-danger" onclick="this.closest('.dyn-entry').remove()">×</button>
+            </div>
+          </div>
+          <div class="dyn-entry">
+            <div class="dyn-entry-info">
+              <div class="dyn-chips">
+                <span class="chip chip-cond">has_currency</span>
+                <span class="chip chip-value">gold</span>
+                <span class="chip chip-param">≥ 1000</span>
+              </div>
+              <div class="dyn-result" style="color:#fa0">§6§lWealthy</div>
+            </div>
+            <div class="dyn-actions">
+              <button class="btn btn-icon btn-danger" onclick="this.closest('.dyn-entry').remove()">×</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="addLoreCondForm" class="add-form hidden">
+          <div class="form-row-3" style="margin-bottom:10px">
+            <div>
+              <label class="form-label">Condition</label>
+              <select class="form-select" id="lc_key">
+                <option>has_stats_greater_than</option>
+                <option>has_permission</option>
+                <option>is_sneaking</option>
+                <option>has_currency</option>
+                <option>is_in_region</option>
+                <option>has_unlockable</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Value</label>
+              <input class="form-input" id="lc_val" placeholder="kills">
+            </div>
+            <div>
+              <label class="form-label">Parameter</label>
+              <input class="form-input" id="lc_param" placeholder="50">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Lore text</label>
+            <input class="form-input" id="lc_result" placeholder="§aVerified Killer">
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-sm" onclick="addDynLore()">Add</button>
+            <button class="btn btn-sm" onclick="hideForm('addLoreCondForm')">Cancel</button>
+          </div>
+        </div>
+        <button class="btn btn-sm" onclick="toggleForm('addLoreCondForm')" style="margin-top:4px">+ Add Lore Condition</button>
+      </div>
+
+      <!-- Dynamic Model -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Dynamic Model</span>
+        </div>
+        <p class="card-subtitle">Override the item model per-player. First match wins. Falls back to the static model.</p>
+
+        <div class="dyn-list" id="dynModelList">
+          <div class="dyn-entry">
+            <div class="dyn-entry-info">
+              <div class="dyn-chips">
+                <span class="chip chip-cond">has_stats_greater_than</span>
+                <span class="chip chip-value">kills</span>
+                <span class="chip chip-param">≥ 100</span>
+              </div>
+              <div class="dyn-result"><span style="color:var(--text-dim)">wos:</span>my_sword_bloodied</div>
+            </div>
+            <div class="dyn-actions">
+              <button class="btn btn-icon" onclick="moveEntry(this,-1)">↑</button>
+              <button class="btn btn-icon" onclick="moveEntry(this,1)">↓</button>
+              <button class="btn btn-icon btn-danger" onclick="this.closest('.dyn-entry').remove()">×</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="addModelCondForm" class="add-form hidden">
+          <div class="form-row-3" style="margin-bottom:10px">
+            <div>
+              <label class="form-label">Condition</label>
+              <select class="form-select" id="mc_key">
+                <option>has_stats_greater_than</option>
+                <option>has_permission</option>
+                <option>is_sneaking</option>
+                <option>is_in_region</option>
+                <option>has_unlockable</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Value</label>
+              <input class="form-input" id="mc_val" placeholder="kills">
+            </div>
+            <div>
+              <label class="form-label">Parameter</label>
+              <input class="form-input" id="mc_param" placeholder="100">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Model ID <span style="color:var(--text-dim); font-family:var(--mono)">wos:</span></label>
+            <input class="form-input" id="mc_result" placeholder="my_sword_bloodied" style="font-family:var(--mono)">
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-sm" onclick="addDynModel()">Add</button>
+            <button class="btn btn-sm" onclick="hideForm('addModelCondForm')">Cancel</button>
+          </div>
+        </div>
+        <button class="btn btn-sm" onclick="toggleForm('addModelCondForm')" style="margin-top:4px">+ Add Model Condition</button>
+      </div>
+
+    </div><!-- /tab-dynamic -->
+
+    <!-- ═══════════════ TAB: PROPERTIES ════════════════ -->
+    <div class="tab-content" id="tab-properties">
+
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-title" style="margin-bottom:10px">Static Model ID</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span style="color:var(--text-dim);font-family:var(--mono);font-size:13px;white-space:nowrap">wos:</span>
+            <input class="form-input" value="my_sword" placeholder="model_id" style="font-family:var(--mono)">
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-title" style="margin-bottom:10px">Max Stack Size</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="number" class="form-input" value="1" min="1" max="99" style="width:80px">
+            <button class="btn btn-sm btn-danger">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:10px">Food Properties</div>
+        <div class="form-row-3" style="margin-bottom:10px">
+          <div>
+            <label class="form-label">Nutrition</label>
+            <input type="number" class="form-input" placeholder="4" min="0">
+          </div>
+          <div>
+            <label class="form-label">Saturation</label>
+            <input type="number" class="form-input" placeholder="2.0" step="0.1" min="0">
+          </div>
+          <div>
+            <label class="form-label">Always Edible</label>
+            <select class="form-select">
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-danger">Remove Food Component</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:10px">Equippable Slot</div>
+        <div class="slot-group" id="slotGroup">
+          <div class="slot-btn sel" onclick="selectSlot(this)">None</div>
+          <div class="slot-btn" onclick="selectSlot(this)">Head</div>
+          <div class="slot-btn" onclick="selectSlot(this)">Chest</div>
+          <div class="slot-btn" onclick="selectSlot(this)">Legs</div>
+          <div class="slot-btn" onclick="selectSlot(this)">Feet</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px">Flags</div>
+        <div class="flags-grid">
+          <div class="flag-btn on" onclick="this.classList.toggle('on')">
+            <span class="flag-dot"></span><span class="flag-name">Unbreakable</span>
+          </div>
+          <div class="flag-btn" onclick="this.classList.toggle('on')">
+            <span class="flag-dot"></span><span class="flag-name">Undroppable</span>
+          </div>
+          <div class="flag-btn" onclick="this.classList.toggle('on')">
+            <span class="flag-dot"></span><span class="flag-name">Unusable</span>
+          </div>
+          <div class="flag-btn" onclick="this.classList.toggle('on')">
+            <span class="flag-dot"></span><span class="flag-name">Fire Resistant</span>
+          </div>
+          <div class="flag-btn on" onclick="this.classList.toggle('on')">
+            <span class="flag-dot"></span><span class="flag-name">Hide Attributes</span>
+          </div>
+          <div class="flag-btn" onclick="this.classList.toggle('on')">
+            <span class="flag-dot"></span><span class="flag-name">Enchant Glint</span>
+          </div>
+          <div class="flag-btn" onclick="this.classList.toggle('on')">
+            <span class="flag-dot"></span><span class="flag-name">Placeable (small)</span>
+          </div>
+          <div class="flag-btn" onclick="this.classList.toggle('on')">
+            <span class="flag-dot"></span><span class="flag-name">Placeable (normal)</span>
+          </div>
+          <div class="flag-btn" onclick="this.classList.toggle('on')">
+            <span class="flag-dot"></span><span class="flag-name">Hide Tooltip</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-properties -->
+
+    <!-- ═══════════════ TAB: ATTRIBUTES ════════════════ -->
+    <div class="tab-content" id="tab-attributes">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Attribute Modifiers</span>
+          <button class="btn btn-sm" onclick="addAttrRow()">+ Add</button>
+        </div>
+        <div class="attr-header">
+          <span class="attr-col-label">Attribute</span>
+          <span class="attr-col-label">Amount</span>
+          <span class="attr-col-label">Slot</span>
+          <span class="attr-col-label">Operation</span>
+          <span></span>
+        </div>
+        <div id="attrList">
+          <div class="attr-row">
+            <select class="form-select">
+              <option>attack_damage</option><option>attack_speed</option><option>max_health</option>
+              <option>armor</option><option>armor_toughness</option><option>movement_speed</option>
+              <option>knockback_resistance</option><option>luck</option>
+            </select>
+            <input type="number" class="form-input" value="5" step="0.5">
+            <select class="form-select">
+              <option>mainhand</option><option>offhand</option><option>head</option>
+              <option>chest</option><option>legs</option><option>feet</option><option>any</option>
+            </select>
+            <select class="form-select">
+              <option value="add">Add</option>
+              <option value="multiply_base">× Base</option>
+              <option value="multiply_total">× Total</option>
+            </select>
+            <span class="attr-del" onclick="this.closest('.attr-row').remove()">×</span>
+          </div>
+          <div class="attr-row">
+            <select class="form-select">
+              <option>attack_damage</option><option selected>attack_speed</option>
+            </select>
+            <input type="number" class="form-input" value="1.6" step="0.1">
+            <select class="form-select"><option>mainhand</option></select>
+            <select class="form-select"><option value="add">Add</option></select>
+            <span class="attr-del" onclick="this.closest('.attr-row').remove()">×</span>
+          </div>
+        </div>
+      </div>
+    </div><!-- /tab-attributes -->
+
+    <!-- ═══════════════ TAB: ACTIONS & FLAGS ════════════════ -->
+    <div class="tab-content" id="tab-actions">
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px">Interaction Actions</div>
+        <div class="form-group">
+          <label class="form-label">Left Click</label>
+          <input class="form-input" value="sword_left_attack" placeholder="interaction_id" style="font-family:var(--mono)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Right Click</label>
+          <input class="form-input" placeholder="interaction_id" style="font-family:var(--mono)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Placed</label>
+          <input class="form-input" placeholder="interaction_id" style="font-family:var(--mono)">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Consume</label>
+          <input class="form-input" placeholder="interaction_id" style="font-family:var(--mono)">
+        </div>
+      </div>
+    </div><!-- /tab-actions -->
+
+  </div><!-- /right-panel -->
+</div><!-- /layout -->
+
+<script>
+  // ── Tab switching ─────────────────────────────────────
+  function switchTab(name, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+  }
+
+  // ── Form toggle ───────────────────────────────────────
+  function toggleForm(id) { document.getElementById(id).classList.toggle('hidden'); }
+  function hideForm(id)   { document.getElementById(id).classList.add('hidden'); }
+
+  // ── Rarity ────────────────────────────────────────────
+  const rarityColors = { common:'#aaa', uncommon:'#5f5', rare:'#5ff', epic:'#a0a', legendary:'#fa0', ancient:'#f55', mythic:'#f5f' };
+  const rarityIcons  = { common:'◆', uncommon:'◆', rare:'◆', epic:'◆', legendary:'✦', ancient:'✦', mythic:'✦' };
+  function selectRarity(el) {
+    document.querySelectorAll('.rarity-opt').forEach(r => r.classList.remove('sel'));
+    el.classList.add('sel');
+    const name = el.textContent.trim().toLowerCase();
+    const prev = document.getElementById('prevRarity');
+    prev.textContent = (rarityIcons[name] || '◆') + ' ' + el.textContent.trim();
+    prev.style.color = rarityColors[name] || '#fff';
+  }
+  function clearRarity() {
+    document.querySelectorAll('.rarity-opt').forEach(r => r.classList.remove('sel'));
+    document.getElementById('prevRarity').textContent = '';
+  }
+
+  // ── Name preview ──────────────────────────────────────
+  function stripColor(s) { return s.replace(/§[0-9a-fk-or]/gi, ''); }
+  function nameColor(s) {
+    const m = s.match(/§([0-9a-f])/i);
+    const map = {'0':'#000','1':'#00a','2':'#0a0','3':'#0aa','4':'#a00','5':'#a0a','6':'#fa0','7':'#aaa','8':'#555','9':'#55f','a':'#5f5','b':'#5ff','c':'#f55','d':'#f5f','e':'#ff5','f':'#fff'};
+    return m ? (map[m[1].toLowerCase()] || '#fff') : '#fff';
+  }
+  function updateNamePreview(val) {
+    const el = document.getElementById('prevName');
+    el.textContent = stripColor(val) || 'Unnamed';
+    el.style.color = nameColor(val);
+  }
+
+  // ── Material preview ──────────────────────────────────
+  function updateMaterialPreview() {
+    const sel = document.getElementById('materialSel');
+    const opt = sel.options[sel.selectedIndex];
+    document.getElementById('prevIcon').textContent = opt.dataset.icon || '❓';
+  }
+
+  // ── Color picker ──────────────────────────────────────
+  function syncColor(val, target) {
+    if (target === 'swatch') {
+      if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+        document.getElementById('colorSwatch').style.background = val;
+        document.getElementById('colorPicker').value = val;
+      }
+    } else {
+      document.getElementById('colorSwatch').style.background = val;
+      document.getElementById('colorHex').value = val;
+    }
+  }
+  function clearColor() {
+    document.getElementById('colorHex').value = '';
+    document.getElementById('colorSwatch').style.background = 'var(--surface2)';
+  }
+
+  // ── Slot selector ─────────────────────────────────────
+  function selectSlot(el) {
+    document.querySelectorAll('#slotGroup .slot-btn').forEach(b => b.classList.remove('sel'));
+    el.classList.add('sel');
+  }
+
+  // ── Lore drag-and-drop ────────────────────────────────
+  let dragSrc = null;
+  function dragStart(e) { dragSrc = e.currentTarget; e.dataTransfer.effectAllowed = 'move'; }
+  function dragOver(e)  { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+  function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+  function drop(e) {
+    e.preventDefault();
+    const target = e.currentTarget;
+    target.classList.remove('drag-over');
+    if (dragSrc && dragSrc !== target) {
+      const list = document.getElementById('loreList');
+      const nodes = [...list.children];
+      const si = nodes.indexOf(dragSrc), ti = nodes.indexOf(target);
+      if (si < ti) target.after(dragSrc); else target.before(dragSrc);
+    }
+  }
+  function addLoreLine() {
+    const item = document.createElement('div');
+    item.className = 'lore-item'; item.draggable = true;
+    item.setAttribute('ondragstart','dragStart(event)');
+    item.setAttribute('ondragover','dragOver(event)');
+    item.setAttribute('ondrop','drop(event)');
+    item.setAttribute('ondragleave','dragLeave(event)');
+    item.innerHTML = '<span class="drag-handle">⠿</span><input class="lore-input" value="" type="text" placeholder="§7New lore line"><span class="lore-del" onclick="this.parentElement.remove()">×</span>';
+    document.getElementById('loreList').appendChild(item);
+    item.querySelector('input').focus();
+  }
+
+  // ── Add dynamic entry helpers ─────────────────────────
+  function buildChips(key, val, param) {
+    let html = `<span class="chip chip-cond">${key}</span>`;
+    if (val)   html += `<span class="chip chip-value">${val}</span>`;
+    if (param) html += `<span class="chip chip-param">≥ ${param}</span>`;
+    return html;
+  }
+
+  function addDynName() {
+    const key = document.getElementById('nc_key').value;
+    const val = document.getElementById('nc_val').value.trim();
+    const param = document.getElementById('nc_param').value.trim();
+    const result = document.getElementById('nc_result').value.trim();
+    if (!result) return;
+    const color = nameColor(result);
+    const entry = document.createElement('div');
+    entry.className = 'dyn-entry';
+    entry.innerHTML = `
+      <div class="dyn-entry-info">
+        <div class="dyn-chips">${buildChips(key, val, param)}</div>
+        <div class="dyn-result" style="color:${color}">${result}</div>
+      </div>
+      <div class="dyn-actions">
+        <button class="btn btn-icon" onclick="moveEntry(this,-1)">↑</button>
+        <button class="btn btn-icon" onclick="moveEntry(this,1)">↓</button>
+        <button class="btn btn-icon btn-danger" onclick="this.closest('.dyn-entry').remove()">×</button>
+      </div>`;
+    document.getElementById('dynNameList').appendChild(entry);
+    ['nc_val','nc_param','nc_result'].forEach(id => document.getElementById(id).value = '');
+    hideForm('addNameForm');
+  }
+
+  function addDynLore() {
+    const key = document.getElementById('lc_key').value;
+    const val = document.getElementById('lc_val').value.trim();
+    const param = document.getElementById('lc_param').value.trim();
+    const result = document.getElementById('lc_result').value.trim();
+    if (!result) return;
+    const color = nameColor(result);
+    const entry = document.createElement('div');
+    entry.className = 'dyn-entry';
+    entry.innerHTML = `
+      <div class="dyn-entry-info">
+        <div class="dyn-chips">${buildChips(key, val, param)}</div>
+        <div class="dyn-result" style="color:${color}">${result}</div>
+      </div>
+      <div class="dyn-actions">
+        <button class="btn btn-icon btn-danger" onclick="this.closest('.dyn-entry').remove()">×</button>
+      </div>`;
+    document.getElementById('dynLoreList').appendChild(entry);
+    ['lc_val','lc_param','lc_result'].forEach(id => document.getElementById(id).value = '');
+    hideForm('addLoreCondForm');
+  }
+
+  function addDynModel() {
+    const key = document.getElementById('mc_key').value;
+    const val = document.getElementById('mc_val').value.trim();
+    const param = document.getElementById('mc_param').value.trim();
+    const result = document.getElementById('mc_result').value.trim();
+    if (!result) return;
+    const entry = document.createElement('div');
+    entry.className = 'dyn-entry';
+    entry.innerHTML = `
+      <div class="dyn-entry-info">
+        <div class="dyn-chips">${buildChips(key, val, param)}</div>
+        <div class="dyn-result"><span style="color:var(--text-dim)">wos:</span>${result}</div>
+      </div>
+      <div class="dyn-actions">
+        <button class="btn btn-icon" onclick="moveEntry(this,-1)">↑</button>
+        <button class="btn btn-icon" onclick="moveEntry(this,1)">↓</button>
+        <button class="btn btn-icon btn-danger" onclick="this.closest('.dyn-entry').remove()">×</button>
+      </div>`;
+    document.getElementById('dynModelList').appendChild(entry);
+    ['mc_val','mc_param','mc_result'].forEach(id => document.getElementById(id).value = '');
+    hideForm('addModelCondForm');
+  }
+
+  // ── Move dynamic entries up/down ──────────────────────
+  function moveEntry(btn, dir) {
+    const entry = btn.closest('.dyn-entry');
+    const list = entry.parentElement;
+    if (dir === -1 && entry.previousElementSibling) entry.previousElementSibling.before(entry);
+    if (dir ===  1 && entry.nextElementSibling)     entry.nextElementSibling.after(entry);
+  }
+
+  // ── Attributes ────────────────────────────────────────
+  function addAttrRow() {
+    const row = document.createElement('div');
+    row.className = 'attr-row';
+    row.innerHTML = `
+      <select class="form-select">
+        <option>attack_damage</option><option>attack_speed</option><option>max_health</option>
+        <option>armor</option><option>armor_toughness</option><option>movement_speed</option>
+        <option>knockback_resistance</option><option>luck</option>
+      </select>
+      <input type="number" class="form-input" value="1" step="0.5">
+      <select class="form-select">
+        <option>mainhand</option><option>offhand</option><option>head</option>
+        <option>chest</option><option>legs</option><option>feet</option><option>any</option>
+      </select>
+      <select class="form-select">
+        <option value="add">Add</option>
+        <option value="multiply_base">× Base</option>
+        <option value="multiply_total">× Total</option>
+      </select>
+      <span class="attr-del" onclick="this.closest('.attr-row').remove()">×</span>`;
+    document.getElementById('attrList').appendChild(row);
+  }
+
+  // ── Save / Delete ─────────────────────────────────────
+  function saveItem() {
+    const btn = document.getElementById('saveBtn');
+    btn.textContent = '✓ Saved';
+    btn.style.background = 'var(--accent)';
+    btn.style.borderColor = 'var(--accent)';
+    setTimeout(() => {
+      btn.textContent = 'Save Changes';
+      btn.style.background = '';
+      btn.style.borderColor = '';
+    }, 1800);
+  }
+  function confirmDelete() {
+    if (confirm('Delete "' + document.getElementById('headerId').textContent + '"? This cannot be undone.')) {
+      alert('(mock) Item deleted.');
+    }
+  }
+  function copyJson() {
+    const json = { id: document.getElementById('itemIdField').value, _note: 'full JSON would go here' };
+    navigator.clipboard?.writeText(JSON.stringify(json, null, 2));
+    alert('JSON copied to clipboard (mock).');
+  }
+</script>
+</body>
+</html>

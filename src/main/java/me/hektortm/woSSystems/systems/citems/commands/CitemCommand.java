@@ -33,10 +33,16 @@ public class CitemCommand implements CommandExecutor {
         subCommands.put("tooltip", new Tooltip());
         subCommands.put("model", new Model());
         subCommands.put("color", new Color());
-        subCommands.put("echant", new Enchant());
+        subCommands.put("enchant", new Enchant());
         subCommands.put("tag", new Tag());
         subCommands.put("info", new Info());
         subCommands.put("equippable", new Equippable());
+        subCommands.put("attribute", new AttributeCmd());
+        subCommands.put("rarity", new Rarity());
+        subCommands.put("food", new Food());
+        subCommands.put("maxstack", new MaxStack());
+        subCommands.put("delete", new Delete(hub));
+        subCommands.put("list", new CitemList(hub));
 
 
 

@@ -23,6 +23,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
+import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -233,6 +236,53 @@ public class CitemListener implements Listener {
 
         return (isOwner && !isCreativePlaced) || (isCreative && isCreativePlaced);
 
+    }
+
+    @EventHandler
+    public void onItemHeld(PlayerItemHeldEvent e) {
+        Player p = e.getPlayer();
+        ItemStack item = p.getInventory().getItem(e.getNewSlot());
+        if (item == null || item.getType() == Material.AIR || !item.hasItemMeta()) return;
+
+        PersistentDataContainer data = item.getItemMeta().getPersistentDataContainer();
+        String dynJson = data.get(Keys.DYNAMIC_LORE.get(), PersistentDataType.STRING);
+        if (dynJson == null) return;
+
+        String itemId = data.get(Keys.ID.get(), PersistentDataType.STRING);
+        if (itemId == null) return;
+
+        ItemStack dbItem = hub.getCitemDAO().getCitem(itemId);
+        if (dbItem == null) return;
+
+        int amount = item.getAmount();
+        ItemStack resolved = citemManager.applyDynamicLore(p, dbItem);
+        resolved.setAmount(amount);
+        p.getInventory().setItem(e.getNewSlot(), resolved);
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent e) {
+        Player p = e.getPlayer();
+        // Resolve dynamic lore for all citems in player inventory on login
+        for (int i = 0; i < p.getInventory().getSize(); i++) {
+            ItemStack item = p.getInventory().getItem(i);
+            if (item == null || item.getType() == Material.AIR || !item.hasItemMeta()) continue;
+
+            PersistentDataContainer data = item.getItemMeta().getPersistentDataContainer();
+            String dynJson = data.get(Keys.DYNAMIC_LORE.get(), PersistentDataType.STRING);
+            if (dynJson == null) continue;
+
+            String itemId = data.get(Keys.ID.get(), PersistentDataType.STRING);
+            if (itemId == null) continue;
+
+            ItemStack dbItem = hub.getCitemDAO().getCitem(itemId);
+            if (dbItem == null) continue;
+
+            int amount = item.getAmount();
+            ItemStack resolved = citemManager.applyDynamicLore(p, dbItem);
+            resolved.setAmount(amount);
+            p.getInventory().setItem(i, resolved);
+        }
     }
 
     public void leftClickAction(Player p) {

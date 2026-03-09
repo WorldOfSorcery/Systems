@@ -14,25 +14,52 @@ error:
   lore:
     invalid-row: "Invalid row number."
     out-of-bounds: "Lore row out of bounds."
+  attribute:
+    invalid: "Invalid attribute. Valid: attack_damage, attack_speed, armor, armor_toughness, max_health, knockback_resistance, movement_speed, luck"
+    invalid-amount: "Invalid amount. Must be a number."
+    invalid-slot: "Invalid slot. Valid: mainhand, offhand, head, chest, legs, feet, armor, any"
+    invalid-operation: "Invalid operation. Valid: add, multiply_base, multiply_total"
+  food:
+    invalid-numbers: "Invalid numbers. Usage: /citem food <nutrition> <saturation> [can_always_eat]"
+  maxstack:
+    invalid: "Invalid amount. Must be a whole number."
+    range: "Max stack size must be between 1 and 99."
+  rarity:
+    invalid: "Invalid rarity. Valid: common, uncommon, rare, epic, legendary, ancient, mythic"
 info:
   usage:
-    citem: "Usage: /citem <save|rename|lore|flag|update>"
-    action: "Usage: /citem action <left|right> <id>"
+    citem: "Usage: /citem <save|rename|lore|flag|update|attribute|rarity|food|maxstack|delete|list>"
+    action: "Usage: /citem action <left|right|placed> <id>"
     flag: "Usage: /citem flag <add|remove> <FLAG>"
-    lore: "Usage: /citem lore <add|edit|remove> <arguments>"
+    lore: "Usage: /citem lore <add|edit|remove|cond> <arguments>"
     lore-add: "Usage: /citem lore add <text>"
     lore-edit: "Usage: /citem lore edit <row> <text>"
     lore-remove: "Usage: /citem lore remove <row>"
-    models: "Usage: /citem model <model id>"
-    rename: "Usage: /citem rename <name>"
+    lore-cond: "Usage: /citem lore cond <add|list|remove>"
+    lore-cond-add: "Usage: /citem lore cond add <condition_key> <value|-> <parameter|-> <text...>"
+    lore-cond-remove: "Usage: /citem lore cond remove <index>"
+    models: "Usage: /citem model <model_id|cond|list|remove|reset>"
+    model-cond: "Usage: /citem model cond <condition_key> <value|-> <parameter|-> <model_id>"
+    model-remove: "Usage: /citem model remove <index>"
+    rename: "Usage: /citem rename <name|cond>"
+    rename-cond: "Usage: /citem rename cond <add|list|remove>"
+    rename-cond-add: "Usage: /citem rename cond add <condition_key> <value|-> <parameter|-> <name...>"
+    rename-cond-remove: "Usage: /citem rename cond remove <index>"
     color: "Usage: /citem color <#hex>"
     equippable: "Usage: /citem equippable <head/chest/legs/feet>"
     save: "Usage: /citem save <id>"
     update: "Usage: /citem update <id>"
+    delete: "Usage: /citem delete <id>"
     cgive: "Usage: /cgive <player> <id> [amount]"
     cremove: "Usage: /cremove <player> <id> [amount]"
     tag: "Usage: /citem tag <tag1> <tag2>"
     tooltip: "Usage: /citem tooltip <hide/tooltip id>"
+    rarity: "Usage: /citem rarity <common|uncommon|rare|epic|legendary|ancient|mythic|reset>"
+    food: "Usage: /citem food <nutrition> <saturation> [can_always_eat] | /citem food remove"
+    maxstack: "Usage: /citem maxstack <1-99|reset>"
+    attribute: "Usage: /citem attribute <add|remove|clear|list>"
+    attribute-add: "Usage: /citem attribute add <attribute> <amount> [slot] [operation]"
+    attribute-remove: "Usage: /citem attribute remove <attribute>"
   placeable-flag: "Use: /citem flag add placeable <small/normal>"
 
 stamp: "§aSuccessfully signed the current item."
@@ -40,12 +67,15 @@ stamp: "§aSuccessfully signed the current item."
 flag:
   add: "§aFlag added: %flag%"
   remove: "§cFlag removed: %flag%"
+  remove:
+    placeable: "§cPlaceable flag removed."
   list:
     undroppable: "%cyan_300%- Undroppable"
     unbreakable: "%cyan_300%- Unbreakable"
     unusable: "%cyan_300%- Unusable"
     hide: "%cyan_300%- Hide"
     placeable: "%cyan_300%- Placeable (small/normal)"
+    fireresist: "%cyan_300%- Fireresist"
     profile_picture: "%cyan_300%- Profile_picture"
     profile_background: "%cyan_300%- Profile_background"
 
@@ -53,22 +83,34 @@ help:
   header: "Citem Commands:"
   save: "%cyan_300%/citem save <id> §7- Save a Citem to the Database."
   update: "%cyan_300%/citem update <id> §7- Update an existing Citem."
+  delete: "%cyan_300%/citem delete <id> §7- Delete a Citem from the Database."
+  list: "%cyan_300%/citem list §7- List all saved Citems."
   rename: "%cyan_300%/citem rename <name> §7- Rename the item in your hand."
-  lore: "%cyan_300%/citem lore <add|edit|remove> §7- Modify the lore of an item."
+  lore: "%cyan_300%/citem lore <add|edit|remove|cond> §7- Modify the lore of an item."
   flag: "%cyan_300%/citem flag <add|remove> §7- Add flags to the item in your hand."
-  action: "%cyan_300%/citem action <left|right> <inter-id> §7- Add an interaction to an Item."
-  tooltip: "%cyan_300%/citem tooltip <hide|tooltip_id> §7- hide or change the tooltip of the item."
+  action: "%cyan_300%/citem action <left|right|placed> <inter-id> §7- Add an interaction to an Item."
+  tooltip: "%cyan_300%/citem tooltip <hide|tooltip_id> §7- Hide or change the tooltip of the item."
   color: "%cyan_300%/citem color <#hex> §7- Set the color of the item in your hand."
   equippable: "%cyan_300%/citem equippable <head/chest/legs/feet> §7- Make the item equippable in the specified slot."
   model: "%cyan_300%/citem model <model_id> §7- Set the model of the item in your hand."
   tag: "%cyan_300%/citem tag <tag> §7- Add tags to an item."
-  enchant: "%cyan_300%/citem enchant §7- Toggle the Enchantment glint"
+  enchant: "%cyan_300%/citem enchant §7- Toggle the Enchantment glint."
   info: "%cyan_300%/citem info §7- Displays info of the held Citem."
+  attribute: "%cyan_300%/citem attribute <add|remove|clear|list> §7- Manage item attribute modifiers."
+  rarity: "%cyan_300%/citem rarity <common|...|mythic|reset> §7- Set custom rarity (shows coloured icon in lore)."
+  food: "%cyan_300%/citem food <nutrition> <saturation> [always_eat] §7- Make item edible."
+  maxstack: "%cyan_300%/citem maxstack <1-99|reset> §7- Set custom max stack size."
   give: "%cyan_300%/cgive <player> <id> [amount] §7- Give a player a Citem."
   remove: "%cyan_300%/cremove <player> <id> [amount] §7- Remove a Citem from a player."
   help: "%cyan_300%/citem help §7- Displays this help message."
 
-model: "§aYou have configured the model to: §e%model_id%§a."
+model:
+  set: "§aYou have configured the model to: §e%model_id%§a."
+  reset: "§aStatic model removed."
+  removed: "§aDynamic model entry removed."
+  empty: "§7No dynamic model entries on this item."
+  cond:
+    added: "§aDynamic model entry added for condition: §e%condition%"
 color: "§aYou have configured the color to: §e%color%§a."
 enchant: "§aYou have toggled the Enchantment Glint."
 
@@ -81,6 +123,10 @@ lore:
   added: "§aLore added."
   edited: "§aLore edited."
   removed: "§aLore removed."
+  cond:
+    added: "§aDynamic lore entry added for condition: §e%condition%"
+    removed: "§aDynamic lore entry removed."
+    empty: "§7No dynamic lore entries on this item."
 
 tag:
   success: "Successfully added tags."
@@ -92,11 +138,36 @@ action:
     placed: "§aPlaced action set to §e%action%§a Interaction."
 
 renamed: "§aItem name set to: %name%"
+
+rename:
+  cond:
+    added: "§aDynamic name entry added for condition: §e%condition%"
+    removed: "§aDynamic name entry removed."
+    empty: "§7No dynamic name entries on this item."
 saved: "§aItem saved successfully as §e%id%"
 updated: "§aItem updated successfully."
+deleted: "§cItem §e%id% §cdeleted from the database."
 given: "§aGiven §e%amount% %id% §ato §e%player%§a."
 removed: "§aRemoved §e%amount% %id% §afrom §e%player%§a."
 equippable: "§aThis item is now equippable in the §e%slot%§a slot."
+
+rarity:
+  set: "§aRarity set to: %rarity%§a."
+  reset: "§aRarity removed."
+
+food:
+  set: "§aFood configured: §eNutrition=%nutrition% Saturation=%saturation%"
+  removed: "§cFood component removed."
+
+maxstack:
+  set: "§aMax stack size set to: §e%amount%"
+  reset: "§aMax stack size reset to default."
+
+attribute:
+  added: "§aAdded §e%attribute% §a(§f%amount%§a) for slot §e%slot%§a."
+  removed: "§aRemoved all §e%attribute% §amodifiers."
+  cleared: "§aAll attribute modifiers cleared."
+  none: "§7No attribute modifiers on this item."
 
 update:
   removed: "§7Your Item (%item%§7) has been removed as it was outdated."

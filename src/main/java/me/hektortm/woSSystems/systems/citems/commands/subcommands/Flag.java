@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
 import me.hektortm.woSSystems.utils.Keys;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
@@ -95,6 +96,11 @@ public class  Flag extends SubCommand {
                             return;
                         }
                     }
+                    case "fireresist" -> {
+                        item.setData(DataComponentTypes.FIRE_RESISTANT);
+                        Utils.success(p, "citems", "flag.add", "%flag%", flag);
+                        return;
+                    }
                     default -> {
                         sendList(p);
                         return;
@@ -124,6 +130,11 @@ public class  Flag extends SubCommand {
                         data.remove(Keys.PLACEABLE.get());
                         Utils.success(p, "citems", "flag.remove.placeable");
                     }
+                    case "fireresist" -> {
+                        item.resetData(DataComponentTypes.FIRE_RESISTANT);
+                        Utils.success(p, "citems", "flag.remove", "%flag%", flag);
+                        return;
+                    }
                     default -> sendList(p);
                 }
                 break;
@@ -142,6 +153,7 @@ public class  Flag extends SubCommand {
         Utils.noPrefix(p, "citems", "flag.list.unusable");
         Utils.noPrefix(p, "citems", "flag.list.hide");
         Utils.noPrefix(p, "citems", "flag.list.placeable");
+        Utils.noPrefix(p, "citems", "flag.list.fireresist");
         Utils.noPrefix(p, "citems", "flag.list.profile_picture");
         Utils.noPrefix(p, "citems", "flag.list.profile_background");
     }
