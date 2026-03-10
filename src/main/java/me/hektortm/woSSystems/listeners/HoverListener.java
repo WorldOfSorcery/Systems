@@ -16,6 +16,9 @@ public class HoverListener implements Listener {
     @EventHandler
     public void onItemheld(PlayerItemHeldEvent event) {
         Player player = event.getPlayer();
+
+
+
         data.updateItem(player);
     }
 }

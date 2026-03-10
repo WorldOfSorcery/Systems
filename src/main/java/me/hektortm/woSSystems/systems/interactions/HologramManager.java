@@ -31,14 +31,65 @@ import java.util.regex.Pattern;
 public class HologramManager {
 
     private static final double RENDER_DISTANCE_SQUARED = 16.0 * 16.0;
-    private static final double LINE_GAP = 0.25;
     private static final double BLOCK_Y_OFFSET = 1.5;
     private static final double NPC_Y_OFFSET = 2.5;
 
-    // Metadata indices for TextDisplay in 1.21.x
-    private static final int META_TEXT = 23;
-    // Billboard: 1 = VERTICAL (rotates on vertical axis only)
-    private static final int META_BILLBOARD = 15;
+    // ── Metadata index constants for Display / TextDisplay entities (MC 1.21.x) ──
+    private enum Meta {
+        // Display base
+        INTERPOLATION_DELAY(8),
+        INTERPOLATION_DURATION(9),
+        TELEPORT_DURATION(10),
+        TRANSLATION(11),
+        SCALE(12),
+        LEFT_ROTATION(13),
+        RIGHT_ROTATION(14),
+        BILLBOARD(15),
+        BRIGHTNESS(16),
+        VIEW_RANGE(17),
+        SHADOW_RADIUS(18),
+        SHADOW_STRENGTH(19),
+        WIDTH(20),
+        HEIGHT(21),
+        GLOW_COLOR(22),
+        // TextDisplay specific
+        TEXT(23),
+        LINE_WIDTH(24),
+        BACKGROUND(25),
+        TEXT_OPACITY(26),
+        STYLE_FLAGS(27);
+
+        final int index;
+        Meta(int index) { this.index = index; }
+    }
+
+    /** Controls which axis the TextDisplay rotates around to face the player. */
+    public enum Billboard {
+        /** No rotation — fixed in world space. */
+        FIXED((byte) 0),
+        /** Rotates around the vertical (Y) axis only. */
+        VERTICAL((byte) 1),
+        /** Rotates around the horizontal axis only. */
+        HORIZONTAL((byte) 2),
+        /** Always faces the player (full billboard). */
+        CENTER((byte) 3);
+
+        private final byte value;
+        Billboard(byte value) { this.value = value; }
+        public byte value() { return value; }
+    }
+
+    /** Horizontal text alignment for a TextDisplay. */
+    public enum TextAlignment {
+        CENTER((byte) 0),
+        LEFT((byte) 1),
+        RIGHT((byte) 2);
+
+        private final byte value;
+        TextAlignment(byte value) { this.value = value; }
+        /** Returns the alignment encoded into bits 3–4 of the style flags byte. */
+        public byte styleFlags() { return (byte) (value << 3); }
+    }
 
     // Matches both &#RRGGBB and #RRGGBB hex color codes (exactly 6 hex digits)
     private static final Pattern HEX_PATTERN = Pattern.compile("&?#([A-Fa-f0-9]{6})");
@@ -149,28 +200,30 @@ public class HologramManager {
                                  Location location, boolean npc, String hologramKey, String fingerprint) {
         if (holograms.isEmpty()) return;
 
-
-        List<Integer> spawnedIds = new ArrayList<>();
         double yBase = location.getY() + (npc ? NPC_Y_OFFSET : BLOCK_Y_OFFSET);
         double x = location.getX() + 0.5;
         double z = location.getZ() + 0.5;
 
+        // Collect every line from all visible holograms into one component
+        List<Component> lineComponents = new ArrayList<>();
         for (InteractionHologram hologram : holograms) {
-            List<String> lines = hologram.getHologram();
-            // First line in list appears highest
-            for (int i = 0; i < lines.size(); i++) {
-                double y = yBase + (lines.size() - 1 - i) * LINE_GAP;
-                int entityId = entityIdCounter.incrementAndGet();
-                sendSpawnTextDisplay(player, entityId, x, y, z, lines.get(i));
-                spawnedIds.add(entityId);
+            for (String line : hologram.getHologram()) {
+                lineComponents.add(buildLineComponent(line, player));
             }
         }
+        if (lineComponents.isEmpty()) return;
 
-        if (!spawnedIds.isEmpty()) {
-            activeHolograms
-                    .computeIfAbsent(player.getUniqueId(), k -> new HashMap<>())
-                    .put(hologramKey, new HologramState(fingerprint, spawnedIds));
+        Component combined = lineComponents.get(0);
+        for (int i = 1; i < lineComponents.size(); i++) {
+            combined = combined.append(Component.newline()).append(lineComponents.get(i));
         }
+
+        int entityId = entityIdCounter.incrementAndGet();
+        sendSpawnTextDisplay(player, entityId, x, yBase, z, combined);
+
+        activeHolograms
+                .computeIfAbsent(player.getUniqueId(), k -> new HashMap<>())
+                .put(hologramKey, new HologramState(fingerprint, List.of(entityId)));
     }
 
     /**
@@ -209,16 +262,17 @@ public class HologramManager {
         return sb.toString().replace('&', '§');
     }
 
-    private void sendSpawnTextDisplay(Player player, int entityId, double x, double y, double z, String text) {
+    private Component buildLineComponent(String text, Player player) {
+        return LegacyComponentSerializer.legacySection()
+                .deserialize(parseColors(replacePlaceholders(text, player)));
+    }
+
+    private void sendSpawnTextDisplay(Player player, int entityId, double x, double y, double z, Component component) {
         var api = PacketEvents.getAPI();
         if (api == null) return;
 
         var user = api.getPlayerManager().getUser(player);
         if (user == null) return;
-
-        // 1. Resolve {placeholders} and constants  2. Parse &#hex + & color codes
-        Component component = LegacyComponentSerializer.legacySection()
-                .deserialize(parseColors(replacePlaceholders(text, player)));
 
         try {
             WrapperPlayServerSpawnEntity spawnPacket = new WrapperPlayServerSpawnEntity(
@@ -233,10 +287,9 @@ public class HologramManager {
             user.sendPacket(spawnPacket);
 
             List<EntityData<?>> metadata = new ArrayList<>();
-            metadata.add(new EntityData(META_TEXT, EntityDataTypes.ADV_COMPONENT, component));
-            metadata.add(new EntityData(META_BILLBOARD, EntityDataTypes.BYTE, (byte) 1));
+            metadata.add(new EntityData(Meta.TEXT.index, EntityDataTypes.ADV_COMPONENT, component));
+            metadata.add(new EntityData(Meta.BILLBOARD.index, EntityDataTypes.BYTE, Billboard.VERTICAL.value()));
 
-            // EntityMetadataProvider is a @FunctionalInterface — lambda ignoring client version
             user.sendPacket(new WrapperPlayServerEntityMetadata(entityId, clientVersion -> metadata));
         } catch (Exception e) {
             e.printStackTrace();

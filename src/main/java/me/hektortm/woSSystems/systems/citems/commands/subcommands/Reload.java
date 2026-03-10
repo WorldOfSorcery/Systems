@@ -1,31 +1,34 @@
 package me.hektortm.woSSystems.systems.citems.commands.subcommands;
 
-import me.hektortm.woSSystems.systems.citems.commands.CitemCommand;
-import me.hektortm.woSSystems.utils.HelpUtil;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
 import org.bukkit.command.CommandSender;
 
-public class Help extends SubCommand {
+public class Reload extends SubCommand {
+    private final DAOHub daoHub;
 
-    private final CitemCommand cmd;
 
-    public Help(CitemCommand cmd) {
-        this.cmd = cmd;
+    public Reload(DAOHub daoHub) {
+        this.daoHub = daoHub;
     }
+
 
     @Override
     public String getName() {
-        return "help";
+        return "reload";
     }
 
     @Override
     public Permissions getPermission() {
-        return null;
+        return Permissions.CITEM_GIVE;
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        HelpUtil.sendHelp(cmd.permCmds, sender, "citems");
+
+        daoHub.getCitemDAO().preloadAll();
+        sender.sendMessage("Citems reloaded");
+
     }
 }

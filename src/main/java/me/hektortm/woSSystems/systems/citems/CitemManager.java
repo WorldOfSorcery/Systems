@@ -22,6 +22,7 @@ import org.joml.Vector3f;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.UUID;
 
 
@@ -40,10 +41,8 @@ public class CitemManager {
     public void giveCitem(CommandSender s, Player t, String id, Integer amount) {
         ItemStack itemToGive = hub.getCitemDAO().getCitem(id);
 
-        if (itemToGive == null) {
-            s.sendMessage("[Database] Item is §onull"); // TODO: lang message
-            return;
-        }
+        if (itemToGive == null) return;
+
 
         itemToGive.setAmount(amount);
         t.getInventory().addItem(itemToGive);
@@ -75,6 +74,7 @@ public class CitemManager {
 
         PersistentDataContainer data = meta.getPersistentDataContainer();
         String itemId = data.get(Keys.ID.get(), PersistentDataType.STRING);
+        String uuuid = data.get(Keys.UUUID.get(),  PersistentDataType.STRING);
         if (itemId == null) return;
 
         ItemStack dbItem = hub.getCitemDAO().getCitem(itemId);
@@ -88,7 +88,7 @@ public class CitemManager {
 
 
 
-        if (!dbItem.isSimilar(item)) {
+        if (isUpdateUuidDifferent(item, dbItem)) {
             p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
             Utils.success(p, "citems", "update.updated", "%item%", meta.getDisplayName());
 
@@ -98,6 +98,14 @@ public class CitemManager {
         }
 
 
+    }
+
+
+    public boolean isUpdateUuidDifferent(ItemStack item1, ItemStack item2) {
+        String updateUUID1 = item1.getItemMeta().getPersistentDataContainer().get(Keys.UUUID.get(), PersistentDataType.STRING);
+        String updateUUID2 = item2.getItemMeta().getPersistentDataContainer().get(Keys.UUUID.get(), PersistentDataType.STRING);
+
+        return !Objects.equals(updateUUID1, updateUUID2);
     }
 
     public boolean hasCitemAmount(Player p, String id, int amount) {

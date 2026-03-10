@@ -24,27 +24,7 @@ public class CitemCommand implements CommandExecutor {
     public CitemCommand(DAOHub hub) {
         this.hub = hub;
 
-        subCommands.put("save", new Save(hub));
-        subCommands.put("update", new Update(hub));
-        subCommands.put("rename", new Name());
-        subCommands.put("lore", new Lore());
-        subCommands.put("flag", new Flag());
-        subCommands.put("action", new Action(hub));
-        subCommands.put("tooltip", new Tooltip());
-        subCommands.put("model", new Model());
-        subCommands.put("color", new Color());
-        subCommands.put("echant", new Enchant());
-        subCommands.put("tag", new Tag());
-        subCommands.put("info", new Info());
-        subCommands.put("equippable", new Equippable());
-
-
-
-        for (SubCommand subCommand : subCommands.values()) {
-            permCmds.put(subCommand.getPermission(), subCommand.getName());
-        }
-
-        subCommands.put("help", new Help(this));
+        subCommands.put("reload", new Reload(hub));
 
     }
 

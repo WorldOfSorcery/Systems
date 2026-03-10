@@ -4,8 +4,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.database.SchemaManager;
+import me.hektortm.woSSystems.systems.citems.CitemBuilder;
 import me.hektortm.woSSystems.utils.Keys;
 import me.hektortm.woSSystems.utils.Parsers;
+import me.hektortm.woSSystems.utils.dataclasses.Citem;
+import me.hektortm.woSSystems.utils.dataclasses.RecipeRecord;
 import me.hektortm.wosCore.database.IDAO;
 import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
@@ -40,15 +44,9 @@ public class CitemDAO implements IDAO {
 
     @Override
     public void initializeTable() throws SQLException {
+        SchemaManager.syncTable(db, Citem.class);
+
         try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.execute("""
-                            CREATE TABLE IF NOT EXISTS items (
-                            id VARCHAR(40) NOT NULL,
-                            item_data TEXT NOT NULL,
-                            web_data JSON NOT NULL,
-                            PRIMARY KEY (id)
-                            )
-                    """);
             stmt.execute("CREATE TABLE IF NOT EXISTS placed_citems("+
                     "citem_id VARCHAR(255) NOT NULL, " +
                     "owner_uuid CHAR(36) NOT NULL, " +
@@ -66,15 +64,15 @@ public class CitemDAO implements IDAO {
         org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, this::preloadAll);
     }
 
-    private void preloadAll() {
-        String sql = "SELECT id, item_data FROM items";
+    public void preloadAll() {
+        String sql = "SELECT id, data FROM citems";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             ResultSet rs = stmt.executeQuery();
             int count = 0;
             while (rs.next()) {
                 String id = rs.getString("id");
                 try {
-                    cache.put(id, itemStackFromBase64(rs.getString("item_data")));
+                    cache.put(id, CitemBuilder.build(id, rs.getString("data")));
                     count++;
                 } catch (Exception e) {
                     plugin.getLogger().warning(logName + ": failed to preload '" + id + "': " + e.getMessage());
@@ -90,46 +88,6 @@ public class CitemDAO implements IDAO {
         return new ArrayList<>(cache.keySet());
     }
 
-    public void saveCitem(String id, ItemStack item) {
-        String itemData = itemStackToBase64(item);
-        JsonObject webData = itemStackToJson(item);
-        String sql = "INSERT INTO items (id, item_data, web_data) VALUES (?, ?, ?)";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, id);
-            stmt.setString(2, itemData);
-            stmt.setString(3, webData.toString());
-            stmt.execute();
-            cache.put(id, item.clone());
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "e70ccfb9", "Failed to save Citem: ", e);
-        }
-    }
-
-    public void updateCitem(String id, ItemStack item) {
-        String itemData = itemStackToBase64(item);
-        JsonObject webData = itemStackToJson(item);
-        String sql = "UPDATE items SET item_data = ?, web_data = ? WHERE id = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, itemData);
-            stmt.setString(2, webData.toString());
-            stmt.setString(3, id);
-            stmt.executeUpdate();
-            cache.put(id, item.clone());
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "24835abe", "Failed to update Citem: ", e);
-        }
-    }
-
-    public void deleteCitem(String id) {
-        String sql = "DELETE FROM items WHERE id = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, id);
-            stmt.executeUpdate();
-            cache.remove(id);
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "a3f1c200", "Failed to delete Citem: ", e);
-        }
-    }
 
     /**
      * Returns a clone of the cached item. Never touches the database after startup.
@@ -144,37 +102,6 @@ public class CitemDAO implements IDAO {
         return cache.containsKey(id);
     }
 
-    public static String itemStackToBase64(ItemStack item) {
-        try {
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            BukkitObjectOutputStream dataOutput = new BukkitObjectOutputStream(outputStream);
-
-            dataOutput.writeObject(item);
-            dataOutput.close();
-
-            return Base64.getEncoder().encodeToString(outputStream.toByteArray());
-
-        } catch (IOException e) {
-            WoSSystems.discordLog(Level.SEVERE, "9592f4b1", "Failed to build Base64 String", e);
-            throw new RuntimeException(e);
-
-        }
-    }
-
-
-    public ItemStack itemStackFromBase64(String base64) {
-        try {
-            byte[] data = Base64.getDecoder().decode(base64);
-            ObjectInputStream inputStream = new BukkitObjectInputStream(new ByteArrayInputStream(data));
-
-            ItemStack item = (ItemStack) inputStream.readObject();
-            inputStream.close();
-            return item;
-        } catch (IOException | ClassNotFoundException e) {
-            WoSSystems.discordLog(Level.SEVERE, "d270e031", "Failed to deserialize Itemstack from Base64 String", e);
-            throw new RuntimeException("Failed to deserialize ItemStack from Base64: " + e.getMessage(), e);
-        }
-    }
 
 
     public void createItemDisplay(String id, UUID ownerUUID, Location blockLocation, Location displayLocation, boolean isCreative) {
@@ -308,25 +235,4 @@ public class CitemDAO implements IDAO {
         }
         return false;
     }
-
-
-    private JsonObject itemStackToJson(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        JsonObject obj = new JsonObject();
-        obj.addProperty("material", item.getType().toString());
-        obj.addProperty("display_name", meta.getDisplayName());
-        JsonArray lore = new JsonArray();
-        if (meta.getLore() != null) {
-            for (String line : meta.getLore()) {
-                lore.add(line);
-            }
-        }
-        obj.add("lore", lore);
-        obj.addProperty("enchanted", meta.hasEnchants());
-        PersistentDataContainer data = meta.getPersistentDataContainer();
-        obj.addProperty("right-click", data.get(Keys.RIGHT_ACTION.get(), PersistentDataType.STRING));
-        obj.addProperty("left-click", data.get(Keys.LEFT_ACTION.get(), PersistentDataType.STRING));
-        return obj;
-    }
-
 }

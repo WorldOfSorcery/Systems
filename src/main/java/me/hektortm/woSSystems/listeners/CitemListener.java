@@ -1,11 +1,16 @@
 package me.hektortm.woSSystems.listeners;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.systems.citems.CitemBuilder;
 import me.hektortm.woSSystems.systems.citems.CitemDisplays;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.Keys;
+import net.kyori.adventure.text.Component;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -17,13 +22,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -258,6 +268,44 @@ public class CitemListener implements Listener {
         String actionId = data.get(Keys.RIGHT_ACTION.get(), PersistentDataType.STRING);
         if (actionId != null) {
             interactionManager.triggerInteraction(actionId, p, null);
+        }
+    }
+
+    @EventHandler
+    public void onSwapHands(InventoryClickEvent e) {
+        if (e.getClick() == ClickType.SWAP_OFFHAND) {
+            ItemStack item = e.getCurrentItem();
+            if (!citemManager.isCitem(item)) {
+                return;
+            }
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) {
+                return;
+            }
+
+
+            PersistentDataContainer pdc = meta.getPersistentDataContainer();
+            String pagesJson = pdc.get(CitemBuilder.KEY_LORE_PAGES, PersistentDataType.STRING);
+            if (pagesJson == null) {
+                return;
+            }
+
+            e.setCancelled(true);
+            JsonArray pages = JsonParser.parseString(pagesJson).getAsJsonArray();
+
+            Integer currentRaw = pdc.get(CitemBuilder.KEY_LORE_PAGE, PersistentDataType.INTEGER);
+            int current = currentRaw != null ? currentRaw : 0;
+            int next = (current + 1) % pages.size();
+
+            List<Component> lore = new ArrayList<>();
+            for (JsonElement line : pages.get(next).getAsJsonArray()) {
+                lore.add(CitemBuilder.parseText(line.getAsString()));
+            }
+
+            meta.lore(lore);
+            pdc.set(CitemBuilder.KEY_LORE_PAGE, PersistentDataType.INTEGER, next);
+            item.setItemMeta(meta);
+            e.getWhoClicked().getInventory().setItemInMainHand(item);
         }
     }
 

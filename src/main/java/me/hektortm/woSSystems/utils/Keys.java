@@ -11,7 +11,8 @@ public enum Keys {
     LEFT_ACTION("action-left"),
     PLACED_ACTION("action-placed"),
     RIGHT_ACTION("action-right"),
-    PLACEABLE("placeable");
+    PLACEABLE("placeable"),
+    UUUID("update_uuid");
     
 
     private final String keyName;
