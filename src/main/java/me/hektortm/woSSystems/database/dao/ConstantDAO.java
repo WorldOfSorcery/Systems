@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.utils.dataclasses.Constant;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
@@ -26,15 +27,7 @@ public class ConstantDAO implements IDAO {
 
     @Override
     public void initializeTable() throws SQLException {
-        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
-
-            String sql = """
-                        CREATE TABLE IF NOT EXISTS constants (
-                            id VARCHAR(255) NOT NULL,
-                            value VARCHAR(255) NOT NULL)
-                        """;
-            stmt.execute(sql);
-        }
+        SchemaManager.syncTable(db, Constant.class);
     }
 
     public Constant getConstant(String id) {

@@ -1,6 +1,7 @@
 package me.hektortm.woSSystems.listeners;
 
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.time.TimeManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -10,9 +11,11 @@ import org.bukkit.event.player.PlayerJoinEvent;
 public class JoinListener implements Listener {
 
     private final WoSSystems plugin;
+    private final DAOHub hub;
 
-    public JoinListener(WoSSystems plugin) {
+    public JoinListener(WoSSystems plugin, DAOHub hub) {
         this.plugin = plugin;
+        this.hub = hub;
     }
 
     @EventHandler
@@ -28,6 +31,10 @@ public class JoinListener implements Listener {
         plugin.getChannelManager().joinDefault(player);
         plugin.getBossBarManager().createBossBar(player);
         plugin.getRegionBossBarManager().createBossBar(player);
+
+        // Load player data into memory async so all subsequent reads are instant
+        final java.util.UUID uuid = player.getUniqueId();
+        org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> hub.loadPlayerData(uuid));
     }
 
 

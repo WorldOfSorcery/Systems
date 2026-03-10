@@ -2,6 +2,8 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.database.SchemaManager;
+import me.hektortm.woSSystems.utils.dataclasses.RecipeRecord;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 
@@ -23,14 +25,7 @@ public class RecipeDAO implements IDAO {
 
     @Override
     public void initializeTable() throws SQLException {
-        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.execute("CREATE TABLE IF NOT EXISTS recipes (" +
-                    "id VARCHAR(255) PRIMARY KEY," +
-                    "type VARCHAR(255)," +
-                    "slots TEXT," +
-                    "output VARCHAR(255)," +
-                    "success VARCHAR(255))");
-        }
+        SchemaManager.syncTable(db, RecipeRecord.class);
     }
 
     public void insertRecipe(String id, String type, String slots, String output, String success) {
@@ -65,21 +60,5 @@ public class RecipeDAO implements IDAO {
             plugin.writeLog(logName, Level.SEVERE, "Failed to retrieve recipes: " + e.getMessage());
         }
         return recipes;
-    }
-
-    public static class RecipeRecord {
-        public final String id;
-        public final String type;
-        public final String slots;
-        public final String output;
-        public final String success;
-
-        public RecipeRecord(String id, String type, String slots, String output, String success) {
-            this.id = id;
-            this.type = type;
-            this.slots = slots;
-            this.output = output;
-            this.success = success;
-        }
     }
 }

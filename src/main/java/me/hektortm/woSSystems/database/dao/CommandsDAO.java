@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.utils.dataclasses.BasicCommand;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
@@ -26,16 +27,7 @@ public class CommandsDAO implements IDAO {
 
     @Override
     public void initializeTable() throws SQLException {
-        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS commands(
-                    command VARCHAR(255) NOT NULL,
-                    permission VARCHAR(255) NULL,
-                    interaction VARCHAR(255) NOT NULL,
-                    PRIMARY KEY (command)
-                )
-            """);
-        }
+        SchemaManager.syncTable(db, BasicCommand.class);
     }
 
     public List<BasicCommand> getCommands() {

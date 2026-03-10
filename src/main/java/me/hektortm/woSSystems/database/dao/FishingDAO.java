@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.utils.dataclasses.FishingItem;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
@@ -29,14 +30,7 @@ public class FishingDAO implements IDAO {
 
     @Override
     public void initializeTable() throws SQLException {
-        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.execute("CREATE TABLE IF NOT EXISTS fishing(" +
-                    "id VARCHAR(255) UNIQUE NOT NULL, " +
-                    "citem_id VARCHAR(255) NOT NULL, " +
-                    "catch_interaction VARCHAR(255), " +
-                    "rarity VARCHAR(255) NOT NULL, " +
-                    "regions TEXT)");
-        }
+        SchemaManager.syncTable(db, FishingItem.class);
     }
 
     public FishingItem getRandomItemByRarityAndRegion(String rarity, String region) {

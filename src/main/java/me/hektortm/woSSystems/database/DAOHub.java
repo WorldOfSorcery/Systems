@@ -5,6 +5,7 @@ import me.hektortm.woSSystems.database.links.FriendLink;
 import me.hektortm.wosCore.database.DatabaseManager;
 
 import java.sql.SQLException;
+import java.util.UUID;
 
 public class DAOHub {
     private final EconomyDAO economyDAO;
@@ -120,5 +121,23 @@ public class DAOHub {
 
     public FriendLink getFriendLink() {
         return friendLink;
+    }
+
+    /**
+     * Load all player-specific cached data (stats, economy, …).
+     * Call async from PlayerJoinEvent.
+     */
+    public void loadPlayerData(UUID uuid) {
+        statsDAO.loadPlayer(uuid);
+        economyDAO.loadPlayer(uuid);
+    }
+
+    /**
+     * Evict all player-specific cached data from memory.
+     * Call from PlayerQuitEvent.
+     */
+    public void evictPlayerData(UUID uuid) {
+        statsDAO.evictPlayer(uuid);
+        economyDAO.evictPlayer(uuid);
     }
 }

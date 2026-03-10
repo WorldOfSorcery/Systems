@@ -2,12 +2,12 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.utils.dataclasses.*;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
 import me.hektortm.wosCore.discord.DiscordLogger;
-import org.bukkit.Location;
 import org.bukkit.Material;
 
 import java.sql.*;
@@ -30,31 +30,8 @@ public class GUIDAO implements IDAO {
 
     @Override
     public void initializeTable() throws SQLException {
-        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.execute("CREATE TABLE IF NOT EXISTS guis(" +
-                    "id VARCHAR(255) NOT NULL," +
-                    "size INTEGER NOT NULL," +
-                    "title VARCHAR(255)," +
-                    "open_actions TEXT," +
-                    "close_actions TEXT" +
-                    ")");
-            stmt.execute("CREATE TABLE IF NOT EXISTS gui_slots(" +
-                    "gui_id VARCHAR(255) NOT NULL," +
-                    "slot INTEGER NOT NULL," +
-                    "slot_id INTEGER NOT NULL," +
-                    "matchtype VARCHAR(255)," +
-                    "material VARCHAR(255)," +
-                    "display_name VARCHAR(255)," +
-                    "lore TEXT," +
-                    "model TEXT," +
-                    "amount INTEGER NOT NULL," +
-                    "color VARCHAR(7)," +
-                    "tooltip VARCHAR(255)," +
-                    "enchanted BOOLEAN,"+
-                    "right_click TEXT," +
-                    "left_click TEXT," +
-                    "visible BOOLEAN NOT NULL DEFAULT false)");
-        }
+        SchemaManager.syncTable(db, GUI.class);
+        SchemaManager.syncTable(db, GUISlot.class);
     }
 
     public List<GUISlot> getSlotsForID(String id) {

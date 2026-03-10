@@ -80,8 +80,8 @@ public class ConditionHandler {
                 case "has_title":                       return hub.getCosmeticsDAO().hasCosmetic(player.getUniqueId(), CosmeticType.TITLE, condition.getValue());
                 case "has_not_title":                   return !hub.getCosmeticsDAO().hasCosmetic(player.getUniqueId(), CosmeticType.TITLE, condition.getValue());
 
-                case "has_currency":                    return hub.getEconomyDAO().getPlayerCurrency(player, condition.getValue()) >= (condition.getParameter() != null ? Long.parseLong(condition.getParameter()) : 0);
-                case "has_not_currency":                return hub.getEconomyDAO().getPlayerCurrency(player, condition.getValue()) <= (condition.getParameter() != null ? Long.parseLong(condition.getParameter()) : 0);
+                case "has_currency":                    return hub.getEconomyDAO().getPlayerCurrency(player.getUniqueId(), condition.getValue()) >= (condition.getParameter() != null ? Long.parseLong(condition.getParameter()) : 0);
+                case "has_not_currency":                return hub.getEconomyDAO().getPlayerCurrency(player.getUniqueId(), condition.getValue()) <= (condition.getParameter() != null ? Long.parseLong(condition.getParameter()) : 0);
                 case "has_permission":                  return player.hasPermission(condition.getValue());
 
                 case "in_world":                        return player.getWorld().getName().equalsIgnoreCase(condition.getValue());

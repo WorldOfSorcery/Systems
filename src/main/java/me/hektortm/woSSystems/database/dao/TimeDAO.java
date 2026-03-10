@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.utils.dataclasses.Activity;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
@@ -27,22 +28,7 @@ public class TimeDAO implements IDAO {
 
     @Override
     public void initializeTable() throws SQLException {
-        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS activities (
-                    id VARCHAR(255) PRIMARY KEY,
-                    isEnabled BOOLEAN DEFAULT TRUE,
-                    name VARCHAR(255) NOT NULL,
-                    message VARCHAR(255) NOT NULL,
-                    isDefault BOOLEAN DEFAULT FALSE,
-                    date VARCHAR(10),
-                    start_time INT NOT NULL,
-                    end_time INT NOT NULL,
-                    start_interaction VARCHAR(255),
-                    end_interaction VARCHAR(255)
-                )
-            """);
-        }
+        SchemaManager.syncTable(db, Activity.class);
     }
     public List<Activity> getAllActivities() {
         List<Activity> activities = new ArrayList<>();

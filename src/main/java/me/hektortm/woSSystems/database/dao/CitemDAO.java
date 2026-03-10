@@ -20,10 +20,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public class CitemDAO implements IDAO {
@@ -31,6 +29,9 @@ public class CitemDAO implements IDAO {
     private final DAOHub daoHub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "CitemDAO";
+
+    /** In-memory cache — all reads go here after startup preload. */
+    private final Map<String, ItemStack> cache = new ConcurrentHashMap<>();
 
     public CitemDAO(me.hektortm.wosCore.database.DatabaseManager db, DAOHub daoHub) {
         this.db = db;
@@ -60,32 +61,45 @@ public class CitemDAO implements IDAO {
         } finally {
             plugin.getLogger().info(logName + ": CitemDAO table initialized successfully.");
         }
+
+        // Preload all items into memory so GUI opens never touch the database.
+        org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, this::preloadAll);
+    }
+
+    private void preloadAll() {
+        String sql = "SELECT id, item_data FROM items";
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            int count = 0;
+            while (rs.next()) {
+                String id = rs.getString("id");
+                try {
+                    cache.put(id, itemStackFromBase64(rs.getString("item_data")));
+                    count++;
+                } catch (Exception e) {
+                    plugin.getLogger().warning(logName + ": failed to preload '" + id + "': " + e.getMessage());
+                }
+            }
+            plugin.getLogger().info(logName + ": preloaded " + count + " item(s) into cache.");
+        } catch (SQLException e) {
+            WoSSystems.discordLog(Level.SEVERE, "CID:preload", "Failed to preload items into cache: ", e);
+        }
     }
 
     public List<String> getCitemIds() {
-        String sql = "SELECT id FROM items";
-        List<String> citemIds = new ArrayList<>();
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                citemIds.add(rs.getString("id"));
-            }
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:7e0bb0a0", "Failed to get Citems IDs: ", e);
-        }
-        return citemIds;
+        return new ArrayList<>(cache.keySet());
     }
 
     public void saveCitem(String id, ItemStack item) {
         String itemData = itemStackToBase64(item);
         JsonObject webData = itemStackToJson(item);
         String sql = "INSERT INTO items (id, item_data, web_data) VALUES (?, ?, ?)";
-
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, id);
             stmt.setString(2, itemData);
             stmt.setString(3, webData.toString());
             stmt.execute();
+            cache.put(id, item.clone());
         } catch (SQLException e) {
             WoSSystems.discordLog(Level.SEVERE, "e70ccfb9", "Failed to save Citem: ", e);
         }
@@ -95,49 +109,39 @@ public class CitemDAO implements IDAO {
         String itemData = itemStackToBase64(item);
         JsonObject webData = itemStackToJson(item);
         String sql = "UPDATE items SET item_data = ?, web_data = ? WHERE id = ?";
-
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, itemData);
             stmt.setString(2, webData.toString());
             stmt.setString(3, id);
             stmt.executeUpdate();
+            cache.put(id, item.clone());
         } catch (SQLException e) {
             WoSSystems.discordLog(Level.SEVERE, "24835abe", "Failed to update Citem: ", e);
         }
     }
 
-    public ItemStack getCitem(String id) {
-        String sql = "SELECT item_data FROM items WHERE id = ?";
+    public void deleteCitem(String id) {
+        String sql = "DELETE FROM items WHERE id = ?";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, id);
-
-            ResultSet rs = stmt.executeQuery();
-
-            ItemStack item = null;
-            if (rs.next()) {
-                String base64 = rs.getString("item_data");
-                item = itemStackFromBase64(base64);
-            }
-
-            rs.close();
-            stmt.close();
-            conn.close();
-            return item;
+            stmt.executeUpdate();
+            cache.remove(id);
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "de1adeb7", "Failed to retrieve Citem: ", e);
-            return null;
+            WoSSystems.discordLog(Level.SEVERE, "a3f1c200", "Failed to delete Citem: ", e);
         }
     }
 
+    /**
+     * Returns a clone of the cached item. Never touches the database after startup.
+     * Returns null if the item doesn't exist.
+     */
+    public ItemStack getCitem(String id) {
+        ItemStack cached = cache.get(id);
+        return cached != null ? cached.clone() : null;
+    }
+
     public boolean citemExists(String id) {
-        try (Connection conn = db.getConnection(); PreparedStatement preparedStatement = conn.prepareStatement("SELECT 1 FROM items WHERE id = ?")) {
-            preparedStatement.setString(1, id);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            return resultSet.next();
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "ce7f7083", "Failed to check existing Citem: ", e);
-            return false;
-        }
+        return cache.containsKey(id);
     }
 
     public static String itemStackToBase64(ItemStack item) {

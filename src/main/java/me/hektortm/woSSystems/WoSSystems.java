@@ -17,6 +17,7 @@ import me.hektortm.woSSystems.channels.cmd.NicknameCommand;
 import me.hektortm.woSSystems.cosmetic.CosmeticManager;
 import me.hektortm.woSSystems.cosmetic.cmd.CosmeticCommand;
 import me.hektortm.woSSystems.cosmetic.cmd.QuickCommands;
+import me.hektortm.woSSystems.database.AsyncWriteQueue;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.economy.EcoManager;
 import me.hektortm.woSSystems.economy.commands.BalanceCommand;
@@ -285,6 +286,7 @@ public final class WoSSystems extends JavaPlugin {
         timeManager.saveGameState();
 //        PacketEvents.getAPI().terminate();
         PermissionRegistry.unregisterAll();
+        AsyncWriteQueue.shutdown(); // flush all pending DB writes before the JVM exits
     }
 
     @Override
@@ -412,7 +414,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new CitemListener(daoHub));
         eventReg(new QuitListener(core, unlockableManager, daoHub, coinflipCommand, this));
         eventReg(new FishingListener(daoHub));
-        eventReg(new JoinListener(this));
+        eventReg(new JoinListener(this, daoHub));
         eventReg(new ChannelListener(channelManager, nickManager, unlockableManager, daoHub));
         eventReg(new RegionHandler(regionBossBarManager));
         eventReg(new ProfileListener());

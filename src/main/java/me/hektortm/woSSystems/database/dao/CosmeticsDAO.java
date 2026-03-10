@@ -2,7 +2,9 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.utils.CosmeticType;
+import me.hektortm.woSSystems.utils.dataclasses.Cosmetic;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
@@ -31,20 +33,8 @@ public class CosmeticsDAO implements IDAO {
 
     @Override
     public void initializeTable() throws SQLException {
+        SchemaManager.syncTable(db, Cosmetic.class);
         try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
-            // Create the cosmetics table
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS cosmetics (
-                    type VARCHAR(255) NOT NULL,
-                    id VARCHAR(255) NOT NULL,
-                    display VARCHAR(255) NOT NULL,
-                    description VARCHAR(255),
-                    permission VARCHAR(255),
-                    PRIMARY KEY (id, type)
-                )
-            """);
-
-            // Create the player_cosmetics table
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS player_cosmetics (
                     uuid CHAR(36) NOT NULL,
@@ -52,8 +42,7 @@ public class CosmeticsDAO implements IDAO {
                     cosmetic_type VARCHAR(255) NOT NULL,
                     equipped BOOLEAN NOT NULL,
                     obtained_at VARCHAR(255) NOT NULL,
-                    PRIMARY KEY (uuid, cosmetic_id),
-                    FOREIGN KEY (cosmetic_id, cosmetic_type) REFERENCES cosmetics(id, type)
+                    PRIMARY KEY (uuid, cosmetic_id)
                 )
             """);
         }

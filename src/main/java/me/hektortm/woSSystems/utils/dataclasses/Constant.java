@@ -1,20 +1,18 @@
 package me.hektortm.woSSystems.utils.dataclasses;
 
-public class Constant {
+import me.hektortm.woSSystems.database.annotation.Column;
+import me.hektortm.woSSystems.database.annotation.Table;
 
-    private final String id;
+@Table("constants")
+public class Constant extends BaseEntity {
+
+    @Column(notNull = true)
     private final String value;
 
     public Constant(String id, String value) {
-        this.id = id;
+        super(id);
         this.value = value;
     }
 
-    public String getId() {
-        return id;
-    }
-    public String getValue() {
-        return value;
-    }
-
+    public String getValue() { return value; }
 }

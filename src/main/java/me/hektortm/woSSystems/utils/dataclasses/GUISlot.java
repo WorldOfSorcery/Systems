@@ -1,27 +1,58 @@
 package me.hektortm.woSSystems.utils.dataclasses;
 
+import me.hektortm.woSSystems.database.annotation.Column;
+import me.hektortm.woSSystems.database.annotation.Table;
 import org.bukkit.Material;
 
 import java.util.List;
 
+@Table("gui_slots")
 public class GUISlot {
 
+    @Column(name = "gui_id", primaryKey = true)
     private final String guiId;
-    private final int slot;
-    private final int slot_id;
-    private final String matchType;
-    private final Material material;
-    private final String displayName;
-    private final List<String> lore;
-    private final String model;
-    private final String color;
-    private final int amount;
-    private final String tooltip;
-    private final boolean enchanted;
-    private final List<String> right_actions;
-    private final List<String> left_actions;
-    private final boolean visible;
 
+    @Column(primaryKey = true)
+    private final int slot;
+
+    @Column(name = "slot_id")
+    private final int slot_id;
+
+    @Column(name = "matchtype")
+    private final String matchType;
+
+    @Column(name = "material", type = "VARCHAR(255)")
+    private final Material material;
+
+    @Column(name = "display_name")
+    private final String displayName;
+
+    @Column(type = "TEXT")
+    private final List<String> lore;
+
+    @Column(type = "TEXT")
+    private final String model;
+
+    @Column(type = "VARCHAR(7)")
+    private final String color;
+
+    @Column(notNull = true)
+    private final int amount;
+
+    @Column
+    private final String tooltip;
+
+    @Column
+    private final boolean enchanted;
+
+    @Column(name = "right_click", type = "TEXT")
+    private final List<String> right_actions;
+
+    @Column(name = "left_click", type = "TEXT")
+    private final List<String> left_actions;
+
+    @Column(notNull = true, defaultValue = "false")
+    private final boolean visible;
 
     public GUISlot(String guiId, int slot, int slot_id, String matchType, Material material, String displayName, List<String> lore, String model, String color, int amount, String tooltip, boolean enchanted, List<String> rightActions, List<String> leftActions, boolean visible) {
         this.guiId = guiId;
@@ -41,56 +72,19 @@ public class GUISlot {
         this.visible = visible;
     }
 
-    public String getGuiId() {
-        return guiId;
-    }
-    public int getSlot() {
-        return slot;
-    }
-    public int getSlotId() {
-        return slot_id;
-    }
-    public String getMatchType() {
-        return matchType;
-    }
-    public Material getMaterial() {
-        return material;
-    }
-    public List<String> getRight_actions() {
-        return right_actions;
-    }
-    public List<String> getLeft_actions() {
-        return left_actions;
-    }
-    public boolean isVisible() {
-        return visible;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public List<String> getLore() {
-        return lore;
-    }
-
-    public boolean isEnchanted() {
-        return enchanted;
-    }
-
-    public String getModel() {
-        return model;
-    }
-
-    public String getColor() {
-        return color;
-    }
-
-    public int getAmount() {
-        return amount;
-    }
-
-    public String getTooltip() {
-        return tooltip;
-    }
+    public String getGuiId()              { return guiId;        }
+    public int getSlot()                  { return slot;         }
+    public int getSlotId()                { return slot_id;      }
+    public String getMatchType()          { return matchType;    }
+    public Material getMaterial()         { return material;     }
+    public String getDisplayName()        { return displayName;  }
+    public List<String> getLore()         { return lore;         }
+    public String getModel()              { return model;        }
+    public String getColor()              { return color;        }
+    public int getAmount()                { return amount;       }
+    public String getTooltip()            { return tooltip;      }
+    public boolean isEnchanted()          { return enchanted;    }
+    public List<String> getRight_actions(){ return right_actions;}
+    public List<String> getLeft_actions() { return left_actions; }
+    public boolean isVisible()            { return visible;      }
 }

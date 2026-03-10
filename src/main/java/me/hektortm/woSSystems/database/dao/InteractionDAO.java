@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.utils.Parsers;
 import me.hektortm.woSSystems.utils.dataclasses.Interaction;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionAction;
@@ -35,65 +36,24 @@ public class InteractionDAO implements IDAO {
 
     @Override
     public void initializeTable() throws SQLException {
+        SchemaManager.syncTable(db, Interaction.class);
+        SchemaManager.syncTable(db, InteractionAction.class);
+        SchemaManager.syncTable(db, InteractionHologram.class);
+        SchemaManager.syncTable(db, InteractionParticles.class);
+        // inter_npcs and inter_blocks have no dataclass — kept manual
         try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS interactions (
-                    id VARCHAR(255) NOT NULL,
-                    PRIMARY KEY (id)
-                )
-            """);
-
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS inter_actions (
-                    id VARCHAR(255) NOT NULL,
-                    behaviour VARCHAR(255) NOT NULL,
-                    matchtype VARCHAR(255) NOT NULL,
-                    action_id INT NOT NULL,
-                    actions TEXT NOT NULL,
-                    PRIMARY KEY (id, action_id),
-                    FOREIGN KEY (id) REFERENCES interactions(id)
-                )
-            """);
-
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS inter_holograms (
-                    interaction_id VARCHAR(255) NOT NULL,
-                    behaviour VARCHAR(255) NOT NULL,
-                    matchtype VARCHAR(255) NOT NULL,
-                    hologram_id INT NOT NULL,
-                    hologram TEXT NOT NULL,
-                    PRIMARY KEY (interaction_id),
-                    FOREIGN KEY (interaction_id) REFERENCES interactions(id)
-                )
-            """);
-
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS inter_npcs (
                     npc_id VARCHAR(255) NOT NULL,
                     interaction_id VARCHAR(255) NOT NULL,
-                    PRIMARY KEY (interaction_id),
-                    FOREIGN KEY (interaction_id) REFERENCES interactions(id)
+                    PRIMARY KEY (interaction_id)
                 )
             """);
-
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS inter_blocks (
                     location TEXT NOT NULL,
                     interaction_id VARCHAR(255) NOT NULL,
-                    PRIMARY KEY (interaction_id),
-                    FOREIGN KEY (interaction_id) REFERENCES interactions(id)
-                )
-            """);
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS inter_particles (
-                    id VARCHAR(255) NOT NULL,
-                    behaviour VARCHAR(255) NOT NULL,
-                    matchtype VARCHAR(255) NOT NULL,
-                    particle_id VARCHAR(255) NOT NULL,
-                    particle VARCHAR(255) NOT NULL,
-                    particle_color VARCHAR(255),
-                    PRIMARY KEY (id),
-                    FOREIGN KEY (id) REFERENCES interactions(id)
+                    PRIMARY KEY (interaction_id)
                 )
             """);
         }
@@ -334,17 +294,95 @@ public class InteractionDAO implements IDAO {
     }
 
     public List<Interaction> getInteractions() {
-        List<Interaction> interactions = new ArrayList<>();
-        String sql = "SELECT * FROM interactions";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        List<String> ids = new ArrayList<>();
+        try (Connection conn = db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement("SELECT id FROM interactions")) {
             ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                String interactionId = rs.getString("id");
-                interactions.add(getInteractionByID(interactionId));
+            while (rs.next()) ids.add(rs.getString("id"));
+        } catch (SQLException e) {
+            DiscordLogger.log(new DiscordLog(Level.SEVERE, plugin, "c3956d21", "Failed to get Interaction IDs: ", e));
+            return new ArrayList<>();
+        }
+
+        if (ids.isEmpty()) return new ArrayList<>();
+
+        // Bulk-load all child rows — one query per table
+        Map<String, List<InteractionAction>> actionsMap = new HashMap<>();
+        Map<String, List<InteractionHologram>> hologramsMap = new HashMap<>();
+        Map<String, List<InteractionParticles>> particlesMap = new HashMap<>();
+        Map<String, List<Location>> blocksMap = new HashMap<>();
+        Map<String, List<Integer>> npcsMap = new HashMap<>();
+
+        try (Connection conn = db.getConnection()) {
+            // inter_actions
+            try (PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM inter_actions ORDER BY id, action_id ASC")) {
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    String id = rs.getString("id");
+                    String actionsRaw = rs.getString("actions");
+                    List<String> parsedActions = Arrays.stream(actionsRaw.replace("[", "").replace("]", "").split(","))
+                            .map(String::trim).map(s -> s.replaceAll("^\"|\"$", "")).collect(Collectors.toList());
+                    actionsMap.computeIfAbsent(id, k -> new ArrayList<>())
+                            .add(new InteractionAction(id, rs.getString("behaviour"), rs.getString("matchtype"), rs.getInt("action_id"), parsedActions));
+                }
+            }
+
+            // inter_holograms
+            try (PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM inter_holograms")) {
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    String id = rs.getString("interaction_id");
+                    String hologramRaw = rs.getString("hologram");
+                    List<String> parsedHologram = Arrays.stream(hologramRaw.replace("[", "").replace("]", "").split(","))
+                            .map(String::trim).map(s -> s.replaceAll("^\"|\"$", "")).collect(Collectors.toList());
+                    hologramsMap.computeIfAbsent(id, k -> new ArrayList<>())
+                            .add(new InteractionHologram(id, rs.getInt("hologram_id"), rs.getString("behaviour"), rs.getString("matchtype"), parsedHologram));
+                }
+            }
+
+            // inter_particles
+            try (PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM inter_particles ORDER BY id, particle_id ASC")) {
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    String id = rs.getString("id");
+                    particlesMap.computeIfAbsent(id, k -> new ArrayList<>())
+                            .add(new InteractionParticles(id, rs.getString("behaviour"), rs.getString("matchtype"), rs.getInt("particle_id"), rs.getString("particle"), rs.getString("particle_color")));
+                }
+            }
+
+            // inter_blocks
+            try (PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM inter_blocks")) {
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    String id = rs.getString("interaction_id");
+                    Location loc = Parsers.stringToLocation(rs.getString("location"));
+                    blocksMap.computeIfAbsent(id, k -> new ArrayList<>()).add(loc);
+                }
+            }
+
+            // inter_npcs
+            try (PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM inter_npcs")) {
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    String id = rs.getString("interaction_id");
+                    npcsMap.computeIfAbsent(id, k -> new ArrayList<>()).add(rs.getInt("npc_id"));
+                }
             }
         } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "c3956d21", "Failed to get Interactions: ", e
+            DiscordLogger.log(new DiscordLog(Level.SEVERE, plugin, "c3956d21b", "Failed to bulk-load Interaction children: ", e));
+            return new ArrayList<>();
+        }
+
+        // Assemble Interaction objects from the maps
+        List<Interaction> interactions = new ArrayList<>();
+        for (String id : ids) {
+            interactions.add(new Interaction(
+                    id,
+                    actionsMap.getOrDefault(id, new ArrayList<>()),
+                    hologramsMap.getOrDefault(id, new ArrayList<>()),
+                    particlesMap.getOrDefault(id, new ArrayList<>()),
+                    blocksMap.getOrDefault(id, new ArrayList<>()),
+                    npcsMap.getOrDefault(id, new ArrayList<>())
             ));
         }
         return interactions;

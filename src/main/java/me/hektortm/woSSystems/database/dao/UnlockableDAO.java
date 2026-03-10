@@ -2,7 +2,9 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.utils.Operations;
+import me.hektortm.woSSystems.utils.dataclasses.Unlockable;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
@@ -26,10 +28,10 @@ public class UnlockableDAO implements IDAO {
 
     @Override
     public void initializeTable() {
+        SchemaManager.syncTable(db, Unlockable.class);
+
+        // Player unlockables table is relational — keep manual
         try (Connection conn = db.getConnection(); Statement statement = conn.createStatement()) {
-            statement.execute("CREATE TABLE IF NOT EXISTS unlockables (" +
-                    "id VARCHAR(255) PRIMARY KEY," +
-                    "temp BOOLEAN)");
             statement.execute("CREATE TABLE IF NOT EXISTS playerdata_unlockables (" +
                     "uuid CHAR(36), " +
                     "id VARCHAR(255), " +
@@ -37,13 +39,13 @@ public class UnlockableDAO implements IDAO {
                     "PRIMARY KEY (uuid, id))");
         } catch (SQLException e) {
             DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "608ad2f4", "Failed to intialize Unlockable Tables: ", e
+                    Level.SEVERE, plugin, "608ad2f4", "Failed to initialize Unlockable Tables: ", e
             ));
         }
     }
 
     public void resetDailyUnlockables() {
-        String sql = "DELTE FROM playerdata_unlockables WHERE id LIKE 'daily_%'";
+        String sql = "DELETE FROM playerdata_unlockables WHERE id LIKE 'daily_%'";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.execute(sql);
         } catch (SQLException e) {
@@ -92,10 +94,11 @@ public class UnlockableDAO implements IDAO {
                     // Nothing on duplicate
                      PreparedStatement stmt = conn.prepareStatement("INSERT INTO playerdata_unlockables (uuid, id, temp) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE temp = ?")) {
 
+                    boolean temp = isTemp(id);
                     stmt.setString(1, uuid.toString());
                     stmt.setString(2, id);
-                    stmt.setBoolean(3, isTemp(id));
-                    stmt.setBoolean(4, isTemp(id));
+                    stmt.setBoolean(3, temp);
+                    stmt.setBoolean(4, temp);
                     stmt.executeUpdate();
                 } catch (SQLException e) {
                     plugin.writeLog(logName, Level.SEVERE, "Failed to give unlockable: " + e);

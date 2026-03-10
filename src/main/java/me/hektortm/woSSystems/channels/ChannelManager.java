@@ -379,7 +379,7 @@ public class ChannelManager {
                 .build();
 
         // Build the gold line
-        String goldAmount = String.valueOf(hub.getEconomyDAO().getPlayerCurrency(player, "gold"));
+        String goldAmount = String.valueOf(hub.getEconomyDAO().getPlayerCurrency(player.getUniqueId(), "gold"));
         Component gold = Component.text()
                 .append(Component.text("§7"+Parsers.parseUniStatic("Gold:")+" "))
                 .append(Component.text("§e"+goldAmount))

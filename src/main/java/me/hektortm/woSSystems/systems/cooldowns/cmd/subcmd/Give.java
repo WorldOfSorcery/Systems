@@ -61,7 +61,10 @@ public class Give extends SubCommand {
                     "%player%", player.getName(),
                     "%cooldown%", cooldownId
             );
-            if (cd.getStart_interaction() != null) interManager.triggerInteraction(cd.getStart_interaction(), player.getPlayer(), null);
+            if (cd.getStart_interaction() != null) {
+                org.bukkit.entity.Player online = player.getPlayer();
+                if (online != null) interManager.triggerInteraction(cd.getStart_interaction(), online, null);
+            }
         }
 
     }

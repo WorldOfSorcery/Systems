@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.utils.dataclasses.Cooldown;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionAction;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionKey;
@@ -29,17 +30,14 @@ public class CooldownDAO implements IDAO {
 
     @Override
     public void initializeTable() throws SQLException {
+        SchemaManager.syncTable(db, Cooldown.class);
+
+        // Player cooldown tables are relational, not entity-backed — keep manual
         try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.execute("CREATE TABLE IF NOT EXISTS cooldowns(" +
-                    "id VARCHAR(255)," +
-                    "duration BIGINT," +
-                    "start_interaction VARCHAR(255)," +
-                    "end_interaction VARCHAR(255))");
             stmt.execute("CREATE TABLE IF NOT EXISTS playerdata_cooldowns(" +
                     "uuid VARCHAR(255)," +
                     "id VARCHAR(255)," +
-                    "start_time TIMESTAMP" +
-                    ")");
+                    "start_time TIMESTAMP)");
             stmt.execute("CREATE TABLE IF NOT EXISTS playerdata_local_cooldowns(" +
                     "uuid VARCHAR(255)," +
                     "id VARCHAR(255)," +

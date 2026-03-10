@@ -14,9 +14,11 @@ import java.util.List;
 import java.util.logging.Level;
 
 public class ActionHandler {
+    // TODO: move to config.yml under 'blocked-commands' key for runtime configurability
+    private static final List<String> COMMAND_BLACKLIST = Arrays.asList("op", "gmc", "gamemode");
+
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final PlaceholderResolver resolver = plugin.getPlaceholderResolver();
-    private final List<String> blacklist = Arrays.asList("op", "gmc", "gamemode");
     private final DAOHub hub;
 
     public ActionHandler(DAOHub hub) {
@@ -48,8 +50,12 @@ public class ActionHandler {
                 continue;
             }
             if (cmd.startsWith("sudo")) {
-                String[] parts = cmd.split(" ");
-                for (String term : blacklist) {
+                String[] parts = cmd.split("\\s+", 2);
+                if (parts.length < 2) {
+                    plugin.writeLog("ActionHandler", java.util.logging.Level.WARNING, "sudo action missing argument: " + cmd);
+                    continue;
+                }
+                for (String term : COMMAND_BLACKLIST) {
                     if (parts[1].contains(term)) {
                         plugin.getLogManager().sendWarning(player.getName() + " Tried to execute: " + parts[1] + " | Source: "+sourceType.getType()+"("+sourceID+")");
                         plugin.getLogManager().writeLog(player, "Tried to execute: " + parts[1] + " | Source: "+sourceType.getType()+"("+sourceID+")");
@@ -65,7 +71,11 @@ public class ActionHandler {
             }
             // cooldown[0] give[1] @p[2] id[3] local[4]
             if (cmd.startsWith("cooldown")) {
-                String[] parts = cmd.split(" ");
+                String[] parts = cmd.split("\\s+");
+                if (parts.length < 5) {
+                    plugin.writeLog("ActionHandler", java.util.logging.Level.WARNING, "cooldown action missing arguments: " + cmd);
+                    continue;
+                }
                 if (parts[1].contains("give") && parts[4].contains("%local%")) {
                     plugin.writeLog("InteractionManager", Level.WARNING, "giving local cooldown...");
                     if (key != null) {
@@ -109,7 +119,11 @@ public class ActionHandler {
 //
 //            }
             if (cmd.startsWith("play_sound")) {
-                String[] parts = cmd.split(" ");
+                String[] parts = cmd.split("\\s+");
+                if (parts.length < 4) {
+                    plugin.writeLog("ActionHandler", java.util.logging.Level.WARNING, "play_sound action missing arguments: " + cmd);
+                    continue;
+                }
                 String soundName = parts[1];
                 float volume = Float.parseFloat(parts[2]);
                 float pitch = Float.parseFloat(parts[3]);
@@ -117,7 +131,11 @@ public class ActionHandler {
                 continue;
             }
             if(cmd.startsWith("eco")) {
-                String[] parts = cmd.split(" ");
+                String[] parts = cmd.split("\\s+");
+                if (parts.length < 5) {
+                    plugin.writeLog("ActionHandler", java.util.logging.Level.WARNING, "eco action missing arguments: " + cmd);
+                    continue;
+                }
                 String actionType = parts[1];
                 String currency = parts[3];
                 int amount = Integer.parseInt(parts[4]);

@@ -1,15 +1,12 @@
 package me.hektortm.woSSystems.utils.dataclasses;
 
-public class TempUnlockable {
-
-    private final String id;
+/**
+ * Convenience wrapper for a temporary {@link Unlockable}.
+ * Equivalent to {@code new Unlockable(id, true)}.
+ */
+public class TempUnlockable extends Unlockable {
 
     public TempUnlockable(String id) {
-        this.id = id;
+        super(id, true);
     }
-
-    public String getId() {
-        return id;
-    }
-
 }

@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.database.dao;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.channels.Channel;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
@@ -27,23 +28,8 @@ public class ChannelDAO implements IDAO {
 
     @Override
     public void initializeTable() throws SQLException {
+        SchemaManager.syncTable(db, Channel.class);
         try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS channels (
-                    name VARCHAR(255) PRIMARY KEY NOT NULL,
-                    short_name VARCHAR(255) NOT NULL,
-                    color VARCHAR(255) NOT NULL,
-                    format VARCHAR(255) NOT NULL,
-                    default_channel TINYINT(1) NOT NULL,
-                    autojoin TINYINT(1) NOT NULL,
-                    forcejoin TINYINT(1) NOT NULL,
-                    hidden TINYINT(1) NOT NULL,
-                    broadcastable TINYINT(1) NOT NULL,
-                    permission VARCHAR(255),
-                    radius INTEGER NOT NULL
-                )
-            """);
-
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS playerdata_channels (
                     uuid CHAR(36) NOT NULL,

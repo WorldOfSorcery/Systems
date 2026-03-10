@@ -1,27 +1,23 @@
 package me.hektortm.woSSystems.utils.dataclasses;
 
-public class Stat {
+import me.hektortm.woSSystems.database.annotation.Column;
+import me.hektortm.woSSystems.database.annotation.Table;
 
-    private final String id;
+@Table("stats")
+public class Stat extends BaseEntity {
+
+    @Column(defaultValue = "0")
     private final long max;
+
+    @Column(defaultValue = "FALSE")
     private final boolean capped;
 
     public Stat(String id, long max, boolean capped) {
-        this.id = id;
-        this.max = max;
+        super(id);
+        this.max    = max;
         this.capped = capped;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public boolean getCapped() {
-        return capped;
-    }
-
-    public long getMax() {
-        return max;
-    }
-
+    public boolean getCapped() { return capped; }
+    public long    getMax()    { return max; }
 }

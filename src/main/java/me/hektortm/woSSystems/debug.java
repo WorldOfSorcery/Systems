@@ -40,8 +40,11 @@ public class debug implements CommandExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
-
-        Player p = (Player) commandSender;
+        if (!commandSender.hasPermission("wossystems.debug.use")) {
+            commandSender.sendMessage("No permission");
+            return true;
+        }
+        if (!(commandSender instanceof Player p)) return true;
         hub.getDialogDAO().getDialog("test", commandSender, p);
         return true;
     }

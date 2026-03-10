@@ -42,7 +42,7 @@ public class EcoManager {
                 newAmount = 0;
                 break;
         }
-        hub.getEconomyDAO().updatePlayerCurrency(player, currency, newAmount);
+        hub.getEconomyDAO().updatePlayerCurrency(player.getUniqueId(), currency, newAmount);
     }
 
     public void ecoLog(UUID uuid, String currency, long changeAmount, String sourceType, String source) {
@@ -55,11 +55,7 @@ public class EcoManager {
     }
 
     public long getCurrencyBalance(UUID uuid, String currency) {
-        Player player = plugin.getServer().getPlayer(uuid);
-        if (player == null) return 0; // Default to 0 if player isn't found
-
-
-        return hub.getEconomyDAO().getPlayerCurrency(player, currency);
+        return hub.getEconomyDAO().getPlayerCurrency(uuid, currency);
 
     }
 

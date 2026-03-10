@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.utils.LoottableItemType;
 import me.hektortm.woSSystems.utils.dataclasses.Loottable;
 import me.hektortm.woSSystems.utils.dataclasses.LoottableItem;
@@ -29,25 +30,21 @@ public class LoottablesDAO implements IDAO {
 
     @Override
     public void initializeTable() throws SQLException {
+        // Syncs 'loottables' and auto-adds missing 'name' column
+        SchemaManager.syncTable(db, Loottable.class);
+
+        // Child table is not entity-backed — keep manual
         try (Connection connection = db.getConnection(); Statement stmt = connection.createStatement()) {
             stmt.execute("""
-                CREATE TABLE IF NOT EXISTS loottables (
-                    id VARCHAR(60) NOT NULL,
-                    amount INT NOT NULL DEFAULT 1,
-                    PRIMARY KEY (id)
+                CREATE TABLE IF NOT EXISTS loottable_items (
+                    loottable_id VARCHAR(255) NOT NULL,
+                    item_id INT NOT NULL,
+                    weight INT NOT NULL,
+                    type VARCHAR(255) NOT NULL,
+                    value VARCHAR(255) NOT NULL,
+                    parameter INT
                 )
             """);
-
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS `loottable_items` (
-                    `loottable_id` VARCHAR(60) NOT NULL,
-                    `item_id` INT NOT NULL,
-                    `weight` INT NOT NULL,
-                    `type` VARCHAR(255) NOT NULL,
-                    `value` VARCHAR(255) NOT NULL,
-                    `parameter` INT
-                )
-               """);
         }
     }
 
