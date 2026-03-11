@@ -100,6 +100,28 @@ public final class CitemBuilder {
 
         meta.getPersistentDataContainer().set(Keys.UUUID.get(), PersistentDataType.STRING, data.get("update_uuid").getAsString().trim());
 
+        if (data.has("flags") && data.get("flags").isJsonObject()) {
+            JsonObject flags = data.getAsJsonObject("flags");
+            // placeable: "small" → 1, "large" → 2, absent/other → 0
+            int placeableVal = 0;
+            if (flags.has("placeable") && !flags.get("placeable").isJsonNull()) {
+                String p = flags.get("placeable").getAsString().trim().toLowerCase();
+                if (p.equals("small")) placeableVal = 1;
+                else if (p.equals("large")) placeableVal = 2;
+            }
+            meta.getPersistentDataContainer().set(Keys.PLACEABLE.get(), PersistentDataType.INTEGER, placeableVal);
+
+            if (flags.has("undroppable") && !flags.get("undroppable").isJsonNull()) {
+                boolean undroppable = flags.get("undroppable").getAsBoolean();
+                meta.getPersistentDataContainer().set(Keys.UNDROPPABLE.get(), PersistentDataType.BOOLEAN, undroppable);
+            }
+
+            if (flags.has("unusable") && !flags.get("unusable").isJsonNull()) {
+                boolean unusable = flags.get("unusable").getAsBoolean();
+                meta.getPersistentDataContainer().set(Keys.UNUSABLE.get(), PersistentDataType.BOOLEAN, unusable);
+            }
+        }
+
         if (!loreLines.isEmpty()) {
             List<Component> loreComponents = new ArrayList<>();
             for (String line : loreLines) {
