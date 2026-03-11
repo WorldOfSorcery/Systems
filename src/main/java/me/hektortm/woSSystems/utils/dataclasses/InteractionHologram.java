@@ -24,12 +24,16 @@ public class InteractionHologram {
     @Column(type = "TEXT", notNull = true)
     private final List<String> hologram;
 
-    public InteractionHologram(String interactionId, int hologramID, String behaviour, String matchType, List<String> hologram) {
+    @Column(type = "JSON", name="settings" )
+    private final String settings;
+
+    public InteractionHologram(String interactionId, int hologramID, String behaviour, String matchType, List<String> hologram, String settings) {
         this.interactionId = interactionId;
         this.hologramID    = hologramID;
         this.behaviour     = behaviour;
         this.matchType     = matchType;
         this.hologram      = hologram;
+        this.settings = settings;
     }
 
     public String getInteractionId()   { return interactionId; }
@@ -37,4 +41,5 @@ public class InteractionHologram {
     public String getBehaviour()       { return behaviour;     }
     public String getMatchType()       { return matchType;     }
     public List<String> getHologram()  { return hologram;      }
+    public String getSettings()        { return settings;      }
 }

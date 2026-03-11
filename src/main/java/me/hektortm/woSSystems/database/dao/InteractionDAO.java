@@ -137,7 +137,10 @@ public class InteractionDAO implements IDAO {
                         .map(String::trim)
                         .map(s -> s.replaceAll("^\"|\"$", "")) // remove surrounding quotes
                         .collect(Collectors.toList());
-                holograms.add(new InteractionHologram(id, hologramId, behaviour, matchType, parsedHologram));
+
+                String settings = rs.getString("settings");
+
+                holograms.add(new InteractionHologram(id, hologramId, behaviour, matchType, parsedHologram, settings));
             }
 
             return holograms;
@@ -336,7 +339,7 @@ public class InteractionDAO implements IDAO {
                     List<String> parsedHologram = Arrays.stream(hologramRaw.replace("[", "").replace("]", "").split(","))
                             .map(String::trim).map(s -> s.replaceAll("^\"|\"$", "")).collect(Collectors.toList());
                     hologramsMap.computeIfAbsent(id, k -> new ArrayList<>())
-                            .add(new InteractionHologram(id, rs.getInt("hologram_id"), rs.getString("behaviour"), rs.getString("matchtype"), parsedHologram));
+                            .add(new InteractionHologram(id, rs.getInt("hologram_id"), rs.getString("behaviour"), rs.getString("matchtype"), parsedHologram, rs.getString("settings")));
                 }
             }
 

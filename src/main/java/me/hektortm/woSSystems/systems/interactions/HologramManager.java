@@ -4,10 +4,14 @@ import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityDataTypes;
 import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes;
+import com.github.retrooper.packetevents.util.Quaternion4f;
 import com.github.retrooper.packetevents.util.Vector3d;
+import com.github.retrooper.packetevents.util.Vector3f;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDestroyEntities;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityMetadata;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSpawnEntity;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.ConditionHandler;
@@ -32,7 +36,8 @@ public class HologramManager {
 
     private static final double RENDER_DISTANCE_SQUARED = 16.0 * 16.0;
     private static final double BLOCK_Y_OFFSET = 1.5;
-    private static final double NPC_Y_OFFSET = 2.5;
+    /** Gap above the top of the NPC's bounding box. */
+    private static final double NPC_HEAD_OFFSET = 0.05;
 
     // ── Metadata index constants for Display / TextDisplay entities (MC 1.21.x) ──
     private enum Meta {
@@ -99,10 +104,11 @@ public class HologramManager {
 
     /**
      * Tracks the current state of holograms shown to a player for a given hologram key.
-     * fingerprint — which hologram IDs passed conditions last tick (used to detect changes)
-     * entityIds   — the packet entity IDs currently spawned
+     * structFingerprint  — which hologram IDs are visible; change triggers full destroy+respawn
+     * contentFingerprint — resolved text of all visible lines; change triggers metadata-only update (no flicker)
+     * entityIds          — the packet entity IDs currently spawned
      */
-    private record HologramState(String fingerprint, List<Integer> entityIds) {}
+    private record HologramState(String structFingerprint, String contentFingerprint, List<Integer> entityIds) {}
 
     // player UUID -> (hologramKey -> state)
     private final Map<UUID, Map<String, HologramState>> activeHolograms = new HashMap<>();
@@ -113,11 +119,16 @@ public class HologramManager {
         this.conditionHandler = WoSSystems.getInstance().getConditionHandler();
     }
 
+    /** Overload for block holograms — entity height is not applicable. */
+    public void handleHolograms(Player player, Interaction inter, Location location, boolean npc, InteractionKey key) {
+        handleHolograms(player, inter, location, npc, key, 0);
+    }
+
     /**
      * Called every interaction task tick for each player/location pair.
-     * Shows, hides, or refreshes the hologram depending on proximity and live condition results.
+     * entityHeight — the bounding-box height of the NPC entity (ignored for blocks).
      */
-    public void handleHolograms(Player player, Interaction inter, Location location, boolean npc, InteractionKey key) {
+    public void handleHolograms(Player player, Interaction inter, Location location, boolean npc, InteractionKey key, double entityHeight) {
         List<InteractionHologram> holograms = inter.getHolograms();
         if (holograms == null || holograms.isEmpty()) return;
 
@@ -128,19 +139,26 @@ public class HologramManager {
 
         if (inRange) {
             List<InteractionHologram> visible = resolveVisibleHolograms(player, inter, holograms, key);
-            String fingerprint = buildFingerprint(visible);
-
+            String structFP   = buildStructFingerprint(visible);
+            String contentFP  = buildContentFingerprint(player, visible);
 
             HologramState current = getState(player, hologramKey);
 
             if (current == null) {
-                spawnHolograms(player, inter.getInteractionId(), visible, location, npc, hologramKey, fingerprint);
-            } else if (!current.fingerprint().equals(fingerprint)) {
+                spawnHolograms(player, inter.getInteractionId(), visible, location, npc, entityHeight, hologramKey, structFP, contentFP);
+            } else if (!current.structFingerprint().equals(structFP)) {
+                // Visible hologram set changed — full respawn needed (different settings/structure)
                 destroyEntities(player, current.entityIds());
                 removeState(player, hologramKey);
-                spawnHolograms(player, inter.getInteractionId(), visible, location, npc, hologramKey, fingerprint);
+                spawnHolograms(player, inter.getInteractionId(), visible, location, npc, entityHeight, hologramKey, structFP, contentFP);
+            } else {
+                // Always refresh the text metadata so the entity stays visible on the client
+                // (acts as a heartbeat — no destroy/spawn means no flicker)
+                sendMetadataUpdate(player, current.entityIds().get(0), visible);
+                if (!current.contentFingerprint().equals(contentFP)) {
+                    setState(player, hologramKey, new HologramState(structFP, contentFP, current.entityIds()));
+                }
             }
-            // else: same state — nothing to do
         } else {
             HologramState current = getState(player, hologramKey);
             if (current != null) {
@@ -171,10 +189,9 @@ public class HologramManager {
                 } else {
                     passes = conditionHandler.checkConditions(player, conditionList, key);
                 }
-                if (!passes) {
-                    if (hologram.getBehaviour().equalsIgnoreCase("break")) break;
-                    continue;
-                }
+                // Conditions failed — always skip to the next hologram regardless of behaviour.
+                // behaviour only controls what happens AFTER a hologram is shown (matching particles/actions).
+                if (!passes) continue;
             }
 
             result.add(hologram);
@@ -184,25 +201,34 @@ public class HologramManager {
         return result;
     }
 
-    /**
-     * Builds a compact string that uniquely represents which holograms + lines are currently visible.
-     * Used to detect condition changes without re-spawning unnecessarily.
-     */
-    private String buildFingerprint(List<InteractionHologram> holograms) {
+    /** Which hologram IDs are currently visible. A change here means a full entity respawn is needed. */
+    private String buildStructFingerprint(List<InteractionHologram> holograms) {
+        StringBuilder sb = new StringBuilder();
+        for (InteractionHologram h : holograms) sb.append(h.getHologramID()).append(';');
+        return sb.toString();
+    }
+
+    /** Resolved text content of all visible lines per player. A change here only needs a metadata update. */
+    private String buildContentFingerprint(Player player, List<InteractionHologram> holograms) {
         StringBuilder sb = new StringBuilder();
         for (InteractionHologram h : holograms) {
-            sb.append(h.getHologramID()).append(':').append(h.getHologram()).append(';');
+            for (String line : h.getHologram()) {
+                sb.append(replacePlaceholders(line, player)).append('\n');
+            }
         }
         return sb.toString();
     }
 
     private void spawnHolograms(Player player, String interactionId, List<InteractionHologram> holograms,
-                                 Location location, boolean npc, String hologramKey, String fingerprint) {
+                                 Location location, boolean npc, double entityHeight, String hologramKey, String structFP, String contentFP) {
         if (holograms.isEmpty()) return;
 
-        double yBase = location.getY() + (npc ? NPC_Y_OFFSET : BLOCK_Y_OFFSET);
-        double x = location.getX() + 0.5;
-        double z = location.getZ() + 0.5;
+        // NPCs: Citizens reports a larger bounding box than the visible model, so we use a
+        // fraction of entityHeight to land just above the crown. Tune NPC_HEAD_OFFSET for fine adjustment.
+        // Blocks: fixed offset from the block's Y, centered on the tile.
+        double yBase = npc ? location.getY() + entityHeight * 0.50 + NPC_HEAD_OFFSET : location.getY() + BLOCK_Y_OFFSET;
+        double x = npc ? location.getX() : location.getX() + 0.5;
+        double z = npc ? location.getZ() : location.getZ() + 0.5;
 
         // Collect every line from all visible holograms into one component
         List<Component> lineComponents = new ArrayList<>();
@@ -218,12 +244,19 @@ public class HologramManager {
             combined = combined.append(Component.newline()).append(lineComponents.get(i));
         }
 
+        // Use settings from the first hologram that has a non-null settings JSON
+        String settingsJson = holograms.stream()
+                .map(InteractionHologram::getSettings)
+                .filter(s -> s != null && !s.isBlank())
+                .findFirst()
+                .orElse(null);
+
         int entityId = entityIdCounter.incrementAndGet();
-        sendSpawnTextDisplay(player, entityId, x, yBase, z, combined);
+        sendSpawnTextDisplay(player, entityId, x, yBase, z, combined, settingsJson);
 
         activeHolograms
                 .computeIfAbsent(player.getUniqueId(), k -> new HashMap<>())
-                .put(hologramKey, new HologramState(fingerprint, List.of(entityId)));
+                .put(hologramKey, new HologramState(structFP, contentFP, List.of(entityId)));
     }
 
     /**
@@ -247,10 +280,12 @@ public class HologramManager {
     }
 
     /**
-     * Converts &#RRGGBB hex codes to the §x§R§R§G§G§B§B format that
+     * Converts <#RRGGBB>, &#RRGGBB and #RRGGBB hex codes to the §x§R§R§G§G§B§B format that
      * LegacyComponentSerializer understands, then converts & to §.
      */
     private String parseColors(String text) {
+        // Normalise <#RRGGBB> → &#RRGGBB so the existing parser handles both forms
+        text = text.replaceAll("<#([A-Fa-f0-9]{6})>", "&#$1");
         Matcher matcher = HEX_PATTERN.matcher(text);
         StringBuilder sb = new StringBuilder();
         while (matcher.find()) {
@@ -267,33 +302,176 @@ public class HologramManager {
                 .deserialize(parseColors(replacePlaceholders(text, player)));
     }
 
-    private void sendSpawnTextDisplay(Player player, int entityId, double x, double y, double z, Component component) {
+    /** Parses a settings JSON string into a JsonObject, or returns null if absent/invalid. */
+    private JsonObject parseSettings(String settingsJson) {
+        if (settingsJson == null || settingsJson.isBlank()) return null;
+        try { return JsonParser.parseString(settingsJson).getAsJsonObject(); } catch (Exception ignored) { return null; }
+    }
+
+    /**
+     * Builds the full metadata list for a TextDisplay entity from a text component and optional settings.
+     * Used by both the initial spawn and the live metadata update, so both paths stay in sync.
+     */
+    private List<EntityData<?>> buildDisplayMetadata(Component text, JsonObject settings) {
+        List<EntityData<?>> metadata = new ArrayList<>();
+
+        // Text component
+        metadata.add(new EntityData(Meta.TEXT.index, EntityDataTypes.ADV_COMPONENT, text));
+
+        // Billboard — default: VERTICAL; overridden by settings
+        byte billboard = Billboard.VERTICAL.value();
+        if (settings != null && settings.has("billboard")) {
+            billboard = switch (settings.get("billboard").getAsString()) {
+                case "fixed"      -> Billboard.FIXED.value();
+                case "horizontal" -> Billboard.HORIZONTAL.value();
+                case "center"     -> Billboard.CENTER.value();
+                default           -> Billboard.VERTICAL.value();
+            };
+        }
+        metadata.add(new EntityData(Meta.BILLBOARD.index, EntityDataTypes.BYTE, billboard));
+
+        if (settings != null) {
+            // Style flags: shadow (bit 0), see_through (bit 1), default_background (bit 2), alignment (bits 3-4)
+            byte styleFlags = 0;
+            if (settings.has("shadow") && settings.get("shadow").getAsBoolean())           styleFlags |= 0x01;
+            if (settings.has("see_through") && settings.get("see_through").getAsBoolean()) styleFlags |= 0x02;
+            if (settings.has("default_background") && settings.get("default_background").getAsBoolean()) styleFlags |= 0x04;
+            if (settings.has("alignment")) {
+                byte alignBits = switch (settings.get("alignment").getAsString()) {
+                    case "left"  -> (byte) 1;
+                    case "right" -> (byte) 2;
+                    default      -> (byte) 0; // center
+                };
+                styleFlags |= (byte) (alignBits << 3);
+            }
+            if (styleFlags != 0) {
+                metadata.add(new EntityData(Meta.STYLE_FLAGS.index, EntityDataTypes.BYTE, styleFlags));
+            }
+
+            if (settings.has("line_width")) {
+                metadata.add(new EntityData(Meta.LINE_WIDTH.index, EntityDataTypes.INT, settings.get("line_width").getAsInt()));
+            }
+            if (settings.has("background")) {
+                metadata.add(new EntityData(Meta.BACKGROUND.index, EntityDataTypes.INT, settings.get("background").getAsInt()));
+            }
+            if (settings.has("text_opacity")) {
+                metadata.add(new EntityData(Meta.TEXT_OPACITY.index, EntityDataTypes.BYTE, settings.get("text_opacity").getAsByte()));
+            }
+            if (settings.has("shadow_radius")) {
+                metadata.add(new EntityData(Meta.SHADOW_RADIUS.index, EntityDataTypes.FLOAT, settings.get("shadow_radius").getAsFloat()));
+            }
+            if (settings.has("shadow_strength")) {
+                metadata.add(new EntityData(Meta.SHADOW_STRENGTH.index, EntityDataTypes.FLOAT, settings.get("shadow_strength").getAsFloat()));
+            }
+            if (settings.has("width")) {
+                metadata.add(new EntityData(Meta.WIDTH.index, EntityDataTypes.FLOAT, settings.get("width").getAsFloat()));
+            }
+            if (settings.has("height")) {
+                metadata.add(new EntityData(Meta.HEIGHT.index, EntityDataTypes.FLOAT, settings.get("height").getAsFloat()));
+            }
+            if (settings.has("glow_color_override")) {
+                metadata.add(new EntityData(Meta.GLOW_COLOR.index, EntityDataTypes.INT, settings.get("glow_color_override").getAsInt()));
+            }
+            if (settings.has("view_range")) {
+                metadata.add(new EntityData(Meta.VIEW_RANGE.index, EntityDataTypes.FLOAT, settings.get("view_range").getAsFloat()));
+            }
+            if (settings.has("interpolation_duration")) {
+                metadata.add(new EntityData(Meta.INTERPOLATION_DURATION.index, EntityDataTypes.INT, settings.get("interpolation_duration").getAsInt()));
+            }
+            if (settings.has("start_interpolation")) {
+                metadata.add(new EntityData(Meta.INTERPOLATION_DELAY.index, EntityDataTypes.INT, settings.get("start_interpolation").getAsInt()));
+            }
+
+            // Brightness override — skipped intentionally.
+            // PacketEvents encodes OPTIONAL_INT as boolean+VarInt, but MC protocol expects
+            // the compact OptVarInt format (value+1). Sending it corrupts the packet stream
+            // and causes the client to disconnect with a network protocol error.
+
+            if (settings.has("transformation")) {
+                JsonObject transform = settings.getAsJsonObject("transformation");
+                if (transform.has("translation")) {
+                    var arr = transform.getAsJsonArray("translation");
+                    metadata.add(new EntityData(Meta.TRANSLATION.index, EntityDataTypes.VECTOR3F,
+                            new Vector3f(arr.get(0).getAsFloat(), arr.get(1).getAsFloat(), arr.get(2).getAsFloat())));
+                }
+                if (transform.has("scale")) {
+                    var arr = transform.getAsJsonArray("scale");
+                    metadata.add(new EntityData(Meta.SCALE.index, EntityDataTypes.VECTOR3F,
+                            new Vector3f(arr.get(0).getAsFloat(), arr.get(1).getAsFloat(), arr.get(2).getAsFloat())));
+                }
+                if (transform.has("left_rotation")) {
+                    var arr = transform.getAsJsonArray("left_rotation");
+                    metadata.add(new EntityData(Meta.LEFT_ROTATION.index, EntityDataTypes.QUATERNION,
+                            new Quaternion4f(arr.get(0).getAsFloat(), arr.get(1).getAsFloat(), arr.get(2).getAsFloat(), arr.get(3).getAsFloat())));
+                }
+                if (transform.has("right_rotation")) {
+                    var arr = transform.getAsJsonArray("right_rotation");
+                    metadata.add(new EntityData(Meta.RIGHT_ROTATION.index, EntityDataTypes.QUATERNION,
+                            new Quaternion4f(arr.get(0).getAsFloat(), arr.get(1).getAsFloat(), arr.get(2).getAsFloat(), arr.get(3).getAsFloat())));
+                }
+            }
+        }
+
+        return metadata;
+    }
+
+    private void sendSpawnTextDisplay(Player player, int entityId, double x, double y, double z, Component component, String settingsJson) {
         var api = PacketEvents.getAPI();
         if (api == null) return;
-
         var user = api.getPlayerManager().getUser(player);
         if (user == null) return;
 
         try {
-            WrapperPlayServerSpawnEntity spawnPacket = new WrapperPlayServerSpawnEntity(
-                    entityId,
-                    Optional.of(UUID.randomUUID()),
-                    EntityTypes.TEXT_DISPLAY,
-                    new Vector3d(x, y, z),
-                    0f, 0f, 0f,
-                    0,
-                    Optional.empty()
-            );
-            user.sendPacket(spawnPacket);
-
-            List<EntityData<?>> metadata = new ArrayList<>();
-            metadata.add(new EntityData(Meta.TEXT.index, EntityDataTypes.ADV_COMPONENT, component));
-            metadata.add(new EntityData(Meta.BILLBOARD.index, EntityDataTypes.BYTE, Billboard.VERTICAL.value()));
-
+            user.sendPacket(new WrapperPlayServerSpawnEntity(
+                    entityId, Optional.of(UUID.randomUUID()), EntityTypes.TEXT_DISPLAY,
+                    new Vector3d(x, y, z), 0f, 0f, 0f, 0, Optional.empty()
+            ));
+            List<EntityData<?>> metadata = buildDisplayMetadata(component, parseSettings(settingsJson));
             user.sendPacket(new WrapperPlayServerEntityMetadata(entityId, clientVersion -> metadata));
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Sends a full metadata update (text + all settings) to an existing TextDisplay entity.
+     * The entity is not removed or re-spawned, so there is no flicker.
+     */
+    private void sendMetadataUpdate(Player player, int entityId, List<InteractionHologram> holograms) {
+        List<Component> lineComponents = new ArrayList<>();
+        for (InteractionHologram hologram : holograms) {
+            for (String line : hologram.getHologram()) {
+                lineComponents.add(buildLineComponent(line, player));
+            }
+        }
+        if (lineComponents.isEmpty()) return;
+
+        Component combined = lineComponents.get(0);
+        for (int i = 1; i < lineComponents.size(); i++) {
+            combined = combined.append(Component.newline()).append(lineComponents.get(i));
+        }
+
+        String settingsJson = holograms.stream()
+                .map(InteractionHologram::getSettings)
+                .filter(s -> s != null && !s.isBlank())
+                .findFirst()
+                .orElse(null);
+
+        var api = PacketEvents.getAPI();
+        if (api == null) return;
+        var user = api.getPlayerManager().getUser(player);
+        if (user == null) return;
+
+        try {
+            List<EntityData<?>> metadata = buildDisplayMetadata(combined, parseSettings(settingsJson));
+            user.sendPacket(new WrapperPlayServerEntityMetadata(entityId, clientVersion -> metadata));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setState(Player player, String hologramKey, HologramState state) {
+        activeHolograms.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>()).put(hologramKey, state);
     }
 
     /** Remove ALL holograms for a player (e.g. on disconnect or plugin disable). */

@@ -68,12 +68,12 @@ public class InteractionManager {
                             Location location = npc1.getEntity().getLocation();
                             InteractionKey key = new InteractionKey("npc:" + id);
                             particleHandler.spawnParticlesForPlayer(player, inter, location, true, key);
-                            hologramManager.handleHolograms(player, inter, location, true, key);
+                            hologramManager.handleHolograms(player, inter, location, true, key, npc1.getEntity().getHeight());
                         }
                     }
                 }
             }
-        }.runTaskTimer(plugin, 0L, 50L);
+        }.runTaskTimer(plugin, 0L, 20L);
     }
 
     public void triggerInteraction(String interactionId, Player player, InteractionKey key) {
