@@ -12,79 +12,42 @@ public class GUISlot {
     @Column(name = "gui_id", primaryKey = true)
     private final String guiId;
 
-    @Column(primaryKey = true)
-    private final int slot;
+    @Column(name = "page_id", primaryKey = true)
+    private final int page_id;
 
-    @Column(name = "slot_id")
+    @Column(name = "slot_id", primaryKey = true)
     private final int slot_id;
 
-    @Column(name = "matchtype")
-    private final String matchType;
+    @Column(name = "active")
+    private final boolean active;
 
-    @Column(name = "material", type = "VARCHAR(255)")
-    private final Material material;
+    private final List<GUISlotConfig> configs;
 
-    @Column(name = "display_name")
-    private final String displayName;
-
-    @Column(type = "TEXT")
-    private final List<String> lore;
-
-    @Column(type = "TEXT")
-    private final String model;
-
-    @Column(type = "VARCHAR(7)")
-    private final String color;
-
-    @Column(notNull = true)
-    private final int amount;
-
-    @Column
-    private final String tooltip;
-
-    @Column
-    private final boolean enchanted;
-
-    @Column(name = "right_click", type = "TEXT")
-    private final List<String> right_actions;
-
-    @Column(name = "left_click", type = "TEXT")
-    private final List<String> left_actions;
-
-    @Column(notNull = true, defaultValue = "false")
-    private final boolean visible;
-
-    public GUISlot(String guiId, int slot, int slot_id, String matchType, Material material, String displayName, List<String> lore, String model, String color, int amount, String tooltip, boolean enchanted, List<String> rightActions, List<String> leftActions, boolean visible) {
+    public GUISlot(String guiId, int pageId, int slotId, boolean active, List<GUISlotConfig> configs) {
         this.guiId = guiId;
-        this.slot = slot;
-        this.slot_id = slot_id;
-        this.matchType = matchType;
-        this.material = material;
-        this.displayName = displayName;
-        this.lore = lore;
-        this.model = model;
-        this.color = color;
-        this.amount = amount;
-        this.tooltip = tooltip;
-        this.enchanted = enchanted;
-        right_actions = rightActions;
-        left_actions = leftActions;
-        this.visible = visible;
+        page_id = pageId;
+        slot_id = slotId;
+        this.active = active;
+        this.configs = configs;
     }
 
-    public String getGuiId()              { return guiId;        }
-    public int getSlot()                  { return slot;         }
-    public int getSlotId()                { return slot_id;      }
-    public String getMatchType()          { return matchType;    }
-    public Material getMaterial()         { return material;     }
-    public String getDisplayName()        { return displayName;  }
-    public List<String> getLore()         { return lore;         }
-    public String getModel()              { return model;        }
-    public String getColor()              { return color;        }
-    public int getAmount()                { return amount;       }
-    public String getTooltip()            { return tooltip;      }
-    public boolean isEnchanted()          { return enchanted;    }
-    public List<String> getRight_actions(){ return right_actions;}
-    public List<String> getLeft_actions() { return left_actions; }
-    public boolean isVisible()            { return visible;      }
+    public String getGuiId() {
+        return guiId;
+    }
+
+    public int getPage_id() {
+        return page_id;
+    }
+
+    public int getSlot_id() {
+        return slot_id;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public List<GUISlotConfig> getConfigs() {
+        return configs;
+    }
 }

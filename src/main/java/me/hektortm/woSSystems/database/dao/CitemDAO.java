@@ -1,28 +1,14 @@
 package me.hektortm.woSSystems.database.dao;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.systems.citems.CitemBuilder;
-import me.hektortm.woSSystems.utils.Keys;
 import me.hektortm.woSSystems.utils.Parsers;
 import me.hektortm.woSSystems.utils.dataclasses.Citem;
-import me.hektortm.woSSystems.utils.dataclasses.RecipeRecord;
 import me.hektortm.wosCore.database.IDAO;
 import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.util.io.BukkitObjectInputStream;
-import org.bukkit.util.io.BukkitObjectOutputStream;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,7 +41,7 @@ public class CitemDAO implements IDAO {
                     "creative_placed BOOLEAN NOT NULL DEFAULT FALSE," +
                     "PRIMARY KEY (citem_id))");
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:adc901cc", "Failed to intiialize CitemDAO table: ", e);
+            WoSSystems.discordLog(Level.SEVERE, "CID:adc901cc", "Failed to initialize CitemDAO table: ", e);
         } finally {
             plugin.getLogger().info(logName + ": CitemDAO table initialized successfully.");
         }

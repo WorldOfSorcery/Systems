@@ -161,7 +161,7 @@ public class ChannelDAO implements IDAO {
     public void removeRecipient(String channelName, UUID playerUUID) {
         Player p = Bukkit.getPlayer(playerUUID);
         if (!isInChannel(playerUUID, channelName)) {
-            Utils.info(p, "channel", "error.not-in-channel");
+            if (p != null) Utils.info(p, "channel", "error.not-in-channel");
             return;
         }
         String sql = "DELETE FROM playerdata_channels WHERE uuid = ? AND channel_name = ?";
@@ -169,7 +169,7 @@ public class ChannelDAO implements IDAO {
             pstmt.setString(1, playerUUID.toString());
             pstmt.setString(2, channelName);
             pstmt.executeUpdate();
-            Utils.successMsg1Value(p, "channel", "left", "%channel%", getChannelColor(channelName) + channelName);
+            if (p != null) Utils.successMsg1Value(p, "channel", "left", "%channel%", getChannelColor(channelName) + channelName);
             if (isFocusedChannel(playerUUID, channelName)) {
                 for (Channel channel : getAllChannels()) {
                     if (channel.isDefaultChannel()) {
@@ -198,10 +198,10 @@ public class ChannelDAO implements IDAO {
         Player p = Bukkit.getPlayer(playerUUID);
         if(!isInChannel(playerUUID, channelName)) {
             String permission = getChannelPermission(channelName);
-            if (permission != null && !p.hasPermission(permission)) {
+            if (permission != null && p != null && !p.hasPermission(permission)) {
                 Utils.error(p, "channel", "error.no-perms");
                 return;
-            } else if (permission == null || p.hasPermission(permission)) {
+            } else if (permission == null || (p != null && p.hasPermission(permission))) {
                 addRecipient(channelName, playerUUID);
             }
         }
@@ -211,7 +211,7 @@ public class ChannelDAO implements IDAO {
             pstmt.setString(1, playerUUID.toString());
             pstmt.setString(2, channelName);
             pstmt.executeUpdate();
-            Utils.success(p, "channel", "focused", "%channel%", getChannelColor(channelName) + channelName);
+            if (p != null) Utils.success(p, "channel", "focused", "%channel%", getChannelColor(channelName) + channelName);
         } catch (SQLException e) {
             WoSSystems.discordLog(Level.SEVERE, "26fa1ea1", "Failed to set focused Channel: ", e);
         }

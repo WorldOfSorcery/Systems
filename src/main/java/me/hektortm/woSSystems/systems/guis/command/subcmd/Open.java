@@ -34,10 +34,12 @@ public class Open extends SubCommand {
 
 
         Player p = Bukkit.getPlayer(args[0]);
-        String id = args[1];
+        String[] t = args[1].split(":");
+        String id = t[0];
+        int page = t[1] != null ? Integer.parseInt(t[1]) : 0;
 
         if(hub.getGuiDAO().getGUIbyId(id) != null) {
-            manager.openGUI(p, id);
+            manager.openGUI(p, id, page);
             sender.sendMessage("Opening GUI '"+id+"' for "+p.getName());
         } else {
             sender.sendMessage("GUI does not exist.");

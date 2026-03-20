@@ -38,7 +38,12 @@ public class CraftingManager {
         registeredKeys.put(r.id(), key);
 
         // ----- Build result -----
-        ItemStack result = hub.getCitemDAO().getCitem(r.resultCItemId()).clone();
+        ItemStack result = hub.getCitemDAO().getCitem(r.resultCItemId());
+        if (result == null) {
+            plugin.getLogger().warning("[CraftingManager] Recipe '" + r.id() + "' references unknown citem '" + r.resultCItemId() + "' — skipping.");
+            return;
+        }
+        result = result.clone();
         result.setAmount(r.resultAmount());
 
         if (r.shaped()) {
@@ -64,8 +69,12 @@ public class CraftingManager {
 
         for (var entry : r.ingredients().entrySet()) {
             char symbol = entry.getKey();
-            ItemStack ing = hub.getCitemDAO().getCitem(entry.getValue().citemId()).clone();
-            shaped.setIngredient(symbol, new RecipeChoice.ExactChoice(ing));
+            ItemStack ing = hub.getCitemDAO().getCitem(entry.getValue().citemId());
+            if (ing == null) {
+                plugin.getLogger().warning("[CraftingManager] Recipe '" + r.id() + "' ingredient '" + entry.getValue().citemId() + "' not found — skipping recipe.");
+                return;
+            }
+            shaped.setIngredient(symbol, new RecipeChoice.ExactChoice(ing.clone()));
         }
 
         Bukkit.addRecipe(shaped);
@@ -75,8 +84,12 @@ public class CraftingManager {
         ShapelessRecipe shapeless = new ShapelessRecipe(key, result);
 
         for (var entry : r.ingredients().entrySet()) {
-            ItemStack ing = hub.getCitemDAO().getCitem(entry.getValue().citemId()).clone();
-            shapeless.addIngredient(new RecipeChoice.ExactChoice(ing));
+            ItemStack ing = hub.getCitemDAO().getCitem(entry.getValue().citemId());
+            if (ing == null) {
+                plugin.getLogger().warning("[CraftingManager] Recipe '" + r.id() + "' ingredient '" + entry.getValue().citemId() + "' not found — skipping recipe.");
+                return;
+            }
+            shapeless.addIngredient(new RecipeChoice.ExactChoice(ing.clone()));
         }
 
         Bukkit.addRecipe(shapeless);
