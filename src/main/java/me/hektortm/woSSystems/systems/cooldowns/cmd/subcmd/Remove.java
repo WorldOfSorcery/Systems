@@ -40,7 +40,7 @@ public class Remove extends SubCommand {
         OfflinePlayer player = Bukkit.getOfflinePlayer(args[0]);
         String cooldownId = args[1];
 
-        if (hub.getCooldownDAO().getCooldownByID(cooldownId) == null) {
+        if (hub.getCooldownDAO().getCooldown(cooldownId) == null) {
             Utils.error(sender, "cooldowns", "error.exists");
             return;
         }

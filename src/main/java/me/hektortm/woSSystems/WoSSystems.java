@@ -85,6 +85,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
@@ -99,6 +100,7 @@ public final class WoSSystems extends JavaPlugin {
     private static WoSSystems instance;
     private PacketEventsAPI packetEventsApi;
     private DAOHub daoHub;
+    private WebhookServer webhookServer;
     private WoSCore core;
     private static LangManager lang;
     private LogManager log;
@@ -186,6 +188,9 @@ public final class WoSSystems extends JavaPlugin {
             System.out.println("Failed to connect to Database"+ e.getMessage());
             Bukkit.getPluginManager().disablePlugin(this);
         }
+
+
+
      //   hologramHandler = new HologramHandler(daoHub);
         bossBarManager = new BossBarManager();
         regionBossBarManager = new RegionBossBar();
@@ -272,6 +277,13 @@ public final class WoSSystems extends JavaPlugin {
         craftingManager.loadAll();
         dailyReset.startResetTimer();
 
+        try {
+            webhookServer = new WebhookServer(this, daoHub);
+        } catch (IOException e) {
+            getLogger().severe("[Webhook] Failed to start: " + e.getMessage());
+        }
+        webhookServer.start();
+
         PermissionRegistry.registerAll(this, PermissionDefault.OP);
     }
 
@@ -285,6 +297,7 @@ public final class WoSSystems extends JavaPlugin {
         }
         timeManager.saveGameState();
 //        PacketEvents.getAPI().terminate();
+        if (webhookServer != null) webhookServer.stop();
         PermissionRegistry.unregisterAll();
         AsyncWriteQueue.shutdown(); // flush all pending DB writes before the JVM exits
     }

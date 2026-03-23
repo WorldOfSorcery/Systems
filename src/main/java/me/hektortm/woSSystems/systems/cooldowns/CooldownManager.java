@@ -75,7 +75,7 @@ public class CooldownManager extends BukkitRunnable {
     private void onCooldownExpire(OfflinePlayer player, String cooldownId) {
         // Customize these actions based on your cooldown types
         plugin.writeLog("CooldownManager", Level.INFO, "Cooldown expired for player: " + player.getName() + " with ID: " + cooldownId);
-        Cooldown cd = hub.getCooldownDAO().getCooldownByID(cooldownId);
+        Cooldown cd = hub.getCooldownDAO().getCooldown(cooldownId);
         String endInt = cd.getEnd_interaction();
 
         if (endInt != null) {

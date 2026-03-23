@@ -2,7 +2,6 @@ package me.hektortm.woSSystems.utils;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.utils.dataclasses.Interaction;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionKey;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
@@ -80,7 +79,7 @@ public class ActionHandler {
                     plugin.writeLog("InteractionManager", Level.WARNING, "giving local cooldown...");
                     if (key != null) {
                         hub.getCooldownDAO().giveLocalCooldown(player, parts[3], key);
-                        String interId = hub.getCooldownDAO().getCooldownByID(parts[3]).getStart_interaction();
+                        String interId = hub.getCooldownDAO().getCooldown(parts[3]).getStart_interaction();
                         if (interId != null) {
                             plugin.getInteractionManager().triggerInteraction(interId, player, null);
                         }

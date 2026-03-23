@@ -3,25 +3,28 @@ package me.hektortm.woSSystems.database.dao;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.SchemaManager;
+import me.hektortm.woSSystems.utils.dataclasses.Constant;
 import me.hektortm.woSSystems.utils.dataclasses.Cooldown;
-import me.hektortm.woSSystems.utils.dataclasses.InteractionAction;
 import me.hektortm.woSSystems.utils.dataclasses.InteractionKey;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
 import me.hektortm.wosCore.discord.DiscordLogger;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 public class CooldownDAO implements IDAO {
     private final DatabaseManager db;
     private final DAOHub hub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "CooldownDAO";
+
+    private final Map<String, Cooldown> cache = new ConcurrentHashMap<>();
 
     public CooldownDAO(DatabaseManager db, DAOHub hub) {
         this.db = db;
@@ -32,7 +35,6 @@ public class CooldownDAO implements IDAO {
     public void initializeTable() throws SQLException {
         SchemaManager.syncTable(db, Cooldown.class);
 
-        // Player cooldown tables are relational, not entity-backed — keep manual
         try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute("CREATE TABLE IF NOT EXISTS playerdata_cooldowns(" +
                     "uuid VARCHAR(255)," +
@@ -44,26 +46,61 @@ public class CooldownDAO implements IDAO {
                     "start_time TIMESTAMP," +
                     "interaction_key VARCHAR(255))");
         }
+
+        org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, this::preloadAll);
     }
 
-
-
-    public Cooldown getCooldownByID(String id) {
-        String sql = "SELECT * FROM cooldowns WHERE id = ?";
+    public void preloadAll() {
+        String sql = "SELECT * FROM cooldowns";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            int count = 0;
+            while (rs.next()) {
+                String id = rs.getString("id");
+                long duration = rs.getLong("duration");
+                String startInteraction = rs.getString("start_interaction");
+                String endInteraction = rs.getString("end_interaction");
+                try {
+                    cache.put(id, new Cooldown(id, duration, startInteraction, endInteraction));
+                    count++;
+                } catch (Exception e) {
+                    plugin.getLogger().warning(logName + ": failed to preload '" + id + "': " + e.getMessage());
+                }
+            }
+            plugin.getLogger().info(logName + ": preloaded " + count + " cooldown(s) into cache.");
+        } catch (SQLException e) {
+            WoSSystems.discordLog(Level.SEVERE, "COOD:preload", "Failed to preload cooldowns into cache: ", e);
+        }
+    }
+
+    public void reloadFromDB(String id, Player p) {
+        String sql = "SELECT * FROM cooldowns WHERE id = ?";
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, id);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                // Duration is now in seconds
-                return new Cooldown(id, rs.getLong("duration"), rs.getString("start_interaction"), rs.getString("end_interaction"));
+                long duration = rs.getLong("duration");
+                String startInteraction = rs.getString("start_interaction");
+                String endInteraction = rs.getString("end_interaction");
+
+                cache.put(id, new Cooldown(id, duration, startInteraction, endInteraction));
+                plugin.getLogger().info(logName + ": reloaded '" + id + "' from DB.");
+                p.sendMessage(plugin.getLangManager().getMessage("general", "prefix") + "§aUpdated Cooldown: §e"+id);
+            } else {
+                // Deleted on the website → evict
+                cache.remove(id);
+                plugin.getLogger().info(logName + ": evicted '" + id + "' (not found in DB).");
+                p.sendMessage(plugin.getLangManager().getMessage("general", "prefix") + "§cDeleted Constant: §e"+id);
             }
-            return null;
         } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "9a771b92", "Failed to fetch all Cooldowns: ", e
-            ));
-            return null;
+            WoSSystems.discordLog(Level.SEVERE, "COOD:reload", "Failed to reload constant from DB: ", e);
         }
+    }
+
+
+    public Cooldown getCooldown(String id) {
+        return cache.get(id);
     }
 
     public void giveCooldown(OfflinePlayer p, String id) {
@@ -279,29 +316,5 @@ public class CooldownDAO implements IDAO {
             }
             return false;
         }
-    }
-
-    public Map<String, Cooldown> getAllCooldowns() {
-        Map<String, Cooldown> cooldowns = new HashMap<>();
-        String sql = "SELECT * FROM cooldowns";
-
-        try (Connection conn = db.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
-            while (rs.next()) {
-                String id = rs.getString("id");
-                long duration = rs.getLong("duration");
-                String startInteraction = rs.getString("start_interaction");
-                String endInteraction = rs.getString("end_interaction");
-
-                cooldowns.put(id, new Cooldown(id, duration, startInteraction, endInteraction));
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "02ac3572", "Failed to fetch all Cooldowns: ", e
-            ));
-        }
-        return cooldowns;
     }
 }

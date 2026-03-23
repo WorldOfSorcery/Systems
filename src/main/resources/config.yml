@@ -1,0 +1,3 @@
+webhook:
+  port: 8080
+  secret: "replace-with-a-strong-random-secret"

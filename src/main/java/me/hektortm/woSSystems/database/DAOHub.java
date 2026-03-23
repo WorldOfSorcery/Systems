@@ -1,19 +1,22 @@
 package me.hektortm.woSSystems.database;
 
+import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.dao.*;
 import me.hektortm.woSSystems.database.links.FriendLink;
 import me.hektortm.wosCore.database.DatabaseManager;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 import java.sql.SQLException;
 import java.util.UUID;
 
 public class DAOHub {
+    private final WoSSystems plugin = WoSSystems.getInstance();
+
     private final EconomyDAO economyDAO;
     private final UnlockableDAO unlockableDAO;
     private final StatsDAO statsDAO;
-
-    private final CitemDAO citemDAO; // This is a new DAO for Citems, if you want to use it instead of the old one
-
+    private final CitemDAO citemDAO;
     private final ChannelDAO channelDAO;
     private final NicknameDAO nicknameDAO;
     private final ProfileDAO profileDAO;
@@ -139,5 +142,29 @@ public class DAOHub {
     public void evictPlayerData(UUID uuid) {
         statsDAO.evictPlayer(uuid);
         economyDAO.evictPlayer(uuid);
+    }
+
+    public void handleWebhookInvalidation(String type, String id, UUID editorUUID) {
+        plugin.getLogger().info("[Webhook] " + editorUUID + " edited " + type + ":" + id);
+        Player p = Bukkit.getPlayer(editorUUID);
+        switch (type) {
+            case "channels"       -> channelDAO.reloadFromDB(id);
+            case "citems"         -> citemDAO.reloadFromDB(id, p);
+            case "commands" -> commandsDAO.reloadFromDB(id);
+            case "constants"      -> constantDAO.reloadFromDB(id, p);
+            case "cooldowns" -> cooldownDAO.reloadFromDB(id, p);
+            case "cosmetics"     -> cosmeticsDAO.reloadFromDB(id, p);
+            case "dialogs" -> dialogDAO.reloadFromDB(id);
+            case "currencies"         -> economyDAO.reloadFromDB(id);
+            case "fishing" -> fishingDAO.reloadFromDB(id);
+            case "guis"         -> guiDAO.reloadFromDB(id);
+            case "interactions" -> interactionDAO.reloadFromDB(id);
+            case "loottables"         -> loottablesDAO.reloadFromDB(id);
+            case "stats" -> statsDAO.reloadFromDB(id);
+            case "timeevents"         -> timeDAO.reloadFromDB(id);
+            case "unlockables" -> unlockableDAO.reloadFromDB(id);
+
+            default -> plugin.getLogger().warning("[Webhook] Unknown type: " + type);
+        }
     }
 }

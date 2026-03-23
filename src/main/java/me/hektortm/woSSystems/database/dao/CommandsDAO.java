@@ -20,6 +20,7 @@ public class CommandsDAO implements IDAO {
     private DatabaseManager db = plugin.getCore().getDatabaseManager();
     private final DAOHub daoHub;
 
+
     public CommandsDAO(DAOHub daoHub) {
         this.daoHub = daoHub;
     }

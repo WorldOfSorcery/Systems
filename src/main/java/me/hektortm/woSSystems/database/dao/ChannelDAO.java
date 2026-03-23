@@ -9,17 +9,18 @@ import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public class ChannelDAO implements IDAO {
     private final DatabaseManager db;
     private final DAOHub daoHub;
+
+    private final Map<String, Channel> cache = new ConcurrentHashMap<>();
 
     public ChannelDAO(DatabaseManager db, DAOHub daoHub) {
         this.db = db;
@@ -39,46 +40,6 @@ public class ChannelDAO implements IDAO {
                     PRIMARY KEY (uuid, channel_name)
                 )
             """);
-        }
-    }
-
-    public void insertChannel(Channel channel) {
-        String sql = "INSERT INTO channels(name, short_name, color, format, default_channel, autojoin, forcejoin, hidden, broadcastable, permission, radius) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, channel.getName());
-            pstmt.setString(2, channel.getShortName());
-            pstmt.setString(3, channel.getColor());
-            pstmt.setString(4, channel.getFormat());
-            pstmt.setBoolean(5, channel.isDefaultChannel());
-            pstmt.setBoolean(6, channel.isAutoJoin());
-            pstmt.setBoolean(7, channel.isForceJoin());
-            pstmt.setBoolean(8, channel.isHidden());
-            pstmt.setBoolean(9, channel.isBroadcastable());
-            pstmt.setString(10, channel.getPermission());
-            pstmt.setInt(11, channel.getRadius());
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CHD:b0b86e0d", "Failed to insert Channel: ", e);
-        }
-    }
-
-    public void updateChannel(Channel channel) {
-        String sql = "UPDATE channels SET short_name = ?, color = ?, format = ?, default_channel = ?, autojoin = ?, forcejoin = ?, hidden = ?, permission = ?, broadcastable = ?, radius = ? WHERE name = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, channel.getShortName());
-            pstmt.setString(2, channel.getColor());
-            pstmt.setString(3, channel.getFormat());
-            pstmt.setBoolean(4, channel.isDefaultChannel());
-            pstmt.setBoolean(5, channel.isAutoJoin());
-            pstmt.setBoolean(6, channel.isForceJoin());
-            pstmt.setBoolean(7, channel.isHidden());
-            pstmt.setString(8, channel.getPermission());
-            pstmt.setBoolean(9, channel.isBroadcastable());
-            pstmt.setInt(10, channel.getRadius());
-            pstmt.setString(11, channel.getName());
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CHD:e4380afc", "Failed to update Channel: ", e);
         }
     }
 

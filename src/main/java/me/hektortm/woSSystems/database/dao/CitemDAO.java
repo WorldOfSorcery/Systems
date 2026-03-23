@@ -8,6 +8,7 @@ import me.hektortm.woSSystems.utils.Parsers;
 import me.hektortm.woSSystems.utils.dataclasses.Citem;
 import me.hektortm.wosCore.database.IDAO;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import java.sql.*;
 import java.util.*;
@@ -50,6 +51,28 @@ public class CitemDAO implements IDAO {
         org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, this::preloadAll);
     }
 
+    public void reloadFromDB(String id, Player p) {
+        String sql = "SELECT id, data FROM citems WHERE id = ?";
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                ItemStack built = CitemBuilder.build(id, rs.getString("data"));
+                cache.put(id, built);
+                plugin.getLogger().info(logName + ": reloaded '" + id + "' from DB.");
+                p.sendMessage(plugin.getLangManager().getMessage("general", "prefix") + "§aUpdated Constant: §e"+id);
+            } else {
+                // Deleted on the website → evict
+                cache.remove(id);
+                plugin.getLogger().info(logName + ": evicted '" + id + "' (not found in DB).");
+                p.sendMessage(plugin.getLangManager().getMessage("general", "prefix") + "§cDeleted Constant: §e"+id);
+            }
+        } catch (SQLException e) {
+            WoSSystems.discordLog(Level.SEVERE, "CID:reload", "Failed to reload item from DB: ", e);
+        }
+    }
+
     public void preloadAll() {
         String sql = "SELECT id, data FROM citems";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -70,11 +93,6 @@ public class CitemDAO implements IDAO {
         }
     }
 
-    public List<String> getCitemIds() {
-        return new ArrayList<>(cache.keySet());
-    }
-
-
     /**
      * Returns a clone of the cached item. Never touches the database after startup.
      * Returns null if the item doesn't exist.
@@ -87,8 +105,6 @@ public class CitemDAO implements IDAO {
     public boolean citemExists(String id) {
         return cache.containsKey(id);
     }
-
-
 
     public void createItemDisplay(String id, UUID ownerUUID, Location blockLocation, Location displayLocation, boolean isCreative) {
         String bLoc = Parsers.locationToString(blockLocation);

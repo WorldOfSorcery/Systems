@@ -4,6 +4,7 @@ import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.utils.CosmeticType;
+import me.hektortm.woSSystems.utils.dataclasses.Cooldown;
 import me.hektortm.woSSystems.utils.dataclasses.Cosmetic;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public class CosmeticsDAO implements IDAO {
@@ -25,6 +27,8 @@ public class CosmeticsDAO implements IDAO {
     private final DAOHub daoHub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "CosmeticsDAO";
+
+    private final Map<String, Cosmetic> cache = new ConcurrentHashMap<>();
 
     public CosmeticsDAO(DatabaseManager db, DAOHub daoHub) throws SQLException {
         this.db = db;
@@ -45,6 +49,58 @@ public class CosmeticsDAO implements IDAO {
                     PRIMARY KEY (uuid, cosmetic_id)
                 )
             """);
+        }
+
+        org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, this::preloadAll);
+    }
+
+    public void preloadAll() {
+        String sql = "SELECT * FROM cosmetics";
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            int count = 0;
+            while (rs.next()) {
+                String id = rs.getString("id");
+                String type = rs.getString("type");
+                String display = rs.getString("display");
+                String description = rs.getString("description");
+                String permission = rs.getString("permission");
+                try {
+                    cache.put(id, new Cosmetic(id, type, display, description, permission));
+                    count++;
+                } catch (Exception e) {
+                    plugin.getLogger().warning(logName + ": failed to preload '" + id + "': " + e.getMessage());
+                }
+            }
+            plugin.getLogger().info(logName + ": preloaded " + count + " cooldown(s) into cache.");
+        } catch (SQLException e) {
+            WoSSystems.discordLog(Level.SEVERE, "COSD:preload", "Failed to preload cooldowns into cache: ", e);
+        }
+    }
+
+    public void reloadFromDB(String id, Player p) {
+        String sql = "SELECT * FROM cooldowns WHERE id = ?";
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String type = rs.getString("type");
+                String display = rs.getString("display");
+                String description = rs.getString("description");
+                String permission = rs.getString("permission");
+
+                cache.put(id, new Cosmetic(id, type, display, description, permission));
+                plugin.getLogger().info(logName + ": reloaded '" + id + "' from DB.");
+                p.sendMessage(plugin.getLangManager().getMessage("general", "prefix") + "§aUpdated Cosmetic: §e"+id);
+            } else {
+                // Deleted on the website → evict
+                cache.remove(id);
+                plugin.getLogger().info(logName + ": evicted '" + id + "' (not found in DB).");
+                p.sendMessage(plugin.getLangManager().getMessage("general", "prefix") + "§cDeleted Cosmetic: §e"+id);
+            }
+        } catch (SQLException e) {
+            WoSSystems.discordLog(Level.SEVERE, "COSD:reload", "Failed to reload constant from DB: ", e);
         }
     }
 

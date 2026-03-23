@@ -26,7 +26,7 @@ public class StatsManager {
         try {
             hub.getStatsDAO().modifyPlayerStat(uuid, id, amount, operation);
         } catch (Exception e) {
-            plugin.writeLog(logName, Level.SEVERE, "Error modifying stat: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Error modifying stat: " + e);
         }
     }
 
@@ -34,7 +34,7 @@ public class StatsManager {
         try {
             hub.getStatsDAO().modifyGlobalStatValue(id, amount, operation);
         } catch (Exception e) {
-            plugin.writeLog(logName, Level.SEVERE, "Error modifying global stat: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Error modifying global stat: " + e);
         }
     }
 
@@ -50,7 +50,7 @@ public class StatsManager {
         try {
             return hub.getStatsDAO().isStatLimitReached(uuid, id);
         } catch (Exception e) {
-            plugin.writeLog(logName, Level.SEVERE, "Error checking player stat limit: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Error checking player stat limit: " + e);
             return false;
         }
     }
@@ -59,7 +59,7 @@ public class StatsManager {
         try {
             return hub.getStatsDAO().isGlobalStatLimitReached(id);
         } catch (Exception e) {
-            plugin.writeLog(logName, Level.SEVERE, "Error checking global stat limit: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Error checking global stat limit: " + e);
             return false;
         }
     }
@@ -68,7 +68,7 @@ public class StatsManager {
         try {
             return hub.getStatsDAO().getPlayerStatValue(playerUUID, statId);
         } catch (Exception e) {
-            plugin.writeLog(logName, Level.SEVERE, "Error fetching player stat value: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Error fetching player stat value: " + e);
             return 0;
         }
     }
@@ -77,7 +77,7 @@ public class StatsManager {
         try {
             return hub.getStatsDAO().getGlobalStatValue(id);
         } catch (Exception e) {
-            plugin.writeLog(logName, Level.SEVERE, "Error fetching global stat value: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Error fetching global stat value: " + e);
             return 0;
         }
     }
@@ -87,7 +87,7 @@ public class StatsManager {
             Stat stat = getStats().get(statId);
             return stat != null ? stat.getMax() : 0;
         } catch (Exception e) {
-            plugin.writeLog(logName, Level.SEVERE, "Error fetching stat max: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Error fetching stat max: " + e);
             return 0;
         }
     }
@@ -103,7 +103,7 @@ public class StatsManager {
             GlobalStat stat = getGlobalStats().get(id);
             return stat != null ? stat.getMax() : 0;
         } catch (Exception e) {
-            plugin.writeLog(logName, Level.SEVERE, "Error fetching global stat max: " + e.getMessage());
+            plugin.writeLog(logName, Level.SEVERE, "Error fetching global stat max: " + e);
             return 0;
         }
     }

@@ -35,6 +35,7 @@ public class DialogDAO implements IDAO {
 
     @Override
     public void initializeTable() throws SQLException {
+        // Schema managed manually — uses external LuxDialogues table structure; not suitable for SchemaManager
         try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute("CREATE TABLE IF NOT EXISTS dialogs(" +
                     "dialog_id VARCHAR(255) PRIMARY KEY," +

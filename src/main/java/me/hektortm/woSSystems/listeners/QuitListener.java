@@ -45,6 +45,7 @@ public class QuitListener implements Listener {
         hub.getUnlockableDAO().removeAllTemps(p.getUniqueId());
         plugin.getInteractionManager().getHologramManager().removeAllHolograms(p);
         hub.evictPlayerData(p.getUniqueId());
+        plugin.getPlayerRegions().remove(p.getUniqueId());
 
 
 

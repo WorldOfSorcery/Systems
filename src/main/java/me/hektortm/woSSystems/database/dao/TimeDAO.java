@@ -54,7 +54,7 @@ public class TimeDAO implements IDAO {
             DiscordLogger.log(new DiscordLog(
                     Level.SEVERE, plugin, "5843eb20", "Failed to get all activities: ", e
             ));
-            return null;
+            return new ArrayList<>();
         }
     }
 

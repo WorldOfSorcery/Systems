@@ -47,31 +47,36 @@ public class InteractionManager {
         new BukkitRunnable() {
             @Override
             public void run() {
-                List<Interaction> interactions = hub.getInteractionDAO().getInteractions();
-                plugin.getLogger().fine("[InteractionManager] Tick — loaded " + interactions.size() + " interaction(s).");
-                for (Interaction inter : interactions) {
-                    for (Location location : inter.getBlockLocations()) {
-                        if (location != null) {
-                            for (Player player : Bukkit.getOnlinePlayers()) {
-                                InteractionKey key = buildKey(location);
-                                particleHandler.spawnParticlesForPlayer(player, inter, location, false, key);
-                                hologramManager.handleHolograms(player, inter, location, false, key);
+                // Load interaction data off the main thread, then process visuals on main thread
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                    List<Interaction> interactions = hub.getInteractionDAO().getInteractions();
+                    plugin.getLogger().fine("[InteractionManager] Tick — loaded " + interactions.size() + " interaction(s).");
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        for (Interaction inter : interactions) {
+                            for (Location location : inter.getBlockLocations()) {
+                                if (location != null) {
+                                    for (Player player : Bukkit.getOnlinePlayers()) {
+                                        InteractionKey key = buildKey(location);
+                                        particleHandler.spawnParticlesForPlayer(player, inter, location, false, key);
+                                        hologramManager.handleHolograms(player, inter, location, false, key);
+                                    }
+                                }
+                            }
+                            for (int id : inter.getNpcIDs()) {
+                                for (Player player : Bukkit.getOnlinePlayers()) {
+                                    NPC npc1 = CitizensAPI.getNPCRegistry().getById(id);
+                                    if (npc1 == null || !npc1.isSpawned() || npc1.getEntity() == null) {
+                                        continue;
+                                    }
+                                    Location location = npc1.getEntity().getLocation();
+                                    InteractionKey key = new InteractionKey("npc:" + id);
+                                    particleHandler.spawnParticlesForPlayer(player, inter, location, true, key);
+                                    hologramManager.handleHolograms(player, inter, location, true, key, npc1.getEntity().getHeight());
+                                }
                             }
                         }
-                    }
-                    for (int id : inter.getNpcIDs()) {
-                        for (Player player : Bukkit.getOnlinePlayers()) {
-                            NPC npc1 = CitizensAPI.getNPCRegistry().getById(id);
-                            if (npc1 == null || !npc1.isSpawned() || npc1.getEntity() == null) {
-                                continue;
-                            }
-                            Location location = npc1.getEntity().getLocation();
-                            InteractionKey key = new InteractionKey("npc:" + id);
-                            particleHandler.spawnParticlesForPlayer(player, inter, location, true, key);
-                            hologramManager.handleHolograms(player, inter, location, true, key, npc1.getEntity().getHeight());
-                        }
-                    }
-                }
+                    });
+                });
             }
         }.runTaskTimer(plugin, 0L, 20L);
     }

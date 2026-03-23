@@ -26,6 +26,7 @@ public class ProfileDAO implements IDAO {
 
     @Override
     public void initializeTable() throws SQLException {
+        // Schema managed manually — no annotated dataclass yet (profile data has no definition entity to migrate from)
         // Create profile table
         try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute("""

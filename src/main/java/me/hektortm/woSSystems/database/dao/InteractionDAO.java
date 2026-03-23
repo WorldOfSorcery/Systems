@@ -147,7 +147,7 @@ public class InteractionDAO implements IDAO {
         } catch (SQLException e) {
             plugin.writeLog(logName, Level.SEVERE, "Failed to get holograms: " + e);
         }
-        return null;
+        return new ArrayList<>();
     }
 
 

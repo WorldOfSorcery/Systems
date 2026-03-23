@@ -47,9 +47,11 @@ public class UnlockableDAO implements IDAO {
     public void resetDailyUnlockables() {
         String sql = "DELETE FROM playerdata_unlockables WHERE id LIKE 'daily_%'";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.execute(sql);
+            stmt.executeUpdate();
         } catch (SQLException e) {
-            // TODO discord log
+            DiscordLogger.log(new DiscordLog(
+                    Level.SEVERE, plugin, "UnlockableDAO:reset", "Failed to reset daily unlockables: ", e
+            ));
         }
     }
 
