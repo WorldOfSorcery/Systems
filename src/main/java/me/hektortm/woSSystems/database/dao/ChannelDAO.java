@@ -18,14 +18,9 @@ import java.util.logging.Level;
 
 public class ChannelDAO implements IDAO {
     private final DatabaseManager db;
-    private final DAOHub daoHub;
-
     private final Map<String, Channel> cache = new ConcurrentHashMap<>();
 
-    public ChannelDAO(DatabaseManager db, DAOHub daoHub) {
-        this.db = db;
-        this.daoHub = daoHub;
-    }
+    public ChannelDAO(DatabaseManager db) { this.db = db; }
 
     @Override
     public void initializeTable() throws SQLException {

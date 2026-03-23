@@ -19,7 +19,6 @@ import java.util.logging.Level;
 
 public class EconomyDAO implements IDAO {
     private final DatabaseManager db;
-    private final DAOHub hub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "EconomyDAO";
 
@@ -29,10 +28,7 @@ public class EconomyDAO implements IDAO {
     // Per-player balance cache — loaded on join, evicted on quit
     private final ConcurrentHashMap<UUID, ConcurrentHashMap<String, Long>> balanceCache = new ConcurrentHashMap<>();
 
-    public EconomyDAO(DatabaseManager db, DAOHub hub) throws SQLException {
-        this.db = db;
-        this.hub = hub;
-    }
+    public EconomyDAO(DatabaseManager db) { this.db = db; }
 
     @Override
     public void initializeTable() throws SQLException {

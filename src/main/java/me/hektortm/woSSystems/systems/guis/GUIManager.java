@@ -177,12 +177,6 @@ public class GUIManager implements Listener {
             default -> null;
         };
 
-        // Inv check
-        if(!plugin.getCitemManager().hasCitemAmount(player, config.getInv_check_id(), config.getInv_check_amount())) {
-            player.sendMessage("§cInsufficient ["+hub.getCitemDAO().getCitem(config.getInv_check_id()).getItemMeta().getDisplayName()+"]");
-            return;
-        }
-
         // Fire specific left/right actions if present, otherwise fall back to global
         List<String> actions = config.getGlobal_actions();
         if (specific != null) actions.addAll(specific);

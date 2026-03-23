@@ -42,6 +42,16 @@ public class WebhookServer {
         server.stop(0);
     }
 
+    private UUID parseUUID(String raw) {
+        if (raw.contains("-")) return UUID.fromString(raw);
+        // Insert dashes: 8-4-4-4-12
+        String formatted = raw.replaceFirst(
+                "(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})",
+                "$1-$2-$3-$4-$5"
+        );
+        return UUID.fromString(formatted);
+    }
+
     private void handleInvalidate(HttpExchange exchange) throws IOException {
         // Only POST
         if (!exchange.getRequestMethod().equalsIgnoreCase("POST")) {
@@ -50,7 +60,7 @@ public class WebhookServer {
         }
 
         // Validate secret
-        String auth = exchange.getRequestHeaders().getFirst("X-Webhook-Secret");
+        String auth = exchange.getRequestHeaders().getFirst("x-webhook-secret");
         if (auth == null || !auth.equals(secret)) {
             respond(exchange, 401, "Unauthorized");
             return;
@@ -61,11 +71,17 @@ public class WebhookServer {
 
         try {
             JsonObject json = JsonParser.parseString(body).getAsJsonObject();
-            String type     = json.get("type").getAsString();
-            String id       = json.get("id").getAsString();
-            UUID editorUUID = UUID.fromString(json.get("editor_uuid").getAsString());
+            plugin.getLogger().info("[Webhook] Parsed OK");
 
-            // DB call → must be async
+            String type = json.get("type").getAsString();
+            plugin.getLogger().info("[Webhook] Type: " + type);
+
+            String id = json.get("id").getAsString();
+            plugin.getLogger().info("[Webhook] ID: " + id);
+
+            UUID editorUUID = parseUUID(json.get("editor_uuid").getAsString());
+            plugin.getLogger().info("[Webhook] UUID: " + editorUUID);
+
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () ->
                     daoHub.handleWebhookInvalidation(type, id, editorUUID)
             );
@@ -73,7 +89,7 @@ public class WebhookServer {
             respond(exchange, 200, "{\"status\":\"ok\"}");
 
         } catch (Exception e) {
-            plugin.getLogger().warning("[Webhook] Bad payload: " + e.getMessage());
+            plugin.getLogger().warning("[Webhook] Failed at: " + e.getClass().getSimpleName() + " - " + e.getMessage());
             respond(exchange, 400, "{\"error\":\"invalid payload\"}");
         }
     }

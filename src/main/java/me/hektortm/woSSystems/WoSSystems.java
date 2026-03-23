@@ -283,7 +283,7 @@ public final class WoSSystems extends JavaPlugin {
             getLogger().severe("[Webhook] Failed to start: " + e.getMessage());
         }
         webhookServer.start();
-
+        this.saveDefaultConfig();
         PermissionRegistry.registerAll(this, PermissionDefault.OP);
     }
 

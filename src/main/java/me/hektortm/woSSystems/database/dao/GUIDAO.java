@@ -1,5 +1,9 @@
 package me.hektortm.woSSystems.database.dao;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.SchemaManager;
@@ -10,6 +14,7 @@ import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
 import me.hektortm.wosCore.discord.DiscordLogger;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -47,13 +52,15 @@ public class GUIDAO implements IDAO {
 
     public void preloadGuis() {
         String sql = "SELECT id FROM guis";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            ResultSet rs = stmt.executeQuery();
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
             int count = 0;
             while (rs.next()) {
                 String id = rs.getString("id");
                 try {
-                    GUI gui = buildGui(id);
+                    GUI gui = buildGui(conn, id);
                     if (gui != null) {
                         cache.put(id, gui);
                         count++;
@@ -68,113 +75,155 @@ public class GUIDAO implements IDAO {
         }
     }
 
-    public GUI getGUIbyId(String id) {
-        return cache.computeIfAbsent(id, this::buildGui);
-    }
 
-    private GUI buildGui(String id) {
-        String sql = "SELECT title, size, type, open_actions, close_actions FROM guis WHERE id = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+    public void reloadFromDB(String id, Player p) {
+        String sql = "SELECT * FROM guis WHERE id = ?";
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, id);
             ResultSet rs = stmt.executeQuery();
-            if (!rs.next()) return null;
-
-            String title = rs.getString("title");
-            int size = rs.getInt("size");
-            String type = rs.getString("type");
-            List<String> openActions = stringToList(rs.getString("open_actions"));
-            List<String> closeActions = stringToList(rs.getString("close_actions"));
-            List<GUIPage> pages = buildPages(id);
-
-            return new GUI(id, size, title, type, pages, openActions, closeActions);
-        } catch (Exception e) {
-            plugin.getLogger().warning(logName + ": failed to build gui '" + id + "': " + e.getMessage());
-            return null;
+            if (rs.next()) {
+                cache.put(id, buildGui(conn, id));
+                p.sendTitle("§aUpdated Gui", "§e"+id );
+            } else {
+                // Deleted on the website → evict
+                cache.remove(id);
+                p.sendTitle("§cDeleted Gui", "§e"+id);
+            }
+        } catch (SQLException e) {
+            WoSSystems.discordLog(Level.SEVERE, logName + ":reload", "Failed to reload item from DB: ", e);
         }
     }
 
-    private List<GUIPage> buildPages(String guiId) {
+    public GUI getGUIbyId(String id) {
+        return cache.computeIfAbsent(id, k -> {
+            try (Connection conn = db.getConnection()) {
+                return buildGui(conn, k);
+            } catch (Exception e) {
+                plugin.getLogger().warning(logName + ": failed to get gui '" + k + "': " + e.getMessage());
+                return null;
+            }
+        });
+    }
+
+    // ── Single-connection build chain ────────────────────────────────────────
+
+    private GUI buildGui(Connection conn, String id) throws SQLException {
+        String sql = "SELECT title, size, type, open_actions, close_actions FROM guis WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) return null;
+
+                String title = rs.getString("title");
+                int size = rs.getInt("size");
+                String type = rs.getString("type");
+                List<String> openActions = stringToList(rs.getString("open_actions"));
+                List<String> closeActions = stringToList(rs.getString("close_actions"));
+                List<GUIPage> pages = buildPages(conn, id);
+
+                return new GUI(id, size, title, type, pages, openActions, closeActions);
+            }
+        }
+    }
+
+    private List<GUIPage> buildPages(Connection conn, String guiId) throws SQLException {
         String sql = "SELECT page_id FROM gui_pages WHERE gui_id = ?";
         List<GUIPage> pages = new ArrayList<>();
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, guiId);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                int pageId = rs.getInt("page_id");
-                List<GUISlot> slots = buildSlots(guiId, pageId);
-                pages.add(new GUIPage(guiId, pageId, slots));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    int pageId = rs.getInt("page_id");
+                    List<GUISlot> slots = buildSlots(conn, guiId, pageId);
+                    pages.add(new GUIPage(guiId, pageId, slots));
+                }
             }
-        } catch (Exception e) {
-            plugin.getLogger().warning(logName + ": failed to build pages for gui '" + guiId + "': " + e.getMessage());
         }
         return pages;
     }
 
-    private List<GUISlot> buildSlots(String guiId, int pageId) {
+    private List<GUISlot> buildSlots(Connection conn, String guiId, int pageId) throws SQLException {
         String sql = "SELECT slot_id, active FROM gui_slots WHERE gui_id = ? AND page_id = ?";
         List<GUISlot> slots = new ArrayList<>();
-        try (Connection conn = db.getConnection(); PreparedStatement s = conn.prepareStatement(sql)) {
+        try (PreparedStatement s = conn.prepareStatement(sql)) {
             s.setString(1, guiId);
             s.setInt(2, pageId);
-            ResultSet rs = s.executeQuery();
-            while (rs.next()) {
-                int slotId = rs.getInt("slot_id");
-                boolean active = rs.getBoolean("active");
-                List<GUISlotConfig> configs = buildConfigs(guiId, pageId, slotId);
-                slots.add(new GUISlot(guiId, pageId, slotId, active, configs));
+            try (ResultSet rs = s.executeQuery()) {
+                while (rs.next()) {
+                    int slotId = rs.getInt("slot_id");
+                    boolean active = rs.getBoolean("active");
+                    List<GUISlotConfig> configs = buildConfigs(conn, guiId, pageId, slotId);
+                    slots.add(new GUISlot(guiId, pageId, slotId, active, configs));
+                }
             }
-        } catch (Exception e) {
-            plugin.getLogger().warning(logName + ": failed to build slots for gui '" + guiId + "' page " + pageId + ": " + e.getMessage());
         }
         return slots;
     }
 
-    private List<GUISlotConfig> buildConfigs(String guiId, int pageId, int slotId) {
-        String sql = "SELECT config_id, matchtype, visible, material, display_name, lore, mode, color, enchanted, " +
-                "global_actions, right_actions, left_actions, confirm, sound, inv_check_id, inv_check_amount " +
+    private List<GUISlotConfig> buildConfigs(Connection conn, String guiId, int pageId, int slotId) throws SQLException {
+        String sql = "SELECT config_id, matchtype, amount, visible, material, display_name, lore, model, color, tooltip, enchanted, " +
+                "global_actions, right_actions, left_actions, confirm, sound, checks " +
                 "FROM gui_slot_configs WHERE gui_id = ? AND page_id = ? AND slot_id = ?";
         List<GUISlotConfig> configs = new ArrayList<>();
-        try (Connection conn = db.getConnection(); PreparedStatement s = conn.prepareStatement(sql)) {
+        try (PreparedStatement s = conn.prepareStatement(sql)) {
             s.setString(1, guiId);
             s.setInt(2, pageId);
             s.setInt(3, slotId);
-            ResultSet rs = s.executeQuery();
-            while (rs.next()) {
-                String configId = rs.getString("config_id");
-                String matchtype = rs.getString("matchtype");
-                int amount = rs.getInt("amount");
-                boolean visible = rs.getBoolean("visible");
-                String materialName = rs.getString("material");
-                String displayName = rs.getString("display_name");
-                String loreRaw = rs.getString("lore");
-                String mode = rs.getString("mode");
-                String color = rs.getString("color");
-                String tooltip = rs.getString("tooltip");
-                boolean enchanted = rs.getBoolean("enchanted");
-                List<String> globalActions = stringToList(rs.getString("global_actions"));
-                List<String> rightActions = stringToList(rs.getString("right_actions"));
-                List<String> leftActions = stringToList(rs.getString("left_actions"));
-                boolean confirm = rs.getBoolean("confirm");
-                String sound = rs.getString("sound");
-                String invCheckId = rs.getString("inv_check_id");
-                String invCheckAmount = rs.getString("inv_check_amount");
+            try (ResultSet rs = s.executeQuery()) {
+                while (rs.next()) {
+                    String configId = rs.getString("config_id");
+                    String matchtype = rs.getString("matchtype");
+                    int amount = rs.getInt("amount");
+                    boolean visible = rs.getBoolean("visible");
+                    String materialName = rs.getString("material");
+                    String displayName = rs.getString("display_name");
+                    String loreRaw = rs.getString("lore");
+                    String model = rs.getString("model");
+                    String color = rs.getString("color");
+                    String tooltip = rs.getString("tooltip");
+                    boolean enchanted = rs.getBoolean("enchanted");
+                    List<String> globalActions = stringToList(rs.getString("global_actions"));
+                    List<String> rightActions = stringToList(rs.getString("right_actions"));
+                    List<String> leftActions = stringToList(rs.getString("left_actions"));
+                    boolean confirm = rs.getBoolean("confirm");
+                    String sound = rs.getString("sound");
+                    String checks = rs.getString("checks");
 
-                ItemStack guiItem = buildItemStack(materialName, displayName, loreRaw, enchanted);
+                    ItemStack guiItem = buildItemStack(materialName, displayName, loreRaw, enchanted);
 
-                String conditionKey = guiId + ":" + pageId + ":" + slotId + ":" + configId;
-                List<Condition> conditions = hub.getConditionDAO().getConditions(ConditionType.GUISLOT, conditionKey);
+                    String conditionKey = guiId + ":" + pageId + ":" + slotId + ":" + configId;
+                    List<Condition> conditions = hub.getConditionDAO().getConditions(ConditionType.GUISLOT, conditionKey);
 
-                configs.add(new GUISlotConfig(
-                        guiId, pageId, slotId, configId, matchtype, amount,
-                        visible, materialName, displayName, loreRaw, mode, color, tooltip, enchanted, guiItem,
-                        globalActions, rightActions, leftActions,
-                        confirm, sound, invCheckId, invCheckAmount, conditions
-                ));
+                    configs.add(new GUISlotConfig(
+                            guiId, pageId, slotId, configId, matchtype, amount,
+                            visible, materialName, displayName, loreRaw, model, color, tooltip, enchanted, guiItem,
+                            globalActions, rightActions, leftActions,
+                            confirm, sound, buildChecks(checks), conditions
+                    ));
+                }
             }
-        } catch (Exception e) {
-            plugin.getLogger().warning(logName + ": failed to build configs for gui '" + guiId + "' page " + pageId + " slot " + slotId + ": " + e.getMessage());
         }
         return configs;
+    }
+
+    private List<GUICheck> buildChecks(String checkData) {
+        List<GUICheck> checks = new ArrayList<>();
+        if (checkData == null || checkData.isBlank()) return checks;
+
+        try {
+            JsonArray arr = JsonParser.parseString(checkData).getAsJsonArray();
+            for (JsonElement el : arr) {
+                JsonObject obj = el.getAsJsonObject();
+                CheckType type = CheckType.valueOf(obj.get("type").getAsString().toUpperCase());
+                int amount = obj.get("amount").getAsInt();
+                String id = obj.has("id") ? obj.get("id").getAsString() : null;
+                checks.add(new GUICheck(type, id, amount));
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning(logName + ": failed to parse checks JSON '" + checkData + "': " + e.getMessage());
+        }
+        return checks;
     }
 
     private ItemStack buildItemStack(String materialName, String displayName, String loreRaw, boolean enchanted) {

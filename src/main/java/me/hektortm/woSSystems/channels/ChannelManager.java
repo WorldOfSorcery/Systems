@@ -52,7 +52,7 @@ public class ChannelManager {
 
     public void saveChannels() {
         for (Channel channel : channels.values()) {
-            hub.getChannelDAO().updateChannel(channel);
+            plugin.writeLog("ChannelDAO", Level.FINE, "This is where the update used to be");
         }
     }
 
@@ -99,13 +99,6 @@ public class ChannelManager {
         return channels.values();
     }
 
-    public void createChannel(String color, String name, String shortName, String format, List<String> recipients,
-                              boolean defaultChannel, boolean autoJoin, boolean forceJoin, boolean hidden,
-                              String permission, boolean broadcastable, int radius) {
-        Channel channel = new Channel(color, name, shortName, format, recipients, defaultChannel, autoJoin, forceJoin, hidden, permission, broadcastable, radius);
-        channels.put(name.toLowerCase(), channel);
-        hub.getChannelDAO().insertChannel(channel);
-    }
 
     public void autoJoin(Player player) {
         for (Channel channel : getChannels()) {

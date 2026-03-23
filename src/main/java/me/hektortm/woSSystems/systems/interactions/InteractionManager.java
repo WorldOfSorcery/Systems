@@ -49,7 +49,7 @@ public class InteractionManager {
             public void run() {
                 // Load interaction data off the main thread, then process visuals on main thread
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                    List<Interaction> interactions = hub.getInteractionDAO().getInteractions();
+                    List<Interaction> interactions = hub.getInteractionDAO().cache();
                     plugin.getLogger().fine("[InteractionManager] Tick — loaded " + interactions.size() + " interaction(s).");
                     Bukkit.getScheduler().runTask(plugin, () -> {
                         for (Interaction inter : interactions) {

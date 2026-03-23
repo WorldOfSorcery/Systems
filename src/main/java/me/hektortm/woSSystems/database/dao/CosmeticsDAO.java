@@ -72,9 +72,9 @@ public class CosmeticsDAO implements IDAO {
                     plugin.getLogger().warning(logName + ": failed to preload '" + id + "': " + e.getMessage());
                 }
             }
-            plugin.getLogger().info(logName + ": preloaded " + count + " cooldown(s) into cache.");
+            plugin.getLogger().info(logName + ": preloaded " + count + " cosmetic(s) into cache.");
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "COSD:preload", "Failed to preload cooldowns into cache: ", e);
+            WoSSystems.discordLog(Level.SEVERE, "COSD:preload", "Failed to preload cosmetics into cache: ", e);
         }
     }
 
@@ -91,16 +91,14 @@ public class CosmeticsDAO implements IDAO {
                 String permission = rs.getString("permission");
 
                 cache.put(id, new Cosmetic(id, type, display, description, permission));
-                plugin.getLogger().info(logName + ": reloaded '" + id + "' from DB.");
-                p.sendMessage(plugin.getLangManager().getMessage("general", "prefix") + "§aUpdated Cosmetic: §e"+id);
+                p.sendTitle("§aUpdated Cosmetic", "§e"+id );
             } else {
                 // Deleted on the website → evict
                 cache.remove(id);
-                plugin.getLogger().info(logName + ": evicted '" + id + "' (not found in DB).");
-                p.sendMessage(plugin.getLangManager().getMessage("general", "prefix") + "§cDeleted Cosmetic: §e"+id);
+                p.sendTitle("§cDeleted Cosmetic", "§e"+id );
             }
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "COSD:reload", "Failed to reload constant from DB: ", e);
+            WoSSystems.discordLog(Level.SEVERE, "COSD:reload", "Failed to reload cosmetic from DB: ", e);
         }
     }
 

@@ -73,13 +73,10 @@ public class ConstantDAO implements IDAO {
             if (rs.next()) {
                 Constant updated = new Constant(rs.getString("id"), rs.getString("value"));
                 cache.put(id, updated);
-                plugin.getLogger().info(logName + ": reloaded '" + id + "' from DB.");
-                p.sendMessage(plugin.getLangManager().getMessage("general", "prefix") + "§aUpdated Constant: §e"+id);
+                p.sendTitle("§aUpdated Constant", "§e"+id );
             } else {
-                // Deleted on the website → evict
                 cache.remove(id);
-                plugin.getLogger().info(logName + ": evicted '" + id + "' (not found in DB).");
-                p.sendMessage(plugin.getLangManager().getMessage("general", "prefix") + "§cDeleted Constant: §e"+id);
+                p.sendTitle("§cDeleted Constant", "§e"+id );
             }
         } catch (SQLException e) {
             WoSSystems.discordLog(Level.SEVERE, "COD:reload", "Failed to reload constant from DB: ", e);

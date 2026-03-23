@@ -21,7 +21,6 @@ import java.util.logging.Level;
 
 public class StatsDAO implements IDAO {
     private final DatabaseManager db;
-    private final DAOHub daoHub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "StatsDAO";
 
@@ -35,10 +34,7 @@ public class StatsDAO implements IDAO {
     // Per-player stat values — loaded on join, evicted on quit
     private final ConcurrentHashMap<UUID, ConcurrentHashMap<String, Long>> playerCache = new ConcurrentHashMap<>();
 
-    public StatsDAO(DatabaseManager db, DAOHub daoHub) throws SQLException {
-        this.db = db;
-        this.daoHub = daoHub;
-    }
+    public StatsDAO(DatabaseManager db) { this.db = db; }
 
     @Override
     public void initializeTable() throws SQLException {

@@ -17,14 +17,10 @@ import java.util.logging.Level;
 
 public class UnlockableDAO implements IDAO {
     private final DatabaseManager db;
-    private final DAOHub daoHub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "UnlockableDAO";
 
-    public UnlockableDAO(DatabaseManager db, DAOHub daoHub) {
-        this.db = db;
-        this.daoHub = daoHub;
-    }
+    public UnlockableDAO(DatabaseManager db) { this.db = db; }
 
     @Override
     public void initializeTable() {

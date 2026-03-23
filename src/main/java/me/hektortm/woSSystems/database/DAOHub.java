@@ -22,7 +22,6 @@ public class DAOHub {
     private final ProfileDAO profileDAO;
     private final FishingDAO fishingDAO;
     private final CosmeticsDAO cosmeticsDAO;
-    private final RecipeDAO recipeDAO;
     private final ConditionDAO conditionDAO;
     private final InteractionDAO interactionDAO;
     private final GUIDAO guiDAO;
@@ -34,25 +33,21 @@ public class DAOHub {
     private final CommandsDAO commandsDAO;
     private final CraftingDAO craftingDAO;
 
-    private final FriendLink friendLink;
-
 
 
     public DAOHub(DatabaseManager databaseManager) throws SQLException {
-        this.economyDAO = new EconomyDAO(databaseManager, this);
-        this.unlockableDAO = new UnlockableDAO(databaseManager, this);
-        this.statsDAO = new StatsDAO(databaseManager, this);
-        this.channelDAO = new ChannelDAO(databaseManager, this);
+        this.economyDAO = new EconomyDAO(databaseManager);
+        this.unlockableDAO = new UnlockableDAO(databaseManager);
+        this.statsDAO = new StatsDAO(databaseManager);
+        this.channelDAO = new ChannelDAO(databaseManager);
         this.nicknameDAO = new NicknameDAO(databaseManager, this);
         this.cosmeticsDAO = new CosmeticsDAO(databaseManager, this);
-        this.friendLink = new FriendLink(databaseManager, this);
         this.profileDAO = new ProfileDAO(databaseManager, this);
         this.fishingDAO = new FishingDAO(databaseManager, this);
-        this.recipeDAO = new RecipeDAO(databaseManager, this);
         this.conditionDAO = new ConditionDAO(databaseManager, this);
         this.interactionDAO = new InteractionDAO(databaseManager, this);
         this.guiDAO = new GUIDAO(databaseManager, this);
-        this.cooldownDAO = new CooldownDAO(databaseManager, this);
+        this.cooldownDAO = new CooldownDAO(databaseManager);
         this.timeDAO = new TimeDAO(databaseManager, this);
         this.citemDAO = new CitemDAO(databaseManager, this);
         this.constantDAO = new ConstantDAO(databaseManager, this);
@@ -84,9 +79,6 @@ public class DAOHub {
     }
     public FishingDAO getFishingDAO() {
         return fishingDAO;
-    }
-    public RecipeDAO getRecipeDAO() {
-        return recipeDAO;
     }
     public ConditionDAO getConditionDAO() {
         return conditionDAO;
@@ -122,10 +114,6 @@ public class DAOHub {
         return craftingDAO;
     }
 
-    public FriendLink getFriendLink() {
-        return friendLink;
-    }
-
     /**
      * Load all player-specific cached data (stats, economy, …).
      * Call async from PlayerJoinEvent.
@@ -148,21 +136,21 @@ public class DAOHub {
         plugin.getLogger().info("[Webhook] " + editorUUID + " edited " + type + ":" + id);
         Player p = Bukkit.getPlayer(editorUUID);
         switch (type) {
-            case "channels"       -> channelDAO.reloadFromDB(id);
+//            case "channels"       -> channelDAO.reloadFromDB(id);
             case "citems"         -> citemDAO.reloadFromDB(id, p);
-            case "commands" -> commandsDAO.reloadFromDB(id);
+//            case "commands" -> commandsDAO.reloadFromDB(id);
             case "constants"      -> constantDAO.reloadFromDB(id, p);
             case "cooldowns" -> cooldownDAO.reloadFromDB(id, p);
             case "cosmetics"     -> cosmeticsDAO.reloadFromDB(id, p);
-            case "dialogs" -> dialogDAO.reloadFromDB(id);
-            case "currencies"         -> economyDAO.reloadFromDB(id);
-            case "fishing" -> fishingDAO.reloadFromDB(id);
-            case "guis"         -> guiDAO.reloadFromDB(id);
-            case "interactions" -> interactionDAO.reloadFromDB(id);
-            case "loottables"         -> loottablesDAO.reloadFromDB(id);
-            case "stats" -> statsDAO.reloadFromDB(id);
-            case "timeevents"         -> timeDAO.reloadFromDB(id);
-            case "unlockables" -> unlockableDAO.reloadFromDB(id);
+//            case "dialogs" -> dialogDAO.reloadFromDB(id);
+//            case "currencies"         -> economyDAO.reloadFromDB(id);
+            case "fishing" -> fishingDAO.reloadFromDB(id, p);
+            case "guis"         -> guiDAO.reloadFromDB(id, p);
+            case "interactions" -> interactionDAO.reloadFromDB(id, p);
+//            case "loottables"         -> loottablesDAO.reloadFromDB(id);
+//            case "stats" -> statsDAO.reloadFromDB(id);
+//            case "timeevents"         -> timeDAO.reloadFromDB(id);
+//            case "unlockables" -> unlockableDAO.reloadFromDB(id);
 
             default -> plugin.getLogger().warning("[Webhook] Unknown type: " + type);
         }

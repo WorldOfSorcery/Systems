@@ -4,10 +4,7 @@ import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.utils.Parsers;
-import me.hektortm.woSSystems.utils.dataclasses.Interaction;
-import me.hektortm.woSSystems.utils.dataclasses.InteractionAction;
-import me.hektortm.woSSystems.utils.dataclasses.InteractionHologram;
-import me.hektortm.woSSystems.utils.dataclasses.InteractionParticles;
+import me.hektortm.woSSystems.utils.dataclasses.*;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
@@ -19,6 +16,7 @@ import org.bukkit.entity.Player;
 
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -28,6 +26,8 @@ public class InteractionDAO implements IDAO {
     private final DAOHub hub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "InteractionDAO";
+
+    private final Map<String, Interaction> cache = new ConcurrentHashMap<>();
 
     public InteractionDAO(DatabaseManager db, DAOHub hub) {
         this.db = db;
@@ -59,12 +59,71 @@ public class InteractionDAO implements IDAO {
         }
     }
 
-    public List<InteractionAction> getActionsForInteraction(String interactionId) {
+    public void reloadFromDB(String id, Player p) {
+        String sql = "SELECT citem_id, catch_interaction, rarity, regions, tag FROM fishing WHERE id = ?";
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                cache.put(id, buildInteraction(conn, id));
+                p.sendTitle("§aUpdated Fish", "§e"+id );
+            } else {
+                // Deleted on the website → evict
+                cache.remove(id);
+                p.sendTitle("§cDeleted Fish", "§e"+id);
+            }
+        } catch (SQLException e) {
+            WoSSystems.discordLog(Level.SEVERE, "CID:reload", "Failed to reload item from DB: ", e);
+        }
+    }
+
+    public void preloadAll() {
+        String sql = "SELECT id FROM interactions";
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            int count = 0;
+            while (rs.next()) {
+                String id = rs.getString("id");
+                try {
+                    cache.put(id, buildInteraction(conn, id));
+                    count++;
+                } catch (Exception e) {
+                    plugin.getLogger().warning(logName + ": failed to preload '" + id + "': " + e.getMessage());
+                }
+            }
+            plugin.getLogger().info(logName + ": preloaded " + count + " fish into cache.");
+        } catch (SQLException e) {
+            WoSSystems.discordLog(Level.SEVERE, "FID:preload", "Failed to preload fish into cache: ", e);
+        }
+    }
+
+
+
+    /**
+    *   Build Interaction
+    *
+    *
+    *
+    */
+    private Interaction buildInteraction(Connection conn, String id) {
+
+        List<InteractionAction> actions = getActionsForInteraction(conn, id);
+        List<InteractionParticles> particles = getParticlesForInteraction(conn, id);
+        List<InteractionHologram> holograms = getHologramsForInteraction(conn, id);
+        List<Location> blockLocations = getBlocks(conn, id);
+        List<Integer> npcIds = getNPCs(conn, id);
+
+
+        return new Interaction(id, actions, holograms, particles, blockLocations, npcIds);
+    }
+
+    public List<InteractionAction> getActionsForInteraction(Connection conn, String interactionId) {
         List<InteractionAction> actions = new ArrayList<>();
 
         String sql = "SELECT * FROM inter_actions WHERE id = ? ORDER BY action_id ASC";
 
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (conn; PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, interactionId);
             ResultSet rs = stmt.executeQuery();
 
@@ -92,12 +151,12 @@ public class InteractionDAO implements IDAO {
         return actions;
     }
 
-    public List<InteractionParticles> getParticlesForInteraction(String id) {
+    public List<InteractionParticles> getParticlesForInteraction(Connection conn, String id) {
         List<InteractionParticles> particles = new ArrayList<>();
 
         String sql = "SELECT * FROM inter_particles WHERE id = ? ORDER BY particle_id ASC";
 
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (conn; PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -118,12 +177,12 @@ public class InteractionDAO implements IDAO {
         return null;
     }
 
-    public List<InteractionHologram> getHologramsForInteraction(String id) {
+    public List<InteractionHologram> getHologramsForInteraction(Connection conn, String id) {
         List<InteractionHologram> holograms = new ArrayList<>();
 
         String sql = "SELECT * FROM inter_holograms WHERE interaction_id = ?";
 
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (conn; PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -166,10 +225,10 @@ public class InteractionDAO implements IDAO {
         }
     }
 
-    public List<Integer> getNPCs(String id) {
+    public List<Integer> getNPCs(Connection conn, String id) {
         List<Integer> npcs = new ArrayList<>();
         String sql = "SELECT npc_id FROM inter_npcs WHERE interaction_id = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (conn; PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -217,10 +276,10 @@ public class InteractionDAO implements IDAO {
 
     }
 
-    public List<Location> getBlocks(String id) {
+    public List<Location> getBlocks(Connection conn, String id) {
         List<Location> blocks = new ArrayList<>();
         String sql = "SELECT location FROM inter_blocks WHERE interaction_id = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (conn; PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -275,25 +334,7 @@ public class InteractionDAO implements IDAO {
 
 
     public Interaction getInteractionByID(String id) {
-        String sql = "SELECT * FROM interactions WHERE id = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                String interactionId = rs.getString("id");
-                List<InteractionAction> actions = getActionsForInteraction(interactionId);
-                List<InteractionHologram> holograms = getHologramsForInteraction(interactionId);
-                List<InteractionParticles> particles = getParticlesForInteraction(interactionId);
-                List<Location> blockLocations = getBlocks(interactionId);
-                List<Integer> npcIDs = getNPCs(interactionId);
-                return new Interaction(interactionId, actions, holograms, particles, blockLocations, npcIDs);
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "d993e0c9", "Failed to get Interactions for ID("+id+"): ", e
-            ));
-        }
-        return null;
+        return cache.get(id);
     }
 
     public List<Interaction> getInteractions() {
@@ -453,10 +494,12 @@ public class InteractionDAO implements IDAO {
 
 
     public boolean interactionExists(String id, CommandSender s) {
-        Interaction inter = getInteractionByID(id);
-        if (inter != null) return true;
-        Utils.error(s, "interactions", "error.not-exist");
-        return false;
+        return cache.get(id) != null;
+    }
+
+
+    public List<Interaction> getCache() {
+        return cache;
     }
 
 }

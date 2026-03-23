@@ -20,15 +20,15 @@ import java.util.logging.Level;
 
 public class CooldownDAO implements IDAO {
     private final DatabaseManager db;
-    private final DAOHub hub;
+
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "CooldownDAO";
 
     private final Map<String, Cooldown> cache = new ConcurrentHashMap<>();
 
-    public CooldownDAO(DatabaseManager db, DAOHub hub) {
+    public CooldownDAO(DatabaseManager db) {
         this.db = db;
-        this.hub = hub;
+
     }
 
     @Override
@@ -85,13 +85,11 @@ public class CooldownDAO implements IDAO {
                 String endInteraction = rs.getString("end_interaction");
 
                 cache.put(id, new Cooldown(id, duration, startInteraction, endInteraction));
-                plugin.getLogger().info(logName + ": reloaded '" + id + "' from DB.");
-                p.sendMessage(plugin.getLangManager().getMessage("general", "prefix") + "§aUpdated Cooldown: §e"+id);
+                p.sendTitle("§aUpdated Cooldown", "§e"+id );
             } else {
                 // Deleted on the website → evict
                 cache.remove(id);
-                plugin.getLogger().info(logName + ": evicted '" + id + "' (not found in DB).");
-                p.sendMessage(plugin.getLangManager().getMessage("general", "prefix") + "§cDeleted Constant: §e"+id);
+                p.sendTitle("§cDeleted Cooldown", "§e"+id );
             }
         } catch (SQLException e) {
             WoSSystems.discordLog(Level.SEVERE, "COOD:reload", "Failed to reload constant from DB: ", e);

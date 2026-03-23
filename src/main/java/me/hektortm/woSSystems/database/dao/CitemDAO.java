@@ -47,7 +47,6 @@ public class CitemDAO implements IDAO {
             plugin.getLogger().info(logName + ": CitemDAO table initialized successfully.");
         }
 
-        // Preload all items into memory so GUI opens never touch the database.
         org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, this::preloadAll);
     }
 
@@ -60,13 +59,11 @@ public class CitemDAO implements IDAO {
             if (rs.next()) {
                 ItemStack built = CitemBuilder.build(id, rs.getString("data"));
                 cache.put(id, built);
-                plugin.getLogger().info(logName + ": reloaded '" + id + "' from DB.");
-                p.sendMessage(plugin.getLangManager().getMessage("general", "prefix") + "§aUpdated Constant: §e"+id);
+                p.sendTitle("§aUpdated Citem", "§e"+id );
             } else {
                 // Deleted on the website → evict
                 cache.remove(id);
-                plugin.getLogger().info(logName + ": evicted '" + id + "' (not found in DB).");
-                p.sendMessage(plugin.getLangManager().getMessage("general", "prefix") + "§cDeleted Constant: §e"+id);
+                p.sendTitle("§cDeleted CItem", "§e"+id);
             }
         } catch (SQLException e) {
             WoSSystems.discordLog(Level.SEVERE, "CID:reload", "Failed to reload item from DB: ", e);

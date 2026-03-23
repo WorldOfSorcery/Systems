@@ -24,7 +24,7 @@ public class GUISlotConfig {
     @Column(name = "matchtype", type = "TEXT")
     private final String matchtype;
 
-    @Column(name = "amount", type = "INTEGER", defaultValue = "1")
+    @Column(name = "amount", type = "INT")
     private final int amount;
 
     @Column(name = "visible", type = "BOOLEAN")
@@ -69,11 +69,8 @@ public class GUISlotConfig {
     @Column(name = "sound", type = "TEXT")
     private final String sound;
 
-    @Column(name = "inv_check_id", type = "TEXT")
-    private final String inv_check_id;
-
-    @Column(name = "inv_check_amount", type = "INTEGER")
-    private final int inv_check_amount;
+    @Column(name = "checks", type = "JSON")
+    private final List<GUICheck> checks;
 
     private final List<Condition> conditions;
 
@@ -81,7 +78,7 @@ public class GUISlotConfig {
                          boolean visible, String material, String displayName, String lore,
                          String model, String color, String tooltip, boolean enchanted, ItemStack guiItem,
                          List<String> globalActions, List<String> rightActions, List<String> leftActions,
-                         boolean confirm, String sound, String invCheckId, int invCheckAmount,
+                         boolean confirm, String sound, List<GUICheck> checks,
                          List<Condition> conditions) {
         gui_id = guiId;
         page_id = pageId;
@@ -103,8 +100,7 @@ public class GUISlotConfig {
         left_actions = leftActions;
         this.confirm = confirm;
         this.sound = sound;
-        inv_check_id = invCheckId;
-        inv_check_amount = invCheckAmount;
+        this.checks = checks;
         this.conditions = conditions;
     }
 
@@ -128,7 +124,6 @@ public class GUISlotConfig {
     public boolean isConfirm()              { return confirm;          }
     public String getTooltip()              { return tooltip;          }
     public String getSound()                { return sound;            }
-    public String getInv_check_id()         { return inv_check_id;     }
-    public int getInv_check_amount()     { return inv_check_amount; }
+    public List<GUICheck> getChecks()       { return checks;           }
     public List<Condition> getConditions()  { return conditions;       }
 }

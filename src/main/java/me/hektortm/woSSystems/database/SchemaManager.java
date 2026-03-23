@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.database;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.annotation.Column;
 import me.hektortm.woSSystems.database.annotation.Table;
+import me.hektortm.woSSystems.utils.dataclasses.BaseEntity;
 import me.hektortm.wosCore.database.DatabaseManager;
 
 import java.lang.reflect.Field;
