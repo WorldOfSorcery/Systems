@@ -78,14 +78,14 @@ public class InterListener implements Listener {
             blockCooldowns.put(blockLocation, currentTime);
 
             // Process interactions
-            if (hub.getInteractionDAO().getInterOnBlock(blockLocation) != null) {
+            if (hub.getInteractionDAO().getBound(blockLocation) != null) {
                 e.setCancelled(true);
                 InteractionKey key = buildKey(blockLocation);
 
                 switch (e.getAction()) {
                     case RIGHT_CLICK_BLOCK:
                     case LEFT_CLICK_BLOCK:
-                        interactionManager.triggerInteraction(hub.getInteractionDAO().getInterOnBlock(blockLocation), p, key);
+                        interactionManager.triggerInteraction(hub.getInteractionDAO().getBound(blockLocation), p, key);
                         break;
                 }
             }
@@ -96,7 +96,7 @@ public class InterListener implements Listener {
     @EventHandler
     public void NPCClick(NPCRightClickEvent e) {
         int npcid = e.getNPC().getId();
-        String id = hub.getInteractionDAO().getNPCInteraction(npcid);
+        String id = hub.getInteractionDAO().getNpcBound(npcid);
         InteractionKey key = new InteractionKey("npc:"+npcid);
         interactionManager.triggerInteraction(id, e.getClicker(), key);
     }

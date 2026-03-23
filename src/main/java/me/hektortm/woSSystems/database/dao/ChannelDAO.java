@@ -16,6 +16,15 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
+/**
+ * DAO for chat channel definitions and per-player channel membership/focus.
+ *
+ * <p>Channel definitions are read directly from the database on demand.
+ * Player subscription and focus state is stored in {@code playerdata_channels}.</p>
+ *
+ * <p>Tables managed (via {@link SchemaManager}): {@code channels}.<br>
+ * Tables managed (manual): {@code playerdata_channels}.</p>
+ */
 public class ChannelDAO implements IDAO {
     private final DatabaseManager db;
     private final Map<String, Channel> cache = new ConcurrentHashMap<>();
@@ -38,6 +47,11 @@ public class ChannelDAO implements IDAO {
         }
     }
 
+    /**
+     * Loads and returns all channel definitions from the {@code channels} table.
+     *
+     * @return list of all {@link Channel} objects; empty if none exist or on error
+     */
     public List<Channel> getAllChannels() {
         List<Channel> channels = new ArrayList<>();
         String sql = "SELECT * FROM channels";
@@ -65,6 +79,12 @@ public class ChannelDAO implements IDAO {
         return channels;
     }
 
+    /**
+     * Returns the UUIDs of all players who have joined the given channel.
+     *
+     * @param channelName the channel name
+     * @return list of subscribed player UUIDs
+     */
     public List<UUID> getRecipients(String channelName) {
         List<UUID> recipients = new ArrayList<>();
         String sql = "SELECT uuid FROM playerdata_channels WHERE channel_name = ? AND joined = TRUE";
@@ -80,6 +100,13 @@ public class ChannelDAO implements IDAO {
         return recipients;
     }
 
+    /**
+     * Subscribes a player to a channel.  Does nothing (with feedback) if the
+     * player is already subscribed.
+     *
+     * @param channelName the channel to join
+     * @param playerUUID  the player's UUID
+     */
     public void addRecipient(String channelName, UUID playerUUID) {
         Player p = Bukkit.getPlayer(playerUUID);
         if (isInChannel(playerUUID, channelName)) {
@@ -114,6 +141,13 @@ public class ChannelDAO implements IDAO {
         return "";
     }
 
+    /**
+     * Removes a player's subscription from a channel.  If the channel was their
+     * focused channel, focus is automatically shifted to the default channel.
+     *
+     * @param channelName the channel to leave
+     * @param playerUUID  the player's UUID
+     */
     public void removeRecipient(String channelName, UUID playerUUID) {
         Player p = Bukkit.getPlayer(playerUUID);
         if (!isInChannel(playerUUID, channelName)) {
@@ -138,6 +172,13 @@ public class ChannelDAO implements IDAO {
         }
     }
 
+    /**
+     * Returns the permission node required to join the given channel, or
+     * {@code null} if the channel is open to everyone.
+     *
+     * @param channelName the channel name
+     * @return permission string, or {@code null}
+     */
     public String getChannelPermission(String channelName) {
         String sql = "SELECT permission FROM channels WHERE name = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -150,6 +191,14 @@ public class ChannelDAO implements IDAO {
         }
     }
 
+    /**
+     * Sets the player's focused (active chat) channel.  Automatically joins the
+     * player if they are not already subscribed and have the required permission.
+     * Unfocuses the previously focused channel before applying.
+     *
+     * @param playerUUID  the player's UUID
+     * @param channelName the channel to focus
+     */
     public void setFocusedChannel(UUID playerUUID, String channelName) {
         Player p = Bukkit.getPlayer(playerUUID);
         if(!isInChannel(playerUUID, channelName)) {
@@ -173,6 +222,13 @@ public class ChannelDAO implements IDAO {
         }
     }
 
+    /**
+     * Clears the focused flag for the given channel.  No-op if {@code channelName}
+     * is {@code null}.
+     *
+     * @param playerUUID  the player's UUID
+     * @param channelName the channel to unfocus
+     */
     public void unfocusChannel(UUID playerUUID, String channelName) {
         if (channelName == null) return;
 
@@ -186,6 +242,13 @@ public class ChannelDAO implements IDAO {
         }
     }
 
+    /**
+     * Returns the name of the channel the player is currently focused on, or
+     * {@code null} if no channel is focused.
+     *
+     * @param playerUUID the player's UUID
+     * @return focused channel name, or {@code null}
+     */
     public String getFocusedChannel(UUID playerUUID) {
         String sql = "SELECT channel_name FROM playerdata_channels WHERE uuid = ? AND focused = TRUE LIMIT 1";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -200,6 +263,13 @@ public class ChannelDAO implements IDAO {
         return null;
     }
 
+    /**
+     * Checks whether the player is currently subscribed to the given channel.
+     *
+     * @param playerUUID  the player's UUID
+     * @param channelName the channel name
+     * @return {@code true} if the player is subscribed
+     */
     public boolean isInChannel(UUID playerUUID, String channelName) {
         String sql = "SELECT 1 FROM playerdata_channels WHERE uuid = ? AND channel_name = ? AND joined = TRUE";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -213,6 +283,13 @@ public class ChannelDAO implements IDAO {
         }
     }
 
+    /**
+     * Checks whether the given channel is the player's currently focused channel.
+     *
+     * @param uuid        the player's UUID
+     * @param channelName the channel name to check
+     * @return {@code true} if this channel is focused
+     */
     public boolean isFocusedChannel(UUID uuid, String channelName) {
         return Objects.equals(channelName, getFocusedChannel(uuid));
     }

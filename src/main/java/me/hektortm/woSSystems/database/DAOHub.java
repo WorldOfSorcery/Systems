@@ -2,7 +2,6 @@ package me.hektortm.woSSystems.database;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.dao.*;
-import me.hektortm.woSSystems.database.links.FriendLink;
 import me.hektortm.wosCore.database.DatabaseManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;

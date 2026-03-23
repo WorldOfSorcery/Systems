@@ -38,7 +38,10 @@ public class Trigger extends SubCommand {
         }
         String playerName = args[0];
         String interactionId = args[1].toLowerCase();
-        if (!hub.getInteractionDAO().interactionExists(interactionId, sender)) return;
+        if (!hub.getInteractionDAO().interactionExists(interactionId)) {
+            // TODO: Re-add Message
+            return;
+        }
 
         Player targetPlayer = Bukkit.getPlayer(playerName);
         if (targetPlayer == null) {

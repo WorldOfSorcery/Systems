@@ -46,7 +46,10 @@ public class NPCBind extends SubCommand {
 
         int npcId = npc.getId();
         String interactionId = args[0];
-        if (!hub.getInteractionDAO().interactionExists(interactionId, p)) return;
+        if (!hub.getInteractionDAO().interactionExists(interactionId)) {
+            // TODO: Re-add Message
+            return;
+        }
 
         if (hub.getInteractionDAO().bindNPC(interactionId, npcId))
             Utils.success(p, "interactions", "interaction.npcbind", "%id%", interactionId, "%npc%", String.valueOf(npcId));

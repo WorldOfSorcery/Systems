@@ -10,13 +10,29 @@ import me.hektortm.wosCore.database.IDAO;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
+/**
+ * DAO for condition definitions attached to interactions, GUI slots, particles,
+ * holograms, and other typed entities.
+ *
+ * <p>Results are cached per {@code (type, id)} key using {@link java.util.concurrent.ConcurrentHashMap}
+ * and {@code computeIfAbsent}.  This prevents the per-tick DB storm that would
+ * otherwise occur since conditions are checked on every tick for every active
+ * entity.  Call {@link #invalidate(me.hektortm.woSSystems.utils.ConditionType, String)}
+ * after updating a condition, or {@link #invalidateAll()} on a full reload.</p>
+ *
+ * <p>Table managed: {@code conditions}.</p>
+ */
 public class ConditionDAO implements IDAO {
     private final DatabaseManager db;
     private final DAOHub hub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "ConditionDAO";
+
+    private final Map<String, List<Condition>> cache = new ConcurrentHashMap<>();
 
     public ConditionDAO(DatabaseManager db, DAOHub hub) {
         this.db = db;
@@ -38,7 +54,20 @@ public class ConditionDAO implements IDAO {
         }
     }
 
+    /**
+     * Returns all conditions for the given typed entity, serving from cache on
+     * subsequent calls.  The first call for a given {@code (type, id)} pair fetches
+     * from the database and populates the cache.
+     *
+     * @param type the entity type owning the conditions
+     * @param id   the entity ID
+     * @return list of conditions; empty if none are defined
+     */
     public List<Condition> getConditions(ConditionType type, String id) {
+        return cache.computeIfAbsent(type.getType() + ":" + id, k -> fetchConditions(type, id));
+    }
+
+    private List<Condition> fetchConditions(ConditionType type, String id) {
         List<Condition> result = new ArrayList<>();
         String sql = "SELECT * FROM conditions WHERE type = ? AND type_id = ?";
 
@@ -60,5 +89,24 @@ public class ConditionDAO implements IDAO {
         }
 
         return result;
+    }
+
+    /**
+     * Evicts the cached conditions for the given typed entity so that the next
+     * call to {@link #getConditions(ConditionType, String)} re-fetches from the DB.
+     *
+     * @param type the entity type
+     * @param id   the entity ID
+     */
+    public void invalidate(ConditionType type, String id) {
+        cache.remove(type.getType() + ":" + id);
+    }
+
+    /**
+     * Clears the entire condition cache.  All subsequent reads will re-fetch from
+     * the database.  Use on a full server reload.
+     */
+    public void invalidateAll() {
+        cache.clear();
     }
 }

@@ -17,6 +17,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
+/**
+ * DAO for loading loot table definitions from the {@code loottables} and
+ * {@code loottable_items} tables.  Each loot table has a set of weighted items
+ * that can resolve to a GUI, interaction, dialog, citem, or command.
+ */
 public class LoottablesDAO implements IDAO {
     private final DatabaseManager db;
     private final DAOHub daoHub;
@@ -48,6 +53,12 @@ public class LoottablesDAO implements IDAO {
         }
     }
 
+    /**
+     * Returns the number of items to award when rolling the given loot table.
+     *
+     * @param id the loot table ID
+     * @return the configured item count, or {@code 0} if the table is not found
+     */
     public int getAmount(String id) {
         String sql = "SELECT amount FROM loottables WHERE id = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -67,6 +78,13 @@ public class LoottablesDAO implements IDAO {
         }
         return 0;
     }
+    /**
+     * Returns the display name of the loot table, or {@code null} if not set
+     * or the table doesn't exist.
+     *
+     * @param id the loot table ID
+     * @return the display name, or {@code null}
+     */
     public String getName(String id) {
         String sql = "SELECT name FROM loottables WHERE id = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -87,6 +105,14 @@ public class LoottablesDAO implements IDAO {
         return null;
     }
 
+    /**
+     * Builds a {@link Loottable} object for the given ID, including all weighted
+     * {@link LoottableItem} entries.  Returns {@code null} if the table has no
+     * items or an entry contains an unrecognised {@link LoottableItemType}.
+     *
+     * @param id the loot table ID
+     * @return the populated loot table, or {@code null}
+     */
     public Loottable getLoottable(String id) {
         Loottable lt = null;
         String sql = "SELECT * FROM loottable_items WHERE loottable_id = ?";

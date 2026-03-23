@@ -22,6 +22,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * DAO for loading custom crafting recipe definitions ({@link CRecipe}) from the
+ * {@code recipes} table.  Recipes are shaped or shapeless and may reference
+ * a success interaction to trigger after a successful craft.
+ */
 public class CraftingDAO implements IDAO {
 
     private final WoSSystems plugin = WoSSystems.getInstance();
@@ -51,6 +56,12 @@ public class CraftingDAO implements IDAO {
         }
     }
 
+    /**
+     * Loads all custom crafting recipes from the {@code recipes} table.
+     * Ingredients are deserialized from the stored JSON object.
+     *
+     * @return list of all {@link CRecipe} definitions; empty if none exist or on error
+     */
     public List<CRecipe> loadAllRecipes() {
         List<CRecipe> recipes = new ArrayList<>();
 
@@ -90,6 +101,12 @@ public class CraftingDAO implements IDAO {
         return new CRecipe(id, shaped, shape, ingMap, resultId, resultAmount,  successId);
     }
 
+    /**
+     * Returns the map of recipes that have been registered with Bukkit's recipe
+     * system, keyed by their {@link NamespacedKey}.
+     *
+     * @return mutable map of loaded recipes
+     */
     public Map<NamespacedKey, Recipe> getLoadedRecipes() {
         return loadedRecipes;
     }

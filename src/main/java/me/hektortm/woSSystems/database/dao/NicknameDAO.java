@@ -15,6 +15,12 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 
+/**
+ * DAO for managing player nicknames, nickname reservations, and the
+ * staff-approval workflow for nickname change requests.
+ *
+ * <p>Tables managed: {@code nicknames}, {@code reserved_nicks}, {@code nick_requests}.</p>
+ */
 public class NicknameDAO implements IDAO {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DatabaseManager db;
@@ -48,6 +54,15 @@ public class NicknameDAO implements IDAO {
         }
     }
 
+    /**
+     * Saves or updates a player's nickname and appends it to their nick history.
+     * Uses INSERT IGNORE to create a new row, followed by UPDATE to keep the
+     * username current and append the new nick to {@code previous_nicks}.
+     *
+     * @param uuid     the player's UUID
+     * @param username the player's current Minecraft username
+     * @param nickname the new nickname to apply
+     */
     public void saveNickname(UUID uuid, String username, String nickname) {
         // Insert if not exists
         String query = "INSERT IGNORE INTO nicknames (uuid, username, nickname, previous_nicks) VALUES (?, ?, ?, ?)";
@@ -78,6 +93,12 @@ public class NicknameDAO implements IDAO {
         }
     }
 
+    /**
+     * Clears the active nickname for a player, setting the {@code nickname}
+     * column to {@code NULL}.  The username and history are preserved.
+     *
+     * @param uuid the player's UUID
+     */
     public void resetNickname(UUID uuid) {
         String query = "UPDATE nicknames SET nickname = NULL WHERE uuid = ?";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -90,6 +111,13 @@ public class NicknameDAO implements IDAO {
         }
     }
 
+    /**
+     * Returns the current nickname for the given UUID, or {@code null} if the
+     * player has no active nickname or is not in the table.
+     *
+     * @param uuid the player's UUID
+     * @return the nickname string, or {@code null}
+     */
     public String getNickname(UUID uuid) {
         String query = "SELECT nickname FROM nicknames WHERE uuid = ?";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -106,6 +134,14 @@ public class NicknameDAO implements IDAO {
         return null;
     }
 
+    /**
+     * Looks up {@code input} against both the {@code username} and {@code nickname}
+     * columns and returns the preferred display name (nickname if set, otherwise
+     * username).  Returns {@code null} if no match is found.
+     *
+     * @param input a username or nickname to search for
+     * @return the resolved display name, or {@code null}
+     */
     public String getRealNameOrNickname(String input) {
         String query = "SELECT username, nickname FROM nicknames WHERE username = ? OR nickname = ?";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -125,6 +161,13 @@ public class NicknameDAO implements IDAO {
         return null;
     }
 
+    /**
+     * Submits a nickname change request for staff review.  Uses upsert semantics
+     * so re-submitting with a different nickname replaces the previous request.
+     *
+     * @param uuid     the requesting player's UUID
+     * @param nickname the desired new nickname (or {@code "reset"} to clear)
+     */
     public void requestNicknameChange(UUID uuid, String nickname) {
         String query = "INSERT INTO nick_requests (uuid, nickname) VALUES (?, ?) " +
                 "ON DUPLICATE KEY UPDATE nickname = VALUES(nickname)";
@@ -139,6 +182,12 @@ public class NicknameDAO implements IDAO {
         }
     }
 
+    /**
+     * Approves a pending nickname change request: applies the nickname (or resets
+     * it if the requested value is {@code "reset"}), then removes the request row.
+     *
+     * @param uuid the player whose request should be approved
+     */
     public void approveNicknameChange(UUID uuid) {
         String query = "SELECT nickname FROM nick_requests WHERE uuid = ?";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -161,6 +210,12 @@ public class NicknameDAO implements IDAO {
         }
     }
 
+    /**
+     * Rejects a pending nickname change request by deleting the request row.
+     * The player's current nickname remains unchanged.
+     *
+     * @param uuid the player whose request should be denied
+     */
     public void denyNicknameChange(UUID uuid) {
         removeNicknameRequest(uuid);
     }
@@ -177,6 +232,11 @@ public class NicknameDAO implements IDAO {
         }
     }
 
+    /**
+     * Returns all pending nickname change requests as a {@code UUID → nickname} map.
+     *
+     * @return map of player UUID to requested nickname
+     */
     public Map<UUID, String> getNickRequests() {
         Map<UUID, String> requests = new HashMap<>();
         String query = "SELECT uuid, nickname FROM nick_requests";
@@ -193,6 +253,13 @@ public class NicknameDAO implements IDAO {
         return requests;
     }
 
+    /**
+     * Reserves a nickname for a specific player so no one else can claim it.
+     * Uses upsert semantics; re-calling replaces the existing reservation.
+     *
+     * @param uuid     the player the reservation is for
+     * @param nickname the nickname to reserve
+     */
     public void reserveNickname(UUID uuid, String nickname) {
         String query = "INSERT INTO reserved_nicks (uuid, nickname) VALUES (?, ?) " +
                 "ON DUPLICATE KEY UPDATE nickname = VALUES(nickname)";
@@ -207,6 +274,11 @@ public class NicknameDAO implements IDAO {
         }
     }
 
+    /**
+     * Removes the nickname reservation for the given player.
+     *
+     * @param uuid the player whose reservation should be released
+     */
     public void unreserveNickname(UUID uuid) {
         String query = "DELETE FROM reserved_nicks WHERE uuid = ?";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -219,6 +291,12 @@ public class NicknameDAO implements IDAO {
         }
     }
 
+    /**
+     * Checks whether the given nickname string is reserved by any player.
+     *
+     * @param nickname the nickname to check
+     * @return {@code true} if the nickname is reserved
+     */
     public boolean isNicknameReserved(String nickname) {
         String query = "SELECT uuid FROM reserved_nicks WHERE nickname = ?";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -233,6 +311,11 @@ public class NicknameDAO implements IDAO {
         return false;
     }
 
+    /**
+     * Returns all reserved nicknames as a {@code UUID → nickname} map.
+     *
+     * @return map of player UUID to their reserved nickname
+     */
     public Map<UUID, String> getReservedNicknames() {
         Map<UUID, String> reservedNicks = new HashMap<>();
         String query = "SELECT uuid, nickname FROM reserved_nicks";

@@ -17,6 +17,17 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
+/**
+ * DAO for currency definitions and per-player balance management.
+ *
+ * <p>Currency definitions are loaded once at startup and cached in memory.
+ * Per-player balances are loaded on join, served entirely from the in-memory
+ * cache during play, and persisted asynchronously via {@link AsyncWriteQueue}
+ * to avoid blocking the main thread.</p>
+ *
+ * <p>Tables managed: {@code currencies} (definitions, via {@link SchemaManager}),
+ * {@code playerdata_economy} (per-player balances), {@code eco_log} (audit log).</p>
+ */
 public class EconomyDAO implements IDAO {
     private final DatabaseManager db;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
@@ -143,6 +154,17 @@ public class EconomyDAO implements IDAO {
 
     // ─── Eco log ────────────────────────────────────────────────────────────────
 
+    /**
+     * Appends an economy audit log entry asynchronously via {@link AsyncWriteQueue}.
+     *
+     * @param uuid           the player's UUID
+     * @param currency       the affected currency ID
+     * @param previousAmount the balance before the change
+     * @param newAmount      the balance after the change
+     * @param changeAmount   the delta (positive or negative)
+     * @param sourceType     category of the action (e.g. {@code "INTERACTION"})
+     * @param source         specific source identifier (e.g. interaction ID)
+     */
     public void ecoLog(UUID uuid, String currency, long previousAmount, long newAmount,
                        long changeAmount, String sourceType, String source) {
         AsyncWriteQueue.submit(() -> {
@@ -174,11 +196,20 @@ public class EconomyDAO implements IDAO {
         return currencyCache;
     }
 
+    /**
+     * Checks whether a currency definition exists (via the cached definitions map).
+     *
+     * @param id the currency ID
+     * @return {@code true} if the currency is defined
+     */
     public boolean currencyExists(String id) {
         return getCurrencies().containsKey(id);
     }
 
-    /** Force-refresh currency definitions (e.g. after an admin adds a currency). */
+    /**
+     * Force-refreshes the currency definitions cache from the database.
+     * Use after an admin adds or modifies a currency definition.
+     */
     public void reloadCurrencies() {
         currencyCache = null;
         loadCurrencies();

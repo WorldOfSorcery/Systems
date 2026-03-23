@@ -20,6 +20,15 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
+/**
+ * DAO for server-wide {@link Constant} key-value pairs stored in the
+ * {@code constants} table.
+ *
+ * <p>All constants are preloaded into an in-memory cache at startup so that
+ * reads are zero-latency.  Individual entries can be refreshed or evicted via
+ * {@link #reloadFromDB(String, org.bukkit.entity.Player)} when a webhook
+ * update is received.</p>
+ */
 public class ConstantDAO implements IDAO {
     private final DatabaseManager db;
     private final DAOHub daoHub;
@@ -40,10 +49,21 @@ public class ConstantDAO implements IDAO {
         org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, this::preloadAll);
     }
 
+    /**
+     * Returns the {@link Constant} with the given ID from the in-memory cache,
+     * or {@code null} if no such constant exists.
+     *
+     * @param id the constant ID
+     * @return the cached constant, or {@code null}
+     */
     public Constant getConstant(String id) {
         return cache.get(id);
     }
 
+    /**
+     * Loads all constant definitions from the {@code constants} table into the
+     * in-memory cache.  Called asynchronously from {@link #initializeTable()}.
+     */
     public void preloadAll() {
         String sql = "SELECT * FROM constants";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -64,6 +84,14 @@ public class ConstantDAO implements IDAO {
         }
     }
 
+    /**
+     * Refreshes a single constant in the cache from the database.  If the row
+     * no longer exists the entry is evicted from cache.  A title is sent to
+     * {@code p} to confirm the result.  Intended for use by webhook update handlers.
+     *
+     * @param id the constant ID to reload
+     * @param p  the player who triggered the reload (receives title feedback)
+     */
     public void reloadFromDB(String id, Player p) {
         String sql = "SELECT id, value FROM constants WHERE id = ?";
         try (Connection conn = db.getConnection();

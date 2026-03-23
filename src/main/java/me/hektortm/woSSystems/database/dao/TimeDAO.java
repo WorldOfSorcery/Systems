@@ -15,6 +15,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 
+/**
+ * DAO for loading time-gated {@link Activity} definitions from the
+ * {@code activities} table.  Activities define a time window (start/end
+ * in-game hours) and optional interactions to trigger at the start and end.
+ */
 public class TimeDAO implements IDAO {
     private final DatabaseManager db;
     private final DAOHub daoHub;
@@ -30,6 +35,13 @@ public class TimeDAO implements IDAO {
     public void initializeTable() throws SQLException {
         SchemaManager.syncTable(db, Activity.class);
     }
+    /**
+     * Loads and returns all {@link Activity} definitions from the database.
+     * Each activity specifies an in-game time window, an optional date filter,
+     * and start/end interaction IDs.
+     *
+     * @return list of activities; empty list if none are defined or on error
+     */
     public List<Activity> getAllActivities() {
         List<Activity> activities = new ArrayList<>();
         String sql = "SELECT * FROM activities";

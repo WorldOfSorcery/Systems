@@ -19,6 +19,18 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
+/**
+ * DAO for player stat and global stat management.
+ *
+ * <p>Stat definitions ({@link Stat}, {@link GlobalStat}) are loaded once at startup
+ * and cached for the server lifetime.  Per-player values are loaded on join and
+ * served entirely from memory during play; writes are flushed asynchronously via
+ * {@link AsyncWriteQueue} to avoid blocking the main thread.</p>
+ *
+ * <p>Tables managed: {@code stats}, {@code global_stats} (definitions, via
+ * {@link me.hektortm.woSSystems.database.SchemaManager}), {@code playerdata_stats}
+ * (per-player values, manual).</p>
+ */
 public class StatsDAO implements IDAO {
     private final DatabaseManager db;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);

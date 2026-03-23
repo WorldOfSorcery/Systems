@@ -5,7 +5,6 @@ import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.utils.Parsers;
 import me.hektortm.woSSystems.utils.dataclasses.*;
-import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
@@ -20,6 +19,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+/**
+ * Data Access Object for {@link Interaction} and all related child tables
+ * ({@code inter_actions}, {@code inter_holograms}, {@code inter_particles},
+ * {@code inter_npcs}, {@code inter_blocks}).
+ *
+ * <p>All interactions are preloaded into an in-memory cache on startup.
+ * Subsequent reads are served entirely from cache with no database involvement.
+ * Two secondary indexes ({@link #blockIndex} and {@link #npcIndex}) are kept in
+ * sync on every bind/unbind so block- and NPC-lookups are also O(1) cache hits.
+ */
 public class InteractionDAO implements IDAO {
 
     private final DatabaseManager db;
@@ -27,13 +36,28 @@ public class InteractionDAO implements IDAO {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "InteractionDAO";
 
+    /** Primary cache: interaction id → fully built {@link Interaction}. */
     private final Map<String, Interaction> cache = new ConcurrentHashMap<>();
+
+    /** Secondary index: serialised block location → interaction id. */
+    private final Map<String, String> blockIndex = new ConcurrentHashMap<>();
+
+    /** Secondary index: Citizens NPC id → interaction id. */
+    private final Map<Integer, String> npcIndex = new ConcurrentHashMap<>();
 
     public InteractionDAO(DatabaseManager db, DAOHub hub) {
         this.db = db;
         this.hub = hub;
     }
 
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
+
+    /**
+     * Creates or syncs all interaction-related tables and kicks off an async
+     * preload of every interaction into the cache.
+     *
+     * @throws SQLException if table creation or schema sync fails
+     */
     @Override
     public void initializeTable() throws SQLException {
         SchemaManager.syncTable(db, Interaction.class);
@@ -46,219 +70,304 @@ public class InteractionDAO implements IDAO {
                 CREATE TABLE IF NOT EXISTS inter_npcs (
                     npc_id VARCHAR(255) NOT NULL,
                     interaction_id VARCHAR(255) NOT NULL,
-                    PRIMARY KEY (interaction_id)
+                    PRIMARY KEY (npc_id)
                 )
             """);
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS inter_blocks (
                     location TEXT NOT NULL,
                     interaction_id VARCHAR(255) NOT NULL,
-                    PRIMARY KEY (interaction_id)
+                    PRIMARY KEY (location(255))
                 )
             """);
         }
+        WoSSystems.getInstance().getServer().getScheduler()
+                .runTaskAsynchronously(plugin, this::preloadAll);
     }
 
+    /**
+     * Re-fetches a single interaction from the database and updates the cache,
+     * or evicts it from the cache if it no longer exists.
+     *
+     * <p>Intended to be called by the web-hook / reload command when a single
+     * entry is known to have changed remotely.
+     *
+     * @param id the interaction id to reload
+     * @param p  the player who triggered the reload — receives a title feedback message
+     */
     public void reloadFromDB(String id, Player p) {
-        String sql = "SELECT citem_id, catch_interaction, rarity, regions, tag FROM fishing WHERE id = ?";
+        String sql = "SELECT id FROM interactions WHERE id = ?";
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, id);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                cache.put(id, buildInteraction(conn, id));
-                p.sendTitle("§aUpdated Fish", "§e"+id );
+                Interaction built = buildInteraction(conn, id);
+                cache.put(id, built);
+                rebuildIndexFor(built);
+                p.sendTitle("§aUpdated Interaction", "§e" + id);
             } else {
-                // Deleted on the website → evict
-                cache.remove(id);
-                p.sendTitle("§cDeleted Fish", "§e"+id);
+                Interaction old = cache.remove(id);
+                if (old != null) removeIndexFor(old);
+                p.sendTitle("§cDeleted Interaction", "§e" + id);
             }
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:reload", "Failed to reload item from DB: ", e);
+            WoSSystems.discordLog(Level.SEVERE, logName + ":reload", "Failed to reload interaction from DB: ", e);
         }
     }
 
+    /**
+     * Loads every interaction from the database into the cache.
+     * Runs asynchronously; each interaction gets its own connection so that
+     * iterating the ID result set and building child objects never share a
+     * connection that a sub-query might close prematurely.
+     *
+     * <p>Called automatically from {@link #initializeTable()}.
+     */
     public void preloadAll() {
         String sql = "SELECT id FROM interactions";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            ResultSet rs = stmt.executeQuery();
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
             int count = 0;
             while (rs.next()) {
                 String id = rs.getString("id");
-                try {
-                    cache.put(id, buildInteraction(conn, id));
+                try (Connection buildConn = db.getConnection()) {
+                    Interaction built = buildInteraction(buildConn, id);
+                    cache.put(id, built);
+                    rebuildIndexFor(built);
                     count++;
                 } catch (Exception e) {
                     plugin.getLogger().warning(logName + ": failed to preload '" + id + "': " + e.getMessage());
                 }
             }
-            plugin.getLogger().info(logName + ": preloaded " + count + " fish into cache.");
+            plugin.getLogger().info(logName + ": preloaded " + count + " interaction(s) into cache.");
         } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "FID:preload", "Failed to preload fish into cache: ", e);
+            WoSSystems.discordLog(Level.SEVERE, logName + ":preload", "Failed to preload interactions into cache: ", e);
         }
     }
 
-
+    // ── Build chain ──────────────────────────────────────────────────────────
 
     /**
-    *   Build Interaction
-    *
-    *
-    *
-    */
-    private Interaction buildInteraction(Connection conn, String id) {
-
-        List<InteractionAction> actions = getActionsForInteraction(conn, id);
-        List<InteractionParticles> particles = getParticlesForInteraction(conn, id);
-        List<InteractionHologram> holograms = getHologramsForInteraction(conn, id);
-        List<Location> blockLocations = getBlocks(conn, id);
-        List<Integer> npcIds = getNPCs(conn, id);
-
-
+     * Assembles a complete {@link Interaction} by fetching all child rows
+     * (actions, particles, holograms, blocks, NPCs) over the supplied connection.
+     *
+     * @param conn an open database connection; not closed by this method
+     * @param id   the interaction id to build
+     * @return the fully populated {@link Interaction}
+     * @throws SQLException if any child query fails
+     */
+    private Interaction buildInteraction(Connection conn, String id) throws SQLException {
+        List<InteractionAction> actions = fetchActions(conn, id);
+        List<InteractionParticles> particles = fetchParticles(conn, id);
+        List<InteractionHologram> holograms = fetchHolograms(conn, id);
+        List<Location> blockLocations = fetchBlocks(conn, id);
+        List<Integer> npcIds = fetchNPCs(conn, id);
         return new Interaction(id, actions, holograms, particles, blockLocations, npcIds);
     }
 
-    public List<InteractionAction> getActionsForInteraction(Connection conn, String interactionId) {
+    /**
+     * Fetches all {@link InteractionAction} rows for a given interaction,
+     * ordered by {@code action_id} ascending.
+     *
+     * @param conn          an open database connection; not closed by this method
+     * @param interactionId the interaction id to query
+     * @return ordered list of actions, empty if none exist
+     * @throws SQLException if the query fails
+     */
+    private List<InteractionAction> fetchActions(Connection conn, String interactionId) throws SQLException {
         List<InteractionAction> actions = new ArrayList<>();
-
         String sql = "SELECT * FROM inter_actions WHERE id = ? ORDER BY action_id ASC";
-
-        try (conn; PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, interactionId);
             ResultSet rs = stmt.executeQuery();
-
             while (rs.next()) {
-                String behaviour = rs.getString("behaviour");
-                String matchType = rs.getString("matchtype");
-                int actionId = rs.getInt("action_id");
                 String actionsRaw = rs.getString("actions");
-
-                // Assuming actions are stored like ["cmd1", "cmd2"]
-                List<String> parsedActions = Arrays.stream(actionsRaw.replace("[", "").replace("]", "").split(","))
-                        .map(String::trim)
-                        .map(s -> s.replaceAll("^\"|\"$", "")) // remove surrounding quotes
-                        .collect(Collectors.toList());
-
-                actions.add(new InteractionAction(interactionId, behaviour, matchType, actionId, parsedActions));
+                List<String> parsedActions = parseList(actionsRaw);
+                actions.add(new InteractionAction(
+                        interactionId,
+                        rs.getString("behaviour"),
+                        rs.getString("matchtype"),
+                        rs.getInt("action_id"),
+                        parsedActions
+                ));
             }
-
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "6cb8760c", "Failed to get Actions for Interaction ID("+interactionId+"): ", e
-            ));
         }
-
         return actions;
     }
 
-    public List<InteractionParticles> getParticlesForInteraction(Connection conn, String id) {
+    /**
+     * Fetches all {@link InteractionParticles} rows for a given interaction,
+     * ordered by {@code particle_id} ascending.
+     *
+     * @param conn an open database connection; not closed by this method
+     * @param id   the interaction id to query
+     * @return ordered list of particle configs, empty if none exist
+     * @throws SQLException if the query fails
+     */
+    private List<InteractionParticles> fetchParticles(Connection conn, String id) throws SQLException {
         List<InteractionParticles> particles = new ArrayList<>();
-
         String sql = "SELECT * FROM inter_particles WHERE id = ? ORDER BY particle_id ASC";
-
-        try (conn; PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                String behaviour = rs.getString("behaviour");
-                String matchType = rs.getString("matchtype");
-                int particleId = rs.getInt("particle_id");
-                String particle = rs.getString("particle");
-                String particleColor = rs.getString("particle_color");
-
-                particles.add(new InteractionParticles(id, behaviour, matchType, particleId, particle, particleColor));
+                particles.add(new InteractionParticles(
+                        id,
+                        rs.getString("behaviour"),
+                        rs.getString("matchtype"),
+                        rs.getInt("particle_id"),
+                        rs.getString("particle"),
+                        rs.getString("particle_color")
+                ));
             }
-            return particles;
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "5b32a7e5", "Failed to get Particles for Interaction ID("+id+"): ", e
-            ));
         }
-        return null;
+        return particles;
     }
 
-    public List<InteractionHologram> getHologramsForInteraction(Connection conn, String id) {
+    /**
+     * Fetches all {@link InteractionHologram} rows for a given interaction.
+     *
+     * @param conn an open database connection; not closed by this method
+     * @param id   the interaction id to query
+     * @return list of hologram configs, empty if none exist
+     * @throws SQLException if the query fails
+     */
+    private List<InteractionHologram> fetchHolograms(Connection conn, String id) throws SQLException {
         List<InteractionHologram> holograms = new ArrayList<>();
-
         String sql = "SELECT * FROM inter_holograms WHERE interaction_id = ?";
-
-        try (conn; PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                int hologramId = rs.getInt("hologram_id");
-                String behaviour = rs.getString("behaviour");
-                String matchType = rs.getString("matchtype");
                 String hologramRaw = rs.getString("hologram");
-
-                // Assuming holograms are stored like ["line1", "line2"]
-                List<String> parsedHologram = Arrays.stream(hologramRaw.replace("[", "").replace("]", "").split(","))
-                        .map(String::trim)
-                        .map(s -> s.replaceAll("^\"|\"$", "")) // remove surrounding quotes
-                        .collect(Collectors.toList());
-
-                String settings = rs.getString("settings");
-
-                holograms.add(new InteractionHologram(id, hologramId, behaviour, matchType, parsedHologram, settings));
+                holograms.add(new InteractionHologram(
+                        id,
+                        rs.getInt("hologram_id"),
+                        rs.getString("behaviour"),
+                        rs.getString("matchtype"),
+                        parseList(hologramRaw),
+                        rs.getString("settings")
+                ));
             }
-
-            return holograms;
-        } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get holograms: " + e);
         }
-        return new ArrayList<>();
+        return holograms;
     }
 
+    /**
+     * Fetches all Citizens NPC ids bound to a given interaction.
+     *
+     * @param conn an open database connection; not closed by this method
+     * @param id   the interaction id to query
+     * @return list of NPC ids, empty if none are bound
+     * @throws SQLException if the query fails
+     */
+    private List<Integer> fetchNPCs(Connection conn, String id) throws SQLException {
+        List<Integer> npcs = new ArrayList<>();
+        String sql = "SELECT npc_id FROM inter_npcs WHERE interaction_id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, id);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                npcs.add(rs.getInt("npc_id"));
+            }
+        }
+        return npcs;
+    }
 
+    /**
+     * Fetches all block locations bound to a given interaction.
+     *
+     * @param conn an open database connection; not closed by this method
+     * @param id   the interaction id to query
+     * @return list of {@link Location} objects, empty if none are bound
+     * @throws SQLException if the query fails
+     */
+    private List<Location> fetchBlocks(Connection conn, String id) throws SQLException {
+        List<Location> blocks = new ArrayList<>();
+        String sql = "SELECT location FROM inter_blocks WHERE interaction_id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, id);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Location loc = Parsers.stringToLocation(rs.getString("location"));
+                blocks.add(loc);
+            }
+        }
+        return blocks;
+    }
+
+    // ── Index helpers ─────────────────────────────────────────────────────────
+
+    /**
+     * Inserts all block locations and NPC ids of the given interaction into
+     * the secondary indexes. Called after the interaction is put into the cache.
+     *
+     * @param inter the interaction whose bindings should be indexed
+     */
+    private void rebuildIndexFor(Interaction inter) {
+        for (Location loc : inter.getBlockLocations()) {
+            blockIndex.put(Parsers.locationToString(loc), inter.getInteractionId());
+        }
+        for (int npcId : inter.getNpcIDs()) {
+            npcIndex.put(npcId, inter.getInteractionId());
+        }
+    }
+
+    /**
+     * Removes all block locations and NPC ids of the given interaction from
+     * the secondary indexes. Called before the interaction is evicted from the cache.
+     *
+     * @param inter the interaction whose bindings should be de-indexed
+     */
+    private void removeIndexFor(Interaction inter) {
+        for (Location loc : inter.getBlockLocations()) {
+            blockIndex.remove(Parsers.locationToString(loc));
+        }
+        for (int npcId : inter.getNpcIDs()) {
+            npcIndex.remove(npcId);
+        }
+    }
+
+    // ── Bind / unbind ─────────────────────────────────────────────────────────
+
+    /**
+     * Binds a Citizens NPC to an interaction, persisting the link to the database
+     * and updating the in-memory cache and {@link #npcIndex} immediately.
+     *
+     * @param id    the interaction id
+     * @param npcId the Citizens NPC id to bind
+     * @return {@code true} if the bind was persisted successfully, {@code false} on error
+     */
     public boolean bindNPC(String id, int npcId) {
         String sql = "INSERT INTO inter_npcs (npc_id, interaction_id) VALUES (?, ?)";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, npcId);
             pstmt.setString(2, id);
             pstmt.executeUpdate();
+            Interaction inter = cache.get(id);
+            if (inter != null) {
+                inter.getNpcIDs().add(npcId);
+                npcIndex.put(npcId, id);
+            }
             return true;
         } catch (SQLException e) {
             DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "6e81e051", "Failed to bind Interaction ID("+id+") to NPC: ", e
+                    Level.SEVERE, plugin, "6e81e051", "Failed to bind Interaction ID(" + id + ") to NPC: ", e
             ));
             return false;
         }
     }
 
-    public List<Integer> getNPCs(Connection conn, String id) {
-        List<Integer> npcs = new ArrayList<>();
-        String sql = "SELECT npc_id FROM inter_npcs WHERE interaction_id = ?";
-        try (conn; PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                npcs.add(rs.getInt("npc_id"));
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "9efbf58a", "Failed to get NPCs for Interaction ID("+id+"): ", e
-            ));
-        }
-        return npcs;
-    }
-
-    public String getNPCInteraction(int id) {
-        String sql = "SELECT interaction_id FROM inter_npcs WHERE npc_id = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getString("interaction_id");
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "8b80892f", "Failed to get NPC Interaction ID("+id+"): ", e
-            ));
-            return null;
-        }
-        return null;
-    }
-
+    /**
+     * Binds a world block to an interaction, persisting the link to the database
+     * and updating the in-memory cache and {@link #blockIndex} immediately.
+     *
+     * @param id  the interaction id
+     * @param loc the block location to bind
+     * @return {@code true} if the bind was persisted successfully, {@code false} on error
+     */
     public boolean bindBlock(String id, Location loc) {
         String block = Parsers.locationToString(loc);
         String sql = "INSERT INTO inter_blocks (location, interaction_id) VALUES (?, ?)";
@@ -266,240 +375,156 @@ public class InteractionDAO implements IDAO {
             pstmt.setString(1, block);
             pstmt.setString(2, id);
             pstmt.executeUpdate();
+            Interaction inter = cache.get(id);
+            if (inter != null) {
+                inter.getBlockLocations().add(loc);
+                blockIndex.put(block, id);
+            }
             return true;
         } catch (SQLException e) {
             DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "8b80892f", "Failed to bind ID("+id+") to block: ", e
+                    Level.SEVERE, plugin, "8b80892f", "Failed to bind ID(" + id + ") to block: ", e
             ));
             return false;
         }
-
     }
 
-    public List<Location> getBlocks(Connection conn, String id) {
-        List<Location> blocks = new ArrayList<>();
-        String sql = "SELECT location FROM inter_blocks WHERE interaction_id = ?";
-        try (conn; PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                String locStr = rs.getString("location");
-                Location loc = Parsers.stringToLocation(locStr);
-                blocks.add(loc);
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "90441c51", "Failed to get Block Locations for ID("+id+"): ", e
-            ));
-        }
-        return blocks;
-    }
-
-    public List<Location> getAllBlockLocations() {
-        String sql = "SELECT * FROM inter_blocks";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            ResultSet rs = pstmt.executeQuery();
-            List<Location> locations = new ArrayList<>();
-            while (rs.next()) {
-                String locStr = rs.getString("location");
-                Location loc = Parsers.stringToLocation(locStr);
-                locations.add(loc);
-            }
-            return locations;
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "364d5b8e", "Failed to get all Block Locations: ", e
-            ));
-        }
-        return List.of();
-    }
-
-    public String getInterOnBlock(Location loc) {
-        String location = Parsers.locationToString(loc);
-        String sql = "SELECT interaction_id FROM inter_blocks WHERE location = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, location);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getString("interaction_id");
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "364d5b8e", "Failed to get Interactions for Block("+location+"): ", e
-            ));
-            return null;
-        }
-        return null;
-    }
-
-
-    public Interaction getInteractionByID(String id) {
-        return cache.get(id);
-    }
-
-    public List<Interaction> getInteractions() {
-        List<String> ids = new ArrayList<>();
-        try (Connection conn = db.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement("SELECT id FROM interactions")) {
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) ids.add(rs.getString("id"));
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(Level.SEVERE, plugin, "c3956d21", "Failed to get Interaction IDs: ", e));
-            return new ArrayList<>();
-        }
-
-        if (ids.isEmpty()) return new ArrayList<>();
-
-        // Bulk-load all child rows — one query per table
-        Map<String, List<InteractionAction>> actionsMap = new HashMap<>();
-        Map<String, List<InteractionHologram>> hologramsMap = new HashMap<>();
-        Map<String, List<InteractionParticles>> particlesMap = new HashMap<>();
-        Map<String, List<Location>> blocksMap = new HashMap<>();
-        Map<String, List<Integer>> npcsMap = new HashMap<>();
-
-        try (Connection conn = db.getConnection()) {
-            // inter_actions
-            try (PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM inter_actions ORDER BY id, action_id ASC")) {
-                ResultSet rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    String id = rs.getString("id");
-                    String actionsRaw = rs.getString("actions");
-                    List<String> parsedActions = Arrays.stream(actionsRaw.replace("[", "").replace("]", "").split(","))
-                            .map(String::trim).map(s -> s.replaceAll("^\"|\"$", "")).collect(Collectors.toList());
-                    actionsMap.computeIfAbsent(id, k -> new ArrayList<>())
-                            .add(new InteractionAction(id, rs.getString("behaviour"), rs.getString("matchtype"), rs.getInt("action_id"), parsedActions));
-                }
-            }
-
-            // inter_holograms
-            try (PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM inter_holograms")) {
-                ResultSet rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    String id = rs.getString("interaction_id");
-                    String hologramRaw = rs.getString("hologram");
-                    List<String> parsedHologram = Arrays.stream(hologramRaw.replace("[", "").replace("]", "").split(","))
-                            .map(String::trim).map(s -> s.replaceAll("^\"|\"$", "")).collect(Collectors.toList());
-                    hologramsMap.computeIfAbsent(id, k -> new ArrayList<>())
-                            .add(new InteractionHologram(id, rs.getInt("hologram_id"), rs.getString("behaviour"), rs.getString("matchtype"), parsedHologram, rs.getString("settings")));
-                }
-            }
-
-            // inter_particles
-            try (PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM inter_particles ORDER BY id, particle_id ASC")) {
-                ResultSet rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    String id = rs.getString("id");
-                    particlesMap.computeIfAbsent(id, k -> new ArrayList<>())
-                            .add(new InteractionParticles(id, rs.getString("behaviour"), rs.getString("matchtype"), rs.getInt("particle_id"), rs.getString("particle"), rs.getString("particle_color")));
-                }
-            }
-
-            // inter_blocks
-            try (PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM inter_blocks")) {
-                ResultSet rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    String id = rs.getString("interaction_id");
-                    Location loc = Parsers.stringToLocation(rs.getString("location"));
-                    blocksMap.computeIfAbsent(id, k -> new ArrayList<>()).add(loc);
-                }
-            }
-
-            // inter_npcs
-            try (PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM inter_npcs")) {
-                ResultSet rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    String id = rs.getString("interaction_id");
-                    npcsMap.computeIfAbsent(id, k -> new ArrayList<>()).add(rs.getInt("npc_id"));
-                }
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(Level.SEVERE, plugin, "c3956d21b", "Failed to bulk-load Interaction children: ", e));
-            return new ArrayList<>();
-        }
-
-        // Assemble Interaction objects from the maps
-        List<Interaction> interactions = new ArrayList<>();
-        for (String id : ids) {
-            interactions.add(new Interaction(
-                    id,
-                    actionsMap.getOrDefault(id, new ArrayList<>()),
-                    hologramsMap.getOrDefault(id, new ArrayList<>()),
-                    particlesMap.getOrDefault(id, new ArrayList<>()),
-                    blocksMap.getOrDefault(id, new ArrayList<>()),
-                    npcsMap.getOrDefault(id, new ArrayList<>())
-            ));
-        }
-        return interactions;
-    }
-
+    /**
+     * Removes the binding between a Citizens NPC and its interaction, deleting
+     * the row from the database and updating the cache and {@link #npcIndex}.
+     *
+     * @param id the Citizens NPC id to unbind
+     * @return {@code true} if the row was deleted successfully, {@code false} on error
+     */
     public boolean unbindNpc(int id) {
         String sql = "DELETE FROM inter_npcs WHERE npc_id = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             pstmt.executeUpdate();
+            String interId = npcIndex.remove(id);
+            if (interId != null) {
+                Interaction inter = cache.get(interId);
+                if (inter != null) inter.getNpcIDs().remove((Integer) id);
+            }
             return true;
         } catch (SQLException e) {
             DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "ca6c88bb", "Failed to unbind Interaction from Npc("+id+"): ", e
+                    Level.SEVERE, plugin, "ca6c88bb", "Failed to unbind Interaction from Npc(" + id + "): ", e
             ));
             return false;
         }
     }
 
+    /**
+     * Removes the binding between a block location and its interaction, deleting
+     * the row from the database and updating the cache and {@link #blockIndex}.
+     *
+     * @param loc the block location to unbind
+     * @return {@code true} if the row was deleted successfully, {@code false} on error
+     */
     public boolean unbindBlock(Location loc) {
-        String sql = "DELETE FROM inter_blocks WHERE location = ?";
         String location = Parsers.locationToString(loc);
+        String sql = "DELETE FROM inter_blocks WHERE location = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, location);
             pstmt.executeUpdate();
+            String interId = blockIndex.remove(location);
+            if (interId != null) {
+                Interaction inter = cache.get(interId);
+                if (inter != null) inter.getBlockLocations().removeIf(l -> Parsers.locationToString(l).equals(location));
+            }
             return true;
         } catch (SQLException e) {
             DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "465cda2f", "Failed to unbind Interaction from block("+location+"): ", e
+                    Level.SEVERE, plugin, "465cda2f", "Failed to unbind Interaction from block(" + location + "): ", e
             ));
             return false;
         }
     }
 
+    // ── Lookups (cache-only) ──────────────────────────────────────────────────
+
+    /**
+     * Returns the cached {@link Interaction} for the given id, or {@code null}
+     * if no interaction with that id exists.
+     *
+     * @param id the interaction id to look up
+     * @return the {@link Interaction}, or {@code null}
+     */
+    public Interaction getInteractionByID(String id) {
+        return cache.get(id);
+    }
+
+    /**
+     * Returns the interaction id bound to the given block location, or
+     * {@code null} if no interaction is bound there.
+     * Served from {@link #blockIndex} — no database call.
+     *
+     * @param loc the block location to look up
+     * @return the bound interaction id, or {@code null}
+     */
     public String getBound(Location loc) {
-        String sql = "SELECT interaction_id FROM inter_blocks WHERE location = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, Parsers.locationToString(loc));
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getString("interaction_id");
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "0d47d170", "Failed to get Block bound interaction: ", e
-            ));
-        }
-        return null;
-    }
-    public String getNpcBound(int id) {
-        String sql = "SELECT interaction_id FROM inter_npcs WHERE npc_id = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getString("interaction_id");
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "af1a69b4", "Failed to get NPC bound interaction: ", e
-            ));
-        }
-        return null;
+        return blockIndex.get(Parsers.locationToString(loc));
     }
 
-
-    public boolean interactionExists(String id, CommandSender s) {
-        return cache.get(id) != null;
+    /**
+     * Returns the interaction id bound to the given Citizens NPC, or
+     * {@code null} if no interaction is bound to that NPC.
+     * Served from {@link #npcIndex} — no database call.
+     *
+     * @param npcId the Citizens NPC id to look up
+     * @return the bound interaction id, or {@code null}
+     */
+    public String getNpcBound(int npcId) {
+        return npcIndex.get(npcId);
     }
 
-
-    public List<Interaction> getCache() {
-        return cache;
+    /**
+     * Returns all block locations that have an interaction bound to them.
+     * Derived from {@link #blockIndex} — no database call.
+     *
+     * @return list of bound block locations; may be empty, never {@code null}
+     */
+    public List<Location> getAllBlockLocations() {
+        return blockIndex.keySet().stream()
+                .map(Parsers::stringToLocation)
+                .collect(Collectors.toList());
     }
 
+    /**
+     * Returns {@code true} if an interaction with the given id exists in the cache.
+     *
+     * @param id the interaction id to check
+     * @return {@code true} if the interaction is cached
+     */
+    public boolean interactionExists(String id) {
+        return cache.containsKey(id);
+    }
+
+    /**
+     * Returns a snapshot of all cached interactions as a new list.
+     *
+     * @return all cached {@link Interaction} objects; may be empty, never {@code null}
+     */
+    public List<Interaction> cache() {
+        return new ArrayList<>(cache.values());
+    }
+
+    // ── Utilities ─────────────────────────────────────────────────────────────
+
+    /**
+     * Parses a raw bracketed list string (e.g. {@code ["cmd1", "cmd2"]}) into
+     * a plain {@link List} of trimmed, unquoted strings.
+     *
+     * @param raw the raw string to parse; may be {@code null} or blank
+     * @return parsed list, empty if the input is null/blank
+     */
+    private List<String> parseList(String raw) {
+        if (raw == null || raw.isBlank()) return new ArrayList<>();
+        return Arrays.stream(raw.replace("[", "").replace("]", "").split(","))
+                .map(String::trim)
+                .map(s -> s.replaceAll("^\"|\"$", ""))
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
+    }
 }

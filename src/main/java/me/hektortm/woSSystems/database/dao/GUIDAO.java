@@ -27,6 +27,22 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+/**
+ * DAO for GUI definitions and their complete build hierarchy.
+ *
+ * <p>GUIs are assembled through a single-connection build chain:
+ * {@code buildGui → buildPages → buildSlots → buildConfigs}.  Keeping one
+ * connection open for the entire chain avoids repeated connection-pool
+ * round-trips and prevents the try-with-resources close bug that occurs when
+ * sub-methods open their own connections.</p>
+ *
+ * <p>All fully-built {@link GUI} objects are cached at startup via
+ * {@link #preloadGuis()}.  Individual GUIs can be refreshed or evicted via
+ * {@link #reloadFromDB(String, org.bukkit.entity.Player)} on webhook updates.</p>
+ *
+ * <p>Tables managed (via {@link me.hektortm.woSSystems.database.SchemaManager}):
+ * {@code guis}, {@code gui_pages}, {@code gui_slots}, {@code gui_slot_configs}.</p>
+ */
 public class GUIDAO implements IDAO {
     private final DatabaseManager db;
     private final DAOHub hub;
@@ -50,6 +66,10 @@ public class GUIDAO implements IDAO {
                 .runTaskAsynchronously(plugin, this::preloadGuis);
     }
 
+    /**
+     * Loads all GUI definitions from the database into the in-memory cache.
+     * Called asynchronously from {@link #initializeTable()}.
+     */
     public void preloadGuis() {
         String sql = "SELECT id FROM guis";
         try (Connection conn = db.getConnection();
@@ -76,6 +96,13 @@ public class GUIDAO implements IDAO {
     }
 
 
+    /**
+     * Refreshes a single GUI in the cache from the database.  If the GUI no
+     * longer exists the entry is evicted.  Sends a title to {@code p} to confirm.
+     *
+     * @param id the GUI ID to reload
+     * @param p  the player who triggered the reload (receives title feedback)
+     */
     public void reloadFromDB(String id, Player p) {
         String sql = "SELECT * FROM guis WHERE id = ?";
         try (Connection conn = db.getConnection();
@@ -95,6 +122,14 @@ public class GUIDAO implements IDAO {
         }
     }
 
+    /**
+     * Returns the {@link GUI} with the given ID from the in-memory cache.  If not
+     * cached, falls back to a database lookup and caches the result.
+     * Returns {@code null} if the GUI does not exist.
+     *
+     * @param id the GUI ID
+     * @return the cached (or freshly loaded) GUI, or {@code null}
+     */
     public GUI getGUIbyId(String id) {
         return cache.computeIfAbsent(id, k -> {
             try (Connection conn = db.getConnection()) {
@@ -248,6 +283,13 @@ public class GUIDAO implements IDAO {
         return item;
     }
 
+    /**
+     * Converts a bracket/comma-separated string (e.g. {@code "[a, b, c]"}) into
+     * a {@link List}.  Handles {@code null} and blank input by returning an empty list.
+     *
+     * @param input the raw string to parse
+     * @return list of trimmed, non-empty tokens
+     */
     public List<String> stringToList(String input) {
         if (input == null || input.isBlank()) return new ArrayList<>();
         return Arrays.stream(input.replace("[", "").replace("]", "").split(","))

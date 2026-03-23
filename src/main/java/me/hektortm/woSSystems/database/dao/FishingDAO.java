@@ -17,6 +17,13 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
+/**
+ * DAO for fishing item definitions stored in the {@code fishing} table.
+ *
+ * <p>Definitions are preloaded into an in-memory cache at startup.  The main
+ * use-case is {@link #getRandomItemByRarityAndRegion(String, String)}, which
+ * selects a random eligible item entirely from memory.</p>
+ */
 public class FishingDAO implements IDAO {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DatabaseManager db;
@@ -36,6 +43,13 @@ public class FishingDAO implements IDAO {
         SchemaManager.syncTable(db, FishingItem.class);
     }
 
+    /**
+     * Refreshes a single fishing item in the cache from the database.  If the row
+     * no longer exists the entry is evicted.  Sends a title to {@code p} to confirm.
+     *
+     * @param id the fishing item ID to reload
+     * @param p  the player who triggered the reload (receives title feedback)
+     */
     public void reloadFromDB(String id, Player p) {
         String sql = "SELECT citem_id, catch_interaction, rarity, regions, tag FROM fishing WHERE id = ?";
         try (Connection conn = db.getConnection();
@@ -55,6 +69,10 @@ public class FishingDAO implements IDAO {
         }
     }
 
+    /**
+     * Loads all fishing item definitions from the {@code fishing} table into the
+     * in-memory cache.  Should be called asynchronously.
+     */
     public void preloadAll() {
         String sql = "SELECT id, citem_id, catch_interaction, rarity, regions, tag FROM fishing";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -81,6 +99,15 @@ public class FishingDAO implements IDAO {
 
     }
 
+    /**
+     * Returns a random {@link FishingItem} matching the given rarity that is
+     * eligible in the given region.  An item with no regions configured is
+     * eligible everywhere.  Returns {@code null} if no eligible items are found.
+     *
+     * @param rarity the rarity tier to filter by
+     * @param region the region the player is fishing in
+     * @return a randomly selected eligible item, or {@code null}
+     */
     public FishingItem getRandomItemByRarityAndRegion(String rarity, String region) {
         List<FishingItem> itemsByRarity = getItemsByRarity(rarity);
         List<FishingItem> eligibleItems = new ArrayList<>();

@@ -13,6 +13,10 @@ import java.sql.*;
 import java.util.UUID;
 import java.util.logging.Level;
 
+/**
+ * DAO for managing player profile customisation data (background and profile
+ * picture).  Data is stored in the {@code playerdata_profile} table.
+ */
 public class ProfileDAO implements IDAO {
     private final DatabaseManager db;
     private final DAOHub hub;
@@ -42,6 +46,13 @@ public class ProfileDAO implements IDAO {
         }
     }
 
+    /**
+     * Returns the display value of the player's active background, or {@code null}
+     * if none is set.
+     *
+     * @param uuid the player's UUID
+     * @return background display value, or {@code null}
+     */
     public String getBackground(UUID uuid) {
         String sql = "SELECT background FROM playerdata_profile WHERE uuid = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -57,6 +68,13 @@ public class ProfileDAO implements IDAO {
         return null;
     }
 
+    /**
+     * Returns the item ID of the player's active background, or {@code null}
+     * if none is set.
+     *
+     * @param uuid the player's UUID
+     * @return background item ID, or {@code null}
+     */
     public String getBackgroundID(UUID uuid) {
         String sql = "SELECT background_id FROM playerdata_profile WHERE uuid = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -72,6 +90,13 @@ public class ProfileDAO implements IDAO {
         return null;
     }
 
+    /**
+     * Returns the display value of the player's active profile picture, or
+     * {@code null} if none is set.
+     *
+     * @param uuid the player's UUID
+     * @return profile picture display value, or {@code null}
+     */
     public String getProfilePicture(UUID uuid) {
         String sql = "SELECT picture FROM playerdata_profile WHERE uuid = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -87,6 +112,13 @@ public class ProfileDAO implements IDAO {
         return null;
     }
 
+    /**
+     * Returns the item ID of the player's active profile picture, or {@code null}
+     * if none is set.
+     *
+     * @param uuid the player's UUID
+     * @return profile picture item ID, or {@code null}
+     */
     public String getProfilePictureID(UUID uuid) {
         String sql = "SELECT picture_id FROM playerdata_profile WHERE uuid = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -102,6 +134,14 @@ public class ProfileDAO implements IDAO {
         return null;
     }
 
+    /**
+     * Inserts or replaces the player's background column.  The background ID is
+     * currently hard-coded to {@code "e"} and may need to be passed as a parameter
+     * in a future revision.
+     *
+     * @param uuid       the player's UUID
+     * @param background the background display value to save
+     */
     public void updateBackground(UUID uuid, String background) {
         String sql = "INSERT OR REPLACE INTO playerdata_profile (uuid, background, background_id) VALUES (?, ?, ?)";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -115,6 +155,13 @@ public class ProfileDAO implements IDAO {
         }
     }
 
+    /**
+     * Inserts or replaces the player's profile picture columns.
+     *
+     * @param uuid        the player's UUID
+     * @param pictureItem the picture display value to save
+     * @param id          the item ID associated with the picture
+     */
     public void updateProfilePicture(UUID uuid, String pictureItem, String id) {
         String sql = "INSERT OR REPLACE INTO playerdata_profile (uuid, picture, picture_id) VALUES (?, ?, ?)";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -128,6 +175,17 @@ public class ProfileDAO implements IDAO {
         }
     }
 
+    /**
+     * Upserts a complete profile row for the player.  Preferred over the individual
+     * {@code updateBackground}/{@code updateProfilePicture} methods when all fields
+     * are available at once.
+     *
+     * @param uuid         the player's UUID
+     * @param background   background display value
+     * @param backgroundId background item ID
+     * @param picture      profile picture display value
+     * @param pictureId    profile picture item ID
+     */
     public void insertOrUpdateProfile(UUID uuid, String background, String backgroundId, String picture, String pictureId) {
         String sql = """
             INSERT INTO playerdata_profile (uuid, background, background_id, picture, picture_id)

@@ -22,6 +22,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
+/**
+ * DAO for building and delivering LuxDialogues {@link Dialogue} instances to players.
+ *
+ * <p>All dialog data is read from the database on demand (no in-memory cache) and
+ * assembled into a fully-configured {@link Dialogue} using the builder API before
+ * being dispatched via {@link me.hektortm.woSSystems.WoSSystems#getDialogueApi()}.</p>
+ *
+ * <p>Tables managed: {@code dialogs}, {@code dialog_pages}, {@code page_lines},
+ * {@code dialog_answers}.</p>
+ */
 public class DialogDAO implements IDAO {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DatabaseManager db;
@@ -102,6 +112,15 @@ public class DialogDAO implements IDAO {
         }
     }
 
+    /**
+     * Fetches a dialog from the database, assembles it with the LuxDialogues builder,
+     * resolves placeholders for {@code target}, and dispatches it to the player.
+     *
+     * @param dialogId the dialog ID to look up
+     * @param source   the command sender who triggered the dialog (used for feedback
+     *                 messages); may be {@code null} for silent triggers
+     * @param target   the player who will receive the dialog
+     */
     public void getDialog(String dialogId, @Nullable CommandSender source, Player target) {
         String sql = "SELECT * FROM dialogs WHERE dialog_id = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -161,6 +180,15 @@ public class DialogDAO implements IDAO {
         }
     }
 
+    /**
+     * Loads all {@link Page} objects for the given dialog, ordered by
+     * {@code page_id}.  Each page has pre/post-action callbacks, lines (with
+     * placeholder resolution), and answer choices attached.
+     *
+     * @param dialogId the dialog whose pages to load
+     * @param target   the player used for placeholder resolution
+     * @return ordered list of pages
+     */
     public List<Page> getPages(String dialogId, Player target) {
         List<Page> pages = new ArrayList<>();
         String sql = "SELECT * FROM dialog_pages WHERE dialog_id = ? ORDER BY page_id ASC";
@@ -197,6 +225,15 @@ public class DialogDAO implements IDAO {
 
     }
 
+    /**
+     * Loads all {@link Answer} objects for a specific dialog page, ordered by
+     * {@code answer_id}.  Each answer has a callback that triggers its action
+     * through the {@link me.hektortm.woSSystems.utils.ActionHandler}.
+     *
+     * @param dialogId the dialog ID
+     * @param page_id  the page within that dialog
+     * @return ordered list of answers
+     */
     public List<Answer> getAnswers(String dialogId, int page_id) {
         List<Answer> answers = new ArrayList<>();
         String sql = "SELECT * FROM dialog_answers WHERE dialog_id = ? AND page_id = ? ORDER BY answer_id ASC";
@@ -230,6 +267,15 @@ public class DialogDAO implements IDAO {
         }
     }
 
+    /**
+     * Returns the text lines for a dialog page, ordered by {@code line_id}.
+     * Placeholders are resolved against {@code target} before returning.
+     *
+     * @param dialogId the dialog ID
+     * @param PageId   the page within that dialog
+     * @param target   the player used for placeholder resolution
+     * @return ordered list of resolved line strings
+     */
     public List<String> getPageLines(String dialogId, int PageId, Player target) {
         String sql = "SELECT line_text FROM page_lines WHERE dialog_id = ? AND page_id = ? ORDER BY line_id ASC";
         List<String> lines = new ArrayList<>();

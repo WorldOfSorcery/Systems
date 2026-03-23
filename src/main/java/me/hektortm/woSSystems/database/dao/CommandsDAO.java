@@ -14,6 +14,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
+/**
+ * DAO for retrieving {@link BasicCommand} definitions from the {@code commands}
+ * table.  Each record maps a command string to an interaction ID and an optional
+ * permission node.
+ */
 public class CommandsDAO implements IDAO {
 
     private final WoSSystems plugin = WoSSystems.getInstance();
@@ -31,6 +36,11 @@ public class CommandsDAO implements IDAO {
         SchemaManager.syncTable(db, BasicCommand.class);
     }
 
+    /**
+     * Returns all {@link BasicCommand} definitions from the {@code commands} table.
+     *
+     * @return list of commands; empty if none are defined or on error
+     */
     public List<BasicCommand> getCommands() {
         String sql = "SELECT * FROM commands";
         List<BasicCommand> commands = new ArrayList<>();

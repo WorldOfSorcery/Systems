@@ -12,6 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
+/**
+ * DAO for persisting and retrieving {@link RecipeRecord} definitions from the
+ * {@code recipes} table.  Schema is managed via {@link me.hektortm.woSSystems.database.SchemaManager}.
+ */
 public class RecipeDAO implements IDAO {
     private final DatabaseManager db;
     private final DAOHub hub;
@@ -28,6 +32,15 @@ public class RecipeDAO implements IDAO {
         SchemaManager.syncTable(db, RecipeRecord.class);
     }
 
+    /**
+     * Inserts or replaces a recipe definition in the database.
+     *
+     * @param id      unique recipe ID
+     * @param type    recipe type string (e.g. {@code "SHAPED"} or {@code "SHAPELESS"})
+     * @param slots   slot layout string
+     * @param output  output item identifier
+     * @param success ID of the interaction to trigger on successful craft, or {@code null}
+     */
     public void insertRecipe(String id, String type, String slots, String output, String success) {
         String sql = "INSERT OR REPLACE INTO recipes (id, type, slots, output, success) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -42,6 +55,11 @@ public class RecipeDAO implements IDAO {
         }
     }
 
+    /**
+     * Returns all recipe definitions from the database.
+     *
+     * @return list of {@link RecipeRecord} objects; empty on error
+     */
     public List<RecipeRecord> getAllRecipes() {
         List<RecipeRecord> recipes = new ArrayList<>();
         String sql = "SELECT * FROM recipes";

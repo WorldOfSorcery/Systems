@@ -15,6 +15,18 @@ import java.sql.*;
 import java.util.UUID;
 import java.util.logging.Level;
 
+/**
+ * DAO for unlockable content definitions and per-player unlock state.
+ *
+ * <p>Unlockables can be permanent or temporary ({@code temp = 1}).  Temporary
+ * unlockables are automatically removed on server startup via
+ * {@link #resetDailyUnlockables()}, and also on player quit via
+ * {@link #removeAllTemps(UUID)}.</p>
+ *
+ * <p>Tables managed: {@code unlockables} (definitions, via
+ * {@link me.hektortm.woSSystems.database.SchemaManager}),
+ * {@code playerdata_unlockables} (per-player state, manual).</p>
+ */
 public class UnlockableDAO implements IDAO {
     private final DatabaseManager db;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
@@ -40,6 +52,10 @@ public class UnlockableDAO implements IDAO {
         }
     }
 
+    /**
+     * Deletes all player unlockable rows whose ID starts with {@code "daily_"}.
+     * Intended to be called at server startup or midnight reset.
+     */
     public void resetDailyUnlockables() {
         String sql = "DELETE FROM playerdata_unlockables WHERE id LIKE 'daily_%'";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -51,6 +67,12 @@ public class UnlockableDAO implements IDAO {
         }
     }
 
+    /**
+     * Checks whether an unlockable definition with the given ID exists.
+     *
+     * @param id the unlockable ID
+     * @return {@code true} if the definition exists
+     */
     public boolean unlockableExists(String id) {
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT 1 FROM unlockables WHERE id = ?")) {
@@ -66,6 +88,13 @@ public class UnlockableDAO implements IDAO {
         }
     }
 
+    /**
+     * Returns whether the given unlockable is marked as temporary in its
+     * definition.  Temporary unlockables are cleaned up automatically.
+     *
+     * @param id the unlockable ID
+     * @return {@code true} if the unlockable is temporary
+     */
     public boolean isTemp(String id) {
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT temp FROM unlockables WHERE id = ?")) {
@@ -83,6 +112,18 @@ public class UnlockableDAO implements IDAO {
         return false;
     }
 
+    /**
+     * Grants or revokes an unlockable for a player based on the given operation.
+     * <ul>
+     *   <li>{@link Operations#GIVE} — inserts the unlockable with the correct
+     *       temp flag; does nothing on duplicate.</li>
+     *   <li>{@link Operations#TAKE} — deletes the player's unlockable row.</li>
+     * </ul>
+     *
+     * @param uuid   the player's UUID
+     * @param id     the unlockable ID
+     * @param action {@code GIVE} or {@code TAKE}
+     */
     public void modifyUnlockable(UUID uuid, String id, Operations action) {
         switch (action) {
             case GIVE:
@@ -127,6 +168,12 @@ public class UnlockableDAO implements IDAO {
         }
     }
 
+    /**
+     * Removes all temporary unlockables for the given player.
+     * Typically called on player quit.
+     *
+     * @param uuid the player's UUID
+     */
     public void removeAllTemps(UUID uuid) {
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement("DELETE FROM playerdata_unlockables WHERE uuid = ? AND temp = 1")) {
@@ -141,6 +188,14 @@ public class UnlockableDAO implements IDAO {
         }
     }
 
+    /**
+     * Returns {@code true} if the player has a <em>permanent</em> ({@code temp = 0})
+     * copy of the given unlockable.
+     *
+     * @param p  the player to check
+     * @param id the unlockable ID
+     * @return {@code true} if the permanent unlockable is held
+     */
     public boolean getPlayerUnlockable(OfflinePlayer p, String id) {
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT 1 FROM playerdata_unlockables WHERE uuid = ? AND id = ? AND temp = 0")) {
@@ -159,6 +214,14 @@ public class UnlockableDAO implements IDAO {
             return false;
         }
     }
+    /**
+     * Returns {@code true} if the player has a <em>temporary</em> ({@code temp = 1})
+     * copy of the given unlockable.
+     *
+     * @param p  the player to check
+     * @param id the unlockable ID
+     * @return {@code true} if the temporary unlockable is held
+     */
     public boolean getPlayerTempUnlockable(OfflinePlayer p, String id) {
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT 1 FROM playerdata_unlockables WHERE uuid = ? AND id = ? AND temp = 1")) {

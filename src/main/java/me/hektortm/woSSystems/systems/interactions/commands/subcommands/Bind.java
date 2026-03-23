@@ -39,7 +39,10 @@ public class Bind extends SubCommand {
         }
 
         String interactionId = args[0];
-        if (!hub.getInteractionDAO().interactionExists(interactionId, p)) return;
+        if (!hub.getInteractionDAO().interactionExists(interactionId)) {
+            // TODO: Re-add Message
+            return;
+        }
 
         Location loc = BlockChecks.getTargetBlock(p);
         if (BlockChecks.isBlockAir(loc.getBlock(), p)) return;

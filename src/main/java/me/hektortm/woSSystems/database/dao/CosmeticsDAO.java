@@ -20,6 +20,16 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
+/**
+ * DAO for cosmetic definitions and per-player cosmetic ownership/equip state.
+ *
+ * <p>Cosmetic definitions are preloaded into an in-memory cache at startup.
+ * Player ownership data ({@code player_cosmetics}) is always read directly
+ * from the database so that it stays authoritative across sessions.</p>
+ *
+ * <p>Tables managed: {@code cosmetics} (definitions), {@code player_cosmetics}
+ * (per-player ownership and equipped state).</p>
+ */
 public class CosmeticsDAO implements IDAO {
 
 
@@ -54,6 +64,10 @@ public class CosmeticsDAO implements IDAO {
         org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, this::preloadAll);
     }
 
+    /**
+     * Loads all cosmetic definitions from the {@code cosmetics} table into the
+     * in-memory cache.  Called asynchronously from {@link #initializeTable()}.
+     */
     public void preloadAll() {
         String sql = "SELECT * FROM cosmetics";
         try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -78,6 +92,13 @@ public class CosmeticsDAO implements IDAO {
         }
     }
 
+    /**
+     * Refreshes a single cosmetic definition in the cache from the database.
+     * If the row no longer exists the entry is evicted.  Sends a title to {@code p}.
+     *
+     * @param id the cosmetic ID to reload
+     * @param p  the player who triggered the reload (receives title feedback)
+     */
     public void reloadFromDB(String id, Player p) {
         String sql = "SELECT * FROM cooldowns WHERE id = ?";
         try (Connection conn = db.getConnection();
@@ -102,6 +123,14 @@ public class CosmeticsDAO implements IDAO {
         }
     }
 
+    /**
+     * Grants ownership of a cosmetic to a player, recording the current date as
+     * the obtained timestamp.  The cosmetic is inserted in the unequipped state.
+     *
+     * @param type the type of cosmetic
+     * @param id   the cosmetic ID
+     * @param uuid the player's UUID
+     */
     public void giveCosmetic(CosmeticType type, String id, UUID uuid) {
         LocalDate date = LocalDate.now();
 
@@ -124,6 +153,14 @@ public class CosmeticsDAO implements IDAO {
         }
     }
 
+    /**
+     * Removes a cosmetic from a player's ownership, deleting the row from
+     * {@code player_cosmetics}.
+     *
+     * @param type the type of cosmetic
+     * @param id   the cosmetic ID
+     * @param uuid the player's UUID
+     */
     public void takeCosmetic(CosmeticType type, String id, UUID uuid) {
         String sql = "DELETE FROM player_cosmetics WHERE uuid = ? AND cosmetic_id = ? AND cosmetic_type = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -138,6 +175,14 @@ public class CosmeticsDAO implements IDAO {
         }
     }
 
+    /**
+     * Force-equips a cosmetic for a player, inserting an ownership row if needed
+     * (bypasses the normal grant workflow).
+     *
+     * @param type the type of cosmetic
+     * @param id   the cosmetic ID
+     * @param uuid the player's UUID
+     */
     public void setCosmetic(CosmeticType type, String id, UUID uuid) {
         String sql =  "INSERT INTO player_cosmetics (uuid, cosmetic_id, cosmetic_type, equipped) " +
                       "VALUES (?, ?, ?, 1) " +
@@ -154,6 +199,15 @@ public class CosmeticsDAO implements IDAO {
         }
     }
 
+    /**
+     * Returns the {@code display} value of the player's currently equipped
+     * cosmetic of the given type, joining {@code player_cosmetics} with
+     * {@code cosmetics}.  Returns {@code null} if nothing is equipped.
+     *
+     * @param p    the player
+     * @param type the cosmetic type to query
+     * @return the equipped cosmetic's display string, or {@code null}
+     */
     public String getCurrentCosmetic(Player p, CosmeticType type) {
         String uuid = p.getUniqueId().toString();
         String sql = """
@@ -177,6 +231,14 @@ public class CosmeticsDAO implements IDAO {
         return null;
     }
 
+    /**
+     * Returns the ID of the player's currently equipped cosmetic of the given
+     * type, or {@code null} if nothing is equipped.
+     *
+     * @param p    the player
+     * @param type the cosmetic type to query
+     * @return the equipped cosmetic ID, or {@code null}
+     */
     public String getCurrentCosmeticId(Player p, CosmeticType type) {
         String uuid = p.getUniqueId().toString();
         String sql = """
@@ -199,6 +261,14 @@ public class CosmeticsDAO implements IDAO {
         return null;
     }
 
+    /**
+     * Equips a cosmetic for the player: first unequips all cosmetics of the same
+     * type, then marks the specified cosmetic as equipped.
+     *
+     * @param p    the player
+     * @param type the cosmetic type
+     * @param id   the cosmetic ID to equip
+     */
     public void equipCosmetic(Player p, CosmeticType type, String id) {
         String uuid = p.getUniqueId().toString();
 
@@ -228,6 +298,14 @@ public class CosmeticsDAO implements IDAO {
         }
     }
 
+    /**
+     * Returns the formatted date string for when the player obtained the specified
+     * cosmetic, or {@code null} if not found.
+     *
+     * @param p  the player
+     * @param id the cosmetic ID
+     * @return obtained-at date string (e.g. {@code "Mon, Jan 01 2024"}), or {@code null}
+     */
     public String getPlayerObtainedTime(Player p, String id) {
         String uuid = p.getUniqueId().toString();
         String sql = "SELECT obtained_at FROM player_cosmetics WHERE uuid = ? and cosmetic_id = ?";
@@ -246,6 +324,14 @@ public class CosmeticsDAO implements IDAO {
         return null;
     }
 
+    /**
+     * Returns a map of cosmetic ID to permission node for all cosmetics of the
+     * given type that require a permission.  Used to auto-grant cosmetics to
+     * players who have the required permission.
+     *
+     * @param type the cosmetic type to query
+     * @return {@code id → permission} map; empty if none
+     */
     public Map<String, String> getPermissionCosmetics(CosmeticType type) {
         String sql = "SELECT id, permission FROM cosmetics WHERE type = ? AND permission IS NOT NULL";
         Map<String, String> cosmetics = new HashMap<>();
@@ -263,6 +349,13 @@ public class CosmeticsDAO implements IDAO {
         return cosmetics;
     }
 
+    /**
+     * Returns all cosmetic IDs of the given type that the player currently owns.
+     *
+     * @param p    the player
+     * @param type the cosmetic type to query
+     * @return list of owned cosmetic IDs; empty if none
+     */
     public List<String> getPlayerCosmetics(Player p, CosmeticType type) {
         String uuid = p.getUniqueId().toString();
         List<String> cosmetics = new ArrayList<>();
@@ -282,6 +375,14 @@ public class CosmeticsDAO implements IDAO {
         return cosmetics;
     }
 
+    /**
+     * Returns the description text for a cosmetic, or {@code "§7Default"} if not
+     * found in the database.
+     *
+     * @param type the cosmetic type
+     * @param id   the cosmetic ID
+     * @return description string
+     */
     public String getCosmeticDescription(CosmeticType type, String id) {
         String sql = "SELECT description FROM cosmetics WHERE id = ? AND type = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -299,6 +400,13 @@ public class CosmeticsDAO implements IDAO {
         return "§7Default";
     }
 
+    /**
+     * Checks whether a cosmetic definition exists in the {@code cosmetics} table.
+     *
+     * @param type the cosmetic type
+     * @param id   the cosmetic ID to check
+     * @return {@code true} if the cosmetic exists
+     */
     public boolean cosmeticExists(CosmeticType type, String id) {
         String sql = "SELECT 1 FROM cosmetics WHERE id = ? AND type = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -314,6 +422,13 @@ public class CosmeticsDAO implements IDAO {
         return false;
     }
 
+    /**
+     * Returns the display string for the given cosmetic, or {@code null} if not found.
+     *
+     * @param type the cosmetic type
+     * @param id   the cosmetic ID
+     * @return display value, or {@code null}
+     */
     public String getCosmeticDisplay(CosmeticType type, String id) {
         String sql = "SELECT display FROM cosmetics WHERE id = ? AND type = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -331,6 +446,14 @@ public class CosmeticsDAO implements IDAO {
         return null;
     }
 
+    /**
+     * Checks whether a player owns a specific cosmetic.
+     *
+     * @param uuid the player's UUID
+     * @param type the cosmetic type
+     * @param id   the cosmetic ID
+     * @return {@code true} if the player owns the cosmetic
+     */
     public boolean hasCosmetic(UUID uuid, CosmeticType type, String id) {
         String sql = "SELECT 1 FROM player_cosmetics WHERE uuid = ? AND cosmetic_id = ? AND cosmetic_type = ?";
         try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
