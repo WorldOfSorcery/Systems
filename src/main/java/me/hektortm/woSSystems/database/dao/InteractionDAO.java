@@ -69,6 +69,7 @@ public class InteractionDAO implements IDAO {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
+                String description = rs.getString("description");
                 String behaviour = rs.getString("behaviour");
                 String matchType = rs.getString("matchtype");
                 int actionId = rs.getInt("action_id");
@@ -80,7 +81,7 @@ public class InteractionDAO implements IDAO {
                         .map(s -> s.replaceAll("^\"|\"$", "")) // remove surrounding quotes
                         .collect(Collectors.toList());
 
-                actions.add(new InteractionAction(interactionId, behaviour, matchType, actionId, parsedActions));
+                actions.add(new InteractionAction(interactionId, description, behaviour, matchType, actionId, parsedActions));
             }
 
         } catch (SQLException e) {
@@ -101,13 +102,14 @@ public class InteractionDAO implements IDAO {
             pstmt.setString(1, id);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
+                String description = rs.getString("description");
                 String behaviour = rs.getString("behaviour");
                 String matchType = rs.getString("matchtype");
                 int particleId = rs.getInt("particle_id");
                 String particle = rs.getString("particle");
                 String particleColor = rs.getString("particle_color");
 
-                particles.add(new InteractionParticles(id, behaviour, matchType, particleId, particle, particleColor));
+                particles.add(new InteractionParticles(id, description, behaviour, matchType, particleId, particle, particleColor));
             }
             return particles;
         } catch (SQLException e) {
@@ -128,6 +130,7 @@ public class InteractionDAO implements IDAO {
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 int hologramId = rs.getInt("hologram_id");
+                String description = rs.getString("description");
                 String behaviour = rs.getString("behaviour");
                 String matchType = rs.getString("matchtype");
                 String hologramRaw = rs.getString("hologram");
@@ -140,7 +143,7 @@ public class InteractionDAO implements IDAO {
 
                 String settings = rs.getString("settings");
 
-                holograms.add(new InteractionHologram(id, hologramId, behaviour, matchType, parsedHologram, settings));
+                holograms.add(new InteractionHologram(id, hologramId, description, behaviour, matchType, parsedHologram, settings));
             }
 
             return holograms;
@@ -326,7 +329,7 @@ public class InteractionDAO implements IDAO {
                     List<String> parsedActions = Arrays.stream(actionsRaw.replace("[", "").replace("]", "").split(","))
                             .map(String::trim).map(s -> s.replaceAll("^\"|\"$", "")).collect(Collectors.toList());
                     actionsMap.computeIfAbsent(id, k -> new ArrayList<>())
-                            .add(new InteractionAction(id, rs.getString("behaviour"), rs.getString("matchtype"), rs.getInt("action_id"), parsedActions));
+                            .add(new InteractionAction(id, rs.getString("description"), rs.getString("behaviour"), rs.getString("matchtype"), rs.getInt("action_id"), parsedActions));
                 }
             }
 
@@ -339,7 +342,7 @@ public class InteractionDAO implements IDAO {
                     List<String> parsedHologram = Arrays.stream(hologramRaw.replace("[", "").replace("]", "").split(","))
                             .map(String::trim).map(s -> s.replaceAll("^\"|\"$", "")).collect(Collectors.toList());
                     hologramsMap.computeIfAbsent(id, k -> new ArrayList<>())
-                            .add(new InteractionHologram(id, rs.getInt("hologram_id"), rs.getString("behaviour"), rs.getString("matchtype"), parsedHologram, rs.getString("settings")));
+                            .add(new InteractionHologram(id, rs.getInt("hologram_id"), rs.getString("description"), rs.getString("behaviour"), rs.getString("matchtype"), parsedHologram, rs.getString("settings")));
                 }
             }
 
@@ -349,7 +352,7 @@ public class InteractionDAO implements IDAO {
                 while (rs.next()) {
                     String id = rs.getString("id");
                     particlesMap.computeIfAbsent(id, k -> new ArrayList<>())
-                            .add(new InteractionParticles(id, rs.getString("behaviour"), rs.getString("matchtype"), rs.getInt("particle_id"), rs.getString("particle"), rs.getString("particle_color")));
+                            .add(new InteractionParticles(id, rs.getString("description"), rs.getString("behaviour"), rs.getString("matchtype"), rs.getInt("particle_id"), rs.getString("particle"), rs.getString("particle_color")));
                 }
             }
 

@@ -1,9 +1,11 @@
 package me.hektortm.woSSystems.database.dao;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.ActionHandler;
-import me.hektortm.woSSystems.utils.dataclasses.Interaction;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
@@ -19,6 +21,7 @@ import org.bukkit.entity.Player;
 import javax.annotation.Nullable;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -39,18 +42,11 @@ public class DialogDAO implements IDAO {
             stmt.execute("CREATE TABLE IF NOT EXISTS dialogs(" +
                     "dialog_id VARCHAR(255) PRIMARY KEY," +
                     "char_name VARCHAR(255)," +
-                    "char_name_color VARCHAR(7)," +
-                    "text_color VARCHAR(7)," +
-                    "background_color VARCHAR(7)," +
-                    "answer_background_color VARCHAR(7)," +
-                    "fog_color VARCHAR(7)," +
-                    "arrow_color VARCHAR(7)," +
-                    "selected_color VARCHAR(7))");
+                    "settings JSON)");
             stmt.execute("CREATE TABLE IF NOT EXISTS dialog_pages(" +
                     "dialog_id VARCHAR(255), " +
                     "page_id INT, " +
-                    "post_action VARCHAR(255)," +
-                    "pre_action VARCHAR(255)," +
+                    "settings JSON," +
                     "PRIMARY KEY (dialog_id, page_id), " +
                     "FOREIGN KEY (dialog_id) REFERENCES dialogs(dialog_id) ON DELETE CASCADE)");
             stmt.execute("CREATE TABLE IF NOT EXISTS page_lines(" +
@@ -65,39 +61,9 @@ public class DialogDAO implements IDAO {
                     "page_id INT, " +
                     "answer_id INT," +
                     "answer_text VARCHAR(255)," +
-                    "answer_reply TEXT," +
-                    "answer_action VARCHAR(255)," +
-                    "PRIMARY KEY (dialog_id))");
-        }
-    }
-
-    private static boolean hasColumn(ResultSet rs, String col) {
-        try {
-            rs.findColumn(col); return true;
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE,
-                    WoSSystems.getPlugin(WoSSystems.class),
-                    "DID:a1d73b8e",
-                    "Column " + col + " does not exist in ResultSet",
-                    e
-            ));
-            return false;
-        }
-    }
-    private static String getOrDefault(ResultSet rs, String col, String def) {
-        try {
-            return hasColumn(rs, col) && rs.getString(col) != null ? rs.getString(col) : def;
-        } catch (SQLException e) {
-
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE,
-                    WoSSystems.getPlugin(WoSSystems.class),
-                    "cfb1f3e2",
-                    "Failed to get column " + col + " from ResultSet, returning default value: " + def,
-                    e
-            ));
-            return def;
+                    "settings JSON," +
+                    "PRIMARY KEY (dialog_id, page_id, answer_id)," +
+                    "FOREIGN KEY (dialog_id, page_id) REFERENCES dialog_pages(dialog_id, page_id) ON DELETE CASCADE)");
         }
     }
 
@@ -107,47 +73,23 @@ public class DialogDAO implements IDAO {
             pstmt.setString(1, dialogId);
             ResultSet rs = pstmt.executeQuery();
 
-            if (rs == null) {
+            if (!rs.next()) {
                 Utils.error(source, "dialogs", "error.notfound", "%id%", dialogId);
                 return;
             }
 
-            if (rs.next()) {
-                String charName = plugin.getPlaceholderResolver().resolvePlaceholders( rs.getString("char_name"), target );
-                String charNameColor        = getOrDefault(rs, "char_name_color", "#4f4a3e");
-                String textColor            = getOrDefault(rs, "text_color", "#4f4a3e");
-                String backgroundColor      = getOrDefault(rs, "background_color", "#f8ffe0");
-                String answerBackgroundColor= getOrDefault(rs, "answer_background_color", "#f8ffe0");
-                String fogColor             = getOrDefault(rs, "fog_color", "#000000");
-                String arrowColor           = getOrDefault(rs, "arrow_color", "#cdff29");
-                String selectedColor        = getOrDefault(rs, "selected_color", "#4f4a3e");
+            String charName = plugin.getPlaceholderResolver().resolvePlaceholders(rs.getString("char_name"), target);
+            String settingsRaw = rs.getString("settings");
+            JsonObject s = JsonParser.parseString(settingsRaw != null ? settingsRaw : "{}").getAsJsonObject();
 
-                List<Page> pages = getPages(dialogId, target);
+            List<Page> pages = getPages(dialogId, target);
 
-                Dialogue.Builder dialogBuilder = new Dialogue.Builder().setDialogueID(dialogId)
-                        .setDialogueText(textColor, 10)
-                        .setCharacterNameText(charName, charNameColor, 20)
-                        .setDialogueBackgroundImage("dialogue-background", backgroundColor, 0)
-                        .setDialogueSpeed(1)
+            Dialogue.Builder dialogBuilder = buildDialogue(dialogId, charName, s);
+            for (Page page : pages) dialogBuilder.addPage(page);
 
-                        .setTypingSound("luxdialogues:luxdialogues.sounds.typing", "master", 1.0, 1.0)
-                        .setRange(10.0)
-                        .setNameImage("name-start", "name-mid", "name-end", "#ffffff", 0)
-                        .setFogImage("fog", fogColor)
-                        .setArrowImage("hand", arrowColor, -7)
-                        .setSelectionSound("luxdialogues:luxdialogues.sounds.selection", "master", 1.0, 1.0)
-                        .setAnswerBackgroundImage("answer-background", answerBackgroundColor, 140)
-                        .setAnswerText(textColor, 13, selectedColor);
-
-                for (Page page : pages) {
-                    dialogBuilder.addPage(page);
-                }
-
-                plugin.getDialogueApi().sendDialogue(target, dialogBuilder.build(), "1");
-                if (source instanceof Player) Utils.success(source, "dialogs", "info.triggered", "%dialog%", dialogId, "%player%", target.getName());
-                else if (source instanceof ConsoleCommandSender) source.sendMessage("Dialog " + dialogId + " triggered for player " + target.getName());
-
-            }
+            plugin.getDialogueApi().sendDialogue(target, dialogBuilder.build(), "1");
+            if (source instanceof Player) Utils.success(source, "dialogs", "info.triggered", "%dialog%", dialogId, "%player%", target.getName());
+            else if (source instanceof ConsoleCommandSender) source.sendMessage("Dialog " + dialogId + " triggered for player " + target.getName());
 
         } catch (SQLException e) {
             DiscordLogger.log(new DiscordLog(
@@ -160,6 +102,57 @@ public class DialogDAO implements IDAO {
         }
     }
 
+    private Dialogue.Builder buildDialogue(String dialogId, String charName, JsonObject s) {
+        Dialogue.Builder b = new Dialogue.Builder().setDialogueID(dialogId);
+
+        b.setRange(getDouble(s, "range", 10.0));
+        b.setCharacterNameText(charName, getString(s, "characterNameTextColor", "#4f4a3e"), getInt(s, "characterNameTextOffset", 20));
+        b.setDialogueText(getString(s, "dialogueTextColor", "#4f4a3e"), getInt(s, "dialogueTextOffset", 10));
+        b.setDialogueBackgroundImage(getString(s, "dialogueBackgroundImage", "dialogue-background"), getString(s, "dialogueBackgroundImageColor", "#f8ffe0"), getInt(s, "dialogueBackgroundImageOffset", 0));
+        b.setAnswerText(getString(s, "answerTextColor", "#4f4a3e"), getInt(s, "answerTextOffset", 13), getString(s, "answerSelectedTextColor", "#4f4a3e"));
+        b.setAnswerBackgroundImage(getString(s, "answerBackgroundImage", "answer-background"), getString(s, "answerBackgroundImageColor", "#f8ffe0"), getInt(s, "answerBackgroundImageOffset", 140));
+        b.setNameImage(getString(s, "nameStartImage", "name-start"), getString(s, "nameMidImage", "name-mid"), getString(s, "nameEndImage", "name-end"), getString(s, "nameImageColor", "#ffffff"), getInt(s, "nameBackgroundImageOffset", 0));
+        b.setArrowImage(getString(s, "arrowImage", "hand"), getString(s, "arrowImageColor", "#cdff29"), getInt(s, "arrowImageOffset", -7));
+        b.setFogImage(getString(s, "fogImage", "fog"), getString(s, "fogColor", "#000000"));
+        b.setDialogueSpeed(getInt(s, "dialogueSpeed", 1));
+        b.setTypingSound(getString(s, "typingSound", "luxdialogues:luxdialogues.sounds.typing"), getString(s, "typingSoundSource", "master"), getDouble(s, "typingSoundVolume", 1.0), getDouble(s, "typingSoundPitch", 1.0));
+        b.setSelectionSound(getString(s, "selectionSound", "luxdialogues:luxdialogues.sounds.selection"), getString(s, "selectionSoundSource", "master"), getDouble(s, "selectionSoundVolume", 1.0), getDouble(s, "selectionSoundPitch", 1.0));
+
+        if (s.has("effect"))          b.setEffect(s.get("effect").getAsString());
+        if (s.has("preventExit"))     b.setPreventExit(s.get("preventExit").getAsBoolean());
+        if (s.has("preventSkip"))     b.setPreventSkip(s.get("preventSkip").getAsBoolean());
+        if (s.has("answerNumbers"))   b.setAnswerNumbers(s.get("answerNumbers").getAsBoolean());
+        if (s.has("characterImage"))  b.setCharacterImage(getString(s, "characterImage", null), getString(s, "characterImageColor", "#ffffff"), getInt(s, "characterImageOffset", 0));
+
+        return b;
+    }
+
+    // --- JSON helpers ---
+
+    private static String getString(JsonObject s, String key, String def) {
+        return s.has(key) && !s.get(key).isJsonNull() ? s.get(key).getAsString() : def;
+    }
+
+    private static int getInt(JsonObject s, String key, int def) {
+        return s.has(key) && !s.get(key).isJsonNull() ? s.get(key).getAsInt() : def;
+    }
+
+    private static double getDouble(JsonObject s, String key, double def) {
+        return s.has(key) && !s.get(key).isJsonNull() ? s.get(key).getAsDouble() : def;
+    }
+
+    private static List<String> getJsonStringList(JsonObject s, String key) {
+        if (!s.has(key) || s.get(key).isJsonNull()) return new ArrayList<>();
+        List<String> result = new ArrayList<>();
+        JsonArray arr = s.get(key).getAsJsonArray();
+        for (int i = 0; i < arr.size(); i++) result.add(arr.get(i).getAsString());
+        return result;
+    }
+
+    // --- Page / line / answer loading ---
+
+
+
     public List<Page> getPages(String dialogId, Player target) {
         List<Page> pages = new ArrayList<>();
         String sql = "SELECT * FROM dialog_pages WHERE dialog_id = ? ORDER BY page_id ASC";
@@ -167,17 +160,34 @@ public class DialogDAO implements IDAO {
             pstmt.setString(1, dialogId);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                String preAction = rs.getString("pre_action");
-                String postAction = rs.getString("post_action");
-                Page.Builder pageBuilder = new Page.Builder();
-                if (rs.getString("pre_action") != null) pageBuilder.addPreCallback(player -> plugin.getInteractionManager().triggerInteraction(preAction, player, null));
-                if (rs.getString("post_action") != null) pageBuilder.addPostCallback(player -> plugin.getInteractionManager().triggerInteraction(postAction, player, null));
+                int pageId = rs.getInt("page_id");
+                String settingsRaw = rs.getString("settings");
+                JsonObject s = JsonParser.parseString(settingsRaw != null ? settingsRaw : "{}").getAsJsonObject();
 
-                for (String line : getPageLines(dialogId, rs.getInt("page_id"), target)) {
+                Page.Builder pageBuilder = new Page.Builder();
+
+                for (String action : getJsonStringList(s, "preActions")) {
+                    pageBuilder.addPreCallback(player -> plugin.getInteractionManager().triggerInteraction(action, player, null));
+                }
+                for (String action : getJsonStringList(s, "postActions")) {
+                    pageBuilder.addPostCallback(player -> plugin.getInteractionManager().triggerInteraction(action, player, null));
+                }
+                for (String action : getJsonStringList(s, "exitActions")) {
+                    pageBuilder.addExitCallback(player -> plugin.getInteractionManager().triggerInteraction(action, player, null));
+                }
+
+                for (String line : getPageLines(dialogId, pageId, target)) {
                     pageBuilder.addLine(line);
                 }
-                for (Answer answer : getAnswers(dialogId, rs.getInt("page_id"))) {
-                    pageBuilder.addAnswer(answer);
+
+                // goto disables answers — the target page ID is stored but handled by the API
+                boolean hasGoto = s.has("goto") && !s.get("goto").isJsonNull();
+                if (hasGoto) {
+                    pageBuilder.setGoTo(Collections.singletonList(s.get("goto").getAsString()));
+                } else {
+                    for (Answer answer : getAnswers(dialogId, pageId)) {
+                        pageBuilder.addAnswer(answer);
+                    }
                 }
 
                 pages.add(pageBuilder.build());
@@ -191,9 +201,7 @@ public class DialogDAO implements IDAO {
                     e
             ));
         }
-
         return pages;
-
     }
 
     public List<Answer> getAnswers(String dialogId, int page_id) {
@@ -204,16 +212,38 @@ public class DialogDAO implements IDAO {
             pstmt.setInt(2, page_id);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
+                String settingsRaw = rs.getString("settings");
+                JsonObject s = JsonParser.parseString(settingsRaw != null ? settingsRaw : "{}").getAsJsonObject();
 
-                String action = rs.getString("answer_action");
-                List<String> helperArray = new ArrayList<>();
-                helperArray.add(action);
+                List<String> actions = getJsonStringList(s, "actions");
+
                 Answer.Builder answerBuilder = new Answer.Builder()
                         .setAnswerID(String.valueOf(rs.getInt("answer_id")))
-                        .setAnswerText(rs.getString("answer_text"))
-                        .addCallback(player -> {
-                            plugin.getActionHandler().executeActions(player, helperArray, ActionHandler.SourceType.DIALOG, dialogId, null);
-                        });
+                        .setAnswerText(rs.getString("answer_text"));
+
+                if (!actions.isEmpty()) {
+                    answerBuilder.addCallback(player ->
+                            plugin.getActionHandler().executeActions(player, actions, ActionHandler.SourceType.DIALOG, dialogId, null));
+                }
+
+                String gotoPage = getString(s, "goto", "");
+                if (!gotoPage.isEmpty()) {
+                    answerBuilder.setGoTo(Collections.singletonList(gotoPage));
+                }
+
+                for (String reply : getJsonStringList(s, "reply")) {
+                    answerBuilder.addReplyMessage(reply);
+                }
+
+                if (s.has("sound") && !s.get("sound").isJsonNull()) {
+                    JsonObject sound = s.get("sound").getAsJsonObject();
+                    answerBuilder.setSound(
+                            getString(sound, "id", ""),
+                            getString(sound, "source", "master"),
+                            getDouble(sound, "volume", 1.0),
+                            getDouble(sound, "pitch", 1.0));
+                }
+
                 answers.add(answerBuilder.build());
             }
             return answers;
@@ -237,7 +267,7 @@ public class DialogDAO implements IDAO {
             pstmt.setInt(2, PageId);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                lines.add(plugin.getPlaceholderResolver().resolvePlaceholders( rs.getString("line_text"), target ) );
+                lines.add(plugin.getPlaceholderResolver().resolvePlaceholders(rs.getString("line_text"), target));
             }
         } catch (SQLException e) {
             DiscordLogger.log(new DiscordLog(
@@ -250,7 +280,4 @@ public class DialogDAO implements IDAO {
         }
         return lines;
     }
-
-
-
 }
