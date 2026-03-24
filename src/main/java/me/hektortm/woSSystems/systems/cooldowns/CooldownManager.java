@@ -15,14 +15,34 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 
+/**
+ * Periodic task that polls all active cooldowns once per second and removes
+ * any that have expired.
+ *
+ * <p>Extends {@link BukkitRunnable} so it can be scheduled as a repeating
+ * Bukkit task via {@link #start()}.  The heavy database work is performed
+ * asynchronously; only the expiry callback ({@link #onCooldownExpire}) is
+ * dispatched back onto the main server thread so it can safely call the
+ * {@link me.hektortm.woSSystems.systems.interactions.InteractionManager}.</p>
+ */
 public class CooldownManager extends BukkitRunnable {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DAOHub hub;
 
+    /**
+     * @param hub the DAO hub used to access cooldown persistence
+     */
     public CooldownManager(DAOHub hub) {
         this.hub = hub;
     }
 
+    /**
+     * Tick body — executed once per second on a background thread.
+     *
+     * <p>Fetches all active global and local cooldowns from the database,
+     * checks each one for expiry, removes expired entries, and schedules
+     * {@link #onCooldownExpire} on the main thread for each removal.</p>
+     */
     @Override
     public void run() {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
@@ -72,6 +92,16 @@ public class CooldownManager extends BukkitRunnable {
         });
     }
 
+    /**
+     * Called on the main thread when a cooldown expires.
+     *
+     * <p>Looks up the {@link Cooldown} definition and, if an
+     * {@code end_interaction} ID is configured, triggers that interaction for
+     * the player (provided they are currently online).</p>
+     *
+     * @param player     the player whose cooldown expired
+     * @param cooldownId the expired cooldown's definition ID
+     */
     private void onCooldownExpire(OfflinePlayer player, String cooldownId) {
         // Customize these actions based on your cooldown types
         plugin.writeLog("CooldownManager", Level.INFO, "Cooldown expired for player: " + player.getName() + " with ID: " + cooldownId);
@@ -85,6 +115,10 @@ public class CooldownManager extends BukkitRunnable {
 
     }
 
+    /**
+     * Schedules this task to run on the Bukkit scheduler every second
+     * (20 ticks), starting immediately.
+     */
     public void start() {
         // Run every second (20 ticks)
         this.runTaskTimer(plugin, 0, 20);

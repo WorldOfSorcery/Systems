@@ -9,6 +9,20 @@ import org.bukkit.entity.Player;
 import java.sql.SQLException;
 import java.util.UUID;
 
+/**
+ * Central access point for all DAO instances in the WoSSystems plugin.
+ *
+ * <p>A single {@code DAOHub} is created during plugin startup and held by the
+ * main {@link WoSSystems} class.  Every manager and handler that needs database
+ * access receives the hub via constructor injection, then calls the appropriate
+ * {@code get*DAO()} accessor.</p>
+ *
+ * <p>The hub also owns the two player-data lifecycle methods
+ * ({@link #loadPlayerData} / {@link #evictPlayerData}) that should be called
+ * from the join and quit event listeners, and
+ * {@link #handleWebhookInvalidation} which reloads a single cached entity
+ * when the administration web panel signals a change.</p>
+ */
 public class DAOHub {
     private final WoSSystems plugin = WoSSystems.getInstance();
 
@@ -34,6 +48,13 @@ public class DAOHub {
 
 
 
+    /**
+     * Constructs all DAO instances using the shared {@link DatabaseManager}.
+     *
+     * @param databaseManager the database connection manager
+     * @throws SQLException if any DAO fails to initialise its schema or
+     *                      prepared statements
+     */
     public DAOHub(DatabaseManager databaseManager) throws SQLException {
         this.economyDAO     = new EconomyDAO(databaseManager);
         this.unlockableDAO  = new UnlockableDAO(databaseManager);
@@ -93,6 +114,20 @@ public class DAOHub {
         economyDAO.evictPlayer(uuid);
     }
 
+    /**
+     * Handles a webhook-triggered cache invalidation for a single entity.
+     *
+     * <p>Called by the webhook listener when the administration panel signals
+     * that a configuration entity has been edited.  The appropriate DAO's
+     * {@code reloadFromDB} method is invoked to refresh the in-memory cache
+     * for that entity.  Unsupported or commented-out types are logged as
+     * warnings.</p>
+     *
+     * @param type       the entity type name (e.g. {@code "interactions"},
+     *                   {@code "citems"}, {@code "guis"})
+     * @param id         the ID of the specific entity to reload
+     * @param editorUUID the UUID of the editor who made the change
+     */
     public void handleWebhookInvalidation(String type, String id, UUID editorUUID) {
         plugin.getLogger().info("[Webhook] " + editorUUID + " edited " + type + ":" + id);
         Player p = Bukkit.getPlayer(editorUUID);

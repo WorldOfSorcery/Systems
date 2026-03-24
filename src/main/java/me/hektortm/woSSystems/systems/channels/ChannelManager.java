@@ -28,18 +28,37 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.logging.Level;
 
+/**
+ * Manages chat channel state, membership, focus, and message formatting.
+ *
+ * <p>Channel definitions are loaded from the database on startup and kept in
+ * an in-memory map.  Player subscription and focus state is persisted via
+ * {@link ChannelDAO}.</p>
+ *
+ * <p>The formatted message pipeline ({@link #getFormattedMessage}) resolves
+ * player cosmetics, nicknames, held-item previews and region display names
+ * into a rich Adventure {@link Component}.</p>
+ */
 public class ChannelManager {
     public Inventory itemPreview = Bukkit.createInventory(null, InventoryType.DISPENSER, "Viewing Item");
     public final WoSSystems plugin;
     private final Map<String, Channel> channels = new HashMap<>();
     private final DAOHub hub;
 
+    /**
+     * @param plugin the plugin instance (used for logging and click-action storage)
+     * @param hub    the DAO hub
+     */
     public ChannelManager(WoSSystems plugin, DAOHub hub) {
         this.plugin = plugin;
         this.hub = hub;
         loadChannels();
     }
 
+    /**
+     * Loads all channel definitions from the database into the in-memory map.
+     * Called automatically from the constructor and can be called again to refresh.
+     */
     public void loadChannels() {
         List<Channel> loadedChannels = hub.getChannelDAO().getAllChannels();
         for (Channel channel : loadedChannels) {
@@ -49,13 +68,24 @@ public class ChannelManager {
         }
     }
 
+    /**
+     * Persists channel state to the database.
+     * Currently a no-op; channel membership is written live via {@link ChannelDAO}.
+     */
     public void saveChannels() {
         for (Channel channel : channels.values()) {
             plugin.writeLog("ChannelDAO", Level.FINE, "This is where the update used to be");
         }
     }
 
-
+    /**
+     * Subscribes a player to a channel.  Accepts either the channel's full name
+     * or its short name as the identifier.  Sends an error message if the channel
+     * is not found or the player lacks the required permission.
+     *
+     * @param player            the player joining
+     * @param channelIdentifier the channel name or short name
+     */
     public void joinChannel(Player player, String channelIdentifier) {
         UUID playerUUID = player.getUniqueId();
         Channel channel = getChannel(channelIdentifier); // Try to get by normal name
@@ -75,6 +105,14 @@ public class ChannelManager {
         }
     }
 
+    /**
+     * Removes a player's subscription from a channel.  Accepts either the
+     * channel's full name or its short name.  Sends an error if the channel
+     * is not found.
+     *
+     * @param player            the player leaving
+     * @param channelIdentifier the channel name or short name
+     */
     public void leaveChannel(Player player, String channelIdentifier) {
         UUID playerUUID = player.getUniqueId();
         Channel channel = getChannel(channelIdentifier); // Try to get by normal name
@@ -90,15 +128,27 @@ public class ChannelManager {
         }
     }
 
+    /**
+     * Returns the {@link Channel} with the given name (case-insensitive), or
+     * {@code null} if no such channel is loaded.
+     *
+     * @param name the channel name
+     * @return the channel, or {@code null}
+     */
     public Channel getChannel(String name) {
         return channels.get(name.toLowerCase());
     }
 
+    /** @return an unmodifiable view of all loaded channels */
     public Collection<Channel> getChannels() {
         return channels.values();
     }
 
-
+    /**
+     * Automatically joins the player to every channel flagged as {@code autoJoin}.
+     *
+     * @param player the player to auto-join
+     */
     public void autoJoin(Player player) {
         for (Channel channel : getChannels()) {
             if (channel.isAutoJoin()) {
@@ -108,6 +158,12 @@ public class ChannelManager {
         }
     }
 
+    /**
+     * Joins the player to every channel flagged as {@code forceJoin}, skipping
+     * channels the player is already subscribed to.
+     *
+     * @param player the player to force-join
+     */
     public void forceJoin(Player player) {
         for (Channel channel : getChannels()) {
             if (channel.isForceJoin()) {
@@ -120,6 +176,12 @@ public class ChannelManager {
         }
     }
 
+    /**
+     * Sets the player's focused channel to the default channel if they do not
+     * currently have any focused channel.
+     *
+     * @param player the player to assign a default focus to
+     */
     public void joinDefault(Player player) {
         if (getChannelDAO().getFocusedChannel(player.getUniqueId()) == null) {
             for (Channel channel : getChannels()) {
@@ -131,6 +193,14 @@ public class ChannelManager {
 
     }
 
+    /**
+     * Sets the player's active (focused) channel to the given channel.  Accepts
+     * either a full name or a short name.  Sends an error if the channel is not
+     * found.
+     *
+     * @param player            the player
+     * @param channelIdentifier the channel name or short name to focus
+     */
     public void setFocus(Player player, String channelIdentifier) {
         UUID playerUUID = player.getUniqueId();
         Channel channel = getChannel(channelIdentifier); // Try to get by normal name
@@ -145,11 +215,24 @@ public class ChannelManager {
         }
     }
 
+    /**
+     * Returns the {@link Channel} the player is currently focused on, or
+     * {@code null} if no channel is focused.
+     *
+     * @param player the player to query
+     * @return the focused channel, or {@code null}
+     */
     public Channel getFocusedChannel(Player player) {
         String channelName = hub.getChannelDAO().getFocusedChannel(player.getUniqueId());
         return channelName != null ? getChannel(channelName) : null;
     }
 
+    /**
+     * Finds a channel by its short name (case-insensitive).
+     *
+     * @param shortName the short name to search for
+     * @return the matching {@link Channel}, or {@code null} if not found
+     */
     public Channel getChannelByShortName(String shortName) {
         for (Channel channel : channels.values()) {
             if (channel.getShortName().equalsIgnoreCase(shortName)) {
@@ -159,6 +242,16 @@ public class ChannelManager {
         return null; // No channel found with the given short name
     }
 
+    /**
+     * Handles an async chat event by routing the message to the player's focused
+     * channel.  Cancels the default chat event and delivers the formatted message
+     * only to recipients who are within the channel's configured radius (or all
+     * recipients if radius is {@code -1}).
+     *
+     * @param event   the original async chat event (will be cancelled)
+     * @param player  the sending player
+     * @param message the raw chat message
+     */
     public void sendMessage(AsyncPlayerChatEvent event, Player player, String message) {
         Channel focusedChannel = getFocusedChannel(player);
         if (focusedChannel != null) {
@@ -183,6 +276,14 @@ public class ChannelManager {
         }
     }
 
+    /**
+     * Sends a message to a specific channel by name (bypasses focus).  Used by
+     * channel-specific slash commands.
+     *
+     * @param player  the sending player
+     * @param channel the target channel name
+     * @param message the raw chat message
+     */
     public void sendMessagePerCommand(Player player, String channel, String message) {
         Channel focusedChannel = getChannel(channel);
         if (focusedChannel != null) {
@@ -206,6 +307,16 @@ public class ChannelManager {
         }
     }
 
+    /**
+     * Returns {@code true} if the recipient is within {@code radius} blocks of
+     * the sender and both are in the same world.  A radius {@code <= 0} is
+     * treated as unrestricted.
+     *
+     * @param senderLocation    the sender's location
+     * @param recipientLocation the recipient's location
+     * @param radius            the maximum allowed distance in blocks
+     * @return {@code true} if within range
+     */
     private boolean isWithinRadius(Location senderLocation, Location recipientLocation, int radius) {
         if (radius <= 0) {
             return true; // No radius restriction
@@ -220,7 +331,24 @@ public class ChannelManager {
         return senderLocation.distanceSquared(recipientLocation) <= (radius * radius);
     }
 
-
+    /**
+     * Builds a fully-formatted Adventure {@link Component} for a chat message.
+     *
+     * <p>The component resolves the following placeholders in the channel's
+     * format string:</p>
+     * <ul>
+     *   <li>{@code {badge}} — equipped badge cosmetic with hover description</li>
+     *   <li>{@code {prefix_player}} — equipped prefix + player name with stat hover</li>
+     *   <li>{@code {player}} — plain player name with stat hover</li>
+     *   <li>{@code {message}} — chat message, with {@code [item]} replaced by a
+     *       clickable item preview component</li>
+     * </ul>
+     *
+     * @param channel the channel whose format string is used
+     * @param sender  the sending player
+     * @param message the raw chat message
+     * @return the fully-assembled chat component
+     */
     public Component getFormattedMessage(Channel channel, Player sender, String message) {
         String format = channel.getFormat();
 
@@ -340,6 +468,14 @@ public class ChannelManager {
 
     // TODO clear null cases
 
+    /**
+     * Builds the hover-card component shown when a player hovers over another
+     * player's name in chat.  Includes display name, username, location,
+     * equipped title, and gold balance.
+     *
+     * @param player the player whose info to display
+     * @return the assembled multi-line hover component
+     */
     private @NotNull Component getPlayerStats(Player player) {
         String nickname = hub.getNicknameDAO().getNickname(player.getUniqueId());
         String shownName = nickname != null ? nickname : player.getName();
@@ -389,11 +525,20 @@ public class ChannelManager {
         return LegacyComponentSerializer.legacySection().deserialize(string);
     }
 
+    /**
+     * Places the given item into the shared item-preview inventory slot and
+     * returns the inventory.  Used to back the clickable {@code [item]} link
+     * in chat.
+     *
+     * @param item the item to display in the preview
+     * @return the populated preview inventory
+     */
     public Inventory viewItem(ItemStack item) {
         itemPreview.setItem(4, item);
         return itemPreview;
     }
 
+    /** @return the underlying {@link ChannelDAO} for direct DB access */
     public ChannelDAO getChannelDAO() {
         return hub.getChannelDAO();
     }

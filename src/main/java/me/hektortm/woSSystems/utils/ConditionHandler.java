@@ -20,6 +20,18 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 
+/**
+ * Evaluates named {@link Condition} objects against the current state of a
+ * player at runtime.
+ *
+ * <p>Conditions are expressed as a triple of (name, value, parameter) and
+ * mapped to concrete checks such as item ownership, stat comparisons, region
+ * membership, cooldown state, cosmetic ownership, currency balance, and
+ * permission checks.  Unknown condition names return {@code false}.</p>
+ *
+ * <p>Evaluation errors are logged to Discord and to the server log at SEVERE
+ * level; the method then returns {@code false} so callers continue safely.</p>
+ */
 public class ConditionHandler {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final CitemManager citems = plugin.getCitemManager();
@@ -28,11 +40,23 @@ public class ConditionHandler {
     private final CooldownManager cooldowns = plugin.getCooldownManager();
     private final DAOHub hub;
 
+    /**
+     * @param hub the DAO hub used to access cosmetic and economy data
+     */
     public ConditionHandler(DAOHub hub) {
         this.hub = hub;
     }
 
 
+    /**
+     * Returns {@code true} only if <em>all</em> conditions in the list pass
+     * for the given player.
+     *
+     * @param player     the player to evaluate against
+     * @param conditions the list of conditions; {@code null} or empty returns {@code true}
+     * @param key        the {@link InteractionKey} used for local-cooldown conditions
+     * @return {@code true} if every condition passes
+     */
     public boolean checkConditions(Player player, List<Condition> conditions, InteractionKey key) {
         if (conditions == null || conditions.isEmpty()) return true;
         for (Condition condition : conditions) {
@@ -41,6 +65,30 @@ public class ConditionHandler {
         return true;
     }
 
+    /**
+     * Evaluates a single condition against the given player.
+     *
+     * <p>Supported condition names include:
+     * {@code has_citem}, {@code has_not_citem},
+     * {@code has_unlockable}, {@code has_not_unlockable},
+     * {@code has_stats_greater_than}, {@code has_stats_less_than}, {@code has_stats_equal_to},
+     * {@code global_stats_greater_than}, {@code global_stats_less_than}, {@code global_stats_equal_to},
+     * {@code is_in_region}, {@code is_not_in_region},
+     * {@code has_active_cooldown}, {@code has_not_active_cooldown},
+     * {@code has_active_local_cooldown}, {@code has_not_active_local_cooldown},
+     * {@code has_badge}, {@code has_not_badge}, {@code has_prefix}, {@code has_not_prefix},
+     * {@code has_title}, {@code has_not_title},
+     * {@code has_currency}, {@code has_not_currency},
+     * {@code has_permission},
+     * {@code in_world},
+     * {@code is_sneaking}, {@code is_not_sneaking}.</p>
+     *
+     * @param player    the player to evaluate against
+     * @param condition the condition definition to evaluate
+     * @param key       the {@link InteractionKey} used for local-cooldown conditions;
+     *                  may be {@code null}
+     * @return {@code true} if the condition passes; {@code false} on failure or error
+     */
     public boolean evaluate(Player player, Condition condition, @Nullable InteractionKey key) {
         try {
             switch (condition.getName().toLowerCase()) {
@@ -103,10 +151,27 @@ public class ConditionHandler {
 
     }
 
+    /**
+     * Returns {@code true} if the player has a currently active (non-expired)
+     * global cooldown with the given ID.
+     *
+     * @param oP         the player to check
+     * @param cooldownId the cooldown definition ID
+     * @return {@code true} if the cooldown is active
+     */
     public boolean isCooldownActive(OfflinePlayer oP, String cooldownId) {
         return hub.getCooldownDAO().getRemainingSeconds(oP, cooldownId) != null;
     }
 
+    /**
+     * Returns {@code true} if the player has a currently active local cooldown
+     * with the given ID scoped to the provided {@link InteractionKey}.
+     *
+     * @param oP         the player to check
+     * @param cooldownId the cooldown definition ID
+     * @param key        the interaction key that scopes the local cooldown
+     * @return {@code true} if the local cooldown is active
+     */
     public boolean isLocalCooldownActive(OfflinePlayer oP, String cooldownId, InteractionKey key) {
         return hub.getCooldownDAO().isLocalCooldownActive(oP, cooldownId, key);
     }

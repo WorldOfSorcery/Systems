@@ -20,6 +20,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 
+/**
+ * Manages the in-game cosmetic selection UI for titles, prefixes, and badges.
+ *
+ * <p>Opens paginated inventory GUIs ({@link #openTitlesPage}, {@link #openPrefixPage},
+ * {@link #openBadgePage}) that list all cosmetics the player owns — including any
+ * that are granted automatically via a permission node.  Each item stores the
+ * cosmetic ID in its {@link PersistentDataContainer} so the click handler can
+ * identify and equip the chosen cosmetic.</p>
+ */
 public class CosmeticManager {
     private final DAOHub hub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
@@ -28,11 +37,19 @@ public class CosmeticManager {
     public static Inventory prefixPage;
     public static Inventory badgesPage;
 
+    /**
+     * @param hub the DAO hub used to access cosmetic and player data
+     */
     public CosmeticManager(DAOHub hub) {
         this.hub = hub;
     }
 
-
+    /**
+     * Opens the main cosmetics navigation page for the player, which provides
+     * buttons to navigate to titles, prefixes, and badges.
+     *
+     * @param p the player to open the inventory for
+     */
     public void openMainPage(Player p) {
         mainPage.setItem(2, createItem("§6Titles", Material.NAME_TAG));
         mainPage.setItem(4, createItem("§6Prefixes", Material.PAPER));
@@ -40,6 +57,13 @@ public class CosmeticManager {
         p.openInventory(mainPage);
     }
 
+    /**
+     * Opens the titles selection page for the player.  Displays all titles the
+     * player owns, including any granted by permission nodes.  The currently
+     * equipped title is indicated by a "Currently selected" lore line.
+     *
+     * @param p the player to open the inventory for
+     */
     public void openTitlesPage(Player p) {
         titlesPage = Bukkit.createInventory(null, 9*5, "§6Titles");
         List<String> titles = hub.getCosmeticsDAO().getPlayerCosmetics(p, CosmeticType.TITLE);
@@ -88,6 +112,12 @@ public class CosmeticManager {
         p.openInventory(titlesPage);
     }
 
+    /**
+     * Opens the prefix selection page for the player.  Displays all prefixes the
+     * player owns, including any granted by permission nodes.
+     *
+     * @param p the player to open the inventory for
+     */
     public void openPrefixPage(Player p) {
         prefixPage  = Bukkit.createInventory(null, 9*5, "§6Prefixes");
         List<String> prefixes = hub.getCosmeticsDAO().getPlayerCosmetics(p, CosmeticType.PREFIX);
@@ -134,6 +164,12 @@ public class CosmeticManager {
         p.openInventory(prefixPage);
     }
 
+    /**
+     * Opens the badge selection page for the player.  Displays all badges the
+     * player owns, including any granted by permission nodes.
+     *
+     * @param p the player to open the inventory for
+     */
     public void openBadgePage(Player p) {
         badgesPage  = Bukkit.createInventory(null, 9*5, "§6Badges");
         List<String> badges = hub.getCosmeticsDAO().getPlayerCosmetics(p, CosmeticType.BADGE);

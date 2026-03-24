@@ -15,18 +15,50 @@ import java.util.UUID;
 
 import static java.lang.Long.parseLong;
 
+/**
+ * Resolves placeholder tokens embedded in strings to their live runtime values.
+ *
+ * <p>The primary entry point is {@link #resolvePlaceholders(String, Player)},
+ * which accepts a raw placeholder string (without surrounding braces) and
+ * returns the resolved text.  Tokens follow the syntax
+ * {@code namespace.key:id}, where {@code namespace} selects the data source
+ * and {@code key} / {@code id} narrow down the specific value:</p>
+ *
+ * <ul>
+ *   <li>{@code player_name} / {@code player_nick} — player display name or nickname</li>
+ *   <li>{@code player_cosmetic.&lt;type&gt;} — currently equipped cosmetic display string</li>
+ *   <li>{@code stats.amount:&lt;id&gt;} / {@code stats.max:&lt;id&gt;} — player stat values</li>
+ *   <li>{@code global_stats.amount:&lt;id&gt;} / {@code global_stats.max:&lt;id&gt;} — global stat values</li>
+ *   <li>{@code cooldowns.duration:&lt;id&gt;} — remaining cooldown time formatted as {@code HH:MM:SS}</li>
+ *   <li>{@code citems.name|lore|material|model|tooltip:&lt;id&gt;} — custom item metadata</li>
+ *   <li>bare token without a dot — looked up as a {@link Constant} by ID</li>
+ * </ul>
+ *
+ * <p>Unrecognised namespaces return the original token wrapped in braces.</p>
+ */
 public class PlaceholderResolver {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DAOHub hub;
     private final StatsManager statsManager = plugin.getStatsManager();
     private final CitemManager citemsManager = plugin.getCitemManager();
 
+    /**
+     * @param hub the DAO hub used to access all data sources
+     */
     public PlaceholderResolver(DAOHub hub) {
         this.hub = hub;
     }
 
     // TODO UPDATE WHEN INVENTORY IS OPENED AGAIN
 
+    /**
+     * Resolves a single placeholder token to its runtime string value.
+     *
+     * @param raw    the placeholder token (without enclosing braces), e.g.
+     *               {@code "stats.amount:kills"} or {@code "player_name"}
+     * @param player the player whose data is used for player-scoped placeholders
+     * @return the resolved string, or the original token in braces if unknown
+     */
     public String resolvePlaceholders(String raw, Player player) {
         UUID uuid = player.getUniqueId();
 

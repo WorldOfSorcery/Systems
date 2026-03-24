@@ -12,6 +12,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 
+/**
+ * Parses and executes action strings for the interaction, GUI, dialog, and
+ * loot-table systems.
+ *
+ * <p>Action strings use a keyword-based DSL, for example:
+ * {@code send_message &aHello!}, {@code sudo warp home},
+ * {@code cooldown give @p my_cooldown %local%}, {@code eco give @p coins 100}.
+ * Unknown strings that do not match any keyword are dispatched as console
+ * commands.</p>
+ *
+ * <p>A hard-coded {@link #COMMAND_BLACKLIST} prevents players from abusing
+ * {@code sudo} to run dangerous commands.  Violations are logged to the audit
+ * log and to Discord.</p>
+ */
 public class ActionHandler {
     // TODO: move to config.yml under 'blocked-commands' key for runtime configurability
     private static final List<String> COMMAND_BLACKLIST = Arrays.asList("op", "gmc", "gamemode");
@@ -20,10 +34,16 @@ public class ActionHandler {
     private final PlaceholderResolver resolver = plugin.getPlaceholderResolver();
     private final DAOHub hub;
 
+    /**
+     * @param hub the DAO hub used to access cooldown and economy persistence
+     */
     public ActionHandler(DAOHub hub) {
         this.hub = hub;
     }
 
+    /**
+     * Categorises the origin of an action execution for audit-log purposes.
+     */
     public enum SourceType {
         INTERACTION("interaction"),
         GUI("gui"),
@@ -40,6 +60,30 @@ public class ActionHandler {
     }
 
 
+    /**
+     * Iterates through each action string and executes it for the given player.
+     *
+     * <p>Supported action keywords (first token):
+     * <ul>
+     *   <li>{@code send_message} — sends a colour-formatted, placeholder-resolved chat message</li>
+     *   <li>{@code sudo} — dispatches a command as the player, checked against the blacklist</li>
+     *   <li>{@code empty_line} — sends a blank chat line</li>
+     *   <li>{@code cooldown give @p &lt;id&gt; %local%} — grants a local cooldown scoped to {@code key}</li>
+     *   <li>{@code send_actionbar} — sends an action-bar message</li>
+     *   <li>{@code send_title} — sends a title/subtitle pair (delimiter {@code -s})</li>
+     *   <li>{@code play_sound &lt;sound&gt; &lt;volume&gt; &lt;pitch&gt;} — plays a sound at the player's location</li>
+     *   <li>{@code eco give|take|set|reset @p &lt;currency&gt; &lt;amount&gt;} — logs an economy change</li>
+     *   <li>{@code close_gui} — closes the player's open inventory</li>
+     *   <li>anything else — dispatched as a console command (async for {@link SourceType#DIALOG})</li>
+     * </ul>
+     *
+     * @param player     the player for whom actions are executed
+     * @param actions    the ordered list of action strings to process
+     * @param sourceType the category of the trigger source (for audit logging)
+     * @param sourceID   the specific source identifier (interaction/GUI/dialog ID)
+     * @param key        the {@link InteractionKey} scoping local cooldowns;
+     *                   may be {@code null} when not applicable
+     */
     public void executeActions(Player player, List<String> actions, SourceType sourceType, String sourceID, @Nullable InteractionKey key) {
         for (String cmd : actions) {
             String parsedCommand = cmd.replace("@p", player.getName());

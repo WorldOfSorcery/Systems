@@ -17,6 +17,21 @@ import java.util.List;
 
 import static me.hektortm.woSSystems.systems.interactions.InterListener.buildKey;
 
+/**
+ * Central service for the interaction system.
+ *
+ * <p>Provides two main responsibilities:</p>
+ * <ol>
+ *   <li><b>Visual tick</b> ({@link #interactionTask()}) — a repeating
+ *       {@link BukkitRunnable} that loads all interactions from the cache each
+ *       second and spawns the configured particles and holograms around every
+ *       block location and Citizens NPC that has an interaction bound to it.</li>
+ *   <li><b>Interaction execution</b> ({@link #triggerInteraction}) — evaluates
+ *       each {@link InteractionAction}'s conditions using {@link ConditionHandler}
+ *       and, for every passing action group, dispatches the action list to
+ *       {@link ActionHandler}.</li>
+ * </ol>
+ */
 public class InteractionManager {
 
     private final DAOHub hub;
@@ -25,11 +40,19 @@ public class InteractionManager {
     private final ActionHandler actionHandler = plugin.getActionHandler();
     private final HologramManager hologramManager;
 
+    /**
+     * @param hub the DAO hub used to access interaction and condition data
+     */
     public InteractionManager(DAOHub hub) {
         this.hub = hub;
         this.hologramManager = new HologramManager(hub);
     }
 
+    /**
+     * Returns the {@link HologramManager} used by this interaction manager.
+     *
+     * @return the hologram manager
+     */
     public HologramManager getHologramManager() {
         return hologramManager;
     }
@@ -39,6 +62,14 @@ public class InteractionManager {
         return inter;
     }
 
+    /**
+     * Starts the repeating per-tick visual task for all interactions.
+     *
+     * <p>Every 20 ticks (once per second) the task loads the full interaction
+     * cache asynchronously and then, back on the main thread, spawns particles
+     * and manages holograms for each interaction's block locations and bound
+     * NPCs for every online player.</p>
+     */
     public void interactionTask() {
         ParticleHandler particleHandler = new ParticleHandler(hub);
         plugin.getLogger().info("[InteractionManager] Starting interaction task.");
@@ -80,6 +111,23 @@ public class InteractionManager {
         }.runTaskTimer(plugin, 0L, 20L);
     }
 
+    /**
+     * Triggers an interaction for a player, evaluating conditions and
+     * executing the resulting action lists.
+     *
+     * <p>Each {@link InteractionAction} in the interaction is checked against
+     * its associated {@link Condition} list.  If the match type is
+     * {@code "one"}, any passing condition is sufficient; otherwise all
+     * conditions must pass.  Actions whose conditions fail are skipped.
+     * Action groups with behaviour {@code "continue"} allow subsequent groups
+     * to also run; any other behaviour value stops processing after the first
+     * passing group.</p>
+     *
+     * @param interactionId the ID of the interaction to trigger
+     * @param player        the player who triggered the interaction
+     * @param key           the {@link InteractionKey} scoping local cooldowns
+     *                      (may be {@code null} for global triggers)
+     */
     public void triggerInteraction(String interactionId, Player player, InteractionKey key) {
         Interaction inter = getInteraction(interactionId);
         if (inter == null) {

@@ -98,6 +98,16 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Main plugin class for WoSSystems.
+ *
+ * <p>Responsible for the full plugin lifecycle: initialising all managers,
+ * registering WorldGuard flags, loading language files, wiring commands and
+ * event listeners, and tearing everything down cleanly on disable.</p>
+ *
+ * <p>A singleton instance is available via {@link #getInstance()} after
+ * {@link #onEnable()} returns.</p>
+ */
 public final class WoSSystems extends JavaPlugin {
 
     private static WoSSystems instance;
@@ -318,11 +328,26 @@ public final class WoSSystems extends JavaPlugin {
 
     }
 
+    /**
+     * Registers a DAO with the {@link DatabaseManager} and immediately runs its
+     * table initialisation.  Called for every DAO during {@link #onEnable()}.
+     *
+     * @param db  the database manager to register with
+     * @param dao the DAO to register and initialise
+     * @throws SQLException if table initialisation fails
+     */
     private void registerAndInitDAO(DatabaseManager db, IDAO dao) throws SQLException {
         db.registerDAO(dao);
         dao.initializeTable();
     }
 
+    /**
+     * Attempts to register a {@link StateFlag} with WorldGuard.  If a flag with
+     * the same name already exists and is a {@code StateFlag}, no action is taken.
+     *
+     * @param flagName the WorldGuard flag name
+     * @param registry the WorldGuard flag registry
+     */
     private void registerStateFlag(String flagName, FlagRegistry registry) {
         try {
             StateFlag flag = new StateFlag(flagName, false);
@@ -337,6 +362,15 @@ public final class WoSSystems extends JavaPlugin {
         }
     }
 
+    /**
+     * Attempts to register a {@link StringFlag} with WorldGuard.  If a flag with
+     * the same name already exists and is a {@code StringFlag}, the existing flag
+     * is returned.  Returns {@code null} if there is a type conflict.
+     *
+     * @param flagName the WorldGuard flag name
+     * @param registry the WorldGuard flag registry
+     * @return the registered or pre-existing {@link StringFlag}, or {@code null}
+     */
     private StringFlag registerStringFlag(String flagName, FlagRegistry registry) {
         try {
             StringFlag flag = new StringFlag(flagName);
@@ -354,18 +388,34 @@ public final class WoSSystems extends JavaPlugin {
         }
     }
 
+    /**
+     * Dynamically registers a Bukkit command executor for each loaded chat
+     * {@link Channel}, using the channel's short name as the command label.
+     */
     private void registerChannelCommands() {
         for (Channel channel : channelManager.getChannels()) {
             registerCommand(channel.getShortName(), new ChannelCommandExecutor(channelManager, channel));
         }
     }
 
+    /**
+     * Dynamically registers a Bukkit command executor for each {@link BasicCommand}
+     * loaded from the database, binding each command to an interaction.
+     */
     private void registerBasicCommands() {
         for (BasicCommand command : daoHub.getCommandsDAO().getCommands()) {
             registerCommand(command.getCommand(), new BasicCommandExecutor(command));
         }
     }
 
+    /**
+     * Dynamically registers a plugin command at runtime by reflectively accessing
+     * the server's {@code commandMap}.  Used for commands that are not declared in
+     * {@code plugin.yml} (e.g. database-driven channel and basic commands).
+     *
+     * @param commandName the name of the command to register
+     * @param executor    the executor that handles the command
+     */
     private void registerCommand(String commandName, CommandExecutor executor) {
         try {
             // Get the server's command map
@@ -440,6 +490,13 @@ public final class WoSSystems extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager, daoHub), this);
     }
 
+    /**
+     * Writes a log entry using the JUL {@link Logger} with the given name.
+     *
+     * @param name    the logger name (typically a class or system identifier)
+     * @param level   the logging level
+     * @param message the message to log
+     */
     public void writeLog(String name, Level level, String message) {
         Logger LOGGER = Logger.getLogger(name);
         LOGGER.log(level, message);
@@ -453,25 +510,76 @@ public final class WoSSystems extends JavaPlugin {
         this.getCommand(cmd).setExecutor(e);
     }
 
+    /**
+     * Sends a localised economy-prefixed message to a command sender.
+     *
+     * @param sender the recipient
+     * @param file   the language file key
+     * @param msg    the message key within that file
+     */
     public static void ecoMsg(CommandSender sender, String file, String msg) {
         sender.sendMessage(lang.getMessage("general","prefix.economy")+lang.getMessage(file, msg));
     }
+
+    /**
+     * Sends a localised economy message with one placeholder substitution.
+     *
+     * @param sender  the recipient
+     * @param file    the language file key
+     * @param msg     the message key within that file
+     * @param oldChar the placeholder string to replace
+     * @param value   the replacement value
+     */
     public static void ecoMsg1Value(CommandSender sender,String file, String msg, String oldChar, String value) {
         String message = lang.getMessage(file, msg).replace(oldChar, value);
         String newMessage = lang.getMessage("general","prefix.economy")+message;
         sender.sendMessage(Utils.replaceColorPlaceholders(newMessage));
     }
+
+    /**
+     * Sends a localised economy message with two placeholder substitutions.
+     *
+     * @param sender   the recipient
+     * @param file     the language file key
+     * @param msg      the message key within that file
+     * @param oldChar1 first placeholder string to replace
+     * @param value1   replacement for the first placeholder
+     * @param oldChar2 second placeholder string to replace
+     * @param value2   replacement for the second placeholder
+     */
     public static void ecoMsg2Values(CommandSender sender,String file, String msg, String oldChar1, String value1, String oldChar2, String value2) {
         String message = lang.getMessage(file, msg).replace(oldChar1, value1).replace(oldChar2, value2);
         String newMessage = lang.getMessage("general","prefix.economy")+message;
         sender.sendMessage(Utils.replaceColorPlaceholders(newMessage));
     }
+
+    /**
+     * Sends a localised economy message with three placeholder substitutions.
+     *
+     * @param sender   the recipient
+     * @param file     the language file key
+     * @param msg      the message key within that file
+     * @param oldChar1 first placeholder string to replace
+     * @param value1   replacement for the first placeholder
+     * @param oldChar2 second placeholder string to replace
+     * @param value2   replacement for the second placeholder
+     * @param oldChar3 third placeholder string to replace
+     * @param value3   replacement for the third placeholder
+     */
     public static void ecoMsg3Values(CommandSender sender,String file, String msg, String oldChar1, String value1, String oldChar2, String value2, String oldChar3, String value3) {
         String message = lang.getMessage(file, msg).replace(oldChar1, value1).replace(oldChar2, value2).replace(oldChar3, value3);
         String newMessage = lang.getMessage("general", "prefix.economy") + message;
         sender.sendMessage(Utils.replaceColorPlaceholders(newMessage));
     }
 
+    /**
+     * Posts a structured log entry to Discord via {@link DiscordLogger}.
+     *
+     * @param level   the severity level
+     * @param uuid    a short identifier string for the log entry (e.g. a code location tag)
+     * @param message the log message
+     * @param e       an optional exception to include; may be {@code null}
+     */
     public static void discordLog(Level level, String uuid, String message, @Nullable Exception e) {
         DiscordLogger.log(new DiscordLog(
                 level,
@@ -482,6 +590,7 @@ public final class WoSSystems extends JavaPlugin {
         ));
     }
 
+    /** @return the singleton plugin instance */
     public static WoSSystems getInstance() {
         return instance;
     }
@@ -530,6 +639,14 @@ public final class WoSSystems extends JavaPlugin {
     public TimeManager getTimeManager() {
         return timeManager;
     }
+
+    /**
+     * Returns the map of pending click-action inventories, keyed by a one-time
+     * {@link UUID}.  Used by the item-view command to pass inventory state
+     * between the chat component click and the inventory open handler.
+     *
+     * @return mutable map of click-action inventories
+     */
     public Map<UUID, Inventory> getClickActions() {
         return clickActions;
     }
@@ -561,6 +678,7 @@ public final class WoSSystems extends JavaPlugin {
         return craftingManager;
     }
 
+    /** @return the shared map of player UUID to their current WorldGuard region name */
     public Map<UUID, String> getPlayerRegions() {
         return playerRegions;
     }
