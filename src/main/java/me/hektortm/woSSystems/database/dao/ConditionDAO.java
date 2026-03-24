@@ -1,9 +1,8 @@
 package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.utils.ConditionType;
-import me.hektortm.woSSystems.utils.dataclasses.Condition;
+import me.hektortm.woSSystems.utils.types.ConditionType;
+import me.hektortm.woSSystems.utils.model.Condition;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 
@@ -21,23 +20,19 @@ import java.util.logging.Level;
  * <p>Results are cached per {@code (type, id)} key using {@link java.util.concurrent.ConcurrentHashMap}
  * and {@code computeIfAbsent}.  This prevents the per-tick DB storm that would
  * otherwise occur since conditions are checked on every tick for every active
- * entity.  Call {@link #invalidate(me.hektortm.woSSystems.utils.ConditionType, String)}
+ * entity.  Call {@link #invalidate(ConditionType, String)}
  * after updating a condition, or {@link #invalidateAll()} on a full reload.</p>
  *
  * <p>Table managed: {@code conditions}.</p>
  */
 public class ConditionDAO implements IDAO {
     private final DatabaseManager db;
-    private final DAOHub hub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "ConditionDAO";
 
     private final Map<String, List<Condition>> cache = new ConcurrentHashMap<>();
 
-    public ConditionDAO(DatabaseManager db, DAOHub hub) {
-        this.db = db;
-        this.hub = hub;
-    }
+    public ConditionDAO(DatabaseManager db) { this.db = db; }
 
     @Override
     public void initializeTable() throws SQLException {

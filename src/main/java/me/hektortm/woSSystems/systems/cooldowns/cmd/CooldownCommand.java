@@ -1,10 +1,10 @@
 package me.hektortm.woSSystems.systems.cooldowns.cmd;
 
 import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.systems.cooldowns.cmd.subcmd.Give;
-import me.hektortm.woSSystems.systems.cooldowns.cmd.subcmd.Help;
-import me.hektortm.woSSystems.systems.cooldowns.cmd.subcmd.Remove;
-import me.hektortm.woSSystems.systems.cooldowns.cmd.subcmd.View;
+import me.hektortm.woSSystems.systems.cooldowns.cmd.sub.Give;
+import me.hektortm.woSSystems.systems.cooldowns.cmd.sub.Help;
+import me.hektortm.woSSystems.systems.cooldowns.cmd.sub.Remove;
+import me.hektortm.woSSystems.systems.cooldowns.cmd.sub.View;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;

@@ -1,15 +1,13 @@
 package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.channels.Channel;
-import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.utils.model.Channel;
 import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 import java.sql.*;
 import java.util.*;

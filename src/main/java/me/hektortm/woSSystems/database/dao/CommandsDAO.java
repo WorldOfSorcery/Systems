@@ -1,9 +1,8 @@
 package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.SchemaManager;
-import me.hektortm.woSSystems.utils.dataclasses.BasicCommand;
+import me.hektortm.woSSystems.utils.model.BasicCommand;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
@@ -22,12 +21,10 @@ import java.util.logging.Level;
 public class CommandsDAO implements IDAO {
 
     private final WoSSystems plugin = WoSSystems.getInstance();
-    private DatabaseManager db = plugin.getCore().getDatabaseManager();
-    private final DAOHub daoHub;
+    private final DatabaseManager db;
 
-
-    public CommandsDAO(DAOHub daoHub) {
-        this.daoHub = daoHub;
+    public CommandsDAO(DatabaseManager db) {
+        this.db = db;
     }
 
 

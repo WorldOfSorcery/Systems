@@ -1,16 +1,13 @@
 package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.SchemaManager;
-import me.hektortm.woSSystems.systems.citems.CitemBuilder;
-import me.hektortm.woSSystems.utils.dataclasses.FishingItem;
+import me.hektortm.woSSystems.utils.model.FishingItem;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
 import me.hektortm.wosCore.discord.DiscordLogger;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 import java.sql.*;
 import java.util.*;
@@ -27,15 +24,11 @@ import java.util.logging.Level;
 public class FishingDAO implements IDAO {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DatabaseManager db;
-    private final DAOHub hub;
     private final String logName = "FishingDAO";
 
     private final Map<String, FishingItem> cache = new ConcurrentHashMap<>();
 
-    public FishingDAO(DatabaseManager db, DAOHub hub) {
-        this.db = db;
-        this.hub = hub;
-    }
+    public FishingDAO(DatabaseManager db) { this.db = db; }
 
 
     @Override

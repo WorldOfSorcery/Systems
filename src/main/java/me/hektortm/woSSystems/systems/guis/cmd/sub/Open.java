@@ -1,0 +1,49 @@
+package me.hektortm.woSSystems.systems.guis.cmd.sub;
+
+import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.systems.guis.GUIManager;
+import me.hektortm.woSSystems.utils.Permissions;
+import me.hektortm.woSSystems.utils.SubCommand;
+import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
+public class Open extends SubCommand {
+    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
+    private final GUIManager manager = plugin.getGuiManager();
+    private final DAOHub hub;
+
+    public Open(DAOHub hub) {
+        this.hub = hub;
+    }
+
+
+    @Override
+    public String getName() {
+        return "open";
+    }
+
+    @Override
+    public Permissions getPermission() {
+        return null;
+    }
+
+    @Override
+    public void execute(CommandSender sender, String[] args) {
+
+
+        Player p = Bukkit.getPlayer(args[0]);
+        String[] t = args[1].split(":");
+        String id = t[0];
+        int page = t[1] != null ? Integer.parseInt(t[1]) : 0;
+
+        if(hub.getGuiDAO().getGUIbyId(id) != null) {
+            manager.openGUI(p, id, page);
+            sender.sendMessage("Opening GUI '"+id+"' for "+p.getName());
+        } else {
+            sender.sendMessage("GUI does not exist.");
+        }
+
+    }
+}

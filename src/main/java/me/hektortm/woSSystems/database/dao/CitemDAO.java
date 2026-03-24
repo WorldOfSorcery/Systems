@@ -1,11 +1,11 @@
 package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.systems.citems.CitemBuilder;
 import me.hektortm.woSSystems.utils.Parsers;
-import me.hektortm.woSSystems.utils.dataclasses.Citem;
+import me.hektortm.woSSystems.utils.model.Citem;
+import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -16,18 +16,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public class CitemDAO implements IDAO {
-    private final me.hektortm.wosCore.database.DatabaseManager db;
-    private final DAOHub daoHub;
+    private final DatabaseManager db;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "CitemDAO";
 
     /** In-memory cache — all reads go here after startup preload. */
     private final Map<String, ItemStack> cache = new ConcurrentHashMap<>();
 
-    public CitemDAO(me.hektortm.wosCore.database.DatabaseManager db, DAOHub daoHub) {
-        this.db = db;
-        this.daoHub = daoHub;
-    }
+    public CitemDAO(DatabaseManager db) { this.db = db; }
 
     @Override
     public void initializeTable() throws SQLException {

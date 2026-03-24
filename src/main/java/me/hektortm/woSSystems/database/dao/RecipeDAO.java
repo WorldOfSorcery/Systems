@@ -3,7 +3,7 @@ package me.hektortm.woSSystems.database.dao;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.SchemaManager;
-import me.hektortm.woSSystems.utils.dataclasses.RecipeRecord;
+import me.hektortm.woSSystems.utils.model.RecipeRecord;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 

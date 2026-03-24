@@ -4,8 +4,8 @@ import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.ActionHandler;
 import me.hektortm.woSSystems.utils.ConditionHandler;
-import me.hektortm.woSSystems.utils.ConditionType;
-import me.hektortm.woSSystems.utils.dataclasses.*;
+import me.hektortm.woSSystems.utils.types.ConditionType;
+import me.hektortm.woSSystems.utils.model.*;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Bukkit;
@@ -14,9 +14,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.List;
-import java.util.logging.Logger;
 
-import static me.hektortm.woSSystems.listeners.InterListener.buildKey;
+import static me.hektortm.woSSystems.systems.interactions.InterListener.buildKey;
 
 public class InteractionManager {
 

@@ -6,13 +6,12 @@ import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.cooldowns.CooldownManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
-import me.hektortm.woSSystems.utils.dataclasses.Condition;
-import me.hektortm.woSSystems.utils.dataclasses.InteractionKey;
+import me.hektortm.woSSystems.utils.model.Condition;
+import me.hektortm.woSSystems.utils.model.InteractionKey;
+import me.hektortm.woSSystems.utils.types.CosmeticType;
 import me.hektortm.wosCore.discord.DiscordLog;
 import me.hektortm.wosCore.discord.DiscordLogger;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
-import org.bukkit.WorldCreator;
 import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;

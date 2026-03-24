@@ -2,25 +2,15 @@ package me.hektortm.woSSystems.systems.loottables;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.utils.ActionHandler;
-import me.hektortm.woSSystems.utils.LoottableItemType;
-import me.hektortm.woSSystems.utils.dataclasses.Loottable;
-import me.hektortm.woSSystems.utils.dataclasses.LoottableItem;
-import me.hektortm.wosCore.LangManager;
-import me.hektortm.wosCore.WoSCore;
+import me.hektortm.woSSystems.utils.model.Loottable;
+import me.hektortm.woSSystems.utils.model.LoottableItem;
 import me.hektortm.wosCore.discord.DiscordLog;
 import me.hektortm.wosCore.discord.DiscordLogger;
-import me.hektortm.wosCore.logging.LogManager;
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 

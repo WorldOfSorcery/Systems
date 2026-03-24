@@ -35,83 +35,45 @@ public class DAOHub {
 
 
     public DAOHub(DatabaseManager databaseManager) throws SQLException {
-        this.economyDAO = new EconomyDAO(databaseManager);
-        this.unlockableDAO = new UnlockableDAO(databaseManager);
-        this.statsDAO = new StatsDAO(databaseManager);
-        this.channelDAO = new ChannelDAO(databaseManager);
-        this.nicknameDAO = new NicknameDAO(databaseManager, this);
-        this.cosmeticsDAO = new CosmeticsDAO(databaseManager, this);
-        this.profileDAO = new ProfileDAO(databaseManager, this);
-        this.fishingDAO = new FishingDAO(databaseManager, this);
-        this.conditionDAO = new ConditionDAO(databaseManager, this);
-        this.interactionDAO = new InteractionDAO(databaseManager, this);
-        this.guiDAO = new GUIDAO(databaseManager, this);
-        this.cooldownDAO = new CooldownDAO(databaseManager);
-        this.timeDAO = new TimeDAO(databaseManager, this);
-        this.citemDAO = new CitemDAO(databaseManager, this);
-        this.constantDAO = new ConstantDAO(databaseManager, this);
-        this.dialogDAO = new DialogDAO(databaseManager, this);
-        this.loottablesDAO = new LoottablesDAO(databaseManager, this);
-        this.commandsDAO = new CommandsDAO(this);
-        this.craftingDAO = new CraftingDAO(databaseManager, this);
+        this.economyDAO     = new EconomyDAO(databaseManager);
+        this.unlockableDAO  = new UnlockableDAO(databaseManager);
+        this.statsDAO       = new StatsDAO(databaseManager);
+        this.channelDAO     = new ChannelDAO(databaseManager);
+        this.nicknameDAO    = new NicknameDAO(databaseManager);
+        this.cosmeticsDAO   = new CosmeticsDAO(databaseManager);
+        this.profileDAO     = new ProfileDAO(databaseManager, this);
+        this.fishingDAO     = new FishingDAO(databaseManager);
+        this.conditionDAO   = new ConditionDAO(databaseManager);
+        this.interactionDAO = new InteractionDAO(databaseManager);
+        this.guiDAO         = new GUIDAO(databaseManager, this);
+        this.cooldownDAO    = new CooldownDAO(databaseManager);
+        this.timeDAO        = new TimeDAO(databaseManager);
+        this.citemDAO       = new CitemDAO(databaseManager);
+        this.constantDAO    = new ConstantDAO(databaseManager);
+        this.dialogDAO      = new DialogDAO(databaseManager);
+        this.loottablesDAO  = new LoottablesDAO(databaseManager);
+        this.commandsDAO    = new CommandsDAO(databaseManager);
+        this.craftingDAO    = new CraftingDAO(databaseManager);
     }
-    public EconomyDAO getEconomyDAO() {
-        return economyDAO;
-    }
-    public UnlockableDAO getUnlockableDAO() {
-        return unlockableDAO;
-    }
-    public StatsDAO getStatsDAO() {
-        return statsDAO;
-    }
-    public ChannelDAO getChannelDAO() {
-        return channelDAO;
-    }
-    public NicknameDAO getNicknameDAO() {
-        return nicknameDAO;
-    }
-    public CosmeticsDAO getCosmeticsDAO() {
-        return cosmeticsDAO;
-    }
-    public ProfileDAO getProfileDAO() {
-        return profileDAO;
-    }
-    public FishingDAO getFishingDAO() {
-        return fishingDAO;
-    }
-    public ConditionDAO getConditionDAO() {
-        return conditionDAO;
-    }
-    public InteractionDAO getInteractionDAO() {
-        return interactionDAO;
-    }
-    public GUIDAO getGuiDAO() {
-        return guiDAO;
-    }
-    public CooldownDAO getCooldownDAO() {
-        return cooldownDAO;
-    }
-    public TimeDAO getTimeDAO() {
-        return timeDAO;
-    }
-    public CitemDAO getCitemDAO() {
-        return citemDAO;
-    }
-    public ConstantDAO getConstantDAO() {
-        return constantDAO;
-    }
-    public DialogDAO getDialogDAO() {
-        return dialogDAO;
-    }
-    public LoottablesDAO getLoottablesDAO() {
-        return loottablesDAO;
-    }
-    public CommandsDAO getCommandsDAO() {
-        return commandsDAO;
-    }
-    public CraftingDAO getCraftingDAO() {
-        return craftingDAO;
-    }
+    public EconomyDAO getEconomyDAO()           { return economyDAO;        }
+    public UnlockableDAO getUnlockableDAO()     { return unlockableDAO;     }
+    public StatsDAO getStatsDAO()               { return statsDAO;          }
+    public ChannelDAO getChannelDAO()           { return channelDAO;        }
+    public NicknameDAO getNicknameDAO()         { return nicknameDAO;       }
+    public CosmeticsDAO getCosmeticsDAO()       { return cosmeticsDAO;      }
+    public ProfileDAO getProfileDAO()           { return profileDAO;        }
+    public FishingDAO getFishingDAO()           { return fishingDAO;        }
+    public ConditionDAO getConditionDAO()       { return conditionDAO;      }
+    public InteractionDAO getInteractionDAO()   { return interactionDAO;    }
+    public GUIDAO getGuiDAO()                   { return guiDAO;            }
+    public CooldownDAO getCooldownDAO()         { return cooldownDAO;       }
+    public TimeDAO getTimeDAO()                 { return timeDAO;           }
+    public CitemDAO getCitemDAO()               { return citemDAO;          }
+    public ConstantDAO getConstantDAO()         { return constantDAO;       }
+    public DialogDAO getDialogDAO()             { return dialogDAO;         }
+    public LoottablesDAO getLoottablesDAO()     { return loottablesDAO;     }
+    public CommandsDAO getCommandsDAO()         { return commandsDAO;       }
+    public CraftingDAO getCraftingDAO()         { return craftingDAO;       }
 
     /**
      * Load all player-specific cached data (stats, economy, …).

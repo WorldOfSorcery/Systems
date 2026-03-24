@@ -1,16 +1,14 @@
 package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.utils.Parsers;
-import me.hektortm.woSSystems.utils.dataclasses.*;
+import me.hektortm.woSSystems.utils.model.*;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
 import me.hektortm.wosCore.discord.DiscordLogger;
 import org.bukkit.Location;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.sql.*;
@@ -32,7 +30,6 @@ import java.util.stream.Collectors;
 public class InteractionDAO implements IDAO {
 
     private final DatabaseManager db;
-    private final DAOHub hub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "InteractionDAO";
 
@@ -45,10 +42,7 @@ public class InteractionDAO implements IDAO {
     /** Secondary index: Citizens NPC id → interaction id. */
     private final Map<Integer, String> npcIndex = new ConcurrentHashMap<>();
 
-    public InteractionDAO(DatabaseManager db, DAOHub hub) {
-        this.db = db;
-        this.hub = hub;
-    }
+    public InteractionDAO(DatabaseManager db) { this.db = db; }
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 

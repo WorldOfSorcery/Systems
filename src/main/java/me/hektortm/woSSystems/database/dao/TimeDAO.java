@@ -1,9 +1,8 @@
 package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.SchemaManager;
-import me.hektortm.woSSystems.utils.dataclasses.Activity;
+import me.hektortm.woSSystems.utils.model.Activity;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
@@ -12,7 +11,6 @@ import me.hektortm.wosCore.discord.DiscordLogger;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.logging.Level;
 
 /**
@@ -22,14 +20,10 @@ import java.util.logging.Level;
  */
 public class TimeDAO implements IDAO {
     private final DatabaseManager db;
-    private final DAOHub daoHub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "TimeDAO";
 
-    public TimeDAO(DatabaseManager db, DAOHub daoHub) throws SQLException {
-        this.db = db;
-        this.daoHub = daoHub;
-    }
+    public TimeDAO(DatabaseManager db) { this.db = db; }
 
     @Override
     public void initializeTable() throws SQLException {

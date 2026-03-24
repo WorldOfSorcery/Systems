@@ -1,11 +1,9 @@
 package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.SchemaManager;
-import me.hektortm.woSSystems.utils.CosmeticType;
-import me.hektortm.woSSystems.utils.dataclasses.Cooldown;
-import me.hektortm.woSSystems.utils.dataclasses.Cosmetic;
+import me.hektortm.woSSystems.utils.types.CosmeticType;
+import me.hektortm.woSSystems.utils.model.Cosmetic;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
@@ -14,7 +12,6 @@ import org.bukkit.entity.Player;
 
 import java.sql.*;
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,16 +31,12 @@ public class CosmeticsDAO implements IDAO {
 
 
     private final DatabaseManager db;
-    private final DAOHub daoHub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "CosmeticsDAO";
 
     private final Map<String, Cosmetic> cache = new ConcurrentHashMap<>();
 
-    public CosmeticsDAO(DatabaseManager db, DAOHub daoHub) throws SQLException {
-        this.db = db;
-        this.daoHub = daoHub;
-    }
+    public CosmeticsDAO(DatabaseManager db) { this.db = db; }
 
     @Override
     public void initializeTable() throws SQLException {

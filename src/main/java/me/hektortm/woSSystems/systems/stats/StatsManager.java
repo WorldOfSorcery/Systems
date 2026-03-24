@@ -3,9 +3,8 @@ package me.hektortm.woSSystems.systems.stats;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.Operations;
-import me.hektortm.woSSystems.utils.dataclasses.GlobalStat;
-import me.hektortm.woSSystems.utils.dataclasses.Stat;
-import me.hektortm.wosCore.WoSCore;
+import me.hektortm.woSSystems.utils.model.GlobalStat;
+import me.hektortm.woSSystems.utils.model.Stat;
 import org.bukkit.OfflinePlayer;
 
 import java.util.Map;

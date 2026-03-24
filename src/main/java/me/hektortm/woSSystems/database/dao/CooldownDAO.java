@@ -1,11 +1,9 @@
 package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.SchemaManager;
-import me.hektortm.woSSystems.utils.dataclasses.Constant;
-import me.hektortm.woSSystems.utils.dataclasses.Cooldown;
-import me.hektortm.woSSystems.utils.dataclasses.InteractionKey;
+import me.hektortm.woSSystems.utils.model.Cooldown;
+import me.hektortm.woSSystems.utils.model.InteractionKey;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;

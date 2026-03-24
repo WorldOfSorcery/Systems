@@ -2,11 +2,10 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.AsyncWriteQueue;
-import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.utils.Operations;
-import me.hektortm.woSSystems.utils.dataclasses.GlobalStat;
-import me.hektortm.woSSystems.utils.dataclasses.Stat;
+import me.hektortm.woSSystems.utils.model.GlobalStat;
+import me.hektortm.woSSystems.utils.model.Stat;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;

@@ -1,9 +1,7 @@
 package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.ActionHandler;
-import me.hektortm.woSSystems.utils.dataclasses.Interaction;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
@@ -35,12 +33,8 @@ import java.util.logging.Level;
 public class DialogDAO implements IDAO {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DatabaseManager db;
-    private final DAOHub hub;
 
-    public DialogDAO(DatabaseManager db, DAOHub hub) {
-        this.db = db;
-        this.hub = hub;
-    }
+    public DialogDAO(DatabaseManager db) { this.db = db; }
 
 
     @Override

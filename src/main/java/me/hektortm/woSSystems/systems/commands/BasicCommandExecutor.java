@@ -1,7 +1,7 @@
 package me.hektortm.woSSystems.systems.commands;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.utils.dataclasses.BasicCommand;
+import me.hektortm.woSSystems.utils.model.BasicCommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

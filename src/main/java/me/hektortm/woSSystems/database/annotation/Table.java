@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks a {@link me.hektortm.woSSystems.utils.dataclasses.BaseEntity} subclass
+ * Marks a {@link me.hektortm.woSSystems.utils.model.BaseEntity} subclass
  * as the source of truth for a database table.
  *
  * SchemaManager will:

@@ -2,8 +2,8 @@ package me.hektortm.woSSystems.systems.cooldowns;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.utils.dataclasses.Cooldown;
-import me.hektortm.woSSystems.utils.dataclasses.InteractionKey;
+import me.hektortm.woSSystems.utils.model.Cooldown;
+import me.hektortm.woSSystems.utils.model.InteractionKey;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;

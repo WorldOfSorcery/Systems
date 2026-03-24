@@ -1,21 +1,13 @@
 package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.SchemaManager;
-import me.hektortm.woSSystems.systems.citems.CitemBuilder;
-import me.hektortm.woSSystems.utils.dataclasses.Constant;
+import me.hektortm.woSSystems.utils.model.Constant;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
-import me.hektortm.wosCore.discord.DiscordLog;
-import me.hektortm.wosCore.discord.DiscordLogger;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -31,16 +23,12 @@ import java.util.logging.Level;
  */
 public class ConstantDAO implements IDAO {
     private final DatabaseManager db;
-    private final DAOHub daoHub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "ConstantDAO";
 
     private final Map<String, Constant> cache = new ConcurrentHashMap<>();
 
-    public ConstantDAO(DatabaseManager db, DAOHub daoHub) {
-        this.db = db;
-        this.daoHub = daoHub;
-    }
+    public ConstantDAO(DatabaseManager db) { this.db = db; }
 
     @Override
     public void initializeTable() throws SQLException {

@@ -2,7 +2,7 @@ package me.hektortm.woSSystems.utils;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.utils.dataclasses.InteractionKey;
+import me.hektortm.woSSystems.utils.model.InteractionKey;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;

@@ -1,19 +1,16 @@
 package me.hektortm.woSSystems.utils;
 
-import io.papermc.paper.datacomponent.DataComponentTypes;
-import io.papermc.paper.datacomponent.item.DyedItemColor;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
-import me.hektortm.woSSystems.utils.dataclasses.Constant;
+import me.hektortm.woSSystems.utils.model.Constant;
+import me.hektortm.woSSystems.utils.types.CosmeticType;
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.List;
 import java.util.UUID;
 
 import static java.lang.Long.parseLong;

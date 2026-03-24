@@ -1,16 +1,14 @@
 package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.database.SchemaManager;
-import me.hektortm.woSSystems.utils.LoottableItemType;
-import me.hektortm.woSSystems.utils.dataclasses.Loottable;
-import me.hektortm.woSSystems.utils.dataclasses.LoottableItem;
+import me.hektortm.woSSystems.utils.types.LoottableItemType;
+import me.hektortm.woSSystems.utils.model.Loottable;
+import me.hektortm.woSSystems.utils.model.LoottableItem;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
 import me.hektortm.wosCore.discord.DiscordLogger;
-import org.bukkit.inventory.ItemStack;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -24,14 +22,10 @@ import java.util.logging.Level;
  */
 public class LoottablesDAO implements IDAO {
     private final DatabaseManager db;
-    private final DAOHub daoHub;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "CitemDAO";
 
-    public LoottablesDAO(DatabaseManager db, DAOHub daoHub) {
-        this.db = db;
-        this.daoHub = daoHub;
-    }
+    public LoottablesDAO(DatabaseManager db) { this.db = db; }
 
     @Override
     public void initializeTable() throws SQLException {

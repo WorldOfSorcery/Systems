@@ -10,4 +10,8 @@ public abstract class SubCommand {
 
     public abstract void execute(CommandSender sender, String[] args);
 
+    public boolean requiresPermission() {
+        return getPermission() != null;
+    }
+
 }

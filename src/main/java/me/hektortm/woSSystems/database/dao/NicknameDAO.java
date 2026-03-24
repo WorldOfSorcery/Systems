@@ -24,13 +24,9 @@ import java.util.logging.Level;
 public class NicknameDAO implements IDAO {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DatabaseManager db;
-    private final DAOHub daoHub;
     private final String logName = "NicknameDAO";
 
-    public NicknameDAO(DatabaseManager db, DAOHub daoHub) throws SQLException {
-        this.db = db;
-        this.daoHub = daoHub;
-    }
+    public NicknameDAO(DatabaseManager db) { this.db = db; }
 
     @Override
     public void initializeTable() throws SQLException {

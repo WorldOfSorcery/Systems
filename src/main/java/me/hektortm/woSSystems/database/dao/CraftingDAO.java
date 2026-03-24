@@ -3,18 +3,12 @@ package me.hektortm.woSSystems.database.dao;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.utils.dataclasses.CIngredient;
-import me.hektortm.woSSystems.utils.dataclasses.CRecipe;
+import me.hektortm.woSSystems.utils.model.CIngredient;
+import me.hektortm.woSSystems.utils.model.CRecipe;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
-import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.Recipe;
-import org.bukkit.inventory.ShapedRecipe;
-import org.bukkit.inventory.ShapelessRecipe;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.RecipeChoice;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -31,13 +25,9 @@ public class CraftingDAO implements IDAO {
 
     private final WoSSystems plugin = WoSSystems.getInstance();
     private final DatabaseManager db;
-    private final DAOHub hub;
     private final Map<NamespacedKey, Recipe> loadedRecipes = new HashMap<>();
 
-    public CraftingDAO(DatabaseManager db, DAOHub hub) {
-        this.db = db;
-        this.hub = hub;
-    }
+    public CraftingDAO(DatabaseManager db) { this.db = db; }
 
     @Override
     public void initializeTable() throws SQLException {
