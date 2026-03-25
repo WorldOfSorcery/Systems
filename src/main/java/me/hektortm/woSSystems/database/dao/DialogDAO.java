@@ -18,14 +18,16 @@ import javax.annotation.Nullable;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 /**
  * DAO for building and delivering LuxDialogues {@link Dialogue} instances to players.
  *
- * <p>All dialog data is read from the database on demand (no in-memory cache) and
- * assembled into a fully-configured {@link Dialogue} using the builder API before
- * being dispatched via {@link me.hektortm.woSSystems.WoSSystems#getDialogueApi()}.</p>
+ * <p>Raw dialog data (unresolved templates) is loaded from the database once and
+ * stored in {@link #cache} per {@code dialog_id}. Player-specific placeholder
+ * resolution happens at build time, so the cache key is always just the dialog ID.</p>
  *
  * <p>Tables managed: {@code dialogs}, {@code dialog_pages}, {@code page_lines},
  * {@code dialog_answers}.</p>
@@ -34,12 +36,42 @@ public class DialogDAO implements IDAO {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DatabaseManager db;
 
+    /** Raw (unresolved) dialog templates keyed by dialog_id. */
+    private final Map<String, RawDialog> cache = new ConcurrentHashMap<>();
+
     public DialogDAO(DatabaseManager db) { this.db = db; }
 
+    // -------------------------------------------------------------------------
+    // Inner records — unresolved templates stored in the cache
+    // -------------------------------------------------------------------------
+
+    private record RawAnswer(int id, String text, String action) {}
+
+    private record RawPage(
+            @Nullable String preAction,
+            @Nullable String postAction,
+            List<String> lineTemplates,
+            List<RawAnswer> answers
+    ) {}
+
+    private record RawDialog(
+            String charNameTemplate,
+            String charNameColor,
+            String textColor,
+            String backgroundColor,
+            String answerBackgroundColor,
+            String fogColor,
+            String arrowColor,
+            String selectedColor,
+            List<RawPage> pages
+    ) {}
+
+    // -------------------------------------------------------------------------
+    // Schema
+    // -------------------------------------------------------------------------
 
     @Override
     public void initializeTable() throws SQLException {
-        // Schema managed manually — uses external LuxDialogues table structure; not suitable for SchemaManager
         try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute("CREATE TABLE IF NOT EXISTS dialogs(" +
                     "dialog_id VARCHAR(255) PRIMARY KEY," +
@@ -76,9 +108,204 @@ public class DialogDAO implements IDAO {
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Cache management
+    // -------------------------------------------------------------------------
+
+    /**
+     * Preloads all dialogs from the database into the cache.
+     * Call this on startup after {@link #initializeTable()}.
+     */
+    public void preloadAll() {
+        String sql = "SELECT dialog_id FROM dialogs";
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            int count = 0;
+            while (rs.next()) {
+                String id = rs.getString("dialog_id");
+                RawDialog raw = loadRawFromDb(id);
+                if (raw != null) {
+                    cache.put(id, raw);
+                    count++;
+                }
+            }
+            plugin.getLogger().info("DialogDAO: preloaded " + count + " dialog(s) into cache.");
+        } catch (SQLException e) {
+            WoSSystems.discordLog(Level.SEVERE, "DialogDAO:preload", "Failed to preload dialogs: ", e);
+        }
+    }
+
+    /** Removes a single entry from the cache, forcing a DB reload on next use. */
+    public void invalidate(String dialogId) {
+        cache.remove(dialogId);
+    }
+
+    /** Clears the entire cache. */
+    public void invalidateAll() {
+        cache.clear();
+    }
+
+    // -------------------------------------------------------------------------
+    // Raw DB loading (no placeholder resolution — one connection for all queries)
+    // -------------------------------------------------------------------------
+
+    @Nullable
+    private RawDialog loadRawFromDb(String dialogId) {
+        String sql = "SELECT * FROM dialogs WHERE dialog_id = ?";
+        try (Connection conn = db.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, dialogId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (!rs.next()) return null;
+
+                return new RawDialog(
+                        rs.getString("char_name"),
+                        getOrDefault(rs, "char_name_color",         "#4f4a3e"),
+                        getOrDefault(rs, "text_color",              "#4f4a3e"),
+                        getOrDefault(rs, "background_color",        "#f8ffe0"),
+                        getOrDefault(rs, "answer_background_color", "#f8ffe0"),
+                        getOrDefault(rs, "fog_color",               "#000000"),
+                        getOrDefault(rs, "arrow_color",             "#cdff29"),
+                        getOrDefault(rs, "selected_color",          "#4f4a3e"),
+                        loadRawPages(conn, dialogId)
+                );
+            }
+        } catch (SQLException e) {
+            DiscordLogger.log(new DiscordLog(Level.SEVERE, plugin, "DID:8e45baa3",
+                    "Failed to load raw dialog for ID: " + dialogId, e));
+            return null;
+        }
+    }
+
+    private List<RawPage> loadRawPages(Connection conn, String dialogId) throws SQLException {
+        List<RawPage> pages = new ArrayList<>();
+        String sql = "SELECT * FROM dialog_pages WHERE dialog_id = ? ORDER BY page_id ASC";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, dialogId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    int pageId = rs.getInt("page_id");
+                    pages.add(new RawPage(
+                            rs.getString("pre_action"),
+                            rs.getString("post_action"),
+                            loadRawLines(conn, dialogId, pageId),
+                            loadRawAnswers(conn, dialogId, pageId)
+                    ));
+                }
+            }
+        }
+        return pages;
+    }
+
+    private List<String> loadRawLines(Connection conn, String dialogId, int pageId) throws SQLException {
+        List<String> lines = new ArrayList<>();
+        String sql = "SELECT line_text FROM page_lines WHERE dialog_id = ? AND page_id = ? ORDER BY line_id ASC";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, dialogId);
+            pstmt.setInt(2, pageId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) lines.add(rs.getString("line_text"));
+            }
+        }
+        return lines;
+    }
+
+    private List<RawAnswer> loadRawAnswers(Connection conn, String dialogId, int pageId) throws SQLException {
+        List<RawAnswer> answers = new ArrayList<>();
+        String sql = "SELECT * FROM dialog_answers WHERE dialog_id = ? AND page_id = ? ORDER BY answer_id ASC";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, dialogId);
+            pstmt.setInt(2, pageId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    answers.add(new RawAnswer(
+                            rs.getInt("answer_id"),
+                            rs.getString("answer_text"),
+                            rs.getString("answer_action")
+                    ));
+                }
+            }
+        }
+        return answers;
+    }
+
+    // -------------------------------------------------------------------------
+    // Public API — build with per-player placeholder resolution
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns a fully-built {@link Dialogue} for {@code target}, resolving all
+     * placeholder templates from the cached raw data.  Falls back to a DB load
+     * if the dialog is not yet cached.
+     *
+     * @param dialogId the dialog ID to look up
+     * @param source   the command sender who triggered the dialog (used for feedback); may be {@code null}
+     * @param target   the player who will receive the dialog
+     * @return the assembled {@link Dialogue}, or {@code null} if the ID is unknown
+     */
+    @Nullable
+    public Dialogue buildDialog(String dialogId, @Nullable CommandSender source, Player target) {
+        RawDialog raw = cache.computeIfAbsent(dialogId, this::loadRawFromDb);
+        if (raw == null) {
+            Utils.error(source, "dialogs", "error.notfound", "%id%", dialogId);
+            return null;
+        }
+
+        // Resolve player-specific placeholders at render time — not stored back into the cache
+        String charName = plugin.getPlaceholderResolver().resolvePlaceholders(raw.charNameTemplate(), target);
+
+        Dialogue.Builder dialogBuilder = new Dialogue.Builder()
+                .setDialogueID(dialogId)
+                .setDialogueText(raw.textColor(), 10)
+                .setCharacterNameText(charName, raw.charNameColor(), 20)
+                .setDialogueBackgroundImage("dialogue-background", raw.backgroundColor(), 0)
+                .setDialogueSpeed(1)
+                .setTypingSound("luxdialogues:luxdialogues.sounds.typing", "master", 1.0, 1.0)
+                .setRange(10.0)
+                .setNameImage("name-start", "name-mid", "name-end", "#ffffff", 0)
+                .setFogImage("fog", raw.fogColor())
+                .setArrowImage("hand", raw.arrowColor(), -7)
+                .setSelectionSound("luxdialogues:luxdialogues.sounds.selection", "master", 1.0, 1.0)
+                .setAnswerBackgroundImage("answer-background", raw.answerBackgroundColor(), 140)
+                .setAnswerText(raw.textColor(), 13, raw.selectedColor());
+
+        for (RawPage rawPage : raw.pages()) {
+            Page.Builder pageBuilder = new Page.Builder();
+            if (rawPage.preAction() != null)
+                pageBuilder.addPreCallback(p -> plugin.getInteractionManager().triggerInteraction(rawPage.preAction(), p, null));
+            if (rawPage.postAction() != null)
+                pageBuilder.addPostCallback(p -> plugin.getInteractionManager().triggerInteraction(rawPage.postAction(), p, null));
+
+            for (String lineTemplate : rawPage.lineTemplates()) {
+                pageBuilder.addLine(plugin.getPlaceholderResolver().resolvePlaceholders(lineTemplate, target));
+            }
+            for (RawAnswer a : rawPage.answers()) {
+                List<String> actionList = List.of(a.action());
+                pageBuilder.addAnswer(new Answer.Builder()
+                        .setAnswerID(String.valueOf(a.id()))
+                        .setAnswerText(a.text())
+                        .addCallback(p -> plugin.getActionHandler().executeActions(
+                                p, actionList, ActionHandler.SourceType.DIALOG, dialogId, null))
+                        .build());
+            }
+            dialogBuilder.addPage(pageBuilder.build());
+        }
+
+        if (source instanceof Player) Utils.success(source, "dialogs", "info.triggered", "%dialog%", dialogId, "%player%", target.getName());
+        else if (source instanceof ConsoleCommandSender) source.sendMessage("Dialog " + dialogId + " triggered for player " + target.getName());
+
+        return dialogBuilder.build();
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
     private static boolean hasColumn(ResultSet rs, String col) {
         try {
-            rs.findColumn(col); return true;
+            rs.findColumn(col);
+            return true;
         } catch (SQLException e) {
             DiscordLogger.log(new DiscordLog(
                     Level.SEVERE,
@@ -90,11 +317,11 @@ public class DialogDAO implements IDAO {
             return false;
         }
     }
+
     private static String getOrDefault(ResultSet rs, String col, String def) {
         try {
             return hasColumn(rs, col) && rs.getString(col) != null ? rs.getString(col) : def;
         } catch (SQLException e) {
-
             DiscordLogger.log(new DiscordLog(
                     Level.SEVERE,
                     WoSSystems.getPlugin(WoSSystems.class),
@@ -105,193 +332,4 @@ public class DialogDAO implements IDAO {
             return def;
         }
     }
-
-    /**
-     * Fetches a dialog from the database, assembles it with the LuxDialogues builder,
-     * resolves placeholders for {@code target}, and dispatches it to the player.
-     *
-     * @param dialogId the dialog ID to look up
-     * @param source   the command sender who triggered the dialog (used for feedback
-     *                 messages); may be {@code null} for silent triggers
-     * @param target   the player who will receive the dialog
-     */
-    public void getDialog(String dialogId, @Nullable CommandSender source, Player target) {
-        String sql = "SELECT * FROM dialogs WHERE dialog_id = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, dialogId);
-            ResultSet rs = pstmt.executeQuery();
-
-            if (rs == null) {
-                Utils.error(source, "dialogs", "error.notfound", "%id%", dialogId);
-                return;
-            }
-
-            if (rs.next()) {
-                String charName = plugin.getPlaceholderResolver().resolvePlaceholders( rs.getString("char_name"), target );
-                String charNameColor        = getOrDefault(rs, "char_name_color", "#4f4a3e");
-                String textColor            = getOrDefault(rs, "text_color", "#4f4a3e");
-                String backgroundColor      = getOrDefault(rs, "background_color", "#f8ffe0");
-                String answerBackgroundColor= getOrDefault(rs, "answer_background_color", "#f8ffe0");
-                String fogColor             = getOrDefault(rs, "fog_color", "#000000");
-                String arrowColor           = getOrDefault(rs, "arrow_color", "#cdff29");
-                String selectedColor        = getOrDefault(rs, "selected_color", "#4f4a3e");
-
-                List<Page> pages = getPages(dialogId, target);
-
-                Dialogue.Builder dialogBuilder = new Dialogue.Builder().setDialogueID(dialogId)
-                        .setDialogueText(textColor, 10)
-                        .setCharacterNameText(charName, charNameColor, 20)
-                        .setDialogueBackgroundImage("dialogue-background", backgroundColor, 0)
-                        .setDialogueSpeed(1)
-
-                        .setTypingSound("luxdialogues:luxdialogues.sounds.typing", "master", 1.0, 1.0)
-                        .setRange(10.0)
-                        .setNameImage("name-start", "name-mid", "name-end", "#ffffff", 0)
-                        .setFogImage("fog", fogColor)
-                        .setArrowImage("hand", arrowColor, -7)
-                        .setSelectionSound("luxdialogues:luxdialogues.sounds.selection", "master", 1.0, 1.0)
-                        .setAnswerBackgroundImage("answer-background", answerBackgroundColor, 140)
-                        .setAnswerText(textColor, 13, selectedColor);
-
-                for (Page page : pages) {
-                    dialogBuilder.addPage(page);
-                }
-
-                plugin.getDialogueApi().sendDialogue(target, dialogBuilder.build(), "1");
-                if (source instanceof Player) Utils.success(source, "dialogs", "info.triggered", "%dialog%", dialogId, "%player%", target.getName());
-                else if (source instanceof ConsoleCommandSender) source.sendMessage("Dialog " + dialogId + " triggered for player " + target.getName());
-
-            }
-
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE,
-                    plugin,
-                    "DID:8e45baa3",
-                    "Failed to load dialog for dialog ID: " + dialogId,
-                    e
-            ));
-        }
-    }
-
-    /**
-     * Loads all {@link Page} objects for the given dialog, ordered by
-     * {@code page_id}.  Each page has pre/post-action callbacks, lines (with
-     * placeholder resolution), and answer choices attached.
-     *
-     * @param dialogId the dialog whose pages to load
-     * @param target   the player used for placeholder resolution
-     * @return ordered list of pages
-     */
-    public List<Page> getPages(String dialogId, Player target) {
-        List<Page> pages = new ArrayList<>();
-        String sql = "SELECT * FROM dialog_pages WHERE dialog_id = ? ORDER BY page_id ASC";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, dialogId);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                String preAction = rs.getString("pre_action");
-                String postAction = rs.getString("post_action");
-                Page.Builder pageBuilder = new Page.Builder();
-                if (rs.getString("pre_action") != null) pageBuilder.addPreCallback(player -> plugin.getInteractionManager().triggerInteraction(preAction, player, null));
-                if (rs.getString("post_action") != null) pageBuilder.addPostCallback(player -> plugin.getInteractionManager().triggerInteraction(postAction, player, null));
-
-                for (String line : getPageLines(dialogId, rs.getInt("page_id"), target)) {
-                    pageBuilder.addLine(line);
-                }
-                for (Answer answer : getAnswers(dialogId, rs.getInt("page_id"))) {
-                    pageBuilder.addAnswer(answer);
-                }
-
-                pages.add(pageBuilder.build());
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE,
-                    plugin,
-                    "65765d89",
-                    "Failed to load dialog pages for dialog ID: " + dialogId,
-                    e
-            ));
-        }
-
-        return pages;
-
-    }
-
-    /**
-     * Loads all {@link Answer} objects for a specific dialog page, ordered by
-     * {@code answer_id}.  Each answer has a callback that triggers its action
-     * through the {@link me.hektortm.woSSystems.utils.ActionHandler}.
-     *
-     * @param dialogId the dialog ID
-     * @param page_id  the page within that dialog
-     * @return ordered list of answers
-     */
-    public List<Answer> getAnswers(String dialogId, int page_id) {
-        List<Answer> answers = new ArrayList<>();
-        String sql = "SELECT * FROM dialog_answers WHERE dialog_id = ? AND page_id = ? ORDER BY answer_id ASC";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, dialogId);
-            pstmt.setInt(2, page_id);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-
-                String action = rs.getString("answer_action");
-                List<String> helperArray = new ArrayList<>();
-                helperArray.add(action);
-                Answer.Builder answerBuilder = new Answer.Builder()
-                        .setAnswerID(String.valueOf(rs.getInt("answer_id")))
-                        .setAnswerText(rs.getString("answer_text"))
-                        .addCallback(player -> {
-                            plugin.getActionHandler().executeActions(player, helperArray, ActionHandler.SourceType.DIALOG, dialogId, null);
-                        });
-                answers.add(answerBuilder.build());
-            }
-            return answers;
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE,
-                    plugin,
-                    "da60aeb2",
-                    "Failed to load dialog answers for dialog ID: " + dialogId,
-                    e
-            ));
-            return answers;
-        }
-    }
-
-    /**
-     * Returns the text lines for a dialog page, ordered by {@code line_id}.
-     * Placeholders are resolved against {@code target} before returning.
-     *
-     * @param dialogId the dialog ID
-     * @param PageId   the page within that dialog
-     * @param target   the player used for placeholder resolution
-     * @return ordered list of resolved line strings
-     */
-    public List<String> getPageLines(String dialogId, int PageId, Player target) {
-        String sql = "SELECT line_text FROM page_lines WHERE dialog_id = ? AND page_id = ? ORDER BY line_id ASC";
-        List<String> lines = new ArrayList<>();
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, dialogId);
-            pstmt.setInt(2, PageId);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                lines.add(plugin.getPlaceholderResolver().resolvePlaceholders( rs.getString("line_text"), target ) );
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE,
-                    plugin,
-                    "869cdc5b",
-                    "Failed to load page lines for dialog ID: " + dialogId,
-                    e
-            ));
-        }
-        return lines;
-    }
-
-
-
 }

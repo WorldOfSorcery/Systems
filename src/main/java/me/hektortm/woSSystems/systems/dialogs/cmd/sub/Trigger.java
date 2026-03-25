@@ -42,7 +42,7 @@ public class Trigger extends SubCommand {
 
 
             if (!WoSSystems.getInstance().getDialogueApi().isInDialogue(targetPlayer)) {
-                hub.getDialogDAO().getDialog(dialogId, sender, targetPlayer);
+                hub.getDialogDAO().buildDialog(dialogId, sender, targetPlayer);
             } else {
                 if (sender instanceof Player) Utils.info(sender, "dialogs", "info.isindialog");
             }

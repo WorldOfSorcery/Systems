@@ -34,7 +34,7 @@ public class LoottableManager {
         helperArray.add(item.getValue());
 
         switch (item.getType()) {
-            case DIALOG -> hub.getDialogDAO().getDialog(item.getValue(), source, (Player) player);
+            case DIALOG -> hub.getDialogDAO().buildDialog(item.getValue(), source, (Player) player);
             case CITEM -> plugin.getCitemManager().giveCitem(source, (Player) player, item.getValue(), item.getParameter());
             case GUI -> plugin.getGuiManager().openGUI((Player) player, item.getValue());
             case INTERACTION -> plugin.getInteractionManager().triggerInteraction(item.getValue(), (Player) player, null);
