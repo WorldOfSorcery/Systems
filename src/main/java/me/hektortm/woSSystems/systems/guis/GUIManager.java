@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import static io.papermc.paper.datacomponent.item.DyedItemColor.dyedItemColor;
@@ -114,16 +115,16 @@ public class GUIManager implements Listener {
     }
 
     private ItemStack buildItem(Player player, GUISlotConfig config) {
-        String materialName = config.getMaterial() != null
-                ? placeholderResolver.resolvePlaceholders(config.getMaterial(), player).toUpperCase()
-                : "PAPER";
-        Material material = Material.getMaterial(materialName);
-        if (material == null) material = Material.PAPER;
+        String materialName = config.getMaterial();
+
+
+        Material material =  Material.getMaterial(materialName);
 
         ItemStack item = new ItemStack(material);
 
         DyedItemColor dyedColor = null;
-        if (config.getColor() != null && !config.getColor().isBlank()) {
+        if (config.getColor() != null && !config.getColor().isBlank())
+        {
             dyedColor = dyedItemColor(hexToBukkitColor(config.getColor()));
         }
 
@@ -134,6 +135,9 @@ public class GUIManager implements Listener {
             ItemMeta meta = item.getItemMeta();
             if (meta != null) item.setItemMeta(generateItemMeta(meta, config, player));
         }
+
+        item.getItemMeta().setDisplayName(config.getDisplay_name());
+
 
         if (dyedColor != null) item.setData(DataComponentTypes.DYED_COLOR, dyedColor);
 
@@ -177,9 +181,13 @@ public class GUIManager implements Listener {
             default -> null;
         };
 
-        // Fire specific left/right actions if present, otherwise fall back to global
-        List<String> actions = config.getGlobal_actions();
-        if (specific != null) actions.addAll(specific);
+        // Use specific (left/right) actions if present, otherwise fall back to global
+        List<String> actions;
+        if (specific != null && !specific.isEmpty()) {
+            actions = specific;
+        } else {
+            actions = config.getGlobal_actions();
+        }
 
         if (actions == null || actions.isEmpty()) return;
         actionHandler.executeActions(player, actions, ActionHandler.SourceType.GUI, config.getGui_id(), null);
@@ -200,19 +208,17 @@ public class GUIManager implements Listener {
 
     private ItemMeta generateItemMeta(ItemMeta meta, GUISlotConfig config, Player player) {
         if (config.getDisplay_name() != null) {
-            meta.setDisplayName(Utils.parseColorCodeString(
-                    placeholderResolver.resolvePlaceholders(config.getDisplay_name(), player)));
+            meta.setDisplayName(Utils.parseColorCodeString(config.getDisplay_name()));
         }
 
         List<String> lore = parseLore(config.getLore());
         if (!lore.isEmpty()) {
-            lore.replaceAll(line -> Utils.parseColorCodeString(placeholderResolver.resolvePlaceholders(line, player)));
+            lore.replaceAll(Utils::parseColorCodeString);
             meta.setLore(lore);
         }
 
         if (config.getModel() != null && !config.getModel().isBlank()) {
-            meta.setItemModel(new NamespacedKey("wos",
-                    placeholderResolver.resolvePlaceholders(config.getModel(), player)));
+            meta.setItemModel(new NamespacedKey("wos", config.getModel()));
         }
 
         if (config.getTooltip() != null && !config.getTooltip().isEmpty()) {
@@ -220,7 +226,7 @@ public class GUIManager implements Listener {
                 meta.setHideTooltip(true);
             }
             else if (config.getTooltip() != null && !config.getTooltip().isEmpty()) {
-                NamespacedKey tooltip = new NamespacedKey("minecraft", placeholderResolver.resolvePlaceholders(config.getTooltip(), player));
+                NamespacedKey tooltip = new NamespacedKey("minecraft",config.getTooltip());
                 meta.setTooltipStyle(tooltip);
             }
         }
@@ -246,13 +252,12 @@ public class GUIManager implements Listener {
 
     private SkullMeta generateSkullMeta(SkullMeta meta, GUISlotConfig config, Player player) {
         if (config.getDisplay_name() != null) {
-            meta.setDisplayName(Utils.parseColorCodeString(
-                    placeholderResolver.resolvePlaceholders(config.getDisplay_name(), player)));
+            meta.setDisplayName(Utils.parseColorCodeString(config.getDisplay_name()));
         }
 
         List<String> lore = parseLore(config.getLore());
         if (!lore.isEmpty()) {
-            lore.replaceAll(line -> Utils.parseColorCodeString(placeholderResolver.resolvePlaceholders(line, player)));
+            lore.replaceAll(Utils::parseColorCodeString);
             meta.setLore(lore);
         }
 
@@ -280,18 +285,6 @@ public class GUIManager implements Listener {
                 ItemFlag.HIDE_DYE);
 
         return meta;
-    }
-
-    /** Applies the `mode` field — currently used for tooltip control. */
-    private void applyModel(ItemMeta meta, GUISlotConfig config, Player player) {
-        String mode = config.getModel();
-        if (mode == null || mode.isBlank()) return;
-        String resolved = placeholderResolver.resolvePlaceholders(mode, player);
-        if ("hidden".equalsIgnoreCase(resolved)) {
-            meta.setHideTooltip(true);
-        } else {
-            meta.setTooltipStyle(new NamespacedKey("minecraft", resolved));
-        }
     }
 
     /** Parses the raw comma-separated lore string stored in the DB into a mutable list. */

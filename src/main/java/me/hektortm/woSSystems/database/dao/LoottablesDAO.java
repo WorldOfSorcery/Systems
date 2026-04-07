@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.database.dao;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.SchemaManager;
+import me.hektortm.woSSystems.utils.model.Unlockable;
 import me.hektortm.woSSystems.utils.types.LoottableItemType;
 import me.hektortm.woSSystems.utils.model.Loottable;
 import me.hektortm.woSSystems.utils.model.LoottableItem;
@@ -9,10 +10,13 @@ import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
 import me.hektortm.wosCore.discord.DiscordLogger;
+import org.bukkit.entity.Player;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 /**
@@ -24,6 +28,8 @@ public class LoottablesDAO implements IDAO {
     private final DatabaseManager db;
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "CitemDAO";
+
+    private final Map<String, Loottable> cache = new ConcurrentHashMap<>();
 
     public LoottablesDAO(DatabaseManager db) { this.db = db; }
 
@@ -45,6 +51,78 @@ public class LoottablesDAO implements IDAO {
                 )
             """);
         }
+
+        org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, this::preloadAll);
+    }
+
+    public void preloadAll() {
+        String sql = "SELECT id, amount, name FROM loottables";
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            int count = 0;
+            while (rs.next()) {
+                String id = rs.getString("id");
+                Loottable lt = new Loottable(
+                        id,
+                        rs.getInt("amount"),
+                        rs.getString("name"),
+                        buildLoottableItems(conn, id)
+                );
+                cache.put(rs.getString("id"), lt);
+                count++;
+
+            }
+            plugin.getLogger().info("DialogDAO: preloaded " + count + " dialog(s) into cache.");
+        } catch (SQLException e) {
+            WoSSystems.discordLog(Level.SEVERE, "DialogDAO:preload", "Failed to preload dialogs: ", e);
+        }
+    }
+
+    public void reloadFromDB(String id, Player p) {
+        String sql = "SELECT amount, name FROM loottables WHERE id = ?";
+        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                Loottable lt = new Loottable(
+                        id,
+                        rs.getInt("amount"),
+                        rs.getString("name"),
+                        buildLoottableItems(conn, id)
+                );
+                cache.put(id, lt);
+                p.sendTitle("§aUpdated Loottable", "§e" + id);
+            } else {
+                cache.remove(id);
+                p.sendTitle("§cDeleted Loottable", "§e" + id);
+            }
+        } catch (SQLException e) {
+            WoSSystems.discordLog(Level.SEVERE, logName + ":reload", "Failed to reload interaction from DB: ", e);
+        }
+    }
+
+
+    public List<LoottableItem> buildLoottableItems(Connection conn, String id) {
+        String sql = "SELECT * FROM loottable_items WHERE id = ?";
+        List<LoottableItem> items = new ArrayList<>();
+        try (conn; PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                LoottableItem item = new LoottableItem(
+                        rs.getInt("weight"),
+                        LoottableItemType.valueOf(rs.getString("type")),
+                        rs.getString("value"),
+                        rs.getInt("parameter")
+                );
+                items.add(item);
+            }
+
+        } catch (SQLException e) {
+            plugin.writeLog("LoottablesDAO", Level.SEVERE, "Couldnt build items");
+        }
+        return items;
     }
 
     /**

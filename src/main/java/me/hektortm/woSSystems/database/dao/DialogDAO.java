@@ -117,7 +117,7 @@ public class DialogDAO implements IDAO {
      * Call this on startup after {@link #initializeTable()}.
      */
     public void preloadAll() {
-        String sql = "SELECT dialog_id FROM dialogs";
+        String sql = "SELECT dialog FROM dialogs";
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -152,7 +152,7 @@ public class DialogDAO implements IDAO {
 
     @Nullable
     private RawDialog loadRawFromDb(String dialogId) {
-        String sql = "SELECT * FROM dialogs WHERE dialog_id = ?";
+        String sql = "SELECT * FROM dialogs WHERE id = ?";
         try (Connection conn = db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, dialogId);

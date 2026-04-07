@@ -133,20 +133,20 @@ public class DAOHub {
         Player p = Bukkit.getPlayer(editorUUID);
         switch (type) {
 //            case "channels"       -> channelDAO.reloadFromDB(id);
-            case "citems"         -> citemDAO.reloadFromDB(id, p);
+            case "citems"           -> citemDAO.reloadFromDB(id, p);
 //            case "commands" -> commandsDAO.reloadFromDB(id);
-            case "constants"      -> constantDAO.reloadFromDB(id, p);
-            case "cooldowns" -> cooldownDAO.reloadFromDB(id, p);
-            case "cosmetics"     -> cosmeticsDAO.reloadFromDB(id, p);
+            case "constants"        -> constantDAO.reloadFromDB(id, p);
+            case "cooldowns"        -> cooldownDAO.reloadFromDB(id, p);
+            case "cosmetics"        -> cosmeticsDAO.reloadFromDB(id, p);
 //            case "dialogs" -> dialogDAO.reloadFromDB(id);
 //            case "currencies"         -> economyDAO.reloadFromDB(id);
-            case "fishing" -> fishingDAO.reloadFromDB(id, p);
-            case "guis"         -> guiDAO.reloadFromDB(id, p);
-            case "interactions" -> interactionDAO.reloadFromDB(id, p);
-//            case "loottables"         -> loottablesDAO.reloadFromDB(id);
-//            case "stats" -> statsDAO.reloadFromDB(id);
+            case "fishing"          -> fishingDAO.reloadFromDB(id, p);
+            case "guis"             -> guiDAO.reloadFromDB(id, p);
+            case "interactions"     -> interactionDAO.reloadFromDB(id, p);
+            case "loottables"       -> loottablesDAO.reloadFromDB(id, p);
+//            case "stats"            -> statsDAO.reloadFromDB(id, p);
 //            case "timeevents"         -> timeDAO.reloadFromDB(id);
-//            case "unlockables" -> unlockableDAO.reloadFromDB(id);
+            case "unlockables"      -> unlockableDAO.reloadFromDB(id, p);
 
             default -> plugin.getLogger().warning("[Webhook] Unknown type: " + type);
         }

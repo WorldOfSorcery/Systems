@@ -52,17 +52,43 @@ public class PlaceholderResolver {
     // TODO UPDATE WHEN INVENTORY IS OPENED AGAIN
 
     /**
-     * Resolves a single placeholder token to its runtime string value.
+     * Scans {@code input} for {@code {placeholder}} tokens and replaces each
+     * with its resolved value.  Tokens follow the syntax
+     * {@code {namespace.key:id}} or {@code {constantID}}.
      *
-     * @param raw    the placeholder token (without enclosing braces), e.g.
-     *               {@code "stats.amount:kills"} or {@code "player_name"}
+     * @param input  the raw string potentially containing placeholder tokens
      * @param player the player whose data is used for player-scoped placeholders
-     * @return the resolved string, or the original token in braces if unknown
+     * @return the input string with all recognised placeholders replaced
      */
-    public String resolvePlaceholders(String raw, Player player) {
+    public String resolvePlaceholders(String input, Player player) {
+        if (input == null || !input.contains("{")) return input;
+
+        StringBuilder result = new StringBuilder();
+        int i = 0;
+        while (i < input.length()) {
+            int open = input.indexOf('{', i);
+            if (open == -1) {
+                result.append(input, i, input.length());
+                break;
+            }
+            int close = input.indexOf('}', open + 1);
+            if (close == -1) {
+                result.append(input, i, input.length());
+                break;
+            }
+            result.append(input, i, open);
+            String token = input.substring(open + 1, close);
+            result.append(resolveToken(token, player));
+            i = close + 1;
+        }
+        return result.toString();
+    }
+
+    /** Resolves a single token (without braces) to its value. */
+    private String resolveToken(String raw, Player player) {
         UUID uuid = player.getUniqueId();
 
-        // player_name
+        // No dot → player shorthand or constant
         if (!raw.contains(".")) {
             return switch (raw) {
                 case "player_name" -> player.getName();

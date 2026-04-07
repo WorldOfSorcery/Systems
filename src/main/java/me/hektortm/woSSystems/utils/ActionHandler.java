@@ -85,11 +85,20 @@ public class ActionHandler {
      *                   may be {@code null} when not applicable
      */
     public void executeActions(Player player, List<String> actions, SourceType sourceType, String sourceID, @Nullable InteractionKey key) {
-        for (String cmd : actions) {
+        for (String rawCmd : actions) {
+            // Strip surrounding quotes that may be stored in the DB
+            String cmd = rawCmd.trim();
+            if (cmd.startsWith("\"") && cmd.endsWith("\"") && cmd.length() >= 2) {
+                cmd = cmd.substring(1, cmd.length() - 1);
+            }
+            plugin.writeLog("Send message action", Level.INFO, cmd);
             String parsedCommand = cmd.replace("@p", player.getName());
             if (cmd.startsWith("send_message")) {
                 String message = cmd.replace("send_message ", "").replace("&", "§");
-                player.sendMessage(Utils.parseColorCodeString(resolver.resolvePlaceholders(message, player)));
+                plugin.writeLog("Send message action", Level.INFO, message);
+                plugin.writeLog("Send message action", Level.INFO, resolver.resolvePlaceholders(message, player));
+                String s = resolver.resolvePlaceholders(message, player);
+                player.sendMessage(Utils.parseColorCodeString(s != null ? s : message));
                 continue;
             }
             if (cmd.startsWith("sudo")) {
@@ -127,10 +136,9 @@ public class ActionHandler {
                         if (interId != null) {
                             plugin.getInteractionManager().triggerInteraction(interId, player, null);
                         }
-
-                        continue;
                     }
                 }
+                continue;
             }
             if (cmd.startsWith("send_actionbar")) {
                 String message = cmd.replace("send_actionbar ", "").replace("&", "§");
@@ -184,20 +192,17 @@ public class ActionHandler {
                 int amount = Integer.parseInt(parts[4]);
                 if (actionType.equalsIgnoreCase("give")) {
                     plugin.getEcoManager().ecoLog(player.getUniqueId(), currency, amount, sourceType.getType(), sourceID);
-
                 }
                 if (actionType.equalsIgnoreCase("take")) {
                     plugin.getEcoManager().ecoLog(player.getUniqueId(), currency, -amount, sourceType.getType(), sourceID);
-
                 }
                 if (actionType.equalsIgnoreCase("set")) {
                     plugin.getEcoManager().ecoLog(player.getUniqueId(), currency, amount, sourceType.getType(), sourceID);
-
                 }
                 if (actionType.equalsIgnoreCase("reset")) {
                     plugin.getEcoManager().ecoLog(player.getUniqueId(), currency, 0, sourceType.getType(), sourceID);
-
                 }
+                continue;
             }
             if (cmd.startsWith("close_gui")) {
                 player.closeInventory();

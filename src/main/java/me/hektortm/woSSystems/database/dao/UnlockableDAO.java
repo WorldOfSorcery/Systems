@@ -3,15 +3,20 @@ package me.hektortm.woSSystems.database.dao;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.SchemaManager;
 import me.hektortm.woSSystems.utils.Operations;
+import me.hektortm.woSSystems.utils.model.Cooldown;
+import me.hektortm.woSSystems.utils.model.Interaction;
 import me.hektortm.woSSystems.utils.model.Unlockable;
 import me.hektortm.wosCore.database.DatabaseManager;
 import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
 import me.hektortm.wosCore.discord.DiscordLogger;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 
 import java.sql.*;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 /**
@@ -31,6 +36,8 @@ public class UnlockableDAO implements IDAO {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "UnlockableDAO";
 
+    private final Map<String, Unlockable> cache = new ConcurrentHashMap<>();
+
     public UnlockableDAO(DatabaseManager db) { this.db = db; }
 
     @Override
@@ -48,6 +55,49 @@ public class UnlockableDAO implements IDAO {
             DiscordLogger.log(new DiscordLog(
                     Level.SEVERE, plugin, "608ad2f4", "Failed to initialize Unlockable Tables: ", e
             ));
+        }
+
+        WoSSystems.getInstance().getServer().getScheduler()
+                .runTaskAsynchronously(plugin, this::preloadAll);
+
+    }
+
+    public void preloadAll() {
+        String sql = "SELECT * FROM unlockables";
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            int count = 0;
+            while (rs.next()) {
+                String id = rs.getString("id");
+                boolean temp = rs.getBoolean("temp");
+                cache.put(id, new Unlockable(id, temp));
+                count++;
+
+            }
+            plugin.getLogger().info("DialogDAO: preloaded " + count + " dialog(s) into cache.");
+        } catch (SQLException e) {
+            WoSSystems.discordLog(Level.SEVERE, "DialogDAO:preload", "Failed to preload dialogs: ", e);
+        }
+    }
+
+    public void reloadFromDB(String id, Player p) {
+        String sql = "SELECT id, temp FROM unlockables WHERE id = ?";
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                boolean temp = rs.getBoolean("temp");
+                Unlockable built = new Unlockable(id, temp);
+                cache.put(id, built);
+                p.sendTitle("§aUpdated Unlockable", "§e" + id);
+            } else {
+                cache.remove(id);
+                p.sendTitle("§cDeleted Unlockable", "§e" + id);
+            }
+        } catch (SQLException e) {
+            WoSSystems.discordLog(Level.SEVERE, logName + ":reload", "Failed to reload interaction from DB: ", e);
         }
     }
 
