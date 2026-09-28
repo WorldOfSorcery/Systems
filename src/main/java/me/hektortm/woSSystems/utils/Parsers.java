@@ -10,6 +10,26 @@ import org.bukkit.entity.Player;
 import static me.hektortm.woSSystems.utils.Letters.*;
 import static me.hektortm.woSSystems.utils.Letters.STAR;
 
+/**
+ * Static and instance utility methods for text conversion, location
+ * serialisation, colour parsing, and cooldown formatting.
+ *
+ * <p>Key capabilities:
+ * <ul>
+ *   <li>{@link #parseUni(String)} — converts a string to small-caps / stylised
+ *       Unicode via the {@link Letters} enum map (instance method).</li>
+ *   <li>{@link #parseUniStatic(String)} — alternative Unicode conversion using
+ *       a character-array lookup table (static).</li>
+ *   <li>{@link #locationToString(Location)} / {@link #stringToLocation(String)} —
+ *       serialise and deserialise Bukkit {@link Location} objects to/from a
+ *       comma-separated {@code world,x,y,z[,yaw,pitch]} string.</li>
+ *   <li>{@link #parseColorFromString(Color)} / {@link #hexToBukkitColor(String)} —
+ *       parse ARGB hex and HTML hex strings into Bukkit {@link Color} values.</li>
+ *   <li>{@link #formatCooldownTime(long)} — formats a duration in seconds to a
+ *       human-readable {@code [D'd ']HH:MM:SS} string.</li>
+ * </ul>
+ * </p>
+ */
 public class Parsers {
 
     private static final String NORMAL_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{};:'\",.<>/?\\|`~ ";
@@ -23,6 +43,16 @@ public class Parsers {
             "=", "[", "]", "{", "}", ";", ":", "'", "\"", ",", ".", "<", ">",
             "/", "?", "\\", "|", "`", "~", " " // Symbols and space
     };
+
+    /**
+     * Converts a string to stylised Unicode using the {@link Letters} enum.
+     *
+     * <p>Each character is mapped to its corresponding Unicode small-cap or
+     * stylised equivalent.  Characters with no mapping are kept as-is.</p>
+     *
+     * @param s the input string
+     * @return the stylised Unicode string
+     */
     public String parseUni(String s) {
         StringBuilder result = new StringBuilder();
 
@@ -95,7 +125,14 @@ public class Parsers {
     }
 
 
-
+    /**
+     * Converts a string to stylised Unicode using a static character-array
+     * lookup table.  This is an alternative to {@link #parseUni(String)} that
+     * does not require an instance.
+     *
+     * @param input the input string
+     * @return the stylised string, with unmapped characters kept as-is
+     */
     public static String parseUniStatic(String input) {
         StringBuilder stylizedText = new StringBuilder();
         for (char c : input.toCharArray()) {
@@ -109,10 +146,27 @@ public class Parsers {
         return stylizedText.toString();
     }
 
+    /**
+     * Serialises a {@link Location} to the format
+     * {@code world,x,y,z,yaw,pitch}.
+     *
+     * @param loc the location to serialise
+     * @return a comma-separated string representation
+     */
     public static String locationToString(Location loc) {
         return loc.getWorld().getName() + "," + loc.getX() + "," + loc.getY() + "," + loc.getZ() + "," + loc.getYaw() + "," + loc.getPitch();
     }
 
+    /**
+     * Parses a Bukkit {@link Color} from a string in the format
+     * {@code Color:[argb0xAARRGGBB]}.
+     *
+     * <p>Returns {@link Color#WHITE} if the string is {@code null}, empty, or
+     * cannot be parsed.</p>
+     *
+     * @param colorString the ARGB hex string to parse
+     * @return the parsed {@link Color}, or {@link Color#WHITE} as fallback
+     */
     public static Color parseColorFromString(String colorString) {
         // Expected format: "Color:[argb0xFFFCBA03]"
         if (colorString == null || colorString.isEmpty()) {
@@ -138,6 +192,16 @@ public class Parsers {
         return Color.WHITE; // Default fallback
     }
 
+    /**
+     * Deserialises a location string in the format
+     * {@code world,x,y,z[,yaw,pitch]} back to a Bukkit {@link Location}.
+     *
+     * <p>Yaw and pitch are optional and default to {@code 0.0}.  Returns
+     * {@code null} if the string cannot be parsed or the world is not loaded.</p>
+     *
+     * @param locationString the serialised location string
+     * @return the corresponding {@link Location}, or {@code null} on failure
+     */
     public static Location stringToLocation(String locationString) {
         try {
             // Split the string by commas
@@ -172,6 +236,20 @@ public class Parsers {
     }
 
 
+    /**
+     * Formats a duration in seconds as a human-readable time string.
+     *
+     * <p>Output format:
+     * <ul>
+     *   <li>When days &gt; 0: {@code Dd HH:MM:SS}</li>
+     *   <li>When hours &gt; 0: {@code HH:MM:SS}</li>
+     *   <li>When minutes &gt; 0: {@code MM:SS}</li>
+     *   <li>Otherwise: {@code SS}</li>
+     * </ul>
+     *
+     * @param totalSeconds the total number of seconds remaining
+     * @return a formatted time string
+     */
     public static String formatCooldownTime(long totalSeconds) {
         long days = totalSeconds / 86400;
         long hours = (totalSeconds % 86400) / 3600;
@@ -191,6 +269,14 @@ public class Parsers {
 
     }
 
+    /**
+     * Converts a six-digit HTML hex colour string (with or without a leading
+     * {@code #}) to a Bukkit {@link Color}.
+     *
+     * @param hex the hex string, e.g. {@code "#FF8800"} or {@code "FF8800"}
+     * @return the corresponding {@link Color}, or {@code null} if the string
+     *         is not a valid 6-digit hex value
+     */
     public static org.bukkit.Color hexToBukkitColor(String hex) {
         if (hex.startsWith("#")) {
             hex = hex.substring(1);

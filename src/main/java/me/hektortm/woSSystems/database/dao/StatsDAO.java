@@ -1,316 +1,136 @@
 package me.hektortm.woSSystems.database.dao;
 
-import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.AsyncWriteQueue;
-import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.database.SchemaManager;
+import me.hektortm.woSSystems.content.ApiSource;
+import me.hektortm.woSSystems.content.ContentStore;
+import me.hektortm.woSSystems.content.Json;
+import me.hektortm.woSSystems.player.ApiServices;
+import me.hektortm.woSSystems.player.ApiWriter;
+import me.hektortm.woSSystems.player.PlayerSession;
+import me.hektortm.woSSystems.player.PlayerSessions;
 import me.hektortm.woSSystems.utils.Operations;
-import me.hektortm.woSSystems.utils.dataclasses.GlobalStat;
-import me.hektortm.woSSystems.utils.dataclasses.Stat;
-import me.hektortm.wosCore.database.DatabaseManager;
-import me.hektortm.wosCore.database.IDAO;
-import me.hektortm.wosCore.discord.DiscordLog;
-import me.hektortm.wosCore.discord.DiscordLogger;
+import me.hektortm.woSSystems.utils.model.GlobalStat;
+import me.hektortm.woSSystems.utils.model.Stat;
+import me.hektortm.wosCore.api.ApiException;
 
-import java.sql.*;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class StatsDAO implements IDAO {
-    private final DatabaseManager db;
-    private final DAOHub daoHub;
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final String logName = "StatsDAO";
+import static me.hektortm.woSSystems.player.ApiWriter.body;
+import static me.hektortm.woSSystems.player.ApiWriter.seg;
 
-    // Server-side definition caches — loaded once, refreshed via reload()
-    private volatile Map<String, Stat> statDefinitions = null;
-    private volatile Map<String, GlobalStat> globalStatDefinitions = null;
+/**
+ * Stats: definitions ({@code /v1/content/stats}, {@code /globalstats}), each
+ * player's stat values (in their {@link PlayerSession}) and the server-wide
+ * global stat values. Values are computed in memory and the resulting absolute
+ * value is persisted, so a replayed write can never double-count.
+ */
+public class StatsDAO {
+    private final ContentStore<Stat> statDefinitions;
+    private final ContentStore<GlobalStat> globalStatDefinitions;
+    private final ConcurrentHashMap<String, Long> globalValues = new ConcurrentHashMap<>();
+    private final PlayerSessions sessions;
+    private final ApiWriter writer;
+    private final Logger log;
 
-    // Global stat values — loaded at startup, kept in sync with DB
-    private final ConcurrentHashMap<String, Long> globalStatsCache = new ConcurrentHashMap<>();
-
-    // Per-player stat values — loaded on join, evicted on quit
-    private final ConcurrentHashMap<UUID, ConcurrentHashMap<String, Long>> playerCache = new ConcurrentHashMap<>();
-
-    public StatsDAO(DatabaseManager db, DAOHub daoHub) throws SQLException {
-        this.db = db;
-        this.daoHub = daoHub;
+    public StatsDAO(ApiServices s) {
+        this.sessions = s.sessions();
+        this.writer = s.writer();
+        this.log = s.log();
+        this.statDefinitions = s.content().register(new ContentStore<>("stats", "Stat",
+                ApiSource.flat(s.api(), "/v1/content/stats", "id", j -> new Stat(
+                        Json.str(j, "id"), Json.lng(j, "max", 0), Json.bool(j, "capped", false)), log)));
+        this.globalStatDefinitions = s.content().register(new ContentStore<GlobalStat>("globalstats", "Global Stat",
+                ApiSource.flat(s.api(), "/v1/content/globalstats", "id", j -> new GlobalStat(
+                        Json.str(j, "id"), Json.lng(j, "value", 0), Json.lng(j, "max", 0), Json.bool(j, "capped", false)), log))
+                // Seed running values once per stat; afterwards the server's own counter is authoritative.
+                .onChange(store -> store.all().forEach(g -> globalValues.putIfAbsent(g.getId(), g.getValue()))));
     }
 
-    @Override
-    public void initializeTable() throws SQLException {
-        SchemaManager.syncTable(db, Stat.class);
-        SchemaManager.syncTable(db, GlobalStat.class);
+    // ─── Player stats ───────────────────────────────────────────────────────────
 
-        // playerdata_stats is a relational table (uuid × stat_id) — keep manual
-        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS playerdata_stats (
-                    uuid CHAR(36) NOT NULL,
-                    id VARCHAR(255) NOT NULL,
-                    value BIGINT DEFAULT 0,
-                    PRIMARY KEY (uuid, id)
-                )
-            """);
-        }
-
-        // Preload server-wide caches async — these are finite and don't change during play
-        org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            loadStatDefinitions();
-            loadGlobalStatDefinitions();
-            preloadGlobalStatValues();
-        });
-    }
-
-    // ─── Player lifecycle ───────────────────────────────────────────────────────
-
-    /**
-     * Load all stats for a player from the DB into memory.
-     * Call async from PlayerJoinEvent.
-     */
-    public void loadPlayer(UUID uuid) {
-        String sql = "SELECT id, value FROM playerdata_stats WHERE uuid = ?;";
-        ConcurrentHashMap<String, Long> stats = new ConcurrentHashMap<>();
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, uuid.toString());
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                stats.put(rs.getString("id"), rs.getLong("value"));
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(Level.SEVERE, plugin, "sd:load01",
-                    "Failed to load stats for player: " + uuid, e));
-        }
-        playerCache.put(uuid, stats);
-    }
-
-    /**
-     * Remove a player's stats from memory.
-     * Call from PlayerQuitEvent — no DB write needed, cache was kept in sync.
-     */
-    public void evictPlayer(UUID uuid) {
-        playerCache.remove(uuid);
-    }
-
-    // ─── Player stat reads ──────────────────────────────────────────────────────
-
-    /**
-     * Returns the player's stat value from cache.
-     * Falls back to a DB query for offline players (e.g., admin lookups).
-     */
     public long getPlayerStatValue(UUID uuid, String statId) {
-        ConcurrentHashMap<String, Long> p = playerCache.get(uuid);
-        if (p != null) return p.getOrDefault(statId, 0L);
-        return queryPlayerStatFromDb(uuid, statId);
-    }
-
-    private long queryPlayerStatFromDb(UUID uuid, String statId) {
-        String sql = "SELECT value FROM playerdata_stats WHERE uuid = ? AND id = ?;";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, uuid.toString());
-            stmt.setString(2, statId);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) return rs.getLong("value");
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(Level.SEVERE, plugin, "ca5cb436",
-                    "Failed to get Stat Value:\n UUID: " + uuid + "\n ID: " + statId, e));
-        }
-        return 0;
+        PlayerSession s = sessions.getOrFetch(uuid);
+        return s == null ? 0 : s.stats.getOrDefault(statId, 0L);
     }
 
     public boolean isStatLimitReached(UUID uuid, String statId) {
-        Stat stat = getAllStats().get(statId);
+        Stat stat = statDefinitions.get(statId);
         if (stat == null || !stat.getCapped()) return false;
         return getPlayerStatValue(uuid, statId) >= stat.getMax();
     }
 
-    // ─── Player stat writes ─────────────────────────────────────────────────────
-
-    /**
-     * Modifies a player's stat: updates the in-memory cache immediately,
-     * then persists the new absolute value asynchronously.
-     */
     public void modifyPlayerStat(UUID uuid, String statId, long amount, Operations operation) {
-        Stat stat = getAllStats().get(statId);
-
-        // Atomically compute the new value in the cache
-        long[] newValueHolder = {0L};
-        playerCache.compute(uuid, (u, playerStats) -> {
-            if (playerStats == null) playerStats = new ConcurrentHashMap<>();
-            long current = playerStats.getOrDefault(statId, 0L);
-            long newVal = switch (operation) {
-                case GIVE -> (stat != null && stat.getCapped())
-                        ? Math.min(current + amount, stat.getMax())
-                        : current + amount;
-                case TAKE -> Math.max(0L, current - amount);
-                case SET  -> amount;
-                case RESET -> 0L;
-            };
-            newValueHolder[0] = newVal;
-            playerStats.put(statId, newVal);
-            return playerStats;
-        });
-
-        // Persist the final absolute value — always a SET, safe against write reordering
-        final long persistValue = newValueHolder[0];
-        AsyncWriteQueue.submit(() -> persistPlayerStat(uuid, statId, persistValue));
-    }
-
-    private void persistPlayerStat(UUID uuid, String statId, long value) {
-        String sql = "INSERT INTO playerdata_stats (uuid, id, value) VALUES (?, ?, ?) " +
-                     "ON DUPLICATE KEY UPDATE value = VALUES(value);";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, uuid.toString());
-            stmt.setString(2, statId);
-            stmt.setLong(3, value);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(Level.SEVERE, plugin, "15049217",
-                    "Failed to persist Stat:\n UUID: " + uuid + "\n ID: " + statId
-                    + "\n Value: " + value, e));
+        Stat stat = statDefinitions.get(statId);
+        long max = stat != null && stat.getCapped() ? stat.getMax() : Long.MAX_VALUE;
+        PlayerSession s = sessions.getOrFetch(uuid);
+        if (s == null) {
+            log.warning("[Stats] cannot modify " + statId + " for unknown player " + uuid);
+            return;
         }
+        long value = s.stats.compute(statId, (k, current) -> apply(current == null ? 0 : current, amount, operation, max));
+        writer.put("/v1/players/" + uuid + "/stats/" + seg(statId), body("value", value));
     }
 
-    /**
-     * Clears all daily_ stats from every loaded player cache and queues a DB delete.
-     */
+    /** Clears every {@code daily_*} stat and unlockable for all players. */
     public void resetDailyStats() {
-        // Evict from in-memory caches
-        for (ConcurrentHashMap<String, Long> p : playerCache.values()) {
-            p.keySet().removeIf(k -> k.startsWith("daily_"));
-        }
-
-        // Async DB delete
-        AsyncWriteQueue.submit(() -> {
-            String sql = "DELETE FROM playerdata_stats WHERE id LIKE 'daily_%'";
-            try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.executeUpdate();
-            } catch (SQLException e) {
-                DiscordLogger.log(new DiscordLog(Level.SEVERE, plugin, "sd:daily",
-                        "Failed to reset daily stats", e));
-            }
-        });
+        for (PlayerSession s : onlineSessions()) s.stats.keySet().removeIf(k -> k.startsWith("daily_"));
+        writer.post("/v1/server/daily-reset", null);
     }
 
     // ─── Global stats ───────────────────────────────────────────────────────────
 
     public long getGlobalStatValue(String statId) {
-        return globalStatsCache.getOrDefault(statId, 0L);
+        return globalValues.getOrDefault(statId, 0L);
     }
 
     public boolean isGlobalStatLimitReached(String statId) {
-        GlobalStat stat = getAllGlobalStats().get(statId);
+        GlobalStat stat = globalStatDefinitions.get(statId);
         if (stat == null || !stat.getCapped()) return false;
         return getGlobalStatValue(statId) >= stat.getMax();
     }
 
     public void modifyGlobalStatValue(String statId, long amount, Operations operation) {
-        GlobalStat stat = getAllGlobalStats().get(statId);
-
-        long[] newValueHolder = {0L};
-        globalStatsCache.compute(statId, (id, current) -> {
-            if (current == null) current = 0L;
-            long newVal = switch (operation) {
-                case GIVE -> (stat != null && stat.getCapped())
-                        ? Math.min(current + amount, stat.getMax())
-                        : current + amount;
-                case TAKE  -> Math.max(0L, current - amount);
-                case SET   -> amount;
-                case RESET -> 0L;
-            };
-            newValueHolder[0] = newVal;
-            return newVal;
-        });
-
-        final long persistValue = newValueHolder[0];
-        AsyncWriteQueue.submit(() -> {
-            String sql = "UPDATE global_stats SET value = ? WHERE id = ?;";
-            try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setLong(1, persistValue);
-                stmt.setString(2, statId);
-                stmt.executeUpdate();
-            } catch (SQLException e) {
-                DiscordLogger.log(new DiscordLog(Level.SEVERE, plugin, "ee540c82",
-                        "Failed to persist global Stat:\n ID: " + statId + "\n Value: " + persistValue, e));
-            }
-        });
+        GlobalStat stat = globalStatDefinitions.get(statId);
+        long max = stat != null && stat.getCapped() ? stat.getMax() : Long.MAX_VALUE;
+        long value = globalValues.compute(statId, (k, current) -> apply(current == null ? 0 : current, amount, operation, max));
+        writer.put("/v1/server/globalstats/" + seg(statId), body("value", value));
     }
 
-    // ─── Definition caches (loaded once) ───────────────────────────────────────
+    // ─── Definitions ────────────────────────────────────────────────────────────
 
-    /**
-     * Returns the stat definitions cache. Lazy-initialised on first call.
-     */
     public Map<String, Stat> getAllStats() {
-        if (statDefinitions == null) loadStatDefinitions();
-        return statDefinitions;
+        return statDefinitions.asMap();
     }
 
-    /**
-     * Returns the global stat definitions cache. Lazy-initialised on first call.
-     */
     public Map<String, GlobalStat> getAllGlobalStats() {
-        if (globalStatDefinitions == null) loadGlobalStatDefinitions();
-        return globalStatDefinitions;
+        return globalStatDefinitions.asMap();
     }
 
-    /** Force-refresh stat definitions (e.g. after an admin adds a new stat). */
+    /** Force-refresh stat definitions from the API. Blocking — call off the main thread. */
     public void reloadStatDefinitions() {
-        statDefinitions = null;
-        globalStatDefinitions = null;
-        loadStatDefinitions();
-        loadGlobalStatDefinitions();
+        try {
+            statDefinitions.preload();
+            globalStatDefinitions.preload();
+        } catch (ApiException e) {
+            log.severe("[Stats] reloading definitions failed: " + e.getMessage());
+        }
     }
 
-    private synchronized void loadStatDefinitions() {
-        if (statDefinitions != null) return; // double-checked
-        Map<String, Stat> defs = new HashMap<>();
-        String sql = "SELECT id, max, capped FROM stats;";
-        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                defs.put(rs.getString("id"), new Stat(
-                        rs.getString("id"), rs.getLong("max"), rs.getBoolean("capped")));
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(Level.SEVERE, plugin, "bbbbf9f5",
-                    "Failed to load stat definitions", e));
-        }
-        statDefinitions = defs;
-        plugin.getLogger().info(logName + ": loaded " + defs.size() + " stat definition(s).");
+    private static long apply(long current, long amount, Operations operation, long max) {
+        return switch (operation) {
+            case GIVE -> Math.min(current + amount, max);
+            case TAKE -> Math.max(0L, current - amount);
+            case SET -> amount;
+            case RESET -> 0L;
+        };
     }
 
-    private synchronized void loadGlobalStatDefinitions() {
-        if (globalStatDefinitions != null) return;
-        Map<String, GlobalStat> defs = new HashMap<>();
-        String sql = "SELECT id, max, capped FROM global_stats;";
-        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                defs.put(rs.getString("id"), new GlobalStat(
-                        rs.getString("id"), rs.getLong("max"), rs.getBoolean("capped")));
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(Level.SEVERE, plugin, "3e124896",
-                    "Failed to load global stat definitions", e));
-        }
-        globalStatDefinitions = defs;
-    }
-
-    private void preloadGlobalStatValues() {
-        String sql = "SELECT id, value FROM global_stats;";
-        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                globalStatsCache.put(rs.getString("id"), rs.getLong("value"));
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(Level.SEVERE, plugin, "sd:gload",
-                    "Failed to preload global stat values", e));
-        }
-        plugin.getLogger().info(logName + ": preloaded " + globalStatsCache.size() + " global stat value(s).");
+    private Iterable<PlayerSession> onlineSessions() {
+        return org.bukkit.Bukkit.getOnlinePlayers().stream()
+                .map(p -> sessions.get(p.getUniqueId()))
+                .filter(java.util.Objects::nonNull)
+                .toList();
     }
 }

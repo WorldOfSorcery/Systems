@@ -1,64 +1,83 @@
 package me.hektortm.woSSystems.database.dao;
 
-import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.utils.ConditionType;
-import me.hektortm.woSSystems.utils.dataclasses.Condition;
-import me.hektortm.wosCore.database.DatabaseManager;
-import me.hektortm.wosCore.database.IDAO;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import me.hektortm.woSSystems.content.ContentRegistry;
+import me.hektortm.woSSystems.content.ContentStore;
+import me.hektortm.woSSystems.content.Json;
+import me.hektortm.woSSystems.utils.model.Condition;
+import me.hektortm.woSSystems.utils.types.ConditionType;
+import me.hektortm.wosCore.api.ApiException;
+import me.hektortm.wosCore.api.WosApi;
 
-import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
-public class ConditionDAO implements IDAO {
-    private final DatabaseManager db;
-    private final DAOHub hub;
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final String logName = "ConditionDAO";
+/**
+ * Conditions attached to content children (interaction actions/particles/holograms,
+ * GUI slot configs, dialog answers, recipes), indexed by {@code "<type>:<type_id>"}.
+ *
+ * <p>Checked on every tick for every active entity, so lookups are pure map reads.
+ * All conditions are loaded at startup; afterwards the interaction, GUI and dialog
+ * stores replace their own children's conditions whenever they reload (their API
+ * trees embed them), and wos-api invalidates the parent on every condition edit.</p>
+ */
+public class ConditionDAO {
+    private final ContentStore<List<Condition>> store;
 
-    public ConditionDAO(DatabaseManager db, DAOHub hub) {
-        this.db = db;
-        this.hub = hub;
-    }
-
-    @Override
-    public void initializeTable() throws SQLException {
-        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.execute("CREATE TABLE IF NOT EXISTS conditions(" +
-                    "type VARCHAR(255), " +
-                    "type_id VARCHAR(255), " +
-                    "condition_id INT," +
-                    "condition_key VARCHAR(255), " +
-                    "value VARCHAR(255), " +
-                    "parameter VARCHAR(255), " +
-                    "PRIMARY KEY (type, id, condition_key)" + // Composite key
-                    ")");
-        }
-    }
-
-    public List<Condition> getConditions(ConditionType type, String id) {
-        List<Condition> result = new ArrayList<>();
-        String sql = "SELECT * FROM conditions WHERE type = ? AND type_id = ?";
-
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, type.getType());
-            stmt.setString(2, id);
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                result.add(new Condition(
-                        rs.getString("condition_key"),
-                        rs.getString("value"),
-                        rs.getString("parameter")
-                ));
+    public ConditionDAO(ContentRegistry registry, WosApi api) {
+        this.store = registry.register(new ContentStore<>("conditions", "Condition", new ContentStore.Source<>() {
+            @Override
+            public Map<String, List<Condition>> loadAll() throws ApiException {
+                return group(api.getJson("/v1/content/conditions").getAsJsonArray());
             }
 
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "3800b1ef", "Failed to load conditions for [" + type + "/" + id + "]:", e);
-        }
+            @Override
+            public Optional<List<Condition>> loadOne(String key) throws ApiException {
+                String[] parts = key.split(":", 2); // "<type>:<type_id>"
+                if (parts.length < 2) return Optional.empty();
+                List<Condition> list = group(api.getJson("/v1/content/conditions/" + parts[0] + "/" + parts[1]).getAsJsonArray())
+                        .getOrDefault(key, List.of());
+                return list.isEmpty() ? Optional.empty() : Optional.of(list);
+            }
+        }));
+    }
 
-        return result;
+    /** Conditions for one child; empty if none. */
+    public List<Condition> getConditions(ConditionType type, String id) {
+        List<Condition> list = store.get(type.getType() + ":" + id);
+        return list == null ? List.of() : list;
+    }
+
+    /**
+     * Replaces the conditions of every child of {@code parentId} for the given
+     * condition types with those embedded in a freshly loaded parent tree.
+     */
+    public void replaceChildren(Set<String> types, String parentId, JsonArray conditions) {
+        store.replaceMatching(key -> {
+            int colon = key.indexOf(':');
+            return colon > 0 && types.contains(key.substring(0, colon))
+                    && key.substring(colon + 1).startsWith(parentId + ":");
+        }, group(conditions));
+    }
+
+    /** Groups API condition rows by "<type>:<type_id>". */
+    static Map<String, List<Condition>> group(JsonArray rows) {
+        Map<String, List<Condition>> out = new HashMap<>();
+        for (JsonElement el : rows) {
+            JsonObject c = el.getAsJsonObject();
+            out.computeIfAbsent(Json.str(c, "type") + ":" + Json.str(c, "type_id"), k -> new ArrayList<>())
+                    .add(toCondition(c));
+        }
+        return out;
+    }
+
+    static Condition toCondition(JsonObject c) {
+        return new Condition(Json.str(c, "condition_key"), Json.str(c, "value"), Json.str(c, "parameter"));
     }
 }

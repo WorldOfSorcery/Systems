@@ -1,69 +1,26 @@
 package me.hektortm.woSSystems.database.dao;
 
-import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.database.SchemaManager;
-import me.hektortm.woSSystems.utils.dataclasses.Constant;
-import me.hektortm.wosCore.database.DatabaseManager;
-import me.hektortm.wosCore.database.IDAO;
-import me.hektortm.wosCore.discord.DiscordLog;
-import me.hektortm.wosCore.discord.DiscordLogger;
+import me.hektortm.woSSystems.content.ApiSource;
+import me.hektortm.woSSystems.content.ContentRegistry;
+import me.hektortm.woSSystems.content.ContentStore;
+import me.hektortm.woSSystems.content.Json;
+import me.hektortm.woSSystems.utils.model.Constant;
+import me.hektortm.wosCore.api.WosApi;
 
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class ConstantDAO implements IDAO {
-    private final DatabaseManager db;
-    private final DAOHub daoHub;
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final String logName = "ConstantDAO";
+/** Server-wide key/value {@link Constant}s, served from wos-api ({@code /v1/content/constants}). */
+public class ConstantDAO {
+    private final ContentStore<Constant> store;
 
-    public ConstantDAO(DatabaseManager db, DAOHub daoHub) {
-        this.db = db;
-        this.daoHub = daoHub;
+    public ConstantDAO(ContentRegistry registry, WosApi api, Logger log) {
+        this.store = registry.register(new ContentStore<>("constants", "Constant",
+                ApiSource.flat(api, "/v1/content/constants", "id",
+                        j -> new Constant(Json.str(j, "id"), Json.str(j, "value")), log)));
     }
 
-    @Override
-    public void initializeTable() throws SQLException {
-        SchemaManager.syncTable(db, Constant.class);
-    }
-
+    /** The constant, or {@code null} if no such constant exists. */
     public Constant getConstant(String id) {
-        String sql = "SELECT * FROM constants WHERE id = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            Constant constant = null;
-            if (rs.next()) {
-                constant = new Constant(rs.getString("id"), rs.getString("value"));
-            }
-            return constant;
-        } catch (SQLException ex) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "9afb79fr", "Failed to get Constant: ", ex
-            ));
-            return null;
-        }
-    }
-
-    public List<Constant> getAllConstants() {
-        String sql = "SELECT * FROM constants";
-        List<Constant> constants = new ArrayList<>();
-
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.executeQuery();
-            ResultSet rs = pstmt.getResultSet();
-            while (rs.next()) {
-                constants.add(new Constant(rs.getString("id"), rs.getString("value")));
-            }
-            return constants;
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "9a49f645", "Failed to get all Constants: ", e
-            ));
-            return null;
-        }
+        return store.get(id);
     }
 }

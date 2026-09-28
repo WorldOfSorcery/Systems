@@ -1,91 +1,56 @@
 package me.hektortm.woSSystems.database.dao;
 
-import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.database.SchemaManager;
-import me.hektortm.woSSystems.utils.dataclasses.FishingItem;
-import me.hektortm.wosCore.database.DatabaseManager;
-import me.hektortm.wosCore.database.IDAO;
-import me.hektortm.wosCore.discord.DiscordLog;
-import me.hektortm.wosCore.discord.DiscordLogger;
+import me.hektortm.woSSystems.content.ApiSource;
+import me.hektortm.woSSystems.content.ContentRegistry;
+import me.hektortm.woSSystems.content.ContentStore;
+import me.hektortm.woSSystems.content.Json;
+import me.hektortm.woSSystems.utils.model.FishingItem;
+import me.hektortm.wosCore.api.WosApi;
 
-import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
-import java.util.logging.Level;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.Logger;
 
-public class FishingDAO implements IDAO {
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final DatabaseManager db;
-    private final DAOHub hub;
-    private final String logName = "FishingDAO";
+/**
+ * Fishing loot definitions ({@code /v1/content/fishing}). A catch is picked
+ * entirely from memory — the legacy DAO queried MySQL on every cast.
+ */
+public class FishingDAO {
+    private final ContentStore<FishingItem> store;
 
-    public FishingDAO(DatabaseManager db, DAOHub hub) {
-        this.db = db;
-        this.hub = hub;
+    public FishingDAO(ContentRegistry registry, WosApi api, Logger log) {
+        this.store = registry.register(new ContentStore<>("fishing", "Fish",
+                ApiSource.flat(api, "/v1/content/fishing", "id", j -> new FishingItem(
+                        Json.str(j, "id"),
+                        Json.str(j, "citem_id"),
+                        Json.str(j, "catch_interaction"),
+                        parseRegions(Json.str(j, "regions")),
+                        Json.str(j, "rarity")), log)));
     }
 
-
-    @Override
-    public void initializeTable() throws SQLException {
-        SchemaManager.syncTable(db, FishingItem.class);
-    }
-
+    /**
+     * A random item of {@code rarity} that may be caught in {@code region}. Items
+     * with no regions are eligible everywhere. {@code null} if none qualify.
+     */
     public FishingItem getRandomItemByRarityAndRegion(String rarity, String region) {
-        List<FishingItem> itemsByRarity = getItemsByRarity(rarity);
-        List<FishingItem> eligibleItems = new ArrayList<>();
-
-        for (FishingItem item : itemsByRarity) {
+        List<FishingItem> eligible = new ArrayList<>();
+        for (FishingItem item : store.all()) {
+            if (!rarity.equalsIgnoreCase(item.getRarity())) continue;
             List<String> regions = item.getRegions();
-            if (regions.isEmpty() || regions.contains(region)) {
-                eligibleItems.add(item);
-            }
+            if (regions.isEmpty() || regions.contains(region)) eligible.add(item);
         }
-
-        if (eligibleItems.isEmpty()) {
-            return null;
-        }
-
-        Random random = new Random();
-        return eligibleItems.get(random.nextInt(eligibleItems.size()));
+        return eligible.isEmpty() ? null : eligible.get(ThreadLocalRandom.current().nextInt(eligible.size()));
     }
 
-    private List<FishingItem> getItemsByRarity(String rarity) {
-        List<FishingItem> items = new ArrayList<>();
-
-        String query = "SELECT id, citem_id, catch_interaction, regions, rarity FROM fishing WHERE rarity = ?";
-
-        try (Connection conn = db.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
-            stmt.setString(1, rarity);
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                String id = rs.getString("id");
-                String citemId = rs.getString("citem_id");
-                String interaction = rs.getString("catch_interaction");
-                String regionsStr = rs.getString("regions");
-                List<String> regions = new ArrayList<>();
-
-                if (regionsStr != null && !regionsStr.trim().isEmpty()) {
-                    regions = Arrays.asList(regionsStr.replace("\"", "").split(","));
-                }
-
-                FishingItem item = new FishingItem(id, citemId, interaction, regions, rs.getString("rarity"));
-                items.add(item);
-            }
-
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "c64040b8", "Failed to get Fish by Rarity("+rarity+"): ", e
-            ));
+    /** "a, b" / "\"a\",\"b\"" → [a, b]; blank → []. */
+    private static List<String> parseRegions(String raw) {
+        List<String> out = new ArrayList<>();
+        if (raw == null || raw.isBlank()) return out;
+        for (String r : Arrays.asList(raw.replace("\"", "").split(","))) {
+            if (!r.isBlank()) out.add(r.trim());
         }
-
-        return items;
+        return out;
     }
-
-
 }

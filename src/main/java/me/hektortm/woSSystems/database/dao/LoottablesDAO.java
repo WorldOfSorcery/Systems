@@ -1,151 +1,75 @@
 package me.hektortm.woSSystems.database.dao;
 
-import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.database.SchemaManager;
-import me.hektortm.woSSystems.utils.LoottableItemType;
-import me.hektortm.woSSystems.utils.dataclasses.Loottable;
-import me.hektortm.woSSystems.utils.dataclasses.LoottableItem;
-import me.hektortm.wosCore.database.DatabaseManager;
-import me.hektortm.wosCore.database.IDAO;
-import me.hektortm.wosCore.discord.DiscordLog;
-import me.hektortm.wosCore.discord.DiscordLogger;
-import org.bukkit.inventory.ItemStack;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import me.hektortm.woSSystems.content.ApiSource;
+import me.hektortm.woSSystems.content.ContentRegistry;
+import me.hektortm.woSSystems.content.ContentStore;
+import me.hektortm.woSSystems.content.Json;
+import me.hektortm.woSSystems.utils.model.Loottable;
+import me.hektortm.woSSystems.utils.model.LoottableItem;
+import me.hektortm.woSSystems.utils.types.LoottableItemType;
+import me.hektortm.wosCore.api.WosApi;
 
-import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
+import java.util.Locale;
+import java.util.logging.Logger;
 
-public class LoottablesDAO implements IDAO {
-    private final DatabaseManager db;
-    private final DAOHub daoHub;
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final String logName = "CitemDAO";
+/**
+ * Loot tables and their weighted items ({@code /v1/content/loottables/{id}}).
+ * An item resolves to a GUI, interaction, dialog, citem, or command.
+ */
+public class LoottablesDAO {
+    private final ContentStore<Loottable> store;
 
-    public LoottablesDAO(DatabaseManager db, DAOHub daoHub) {
-        this.db = db;
-        this.daoHub = daoHub;
+    public LoottablesDAO(ContentRegistry registry, WosApi api, Logger log) {
+        this.store = registry.register(new ContentStore<>("loottables", "Loottable",
+                ApiSource.tree(api, "/v1/content/loottables", LoottablesDAO::map, log)));
     }
 
-    @Override
-    public void initializeTable() throws SQLException {
-        // Syncs 'loottables' and auto-adds missing 'name' column
-        SchemaManager.syncTable(db, Loottable.class);
-
-        // Child table is not entity-backed — keep manual
-        try (Connection connection = db.getConnection(); Statement stmt = connection.createStatement()) {
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS loottable_items (
-                    loottable_id VARCHAR(255) NOT NULL,
-                    item_id INT NOT NULL,
-                    weight INT NOT NULL,
-                    type VARCHAR(255) NOT NULL,
-                    value VARCHAR(255) NOT NULL,
-                    parameter INT
-                )
-            """);
+    private static Loottable map(JsonObject j) {
+        String id = Json.str(j, "id");
+        List<LoottableItem> items = new ArrayList<>();
+        for (JsonElement el : Json.array(j, "items")) {
+            JsonObject it = el.getAsJsonObject();
+            LoottableItemType type = parseItemType(Json.str(it, "type"));
+            if (type == null) {
+                throw new IllegalArgumentException("invalid loot item type '" + Json.str(it, "type") + "'");
+            }
+            items.add(new LoottableItem(Json.integer(it, "weight", 0), type, Json.str(it, "value"), Json.integer(it, "parameter", 0)));
         }
+        String name = Json.str(j, "name");
+        return new Loottable(id, Json.integer(j, "amount", 0), name != null ? name : id, items);
     }
 
+    /** Number of items awarded per roll; 0 if the table is unknown. */
     public int getAmount(String id) {
-        String sql = "SELECT amount FROM loottables WHERE id = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("amount");
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE,
-                    plugin,
-                    "30d8689d",
-                    "Failed to get Loottable Amount: " +
-                            "\nID: "+id, e
-            ));
-        }
-        return 0;
+        Loottable lt = store.get(id);
+        return lt == null ? 0 : lt.getAmount();
     }
+
+    /** Display name (falls back to the id); {@code null} if the table is unknown. */
     public String getName(String id) {
-        String sql = "SELECT name FROM loottables WHERE id = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getString("name") != null ? rs.getString("name") : null;
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE,
-                    plugin,
-                    "30d8689d",
-                    "Failed to get Loottable Name: " +
-                            "\nID: "+id, e
-            ));
-        }
-        return null;
+        Loottable lt = store.get(id);
+        return lt == null ? null : lt.getName();
     }
 
+    /** The loot table with its items, or {@code null} if unknown or empty (legacy contract). */
     public Loottable getLoottable(String id) {
-        Loottable lt = null;
-        String sql = "SELECT * FROM loottable_items WHERE loottable_id = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, id);
-
-            ResultSet rs = pstmt.executeQuery();
-            List<LoottableItem> items = new ArrayList<>();
-            while (rs.next()) {
-                int weight = rs.getInt("weight");
-                String value = rs.getString("value");
-                String name = getName(id);
-                LoottableItemType type = parseItemType(rs.getString("type"));
-                if (type == null) {
-                    DiscordLogger.log(new DiscordLog(Level.WARNING, plugin, "8e7aaad0", "Invalid Item Type", null));
-                    return null;
-                }
-
-
-                int parameter = rs.getInt("parameter");
-
-
-
-                items.add(new LoottableItem(weight, type, value, parameter));
-                lt = new Loottable(id, getAmount(id),name != null ? name : id,items);
-            }
-
-        } catch(SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE,
-                    plugin,
-                    "30d8689d",
-                    "Failed to get Loottable: " +
-                            "\nID: "+id, e
-            ));
-        }
-        return lt;
+        Loottable lt = store.get(id);
+        return lt == null || lt.getItems().isEmpty() ? null : lt;
     }
 
-
-    private LoottableItemType parseItemType(String itemType) {
+    private static LoottableItemType parseItemType(String itemType) {
         if (itemType == null) return null;
-
-        String key = itemType.trim().toLowerCase(java.util.Locale.ROOT);
-
-        return switch (key) {
+        return switch (itemType.trim().toLowerCase(Locale.ROOT)) {
             case "gui" -> LoottableItemType.GUI;
             case "interaction" -> LoottableItemType.INTERACTION;
             case "dialog" -> LoottableItemType.DIALOG;
             case "citem" -> LoottableItemType.CITEM;
             case "command" -> LoottableItemType.COMMAND;
-            default -> {
-                DiscordLogger.log(new DiscordLog(
-                        Level.WARNING, plugin, "8e7aaad0",
-                        "Invalid Item Type: " + itemType, null
-                ));
-                yield null;
-            }
+            default -> null;
         };
     }
-
 }

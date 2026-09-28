@@ -19,7 +19,4 @@ public class BlockChecks {
         Block target = p.getTargetBlock(null, (int)distance);
         return target.getLocation();
     }
-
-
-
 }

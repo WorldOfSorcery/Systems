@@ -1,0 +1,21 @@
+# Maven
+target/
+dependency-reduced-pom.xml
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# macOS
+.DS_Store
+
+# Eclipse (in case)
+.classpath
+.project
+.settings/
+
+# VS Code
+.vscode/

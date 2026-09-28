@@ -17,6 +17,7 @@ import org.bukkit.potion.*;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 
+import javax.naming.Name;
 import java.net.URI;
 import java.util.*;
 
@@ -161,33 +162,25 @@ public final class CitemBuilder {
         // ── Custom tooltip style ─────────────────────────────────────────────
         // Stored in PDC so the resource pack / plugin logic can read it
         if (data.has("tooltip") && !data.get("tooltip").isJsonNull()) {
-            meta.getPersistentDataContainer().set(
-                    new NamespacedKey(NS, "tooltip_style"),
-                    PersistentDataType.STRING,
-                    data.get("tooltip").getAsString()
-            );
+
+            NamespacedKey tooltip = new NamespacedKey("minecraft", data.get("tooltip").getAsString());
+            meta.setTooltipStyle(tooltip);
         }
 
         // ── Click interactions ────────────────────────────────────────────────
-        if (data.has("left-click") && !data.get("left-click").isJsonNull()) {
+        if (data.has("action-left") && !data.get("action-left").isJsonNull()) {
             meta.getPersistentDataContainer().set(
-                    new NamespacedKey(NS, "left_click"),
-                    PersistentDataType.STRING,
-                    data.get("left-click").getAsString()
+                    Keys.LEFT_ACTION.get(), PersistentDataType.STRING, data.get("action-left").getAsString()
             );
         }
-        if (data.has("right-click") && !data.get("right-click").isJsonNull()) {
+        if (data.has("action-right") && !data.get("action-right").isJsonNull()) {
             meta.getPersistentDataContainer().set(
-                    new NamespacedKey(NS, "right_click"),
-                    PersistentDataType.STRING,
-                    data.get("right-click").getAsString()
+                    Keys.RIGHT_ACTION.get(), PersistentDataType.STRING, data.get("action-right").getAsString()
             );
         }
         if (data.has("action-placed") && !data.get("action-placed").isJsonNull()) {
             meta.getPersistentDataContainer().set(
-                    new NamespacedKey(NS, "action-placed"),
-                    PersistentDataType.STRING,
-                    data.get("action-placed").getAsString()
+                    Keys.PLACED_ACTION.get(), PersistentDataType.STRING, data.get("action-placed").getAsString()
             );
         }
 

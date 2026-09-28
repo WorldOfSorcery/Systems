@@ -1,8 +1,8 @@
 package me.hektortm.woSSystems.systems.dialogs.cmd;
 
 import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.systems.dialogs.cmd.subcmd.Help;
-import me.hektortm.woSSystems.systems.dialogs.cmd.subcmd.Trigger;
+import me.hektortm.woSSystems.systems.dialogs.cmd.sub.Help;
+import me.hektortm.woSSystems.systems.dialogs.cmd.sub.Trigger;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;

@@ -15,11 +15,11 @@ import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.ConditionHandler;
-import me.hektortm.woSSystems.utils.ConditionType;
-import me.hektortm.woSSystems.utils.dataclasses.Condition;
-import me.hektortm.woSSystems.utils.dataclasses.Interaction;
-import me.hektortm.woSSystems.utils.dataclasses.InteractionHologram;
-import me.hektortm.woSSystems.utils.dataclasses.InteractionKey;
+import me.hektortm.woSSystems.utils.types.ConditionType;
+import me.hektortm.woSSystems.utils.model.Condition;
+import me.hektortm.woSSystems.utils.model.Interaction;
+import me.hektortm.woSSystems.utils.model.InteractionHologram;
+import me.hektortm.woSSystems.utils.model.InteractionKey;
 import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -28,7 +28,6 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

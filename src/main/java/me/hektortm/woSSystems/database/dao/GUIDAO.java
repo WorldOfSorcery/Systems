@@ -1,127 +1,159 @@
 package me.hektortm.woSSystems.database.dao;
 
-import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.database.SchemaManager;
-import me.hektortm.woSSystems.utils.dataclasses.*;
-import me.hektortm.wosCore.database.DatabaseManager;
-import me.hektortm.wosCore.database.IDAO;
-import me.hektortm.wosCore.discord.DiscordLog;
-import me.hektortm.wosCore.discord.DiscordLogger;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import me.hektortm.woSSystems.content.ApiSource;
+import me.hektortm.woSSystems.content.ContentRegistry;
+import me.hektortm.woSSystems.content.ContentStore;
+import me.hektortm.woSSystems.content.Json;
+import me.hektortm.woSSystems.utils.model.Condition;
+import me.hektortm.woSSystems.utils.model.GUI;
+import me.hektortm.woSSystems.utils.model.GUICheck;
+import me.hektortm.woSSystems.utils.model.GUIPage;
+import me.hektortm.woSSystems.utils.model.GUISlot;
+import me.hektortm.woSSystems.utils.model.GUISlotConfig;
+import me.hektortm.woSSystems.utils.types.CheckType;
+import me.hektortm.wosCore.api.WosApi;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
-import java.sql.*;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.logging.Logger;
 
-public class GUIDAO implements IDAO {
-    private final DatabaseManager db;
-    private final DAOHub hub;
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final String logName = "GUIDAO";
+/**
+ * GUI definitions ({@code /v1/content/guis/{id}}). One API call returns the whole
+ * GUI — pages, slots, slot configs and their conditions — which is assembled into
+ * the {@link GUI} model once and cached.
+ */
+public class GUIDAO {
+    private final ContentStore<GUI> store;
+    private final ConditionDAO conditionDAO;
+    private final Logger log;
 
-    public GUIDAO(DatabaseManager db, DAOHub hub) {
-        this.db = db;
-        this.hub = hub;
+    public GUIDAO(ContentRegistry registry, WosApi api, ConditionDAO conditionDAO, Logger log) {
+        this.log = log;
+        this.conditionDAO = conditionDAO;
+        this.store = registry.register(new ContentStore<>("guis", "GUI",
+                ApiSource.tree(api, "/v1/content/guis", this::map, log)));
     }
 
-    @Override
-    public void initializeTable() throws SQLException {
-        SchemaManager.syncTable(db, GUI.class);
-        SchemaManager.syncTable(db, GUISlot.class);
-    }
-
-    public List<GUISlot> getSlotsForID(String id) {
-        List<GUISlot> slots = new ArrayList<>();
-
-        String sql = "SELECT * FROM gui_slots WHERE gui_id = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                int slot = rs.getInt("slot");
-                int slotId = rs.getInt("slot_id");
-                String matchType = rs.getString("matchtype");
-                Material material = Material.getMaterial(rs.getString("material"));
-                String displayName = rs.getString("display_name");
-                String loreRaw = rs.getString("lore");
-                String model = rs.getString("model");
-                String color = rs.getString("color");
-                int amount = rs.getInt("amount");
-                String tooltip = rs.getString("tooltip");
-                boolean enchanted = rs.getBoolean("enchanted");
-                String rightClickRaw = rs.getString("right_click");
-                String leftClickRaw = rs.getString("left_click");
-                boolean visible = rs.getBoolean("visible");
-
-                // Assuming actions are stored like ["cmd1", "cmd2"]
-                List<String> lore = Arrays.stream(loreRaw.replace("[", "").replace("]", "").split(","))
-                        .map(String::trim)
-                        .map(s -> s.replaceAll("^\"|\"$", "")) // remove surrounding quotes
-                        .collect(Collectors.toList());
-                List<String> parsedRightClick = Arrays.stream(rightClickRaw.replace("[", "").replace("]", "").split(","))
-                        .map(String::trim)
-                        .map(s -> s.replaceAll("^\"|\"$", "")) // remove surrounding quotes
-                        .collect(Collectors.toList());
-                List<String> parsedLeftClick = Arrays.stream(leftClickRaw.replace("[", "").replace("]", "").split(","))
-                        .map(String::trim)
-                        .map(s -> s.replaceAll("^\"|\"$", "")) // remove surrounding quotes
-                        .collect(Collectors.toList());
-
-
-
-                slots.add(new GUISlot(id, slot, slotId, matchType, material, displayName, lore, model, color, amount, tooltip, enchanted, parsedRightClick, parsedLeftClick, visible));
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "857985d7", "Failed to get Slots for GUI("+id+"): ", e
-            ));
-        }
-        return slots;
-    }
-
+    /** The GUI, or {@code null} if it does not exist. */
     public GUI getGUIbyId(String id) {
-        String sql = "SELECT * FROM guis WHERE id = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                String interactionId = rs.getString("id");
-                int size = rs.getInt("size");
-                String title = rs.getString("title");
-                List<GUISlot> slots = getSlotsForID(interactionId);
+        return store.get(id);
+    }
 
-                String openActions = rs.getString("open_actions");
-                String closeActions = rs.getString("close_actions");
+    // ── tree → model ────────────────────────────────────────────────────────
 
-                List<String> parsedOpenActions = null;
-                if (openActions != null && !openActions.trim().isEmpty()) {
-                    parsedOpenActions = Arrays.stream(openActions.replace("[", "").replace("]", "").split(","))
-                            .map(String::trim)
-                            .map(s -> s.replaceAll("^\"|\"$", ""))
-                            .filter(s -> !s.isEmpty())
-                            .collect(Collectors.toList());
-                }
+    private GUI map(JsonObject tree) {
+        JsonObject g = Json.object(tree, "gui");
+        String guiId = Json.str(g, "id");
 
-                List<String> parsedCloseActions = null;
-                if (closeActions != null && !closeActions.trim().isEmpty()) {
-                    parsedCloseActions = Arrays.stream(closeActions.replace("[", "").replace("]", "").split(","))
-                            .map(String::trim)
-                            .map(s -> s.replaceAll("^\"|\"$", ""))
-                            .filter(s -> !s.isEmpty())
-                            .collect(Collectors.toList());
-                }
+        conditionDAO.replaceChildren(java.util.Set.of("guislot"), guiId, Json.array(tree, "conditions"));
 
-                return new GUI(id, size, title, slots, parsedOpenActions, parsedCloseActions);
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "08812b49", "Failed to get GUI("+id+"): ", e
-            ));
+        // conditions keyed by "<gui>:<page>:<slot>:<config>"
+        Map<String, List<Condition>> conditions = new HashMap<>();
+        for (JsonElement el : Json.array(tree, "conditions")) {
+            JsonObject c = el.getAsJsonObject();
+            conditions.computeIfAbsent(Json.str(c, "type_id"), k -> new ArrayList<>())
+                    .add(new Condition(Json.str(c, "condition_key"), Json.str(c, "value"), Json.str(c, "parameter")));
         }
-        return null;
+
+        // configs grouped by (page, slot)
+        Map<String, List<GUISlotConfig>> configs = new HashMap<>();
+        for (JsonElement el : Json.array(tree, "configs")) {
+            JsonObject c = el.getAsJsonObject();
+            int page = Json.integer(c, "page_id", 0);
+            int slot = Json.integer(c, "slot_id", 0);
+            String configId = Json.str(c, "config_id");
+            String material = Json.str(c, "material");
+            String displayName = Json.str(c, "display_name");
+            String lore = Json.str(c, "lore"); // JSON array text; GUIManager.parseLore reads it
+            boolean enchanted = Json.bool(c, "enchanted", false);
+            List<Condition> conds = conditions.getOrDefault(guiId + ":" + page + ":" + slot + ":" + configId, List.of());
+
+            configs.computeIfAbsent(page + ":" + slot, k -> new ArrayList<>()).add(new GUISlotConfig(
+                    guiId, page, slot, configId,
+                    Json.str(c, "matchtype"),
+                    Json.integer(c, "amount", 1),
+                    Json.bool(c, "visible", true),
+                    material, displayName, lore,
+                    Json.str(c, "model"),
+                    Json.str(c, "color"),
+                    Json.str(c, "tooltip"),
+                    enchanted,
+                    buildItemStack(material, displayName, Json.strings(c, "lore"), enchanted),
+                    Json.strings(c, "global_actions"),
+                    Json.strings(c, "right_actions"),
+                    Json.strings(c, "left_actions"),
+                    Json.bool(c, "confirm", false),
+                    Json.str(c, "sound"),
+                    buildChecks(guiId, Json.array(c, "checks")),
+                    conds));
+        }
+
+        Map<Integer, List<GUISlot>> slots = new HashMap<>();
+        for (JsonElement el : Json.array(tree, "slots")) {
+            JsonObject s = el.getAsJsonObject();
+            int page = Json.integer(s, "page_id", 0);
+            int slot = Json.integer(s, "slot_id", 0);
+            slots.computeIfAbsent(page, k -> new ArrayList<>()).add(new GUISlot(
+                    guiId, page, slot, Json.bool(s, "active", true),
+                    configs.getOrDefault(page + ":" + slot, new ArrayList<>())));
+        }
+
+        List<GUIPage> pages = new ArrayList<>();
+        for (JsonElement el : Json.array(tree, "pages")) {
+            int page = Json.integer(el.getAsJsonObject(), "page_id", 0);
+            pages.add(new GUIPage(guiId, page, slots.getOrDefault(page, new ArrayList<>())));
+        }
+
+        return new GUI(guiId,
+                Json.integer(g, "size", 1),
+                Json.str(g, "title"),
+                Json.str(g, "type"),
+                pages,
+                Json.strings(g, "open_actions"),
+                Json.strings(g, "close_actions"));
+    }
+
+    private List<GUICheck> buildChecks(String guiId, JsonArray arr) {
+        List<GUICheck> checks = new ArrayList<>();
+        for (JsonElement el : arr) {
+            try {
+                JsonObject obj = el.isJsonObject() ? el.getAsJsonObject() : JsonParser.parseString(el.getAsString()).getAsJsonObject();
+                CheckType type = CheckType.valueOf(obj.get("type").getAsString().toUpperCase());
+                String id = obj.has("id") && !obj.get("id").isJsonNull() ? obj.get("id").getAsString() : null;
+                checks.add(new GUICheck(type, id, obj.get("amount").getAsInt()));
+            } catch (Exception e) {
+                log.warning("GUIDAO: " + guiId + ": skipped invalid check " + el + " — " + e.getMessage());
+            }
+        }
+        return checks;
+    }
+
+    private static ItemStack buildItemStack(String materialName, String displayName, List<String> lore, boolean enchanted) {
+        Material material = materialName != null ? Material.getMaterial(materialName.toUpperCase()) : null;
+        if (material == null) material = Material.PAPER;
+
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return item;
+
+        if (displayName != null && !displayName.isEmpty()) meta.setDisplayName(displayName);
+        if (!lore.isEmpty()) meta.setLore(lore);
+        if (enchanted) {
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            meta.addEnchant(Enchantment.UNBREAKING, 1, true);
+        }
+        item.setItemMeta(meta);
+        return item;
     }
 }

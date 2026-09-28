@@ -2,10 +2,9 @@ package me.hektortm.woSSystems.tablist;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.utils.CosmeticType;
+import me.hektortm.woSSystems.utils.types.CosmeticType;
 import me.hektortm.woSSystems.utils.Icons;
 import me.hektortm.wosCore.Utils;
-import net.kyori.adventure.audience.Audiences;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;

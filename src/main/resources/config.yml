@@ -1,0 +1,3 @@
+webhook:
+  port: 8090 # must differ from wos-api (8080)
+  secret: "replace-with-a-strong-random-secret"

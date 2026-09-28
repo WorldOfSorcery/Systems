@@ -1,5 +1,5 @@
 name: Systems
-version: '1.0.4'
+version: '${project.version}'
 main: me.hektortm.woSSystems.WoSSystems
 api-version: '1.21.8'
 author: HektorTM
@@ -68,11 +68,6 @@ commands:
     usage: /coinflip <amount> <heads|tails>
     permission: economy.coinflip
   # Chat System Commands
-  channel:
-    aliases: [ch]
-    description: chat
-    usage: /ch <join|focus|leave>
-    permission: chat.channel.join
   nickname:
     aliases: [nick]
     description: nick
@@ -91,9 +86,6 @@ commands:
   time:
     description: View and manipulate the time
     usage: /<command> [date|reload|freeze]
-  internalviewitem:
-    description: Internal command for viewing items.
-    usage: /internalviewitem <clickId>
 # Cosmetic Commands
   cosmetic:
     description: cosmetic management
@@ -136,3 +128,8 @@ commands:
   dialog:
     description: Dialog Command
     usage: /<command> <start|stop|reload> [player|id]
+
+  quest:
+    description: Quest management
+    usage: /<command> <start|status|help> [args]
+    permission: quest.start

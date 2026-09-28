@@ -1,238 +1,137 @@
 package me.hektortm.woSSystems.database.dao;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.database.SchemaManager;
+import me.hektortm.woSSystems.content.ApiSource;
+import me.hektortm.woSSystems.content.ContentStore;
+import me.hektortm.woSSystems.content.Json;
+import me.hektortm.woSSystems.player.ApiServices;
+import me.hektortm.woSSystems.player.ApiWriter;
 import me.hektortm.woSSystems.systems.citems.CitemBuilder;
-import me.hektortm.woSSystems.utils.Keys;
 import me.hektortm.woSSystems.utils.Parsers;
-import me.hektortm.woSSystems.utils.dataclasses.Citem;
-import me.hektortm.woSSystems.utils.dataclasses.RecipeRecord;
-import me.hektortm.wosCore.database.IDAO;
+import me.hektortm.wosCore.api.ApiException;
 import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.util.io.BukkitObjectInputStream;
-import org.bukkit.util.io.BukkitObjectOutputStream;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.sql.*;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import java.util.logging.Level;
 
-public class CitemDAO implements IDAO {
-    private final me.hektortm.wosCore.database.DatabaseManager db;
-    private final DAOHub daoHub;
+import static me.hektortm.woSSystems.player.ApiWriter.body;
+
+/**
+ * Custom items: the definitions come from wos-api ({@code /v1/content/citems}),
+ * built into {@link ItemStack}s once and cached. Items placed in the world as
+ * displays ({@code /v1/server/placed-citems}) are loaded at startup, kept in
+ * memory keyed by block location, and written through on every change.
+ */
+public class CitemDAO {
+    /** An item placed in the world as a display entity. */
+    public record Placed(String blockLocation, String citemId, UUID owner, String displayLocation, boolean creative) {}
+
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final String logName = "CitemDAO";
+    private final ContentStore<ItemStack> store;
+    private final ContentStore<Placed> placed;
+    private final ApiWriter writer;
 
-    /** In-memory cache — all reads go here after startup preload. */
-    private final Map<String, ItemStack> cache = new ConcurrentHashMap<>();
-
-    public CitemDAO(me.hektortm.wosCore.database.DatabaseManager db, DAOHub daoHub) {
-        this.db = db;
-        this.daoHub = daoHub;
+    public CitemDAO(ApiServices s) {
+        this.writer = s.writer();
+        this.store = s.content().register(new ContentStore<>("citems", "Citem",
+                ApiSource.flat(s.api(), "/v1/content/citems", "id",
+                        j -> CitemBuilder.build(Json.str(j, "id"), Json.str(j, "data", "{}")), s.log())));
+        this.placed = s.content().register(new ContentStore<>("placed-citems", "Placed item",
+                ApiSource.flat(s.api(), "/v1/server/placed-citems", "block_location", j -> new Placed(
+                        Json.str(j, "block_location"), Json.str(j, "citem_id"), UUID.fromString(Json.str(j, "owner_uuid")),
+                        Json.str(j, "display_location"), Json.bool(j, "creative_placed", false)), s.log())));
     }
 
-    @Override
-    public void initializeTable() throws SQLException {
-        SchemaManager.syncTable(db, Citem.class);
-
-        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.execute("CREATE TABLE IF NOT EXISTS placed_citems("+
-                    "citem_id VARCHAR(255) NOT NULL, " +
-                    "owner_uuid CHAR(36) NOT NULL, " +
-                    "block_location VARCHAR(255) NOT NULL, " +
-                    "display_location VARCHAR(255) NOT NULL," +
-                    "creative_placed BOOLEAN NOT NULL DEFAULT FALSE," +
-                    "PRIMARY KEY (citem_id))");
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:adc901cc", "Failed to intiialize CitemDAO table: ", e);
-        } finally {
-            plugin.getLogger().info(logName + ": CitemDAO table initialized successfully.");
-        }
-
-        // Preload all items into memory so GUI opens never touch the database.
-        org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, this::preloadAll);
-    }
-
+    /** Reloads every item definition from the API (the {@code /citems reload} command). Blocking. */
     public void preloadAll() {
-        String sql = "SELECT id, data FROM citems";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            ResultSet rs = stmt.executeQuery();
-            int count = 0;
-            while (rs.next()) {
-                String id = rs.getString("id");
-                try {
-                    cache.put(id, CitemBuilder.build(id, rs.getString("data")));
-                    count++;
-                } catch (Exception e) {
-                    plugin.getLogger().warning(logName + ": failed to preload '" + id + "': " + e.getMessage());
-                }
-            }
-            plugin.getLogger().info(logName + ": preloaded " + count + " item(s) into cache.");
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "CID:preload", "Failed to preload items into cache: ", e);
+        try {
+            store.preload();
+            plugin.getLogger().info(logName + ": reloaded " + store.size() + " item(s).");
+        } catch (ApiException e) {
+            WoSSystems.discordLog(Level.SEVERE, "CID:preload", "Failed to reload items from the API: ", e);
         }
     }
 
-    public List<String> getCitemIds() {
-        return new ArrayList<>(cache.keySet());
-    }
-
-
-    /**
-     * Returns a clone of the cached item. Never touches the database after startup.
-     * Returns null if the item doesn't exist.
-     */
+    /** A clone of the cached item, or {@code null} if it doesn't exist. */
     public ItemStack getCitem(String id) {
-        ItemStack cached = cache.get(id);
+        ItemStack cached = store.get(id);
         return cached != null ? cached.clone() : null;
     }
 
     public boolean citemExists(String id) {
-        return cache.containsKey(id);
+        return store.exists(id);
     }
 
+    // ─── Placed item displays ───────────────────────────────────────────────────
 
-
+    /** Records an item placed as a display at {@code blockLocation}. */
     public void createItemDisplay(String id, UUID ownerUUID, Location blockLocation, Location displayLocation, boolean isCreative) {
-        String bLoc = Parsers.locationToString(blockLocation);
-        String dLoc = Parsers.locationToString(displayLocation);
-        String sql = "INSERT INTO placed_citems (citem_id, owner_uuid, block_location, display_location, creative_placed) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, id);
-            pstmt.setString(2, ownerUUID.toString());
-            pstmt.setString(3, bLoc);
-            pstmt.setString(4, dLoc);
-            pstmt.setBoolean(5, isCreative);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "9e2bb566", "Failed to create Item Display", e);
-        }
+        save(new Placed(Parsers.locationToString(blockLocation), id, ownerUUID,
+                Parsers.locationToString(displayLocation), isCreative));
     }
 
+    /** Removes the placed item at {@code location} if {@code ownerUUID} placed it. */
     public void removeItemDisplay(UUID ownerUUID, Location location) {
-        String loc = Parsers.locationToString(location);
-        String sql = "DELETE FROM placed_citems WHERE owner_uuid = ? AND block_location = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, ownerUUID.toString());
-            pstmt.setString(2, loc);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "4e63206a", "Failed to remove Item Display", e);
-        }
+        Placed p = at(location);
+        if (p == null || !p.owner().equals(ownerUUID)) return;
+        placed.remove(p.blockLocation());
+        writer.delete("/v1/server/placed-citems?block_location=" + URLEncoder.encode(p.blockLocation(), StandardCharsets.UTF_8));
     }
 
+    /** Who placed the item at {@code location}, or {@code null}. */
     public UUID getUUID(Location location) {
-        String loc = Parsers.locationToString(location);
-        String sql = "SELECT owner_uuid FROM placed_citems WHERE block_location = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, loc);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) { // Check if result exists
-                return UUID.fromString(rs.getString("owner_uuid"));
-            }
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "b1ebfe0d", "Failed to get Owner UUID", e);
-        }
-        return null; // Return null if no result
+        Placed p = at(location);
+        return p == null ? null : p.owner();
     }
 
+    /** Moves the display entity of the placed item currently shown at {@code oldLocation}. */
     public void changeDisplay(Location oldLocation, Location newLocation) {
-        String oldLoc = Parsers.locationToString(oldLocation);
-        String newLoc = Parsers.locationToString(newLocation);
-        String sql = "UPDATE placed_citems SET display_location = ? WHERE display_location = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, newLoc);
-            pstmt.setString(2, oldLoc);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "621ebf18", "Failed to change Item Display", e);
+        String old = Parsers.locationToString(oldLocation);
+        for (Placed p : placed.all()) {
+            if (p.displayLocation().equals(old)) {
+                save(new Placed(p.blockLocation(), p.citemId(), p.owner(), Parsers.locationToString(newLocation), p.creative()));
+            }
         }
     }
 
     public boolean isCreativePlaced(Location location) {
-        String loc = Parsers.locationToString(location);
-        String sql = "SELECT * FROM placed_citems WHERE block_location = ? AND creative_placed = true";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, loc);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getBoolean("creative_placed");
-            }
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "d3041663", "Failed to check if Creative Placed", e);
-            return false;
-        }
-        return false;
+        Placed p = at(location);
+        return p != null && p.creative();
     }
 
+    /** The display entity location of the item placed at {@code location}, or {@code null}. */
     public Location getDisplayLocation(Location location) {
-        String loc = Parsers.locationToString(location);
-        String sql = "SELECT display_location FROM placed_citems WHERE block_location = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, loc);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return Parsers.stringToLocation(rs.getString("display_location"));
-            } else {
-                return null;
-            }
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "cbf86e39", "Failed to get Item Display Location", e);
-            return null;
-        }
+        Placed p = at(location);
+        return p == null ? null : Parsers.stringToLocation(p.displayLocation());
     }
 
+    /** The citem id of the item placed at {@code location}, or {@code null}. */
     public String getItemDisplayID(Location location) {
-        String loc = Parsers.locationToString(location);
-        String sql = "SELECT citem_id FROM placed_citems WHERE block_location = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, loc);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) { // Check if result exists
-                return rs.getString("citem_id");
-            }
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "9b378252", "Failed to get Item Display ID", e);
-        }
-        return null; // Return null if not found
+        Placed p = at(location);
+        return p == null ? null : p.citemId();
     }
-
 
     public boolean isItemDisplay(Location location) {
-        String loc = Parsers.locationToString(location);
-        String sql = "SELECT  1 FROM placed_citems WHERE block_location = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, loc);
-            ResultSet rs = pstmt.executeQuery();
-            return rs.next();
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "593f879f", "Failed to check Item Display", e);
-            return false;
-        }
+        return at(location) != null;
     }
 
     public boolean isItemDisplayOwner(Location location, UUID uuid) {
-        String loc = Parsers.locationToString(location); // Fix incorrect location format
-        String sql = "SELECT 1 FROM placed_citems WHERE block_location = ? AND owner_uuid = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, loc);
-            pstmt.setString(2, uuid.toString());
-            ResultSet rs = pstmt.executeQuery();
-            return rs.next(); // If there's a result, return true
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "f2863bfe", "Failed to check Item Display Owner", e);
-        }
-        return false;
+        Placed p = at(location);
+        return p != null && p.owner().equals(uuid);
+    }
+
+    private Placed at(Location location) {
+        return placed.get(Parsers.locationToString(location));
+    }
+
+    private void save(Placed p) {
+        placed.put(p.blockLocation(), p);
+        writer.put("/v1/server/placed-citems", body(
+                "block_location", p.blockLocation(), "citem_id", p.citemId(), "owner_uuid", p.owner().toString(),
+                "display_location", p.displayLocation(), "creative_placed", p.creative()));
     }
 }
