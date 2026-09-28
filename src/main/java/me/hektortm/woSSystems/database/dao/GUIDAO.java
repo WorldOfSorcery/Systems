@@ -4,265 +4,142 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.database.SchemaManager;
+import me.hektortm.woSSystems.content.ApiSource;
+import me.hektortm.woSSystems.content.ContentRegistry;
+import me.hektortm.woSSystems.content.ContentStore;
+import me.hektortm.woSSystems.content.Json;
+import me.hektortm.woSSystems.utils.model.Condition;
+import me.hektortm.woSSystems.utils.model.GUI;
+import me.hektortm.woSSystems.utils.model.GUICheck;
+import me.hektortm.woSSystems.utils.model.GUIPage;
+import me.hektortm.woSSystems.utils.model.GUISlot;
+import me.hektortm.woSSystems.utils.model.GUISlotConfig;
 import me.hektortm.woSSystems.utils.types.CheckType;
-import me.hektortm.woSSystems.utils.types.ConditionType;
-import me.hektortm.woSSystems.utils.model.*;
-import me.hektortm.wosCore.database.DatabaseManager;
-import me.hektortm.wosCore.database.IDAO;
-import me.hektortm.wosCore.discord.DiscordLog;
-import me.hektortm.wosCore.discord.DiscordLogger;
+import me.hektortm.wosCore.api.WosApi;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.sql.*;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
+import java.util.logging.Logger;
 
 /**
- * DAO for GUI definitions and their complete build hierarchy.
- *
- * <p>GUIs are assembled through a single-connection build chain:
- * {@code buildGui → buildPages → buildSlots → buildConfigs}.  Keeping one
- * connection open for the entire chain avoids repeated connection-pool
- * round-trips and prevents the try-with-resources close bug that occurs when
- * sub-methods open their own connections.</p>
- *
- * <p>All fully-built {@link GUI} objects are cached at startup via
- * {@link #preloadGuis()}.  Individual GUIs can be refreshed or evicted via
- * {@link #reloadFromDB(String, org.bukkit.entity.Player)} on webhook updates.</p>
- *
- * <p>Tables managed (via {@link me.hektortm.woSSystems.database.SchemaManager}):
- * {@code guis}, {@code gui_pages}, {@code gui_slots}, {@code gui_slot_configs}.</p>
+ * GUI definitions ({@code /v1/content/guis/{id}}). One API call returns the whole
+ * GUI — pages, slots, slot configs and their conditions — which is assembled into
+ * the {@link GUI} model once and cached.
  */
-public class GUIDAO implements IDAO {
-    private final DatabaseManager db;
-    private final DAOHub hub;
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final String logName = "GUIDAO";
+public class GUIDAO {
+    private final ContentStore<GUI> store;
+    private final ConditionDAO conditionDAO;
+    private final Logger log;
 
-    private final Map<String, GUI> cache = new ConcurrentHashMap<>();
-
-    public GUIDAO(DatabaseManager db, DAOHub hub) {
-        this.db = db;
-        this.hub = hub;
+    public GUIDAO(ContentRegistry registry, WosApi api, ConditionDAO conditionDAO, Logger log) {
+        this.log = log;
+        this.conditionDAO = conditionDAO;
+        this.store = registry.register(new ContentStore<>("guis", "GUI",
+                ApiSource.tree(api, "/v1/content/guis", this::map, log)));
     }
 
-    @Override
-    public void initializeTable() throws SQLException {
-        SchemaManager.syncTable(db, GUI.class);
-        SchemaManager.syncTable(db, GUIPage.class);
-        SchemaManager.syncTable(db, GUISlot.class);
-        SchemaManager.syncTable(db, GUISlotConfig.class);
-        WoSSystems.getInstance().getServer().getScheduler()
-                .runTaskAsynchronously(plugin, this::preloadGuis);
-    }
-
-    /**
-     * Loads all GUI definitions from the database into the in-memory cache.
-     * Called asynchronously from {@link #initializeTable()}.
-     */
-    public void preloadGuis() {
-        String sql = "SELECT id FROM guis";
-        try (Connection conn = db.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            int count = 0;
-            while (rs.next()) {
-                String id = rs.getString("id");
-                try {
-                    GUI gui = buildGui(conn, id);
-                    if (gui != null) {
-                        cache.put(id, gui);
-                        count++;
-                    }
-                } catch (Exception e) {
-                    plugin.getLogger().warning(logName + ": failed to preload '" + id + "': " + e.getMessage());
-                }
-            }
-            plugin.getLogger().info(logName + ": preloaded " + count + " gui(s) into cache.");
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(Level.SEVERE, plugin, logName + ":preload", "Failed to preload guis into cache: ", e));
-        }
-    }
-
-
-    /**
-     * Refreshes a single GUI in the cache from the database.  If the GUI no
-     * longer exists the entry is evicted.  Sends a title to {@code p} to confirm.
-     *
-     * @param id the GUI ID to reload
-     * @param p  the player who triggered the reload (receives title feedback)
-     */
-    public void reloadFromDB(String id, Player p) {
-        String sql = "SELECT * FROM guis WHERE id = ?";
-        try (Connection conn = db.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                cache.put(id, buildGui(conn, id));
-                p.sendTitle("§aUpdated Gui", "§e"+id );
-            } else {
-                // Deleted on the website → evict
-                cache.remove(id);
-                p.sendTitle("§cDeleted Gui", "§e"+id);
-            }
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, logName + ":reload", "Failed to reload item from DB: ", e);
-        }
-    }
-
-    /**
-     * Returns the {@link GUI} with the given ID from the in-memory cache.  If not
-     * cached, falls back to a database lookup and caches the result.
-     * Returns {@code null} if the GUI does not exist.
-     *
-     * @param id the GUI ID
-     * @return the cached (or freshly loaded) GUI, or {@code null}
-     */
+    /** The GUI, or {@code null} if it does not exist. */
     public GUI getGUIbyId(String id) {
-        return cache.computeIfAbsent(id, k -> {
-            try (Connection conn = db.getConnection()) {
-                return buildGui(conn, k);
-            } catch (Exception e) {
-                plugin.getLogger().warning(logName + ": failed to get gui '" + k + "': " + e.getMessage());
-                return null;
-            }
-        });
+        return store.get(id);
     }
 
-    // ── Single-connection build chain ────────────────────────────────────────
+    // ── tree → model ────────────────────────────────────────────────────────
 
-    private GUI buildGui(Connection conn, String id) throws SQLException {
-        String sql = "SELECT title, size, type, open_actions, close_actions FROM guis WHERE id = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, id);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (!rs.next()) return null;
+    private GUI map(JsonObject tree) {
+        JsonObject g = Json.object(tree, "gui");
+        String guiId = Json.str(g, "id");
 
-                String title = rs.getString("title");
-                int size = rs.getInt("size");
-                String type = rs.getString("type");
-                List<String> openActions = stringToList(rs.getString("open_actions"));
-                List<String> closeActions = stringToList(rs.getString("close_actions"));
-                List<GUIPage> pages = buildPages(conn, id);
+        conditionDAO.replaceChildren(java.util.Set.of("guislot"), guiId, Json.array(tree, "conditions"));
 
-                return new GUI(id, size, title, type, pages, openActions, closeActions);
-            }
+        // conditions keyed by "<gui>:<page>:<slot>:<config>"
+        Map<String, List<Condition>> conditions = new HashMap<>();
+        for (JsonElement el : Json.array(tree, "conditions")) {
+            JsonObject c = el.getAsJsonObject();
+            conditions.computeIfAbsent(Json.str(c, "type_id"), k -> new ArrayList<>())
+                    .add(new Condition(Json.str(c, "condition_key"), Json.str(c, "value"), Json.str(c, "parameter")));
         }
-    }
 
-    private List<GUIPage> buildPages(Connection conn, String guiId) throws SQLException {
-        String sql = "SELECT page_id FROM gui_pages WHERE gui_id = ?";
+        // configs grouped by (page, slot)
+        Map<String, List<GUISlotConfig>> configs = new HashMap<>();
+        for (JsonElement el : Json.array(tree, "configs")) {
+            JsonObject c = el.getAsJsonObject();
+            int page = Json.integer(c, "page_id", 0);
+            int slot = Json.integer(c, "slot_id", 0);
+            String configId = Json.str(c, "config_id");
+            String material = Json.str(c, "material");
+            String displayName = Json.str(c, "display_name");
+            String lore = Json.str(c, "lore"); // JSON array text; GUIManager.parseLore reads it
+            boolean enchanted = Json.bool(c, "enchanted", false);
+            List<Condition> conds = conditions.getOrDefault(guiId + ":" + page + ":" + slot + ":" + configId, List.of());
+
+            configs.computeIfAbsent(page + ":" + slot, k -> new ArrayList<>()).add(new GUISlotConfig(
+                    guiId, page, slot, configId,
+                    Json.str(c, "matchtype"),
+                    Json.integer(c, "amount", 1),
+                    Json.bool(c, "visible", true),
+                    material, displayName, lore,
+                    Json.str(c, "model"),
+                    Json.str(c, "color"),
+                    Json.str(c, "tooltip"),
+                    enchanted,
+                    buildItemStack(material, displayName, Json.strings(c, "lore"), enchanted),
+                    Json.strings(c, "global_actions"),
+                    Json.strings(c, "right_actions"),
+                    Json.strings(c, "left_actions"),
+                    Json.bool(c, "confirm", false),
+                    Json.str(c, "sound"),
+                    buildChecks(guiId, Json.array(c, "checks")),
+                    conds));
+        }
+
+        Map<Integer, List<GUISlot>> slots = new HashMap<>();
+        for (JsonElement el : Json.array(tree, "slots")) {
+            JsonObject s = el.getAsJsonObject();
+            int page = Json.integer(s, "page_id", 0);
+            int slot = Json.integer(s, "slot_id", 0);
+            slots.computeIfAbsent(page, k -> new ArrayList<>()).add(new GUISlot(
+                    guiId, page, slot, Json.bool(s, "active", true),
+                    configs.getOrDefault(page + ":" + slot, new ArrayList<>())));
+        }
+
         List<GUIPage> pages = new ArrayList<>();
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, guiId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    int pageId = rs.getInt("page_id");
-                    List<GUISlot> slots = buildSlots(conn, guiId, pageId);
-                    pages.add(new GUIPage(guiId, pageId, slots));
-                }
-            }
+        for (JsonElement el : Json.array(tree, "pages")) {
+            int page = Json.integer(el.getAsJsonObject(), "page_id", 0);
+            pages.add(new GUIPage(guiId, page, slots.getOrDefault(page, new ArrayList<>())));
         }
-        return pages;
+
+        return new GUI(guiId,
+                Json.integer(g, "size", 1),
+                Json.str(g, "title"),
+                Json.str(g, "type"),
+                pages,
+                Json.strings(g, "open_actions"),
+                Json.strings(g, "close_actions"));
     }
 
-    private List<GUISlot> buildSlots(Connection conn, String guiId, int pageId) throws SQLException {
-        String sql = "SELECT slot_id, active FROM gui_slots WHERE gui_id = ? AND page_id = ?";
-        List<GUISlot> slots = new ArrayList<>();
-        try (PreparedStatement s = conn.prepareStatement(sql)) {
-            s.setString(1, guiId);
-            s.setInt(2, pageId);
-            try (ResultSet rs = s.executeQuery()) {
-                while (rs.next()) {
-                    int slotId = rs.getInt("slot_id");
-                    boolean active = rs.getBoolean("active");
-                    List<GUISlotConfig> configs = buildConfigs(conn, guiId, pageId, slotId);
-                    slots.add(new GUISlot(guiId, pageId, slotId, active, configs));
-                }
-            }
-        }
-        return slots;
-    }
-
-    private List<GUISlotConfig> buildConfigs(Connection conn, String guiId, int pageId, int slotId) throws SQLException {
-        String sql = "SELECT config_id, matchtype, amount, visible, material, display_name, lore, model, color, tooltip, enchanted, " +
-                "global_actions, right_actions, left_actions, confirm, sound, checks " +
-                "FROM gui_slot_configs WHERE gui_id = ? AND page_id = ? AND slot_id = ?";
-        List<GUISlotConfig> configs = new ArrayList<>();
-        try (PreparedStatement s = conn.prepareStatement(sql)) {
-            s.setString(1, guiId);
-            s.setInt(2, pageId);
-            s.setInt(3, slotId);
-            try (ResultSet rs = s.executeQuery()) {
-                while (rs.next()) {
-                    String configId = rs.getString("config_id");
-                    String matchtype = rs.getString("matchtype");
-                    int amount = rs.getInt("amount");
-                    boolean visible = rs.getBoolean("visible");
-                    String materialName = rs.getString("material");
-                    String displayName = rs.getString("display_name");
-                    String loreRaw = rs.getString("lore");
-                    String model = rs.getString("model");
-                    String color = rs.getString("color");
-                    String tooltip = rs.getString("tooltip");
-                    boolean enchanted = rs.getBoolean("enchanted");
-                    List<String> globalActions = stringToList(rs.getString("global_actions"));
-                    List<String> rightActions = stringToList(rs.getString("right_actions"));
-                    List<String> leftActions = stringToList(rs.getString("left_actions"));
-                    boolean confirm = rs.getBoolean("confirm");
-                    String sound = rs.getString("sound");
-                    String checks = rs.getString("checks");
-
-                    ItemStack guiItem = buildItemStack(materialName, displayName, loreRaw, enchanted);
-
-                    String conditionKey = guiId + ":" + pageId + ":" + slotId + ":" + configId;
-                    List<Condition> conditions = hub.getConditionDAO().getConditions(ConditionType.GUISLOT, conditionKey);
-
-                    configs.add(new GUISlotConfig(
-                            guiId, pageId, slotId, configId, matchtype, amount,
-                            visible, materialName, displayName, loreRaw, model, color, tooltip, enchanted, guiItem,
-                            globalActions, rightActions, leftActions,
-                            confirm, sound, buildChecks(checks), conditions
-                    ));
-                }
-            }
-        }
-        return configs;
-    }
-
-    private List<GUICheck> buildChecks(String checkData) {
+    private List<GUICheck> buildChecks(String guiId, JsonArray arr) {
         List<GUICheck> checks = new ArrayList<>();
-        if (checkData == null || checkData.isBlank()) return checks;
-
-        try {
-            JsonArray arr = JsonParser.parseString(checkData).getAsJsonArray();
-            for (JsonElement el : arr) {
-                JsonObject obj = el.getAsJsonObject();
+        for (JsonElement el : arr) {
+            try {
+                JsonObject obj = el.isJsonObject() ? el.getAsJsonObject() : JsonParser.parseString(el.getAsString()).getAsJsonObject();
                 CheckType type = CheckType.valueOf(obj.get("type").getAsString().toUpperCase());
-                int amount = obj.get("amount").getAsInt();
-                String id = obj.has("id") ? obj.get("id").getAsString() : null;
-                checks.add(new GUICheck(type, id, amount));
+                String id = obj.has("id") && !obj.get("id").isJsonNull() ? obj.get("id").getAsString() : null;
+                checks.add(new GUICheck(type, id, obj.get("amount").getAsInt()));
+            } catch (Exception e) {
+                log.warning("GUIDAO: " + guiId + ": skipped invalid check " + el + " — " + e.getMessage());
             }
-        } catch (Exception e) {
-            plugin.getLogger().warning(logName + ": failed to parse checks JSON '" + checkData + "': " + e.getMessage());
         }
         return checks;
     }
 
-    private ItemStack buildItemStack(String materialName, String displayName, String loreRaw, boolean enchanted) {
+    private static ItemStack buildItemStack(String materialName, String displayName, List<String> lore, boolean enchanted) {
         Material material = materialName != null ? Material.getMaterial(materialName.toUpperCase()) : null;
         if (material == null) material = Material.PAPER;
 
@@ -270,32 +147,13 @@ public class GUIDAO implements IDAO {
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return item;
 
-        if (displayName != null && !displayName.isEmpty()) {
-            meta.setDisplayName(displayName);
-        }
-        if (loreRaw != null && !loreRaw.isEmpty()) {
-            meta.setLore(stringToList(loreRaw));
-        }
+        if (displayName != null && !displayName.isEmpty()) meta.setDisplayName(displayName);
+        if (!lore.isEmpty()) meta.setLore(lore);
         if (enchanted) {
-            meta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
-            meta.addEnchant(org.bukkit.enchantments.Enchantment.UNBREAKING, 1, true);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            meta.addEnchant(Enchantment.UNBREAKING, 1, true);
         }
         item.setItemMeta(meta);
         return item;
-    }
-
-    /**
-     * Converts a bracket/comma-separated string (e.g. {@code "[a, b, c]"}) into
-     * a {@link List}.  Handles {@code null} and blank input by returning an empty list.
-     *
-     * @param input the raw string to parse
-     * @return list of trimmed, non-empty tokens
-     */
-    public List<String> stringToList(String input) {
-        if (input == null || input.isBlank()) return new ArrayList<>();
-        return Arrays.stream(input.replace("[", "").replace("]", "").split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .collect(Collectors.toList());
     }
 }

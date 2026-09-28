@@ -51,7 +51,7 @@ public class SignCommand implements CommandExecutor {
             return true;
         }
       //  manager.createStamp(target, item, quote);
-        eco.modifyCurrency(target.getUniqueId(), "signature_token", 1, Operations.TAKE);
+        eco.modifyCurrency(target.getUniqueId(), "signature_token", 1, Operations.TAKE, "sign", null);
         Utils.successMsg(target, "citems", "stamp");
 
         return true;

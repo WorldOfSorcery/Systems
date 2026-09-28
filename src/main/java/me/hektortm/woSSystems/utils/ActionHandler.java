@@ -1,5 +1,6 @@
 package me.hektortm.woSSystems.utils;
 
+import me.hektortm.woSSystems.utils.Operations;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.model.InteractionKey;
@@ -48,7 +49,8 @@ public class ActionHandler {
         INTERACTION("interaction"),
         GUI("gui"),
         DIALOG("dialog"),
-        LOOTTABLE("loottable");
+        LOOTTABLE("loottable"),
+        QUEST("quest");
 
         private final String type;
         SourceType(String type) {
@@ -72,7 +74,7 @@ public class ActionHandler {
      *   <li>{@code send_actionbar} — sends an action-bar message</li>
      *   <li>{@code send_title} — sends a title/subtitle pair (delimiter {@code -s})</li>
      *   <li>{@code play_sound &lt;sound&gt; &lt;volume&gt; &lt;pitch&gt;} — plays a sound at the player's location</li>
-     *   <li>{@code eco give|take|set|reset @p &lt;currency&gt; &lt;amount&gt;} — logs an economy change</li>
+     *   <li>{@code eco give|take|set|reset @p &lt;currency&gt; &lt;amount&gt;} — changes the player's balance (logged with this source)</li>
      *   <li>{@code close_gui} — closes the player's open inventory</li>
      *   <li>anything else — dispatched as a console command (async for {@link SourceType#DIALOG})</li>
      * </ul>
@@ -187,25 +189,40 @@ public class ActionHandler {
                     plugin.writeLog("ActionHandler", java.util.logging.Level.WARNING, "eco action missing arguments: " + cmd);
                     continue;
                 }
+                // eco give|take|set|reset @p <currency> <amount> — applied to the acting
+                // player and logged with this interaction/dialog as the source.
                 String actionType = parts[1];
                 String currency = parts[3];
                 int amount = Integer.parseInt(parts[4]);
-                if (actionType.equalsIgnoreCase("give")) {
-                    plugin.getEcoManager().ecoLog(player.getUniqueId(), currency, amount, sourceType.getType(), sourceID);
+                Operations op = switch (actionType.toLowerCase(java.util.Locale.ROOT)) {
+                    case "give" -> Operations.GIVE;
+                    case "take" -> Operations.TAKE;
+                    case "set" -> Operations.SET;
+                    case "reset" -> Operations.RESET;
+                    default -> null;
+                };
+                if (op == null) {
+                    plugin.writeLog("ActionHandler", java.util.logging.Level.WARNING, "unknown eco action: " + cmd);
+                    continue;
                 }
-                if (actionType.equalsIgnoreCase("take")) {
-                    plugin.getEcoManager().ecoLog(player.getUniqueId(), currency, -amount, sourceType.getType(), sourceID);
-                }
-                if (actionType.equalsIgnoreCase("set")) {
-                    plugin.getEcoManager().ecoLog(player.getUniqueId(), currency, amount, sourceType.getType(), sourceID);
-                }
-                if (actionType.equalsIgnoreCase("reset")) {
-                    plugin.getEcoManager().ecoLog(player.getUniqueId(), currency, 0, sourceType.getType(), sourceID);
-                }
+                plugin.getEcoManager().modifyCurrency(player.getUniqueId(), currency, amount, op, sourceType.getType(), sourceID);
                 continue;
             }
             if (cmd.startsWith("close_gui")) {
                 player.closeInventory();
+                continue;
+            }
+            // quest_progress <quest_id> <node_id> [amount]
+            if (cmd.startsWith("quest_progress")) {
+                String[] parts = cmd.split("\\s+");
+                if (parts.length < 3) {
+                    plugin.writeLog("ActionHandler", java.util.logging.Level.WARNING, "quest_progress missing arguments: " + cmd);
+                    continue;
+                }
+                String questId = parts[1];
+                String nodeId  = parts[2];
+                int amount = parts.length >= 4 ? Integer.parseInt(parts[3]) : 1;
+                plugin.getQuestManager().progressObjective(player, questId, nodeId, amount);
                 continue;
             }
 

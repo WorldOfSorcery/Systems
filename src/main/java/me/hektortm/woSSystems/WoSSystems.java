@@ -10,14 +10,10 @@ import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import me.hektortm.woSSystems.core.JoinListener;
 import me.hektortm.woSSystems.core.QuitListener;
 import me.hektortm.woSSystems.systems.backpack.BackpackListener;
-import me.hektortm.woSSystems.utils.model.Channel;
-import me.hektortm.woSSystems.systems.channels.ChannelListener;
-import me.hektortm.woSSystems.systems.channels.ChannelManager;
-import me.hektortm.woSSystems.systems.channels.cmd.ChannelCommand;
-import me.hektortm.woSSystems.systems.channels.NicknameManager;
-import me.hektortm.woSSystems.systems.channels.cmd.ChannelCommandExecutor;
-import me.hektortm.woSSystems.systems.channels.cmd.InternalViewItemCommand;
-import me.hektortm.woSSystems.systems.channels.cmd.NicknameCommand;
+import me.hektortm.woSSystems.systems.chat.ChatListener;
+import me.hektortm.woSSystems.systems.chat.ChatManager;
+import me.hektortm.woSSystems.systems.chat.NicknameManager;
+import me.hektortm.woSSystems.systems.chat.cmd.NicknameCommand;
 import me.hektortm.woSSystems.systems.citems.*;
 import me.hektortm.woSSystems.systems.cosmetic.CosmeticManager;
 import me.hektortm.woSSystems.systems.cosmetic.cmd.CosmeticCommand;
@@ -63,6 +59,10 @@ import me.hektortm.woSSystems.systems.interactions.cmd.InteractionCommand;
 import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.systems.stats.cmd.GlobalStatCommand;
 import me.hektortm.woSSystems.systems.stats.cmd.StatsCommand;
+import me.hektortm.woSSystems.systems.quests.QuestDAO;
+import me.hektortm.woSSystems.systems.quests.QuestListener;
+import me.hektortm.woSSystems.systems.quests.QuestManager;
+import me.hektortm.woSSystems.systems.quests.cmd.QuestCommand;
 import me.hektortm.woSSystems.systems.unlockables.UnlockableManager;
 import me.hektortm.woSSystems.systems.unlockables.cmd.UnlockableCommand;
 import me.hektortm.woSSystems.utils.*;
@@ -70,9 +70,9 @@ import me.hektortm.woSSystems.utils.model.BasicCommand;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.WoSCore;
+import me.hektortm.woSSystems.content.ContentRegistry;
 
 import me.hektortm.wosCore.database.DatabaseManager;
-import me.hektortm.wosCore.database.IDAO;
 import me.hektortm.wosCore.discord.DiscordLog;
 import me.hektortm.wosCore.discord.DiscordLogger;
 import me.hektortm.wosCore.logging.LogManager;
@@ -82,7 +82,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -128,7 +127,7 @@ public final class WoSSystems extends JavaPlugin {
     private PlaceholderResolver resolver;
     private ConditionHandler conditionHandler;
     private CraftingManager craftingManager;
-    private ChannelManager channelManager;
+    private ChatManager chatManager;
     private NicknameManager nickManager;
     private Coinflip coinflipCommand;
     private LoottableManager lootTableManager;
@@ -143,13 +142,13 @@ public final class WoSSystems extends JavaPlugin {
     private LuxDialoguesAPI luxApi;
     private CitemDisplays citemDisplays;
     private DailyReset dailyReset;
+    private QuestManager questManager;
 
 
     public static StringFlag DISPLAY_NAME;
     public static StringFlag ENTER_INTERACTION;
     public static StringFlag LEAVE_INTERACTION;
     public final Map<UUID, String> playerRegions = new HashMap<>();
-    private final Map<UUID, Inventory> clickActions = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -175,31 +174,26 @@ public final class WoSSystems extends JavaPlugin {
 
             DatabaseManager databaseManager = core.getDatabaseManager();
 
-            daoHub = new DAOHub(databaseManager);
-
-            registerAndInitDAO(databaseManager, daoHub.getEconomyDAO());
-            registerAndInitDAO(databaseManager, daoHub.getNicknameDAO());
-            registerAndInitDAO(databaseManager, daoHub.getChannelDAO());
-            registerAndInitDAO(databaseManager, daoHub.getUnlockableDAO());
-            registerAndInitDAO(databaseManager, daoHub.getCitemDAO());
-            registerAndInitDAO(databaseManager, daoHub.getStatsDAO());
-            registerAndInitDAO(databaseManager, daoHub.getCosmeticsDAO());
-            registerAndInitDAO(databaseManager, daoHub.getProfileDAO());
-            registerAndInitDAO(databaseManager, daoHub.getConditionDAO());
-            registerAndInitDAO(databaseManager, daoHub.getInteractionDAO());
-            registerAndInitDAO(databaseManager, daoHub.getGuiDAO());
-            registerAndInitDAO(databaseManager, daoHub.getFishingDAO());
-            registerAndInitDAO(databaseManager, daoHub.getCooldownDAO());
-            registerAndInitDAO(databaseManager, daoHub.getTimeDAO());
-            registerAndInitDAO(databaseManager, daoHub.getConstantDAO());
-            registerAndInitDAO(databaseManager, daoHub.getDialogDAO());
-            registerAndInitDAO(databaseManager, daoHub.getLoottablesDAO());
-            registerAndInitDAO(databaseManager, daoHub.getCommandsDAO());
+            // Content and player/game state come from wos-api (only recipes still use MySQL).
+            ContentRegistry content = new ContentRegistry(this);
+            daoHub = new DAOHub(databaseManager, core.getApi(), content);
+            // Registered before anything else so sessions load ahead of other login handlers.
+            eventReg(daoHub.getSessions());
 
             databaseManager.initializeAllDAOs();
+
+            // Content must be loaded before the managers below are built — several
+            // (time events, custom commands) read definitions on construction.
+            if (!content.preloadAll()) {
+                getLogger().severe("Could not load game content from wos-api (" + getCore().getConfig().getString("api.url")
+                        + "). Check that the API is running and WoSCore's api.token is set. Disabling WoSSystems.");
+                Bukkit.getPluginManager().disablePlugin(this);
+                return;
+            }
         } catch (SQLException e) {
             System.out.println("Failed to connect to Database"+ e.getMessage());
             Bukkit.getPluginManager().disablePlugin(this);
+            return;
         }
 
 
@@ -227,8 +221,8 @@ public final class WoSSystems extends JavaPlugin {
         actionHandler = new ActionHandler(daoHub);
         interactionManager = new InteractionManager(daoHub);
         cooldownManager = new CooldownManager(daoHub);
-        channelManager = new ChannelManager(this, daoHub);
         nickManager = new NicknameManager(daoHub);
+        chatManager = new ChatManager(daoHub, nickManager);
 
         lootTableManager = new LoottableManager(daoHub);
         coinflipCommand = new Coinflip(ecoManager, this, lang);
@@ -237,6 +231,7 @@ public final class WoSSystems extends JavaPlugin {
 
 // Initialize the remaining managers
         craftingManager = new CraftingManager(daoHub); // TODO: interactions
+        questManager = new QuestManager(this, daoHub);
 
         new CraftingListener(daoHub); // TODO: interactions
 
@@ -252,7 +247,6 @@ public final class WoSSystems extends JavaPlugin {
             lang.loadLangFileExternal(this, "economy", core);
             lang.loadLangFileExternal(this, "crecipes", core);
             lang.loadLangFileExternal(this, "nicknames", core);
-            lang.loadLangFileExternal(this, "channel", core);
             lang.loadLangFileExternal(this, "loottables", core);
             lang.loadLangFileExternal(this, "cosmetics", core);
             lang.loadLangFileExternal(this, "cooldowns", core);
@@ -277,8 +271,6 @@ public final class WoSSystems extends JavaPlugin {
             regionBossBarManager.removeBossBar(p);
             regionBossBarManager.createBossBar(p);
         }
-        channelManager.loadChannels();
-        registerChannelCommands();
         registerBasicCommands();
         //recipeManager.loadRecipes();
         registerCommands();
@@ -290,25 +282,28 @@ public final class WoSSystems extends JavaPlugin {
         craftingManager.loadAll();
         dailyReset.startResetTimer();
 
+        // Optional: without it, portal edits just don't hot-reload — never disable the plugin over it.
         try {
             webhookServer = new WebhookServer(this, daoHub);
+            webhookServer.start();
         } catch (IOException e) {
-            getLogger().severe("[Webhook] Failed to start: " + e.getMessage());
+            getLogger().severe("[Webhook] Failed to start on port " + getConfig().getInt("webhook.port")
+                    + ": " + e.getMessage() + " — portal edits will not hot-reload (is another process on that port? wos-api uses 8080)");
         }
-        webhookServer.start();
         this.saveDefaultConfig();
         PermissionRegistry.registerAll(this, PermissionDefault.OP);
     }
 
     @Override
     public void onDisable() {
-        channelManager.saveChannels();
+        // onEnable may have stopped early (missing WoSCore, API unreachable), so any
+        // of these can still be null here.
         for (Player p : Bukkit.getOnlinePlayers()) {
-            bossBarManager.removeBossBar(p);
-            regionBossBarManager.removeBossBar(p);
-            interactionManager.getHologramManager().removeAllHolograms(p);
+            if (bossBarManager != null) bossBarManager.removeBossBar(p);
+            if (regionBossBarManager != null) regionBossBarManager.removeBossBar(p);
+            if (interactionManager != null) interactionManager.getHologramManager().removeAllHolograms(p);
         }
-        timeManager.saveGameState();
+        if (timeManager != null) timeManager.saveGameState();
 //        PacketEvents.getAPI().terminate();
         if (webhookServer != null) webhookServer.stop();
         PermissionRegistry.unregisterAll();
@@ -326,19 +321,6 @@ public final class WoSSystems extends JavaPlugin {
         ENTER_INTERACTION = registerStringFlag("enter-interaction", registry);
         LEAVE_INTERACTION = registerStringFlag("leave-interaction", registry);
 
-    }
-
-    /**
-     * Registers a DAO with the {@link DatabaseManager} and immediately runs its
-     * table initialisation.  Called for every DAO during {@link #onEnable()}.
-     *
-     * @param db  the database manager to register with
-     * @param dao the DAO to register and initialise
-     * @throws SQLException if table initialisation fails
-     */
-    private void registerAndInitDAO(DatabaseManager db, IDAO dao) throws SQLException {
-        db.registerDAO(dao);
-        dao.initializeTable();
     }
 
     /**
@@ -389,16 +371,6 @@ public final class WoSSystems extends JavaPlugin {
     }
 
     /**
-     * Dynamically registers a Bukkit command executor for each loaded chat
-     * {@link Channel}, using the channel's short name as the command label.
-     */
-    private void registerChannelCommands() {
-        for (Channel channel : channelManager.getChannels()) {
-            registerCommand(channel.getShortName(), new ChannelCommandExecutor(channelManager, channel));
-        }
-    }
-
-    /**
      * Dynamically registers a Bukkit command executor for each {@link BasicCommand}
      * loaded from the database, binding each command to an interaction.
      */
@@ -411,7 +383,7 @@ public final class WoSSystems extends JavaPlugin {
     /**
      * Dynamically registers a plugin command at runtime by reflectively accessing
      * the server's {@code commandMap}.  Used for commands that are not declared in
-     * {@code plugin.yml} (e.g. database-driven channel and basic commands).
+     * {@code plugin.yml} (e.g. database-driven basic commands).
      *
      * @param commandName the name of the command to register
      * @param executor    the executor that handles the command
@@ -453,12 +425,10 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("balance", new BalanceCommand(ecoManager, core));
         cmdReg("pay", new PayCommand(ecoManager, lang));
         cmdReg("coinflip", coinflipCommand);
-        cmdReg("channel", new ChannelCommand());
         cmdReg("nickname", new NicknameCommand());
         cmdReg("loottable", new LoottableCommand(daoHub, lootTableManager));
         cmdReg("sign", new SignCommand(citemManager, ecoManager));
         cmdReg("time", new TimeCommand(timeManager, this, lang));
-        cmdReg("internalviewitem", new InternalViewItemCommand(this));
         cmdReg("cosmetic", new CosmeticCommand(cosmeticManager, daoHub));
         cmdReg("prefixes", new QuickCommands.PrefixCommand());
         cmdReg("badges", new QuickCommands.BadgeCommand());
@@ -470,6 +440,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("calendar", new Calender());
         cmdReg("link", new LinkCommand());
         cmdReg("dialog", new me.hektortm.woSSystems.systems.dialogs.cmd.DialogCommand(daoHub));
+        cmdReg("quest", new QuestCommand(questManager, daoHub));
        // cmdReg("unlockrecipe", new RecipeCommand());
     }
 
@@ -481,12 +452,13 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new QuitListener(core, unlockableManager, daoHub, coinflipCommand, this));
         eventReg(new FishingListener(daoHub));
         eventReg(new JoinListener(this, daoHub));
-        eventReg(new ChannelListener(channelManager, nickManager, unlockableManager, daoHub));
+        eventReg(new ChatListener(chatManager, unlockableManager));
         eventReg(new RegionHandler(regionBossBarManager));
         eventReg(new ProfileListener());
         eventReg(new BackpackListener());
         //eventReg(new HologramHandler(daoHub));
         eventReg(new GUIManager(daoHub));
+        eventReg(new QuestListener(this, questManager));
         getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager, daoHub), this);
     }
 
@@ -630,25 +602,14 @@ public final class WoSSystems extends JavaPlugin {
     public RegionBossBar getRegionBossBarManager() {
         return regionBossBarManager;
     }
-    public ChannelManager getChannelManager() {
-        return channelManager;
+    public ChatManager getChatManager() {
+        return chatManager;
     }
     public CosmeticManager getCosmeticManager() {
         return cosmeticManager;
     }
     public TimeManager getTimeManager() {
         return timeManager;
-    }
-
-    /**
-     * Returns the map of pending click-action inventories, keyed by a one-time
-     * {@link UUID}.  Used by the item-view command to pass inventory state
-     * between the chat component click and the inventory open handler.
-     *
-     * @return mutable map of click-action inventories
-     */
-    public Map<UUID, Inventory> getClickActions() {
-        return clickActions;
     }
     public ProfileManager getProfileManager() {
         return profileManager;
@@ -676,6 +637,15 @@ public final class WoSSystems extends JavaPlugin {
     }
     public CraftingManager getCraftingManager() {
         return craftingManager;
+    }
+    public QuestManager getQuestManager() {
+        return questManager;
+    }
+    public QuestDAO getQuestDAO() {
+        return daoHub.getQuestDAO();
+    }
+    public LoottableManager getLootTableManager() {
+        return lootTableManager;
     }
 
     /** @return the shared map of player UUID to their current WorldGuard region name */

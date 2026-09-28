@@ -1,6 +1,6 @@
 # ChannelManager (logic additions)
 
-**Package:** `me.hektortm.woSSystems.systems.channels`
+**Package:** `me.hektortm.woSSystems.systems.chat`
 
 ## Logic Issues
 

@@ -84,7 +84,7 @@ public class TakeCommand extends SubCommand {
             log.writeLog(p, "-> "+ target.getName() +": Took "+amount+" "+name);
         }
 
-        ecoManager.modifyCurrency(target.getUniqueId(), currencyID, amount, Operations.TAKE);
+        ecoManager.modifyCurrency(target.getUniqueId(), currencyID, amount, Operations.TAKE, "command", sender.getName());
         WoSSystems.ecoMsg3Values(sender, "economy", "currency.taken", "%amount%", String.valueOf(amount), "%currency%", color+name, "%player%", playerName);
 
         String actionbar = lang.getMessage("economy", "actionbar.taken")

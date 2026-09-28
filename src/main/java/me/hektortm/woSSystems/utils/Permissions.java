@@ -79,15 +79,6 @@ public enum Permissions {
     NICK_UNRESERVE("nick.unreserve"),
     NICK_RESET("nick.reset"),
     
-    CHANNEL_CREATE("chat.channel.create"),
-    CHANNEL_JOIN("chat.channel.join"),
-    CHANNEL_LEAVE("chat.channel.leave"),
-    CHANNEL_FOCUS("chat.channel.focus"),
-    CHANNEL_UNFOCUS("chat.channel.unfocus"),
-    CHANNEL_LIST("chat.channel.list"),
-    CHANNEL_BROADCAST("chat.channel.broadcast"),
-    CHANNEL_MODIFY("chat.channel.modify"),
-    CHANNEL_DELETE("chat.channel.delete"),
 
     COSMETIC_TAKE("cosmetic.take"),
     COSMETIC_GIVE("cosmetic.give"),
@@ -193,7 +184,10 @@ public enum Permissions {
     PORTAL_REQUEST_DENY("portal.request.deny"),
 
     PORTAL_PERMISSIONS_USERS_VIEW("portal.permissions.users.view"),
-    PORTAL_PERMISSIONS_USERS_MODIFY("portal.permissions.users.modify");
+    PORTAL_PERMISSIONS_USERS_MODIFY("portal.permissions.users.modify"),
+
+    QUEST_START("quest.start"),
+    QUEST_ADMIN_START("quest.admin.start");
 
     private final String permission;
 

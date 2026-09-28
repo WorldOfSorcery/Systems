@@ -10,6 +10,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.util.UUID;
+
 public class QuitListener implements Listener {
 
     private final UnlockableManager manager;
@@ -30,18 +32,18 @@ public class QuitListener implements Listener {
     @EventHandler
     public void leaveEvent(PlayerQuitEvent event) {
         Player p = event.getPlayer();
+        UUID uuid = p.getUniqueId();
 
         event.setQuitMessage(null);
 
-        if (coinflip.challengeQueue.containsKey(p.getUniqueId())) {
-            coinflip.challengeQueue.remove(p.getUniqueId());
+        if (coinflip.challengeQueue.containsKey(uuid)) {
+            coinflip.challengeQueue.remove(uuid);
         }
 
         plugin.getBossBarManager().removeBossBar(p);
-        hub.getUnlockableDAO().removeAllTemps(p.getUniqueId());
+        hub.getUnlockableDAO().removeAllTemps(uuid); // queued write, non-blocking
         plugin.getInteractionManager().getHologramManager().removeAllHolograms(p);
-        hub.evictPlayerData(p.getUniqueId());
-        plugin.getPlayerRegions().remove(p.getUniqueId());
+        plugin.getPlayerRegions().remove(uuid);
 
 
 

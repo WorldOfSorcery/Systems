@@ -71,7 +71,7 @@ public class SetCommand extends SubCommand {
             log.writeLog(p, "-> "+ target.getName() +": Set "+name+" to "+amount);
         }
 
-        ecoManager.modifyCurrency(target.getUniqueId(), currencyID, amount, Operations.SET);
+        ecoManager.modifyCurrency(target.getUniqueId(), currencyID, amount, Operations.SET, "command", sender.getName());
         WoSSystems.ecoMsg3Values(sender, "economy", "currency.set", "%amount%", String.valueOf(amount), "%currency%", color+name, "%player%", playerName);
 
     }

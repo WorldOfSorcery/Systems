@@ -27,8 +27,11 @@ public class Reload extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
 
-        daoHub.getCitemDAO().preloadAll();
-        sender.sendMessage("Citems reloaded");
+        // Reloading fetches from wos-api — never block the main thread.
+        org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(me.hektortm.woSSystems.WoSSystems.getInstance(), () -> {
+            daoHub.getCitemDAO().preloadAll();
+            sender.sendMessage("Citems reloaded");
+        });
 
     }
 }

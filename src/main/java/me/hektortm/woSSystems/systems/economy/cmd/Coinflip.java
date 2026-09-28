@@ -170,8 +170,8 @@ public class Coinflip implements CommandExecutor, Listener {
 
         // Deduct gold from both players
         int amount = challenge.getAmount();
-        ecoManager.modifyCurrency(acceptor.getUniqueId(), "gold", amount, Operations.TAKE);
-        ecoManager.modifyCurrency(challenger.getUniqueId(), "gold", amount, Operations.TAKE);
+        ecoManager.modifyCurrency(acceptor.getUniqueId(), "gold", amount, Operations.TAKE, "coinflip", null);
+        ecoManager.modifyCurrency(challenger.getUniqueId(), "gold", amount, Operations.TAKE, "coinflip", null);
 
         // Determine winner
         String result = randomInt(2, 1) == 1 ? "heads" : "tails";
@@ -180,7 +180,7 @@ public class Coinflip implements CommandExecutor, Listener {
 
         // Transfer gold
         int winnings = amount * 2;
-        ecoManager.modifyCurrency(winner.getUniqueId(), "gold", winnings, Operations.GIVE);
+        ecoManager.modifyCurrency(winner.getUniqueId(), "gold", winnings, Operations.GIVE, "coinflip", null);
 
         // Notify players
         Utils.successMsg2Values(winner, "economy", "coinflip.win", "%result%", result, "%amount%", String.valueOf(winnings));

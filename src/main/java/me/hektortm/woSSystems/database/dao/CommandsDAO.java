@@ -1,64 +1,29 @@
 package me.hektortm.woSSystems.database.dao;
 
-import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.SchemaManager;
+import me.hektortm.woSSystems.content.ApiSource;
+import me.hektortm.woSSystems.content.ContentRegistry;
+import me.hektortm.woSSystems.content.ContentStore;
+import me.hektortm.woSSystems.content.Json;
 import me.hektortm.woSSystems.utils.model.BasicCommand;
-import me.hektortm.wosCore.database.DatabaseManager;
-import me.hektortm.wosCore.database.IDAO;
-import me.hektortm.wosCore.discord.DiscordLog;
-import me.hektortm.wosCore.discord.DiscordLogger;
+import me.hektortm.wosCore.api.WosApi;
 
-import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
+import java.util.logging.Logger;
 
-/**
- * DAO for retrieving {@link BasicCommand} definitions from the {@code commands}
- * table.  Each record maps a command string to an interaction ID and an optional
- * permission node.
- */
-public class CommandsDAO implements IDAO {
+/** Custom chat commands bound to an interaction ({@code /v1/content/commands}). */
+public class CommandsDAO {
+    private final ContentStore<BasicCommand> store;
 
-    private final WoSSystems plugin = WoSSystems.getInstance();
-    private final DatabaseManager db;
-
-    public CommandsDAO(DatabaseManager db) {
-        this.db = db;
+    public CommandsDAO(ContentRegistry registry, WosApi api, Logger log) {
+        this.store = registry.register(new ContentStore<>("commands", "Command",
+                ApiSource.flat(api, "/v1/content/commands", "command",
+                        j -> new BasicCommand(Json.str(j, "command"), Json.str(j, "interaction"), Json.str(j, "permission")),
+                        log)));
     }
 
-
-    @Override
-    public void initializeTable() throws SQLException {
-        SchemaManager.syncTable(db, BasicCommand.class);
-    }
-
-    /**
-     * Returns all {@link BasicCommand} definitions from the {@code commands} table.
-     *
-     * @return list of commands; empty if none are defined or on error
-     */
+    /** Every custom command definition. */
     public List<BasicCommand> getCommands() {
-        String sql = "SELECT * FROM commands";
-        List<BasicCommand> commands = new ArrayList<>();
-        try (Connection conn = db.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.executeQuery();
-            ResultSet rs = pstmt.getResultSet();
-            while (rs.next()) {
-                commands.add(new BasicCommand(rs.getString("command"), rs.getString("interaction"), rs.getString("permission")));
-            }
-            return commands;
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE,
-                    plugin,
-                    "c32u6t",
-                    "Failed to get Commands",
-                    e
-            ));
-        }
-
-        return commands;
+        return new ArrayList<>(store.all());
     }
-
 }

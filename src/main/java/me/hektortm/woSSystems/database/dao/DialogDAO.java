@@ -1,12 +1,15 @@
 package me.hektortm.woSSystems.database.dao;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import me.hektortm.woSSystems.WoSSystems;
+import me.hektortm.woSSystems.content.ApiSource;
+import me.hektortm.woSSystems.content.ContentRegistry;
+import me.hektortm.woSSystems.content.ContentStore;
+import me.hektortm.woSSystems.content.Json;
 import me.hektortm.woSSystems.utils.ActionHandler;
 import me.hektortm.wosCore.Utils;
-import me.hektortm.wosCore.database.DatabaseManager;
-import me.hektortm.wosCore.database.IDAO;
-import me.hektortm.wosCore.discord.DiscordLog;
-import me.hektortm.wosCore.discord.DiscordLogger;
+import me.hektortm.wosCore.api.WosApi;
 import org.aselstudios.luxdialoguesapi.Builders.Answer;
 import org.aselstudios.luxdialoguesapi.Builders.Dialogue;
 import org.aselstudios.luxdialoguesapi.Builders.Page;
@@ -15,244 +18,81 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
-import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * DAO for building and delivering LuxDialogues {@link Dialogue} instances to players.
+ * Builds LuxDialogues {@link Dialogue}s from the dialog definitions in wos-api
+ * ({@code /v1/content/dialogs/{id}}).
  *
- * <p>Raw dialog data (unresolved templates) is loaded from the database once and
- * stored in {@link #cache} per {@code dialog_id}. Player-specific placeholder
- * resolution happens at build time, so the cache key is always just the dialog ID.</p>
- *
- * <p>Tables managed: {@code dialogs}, {@code dialog_pages}, {@code page_lines},
- * {@code dialog_answers}.</p>
+ * <p>The raw (unresolved) dialog is cached per id; player placeholders are
+ * resolved at build time. Visual settings come from the dialog's {@code settings}
+ * object as edited in the portal (character name, colors).</p>
  */
-public class DialogDAO implements IDAO {
+public class DialogDAO {
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final DatabaseManager db;
+    private final ContentStore<RawDialog> store;
 
-    /** Raw (unresolved) dialog templates keyed by dialog_id. */
-    private final Map<String, RawDialog> cache = new ConcurrentHashMap<>();
-
-    public DialogDAO(DatabaseManager db) { this.db = db; }
-
-    // -------------------------------------------------------------------------
-    // Inner records — unresolved templates stored in the cache
-    // -------------------------------------------------------------------------
-
-    private record RawAnswer(int id, String text, String action) {}
-
-    private record RawPage(
-            @Nullable String preAction,
-            @Nullable String postAction,
-            List<String> lineTemplates,
-            List<RawAnswer> answers
-    ) {}
-
-    private record RawDialog(
-            String charNameTemplate,
-            String charNameColor,
-            String textColor,
-            String backgroundColor,
-            String answerBackgroundColor,
-            String fogColor,
-            String arrowColor,
-            String selectedColor,
-            List<RawPage> pages
-    ) {}
-
-    // -------------------------------------------------------------------------
-    // Schema
-    // -------------------------------------------------------------------------
-
-    @Override
-    public void initializeTable() throws SQLException {
-        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.execute("CREATE TABLE IF NOT EXISTS dialogs(" +
-                    "dialog_id VARCHAR(255) PRIMARY KEY," +
-                    "char_name VARCHAR(255)," +
-                    "char_name_color VARCHAR(7)," +
-                    "text_color VARCHAR(7)," +
-                    "background_color VARCHAR(7)," +
-                    "answer_background_color VARCHAR(7)," +
-                    "fog_color VARCHAR(7)," +
-                    "arrow_color VARCHAR(7)," +
-                    "selected_color VARCHAR(7))");
-            stmt.execute("CREATE TABLE IF NOT EXISTS dialog_pages(" +
-                    "dialog_id VARCHAR(255), " +
-                    "page_id INT, " +
-                    "post_action VARCHAR(255)," +
-                    "pre_action VARCHAR(255)," +
-                    "PRIMARY KEY (dialog_id, page_id), " +
-                    "FOREIGN KEY (dialog_id) REFERENCES dialogs(dialog_id) ON DELETE CASCADE)");
-            stmt.execute("CREATE TABLE IF NOT EXISTS page_lines(" +
-                    "dialog_id VARCHAR(255), " +
-                    "page_id INT, " +
-                    "line_id INT, " +
-                    "line_text VARCHAR(255)," +
-                    "PRIMARY KEY (dialog_id, page_id, line_id), " +
-                    "FOREIGN KEY (dialog_id, page_id) REFERENCES dialog_pages(dialog_id, page_id) ON DELETE CASCADE)");
-            stmt.execute("CREATE TABLE IF NOT EXISTS dialog_answers(" +
-                    "dialog_id VARCHAR(255), " +
-                    "page_id INT, " +
-                    "answer_id INT," +
-                    "answer_text VARCHAR(255)," +
-                    "answer_reply TEXT," +
-                    "answer_action VARCHAR(255)," +
-                    "PRIMARY KEY (dialog_id))");
-        }
+    public DialogDAO(ContentRegistry registry, WosApi api, Logger log) {
+        this.store = registry.register(new ContentStore<>("dialogs", "Dialog",
+                ApiSource.tree(api, "/v1/content/dialogs", DialogDAO::map, log)));
     }
 
-    // -------------------------------------------------------------------------
-    // Cache management
-    // -------------------------------------------------------------------------
+    // ── cached templates ──────────────────────────────────────────────────────
 
-    /**
-     * Preloads all dialogs from the database into the cache.
-     * Call this on startup after {@link #initializeTable()}.
-     */
-    public void preloadAll() {
-        String sql = "SELECT dialog FROM dialogs";
-        try (Connection conn = db.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            int count = 0;
-            while (rs.next()) {
-                String id = rs.getString("dialog_id");
-                RawDialog raw = loadRawFromDb(id);
-                if (raw != null) {
-                    cache.put(id, raw);
-                    count++;
-                }
-            }
-            plugin.getLogger().info("DialogDAO: preloaded " + count + " dialog(s) into cache.");
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "DialogDAO:preload", "Failed to preload dialogs: ", e);
-        }
-    }
+    private record RawAnswer(String id, String text, @Nullable String action) {}
 
-    /** Removes a single entry from the cache, forcing a DB reload on next use. */
-    public void invalidate(String dialogId) {
-        cache.remove(dialogId);
-    }
+    private record RawPage(@Nullable String preAction, @Nullable String postAction,
+                           List<String> lineTemplates, List<RawAnswer> answers) {}
 
-    /** Clears the entire cache. */
-    public void invalidateAll() {
-        cache.clear();
-    }
+    private record RawDialog(String charNameTemplate, String charNameColor, String textColor,
+                             String backgroundColor, String answerBackgroundColor, String fogColor,
+                             String arrowColor, String selectedColor, List<RawPage> pages) {}
 
-    // -------------------------------------------------------------------------
-    // Raw DB loading (no placeholder resolution — one connection for all queries)
-    // -------------------------------------------------------------------------
-
-    @Nullable
-    private RawDialog loadRawFromDb(String dialogId) {
-        String sql = "SELECT * FROM dialogs WHERE id = ?";
-        try (Connection conn = db.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, dialogId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (!rs.next()) return null;
-
-                return new RawDialog(
-                        rs.getString("char_name"),
-                        getOrDefault(rs, "char_name_color",         "#4f4a3e"),
-                        getOrDefault(rs, "text_color",              "#4f4a3e"),
-                        getOrDefault(rs, "background_color",        "#f8ffe0"),
-                        getOrDefault(rs, "answer_background_color", "#f8ffe0"),
-                        getOrDefault(rs, "fog_color",               "#000000"),
-                        getOrDefault(rs, "arrow_color",             "#cdff29"),
-                        getOrDefault(rs, "selected_color",          "#4f4a3e"),
-                        loadRawPages(conn, dialogId)
-                );
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(Level.SEVERE, plugin, "DID:8e45baa3",
-                    "Failed to load raw dialog for ID: " + dialogId, e));
-            return null;
-        }
-    }
-
-    private List<RawPage> loadRawPages(Connection conn, String dialogId) throws SQLException {
+    private static RawDialog map(JsonObject tree) {
+        JsonObject s = Json.object(tree, "settings");
         List<RawPage> pages = new ArrayList<>();
-        String sql = "SELECT * FROM dialog_pages WHERE dialog_id = ? ORDER BY page_id ASC";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, dialogId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    int pageId = rs.getInt("page_id");
-                    pages.add(new RawPage(
-                            rs.getString("pre_action"),
-                            rs.getString("post_action"),
-                            loadRawLines(conn, dialogId, pageId),
-                            loadRawAnswers(conn, dialogId, pageId)
-                    ));
-                }
+        for (JsonElement el : Json.array(tree, "pages")) {
+            JsonObject p = el.getAsJsonObject();
+            List<RawAnswer> answers = new ArrayList<>();
+            for (JsonElement a : Json.array(p, "answers")) {
+                JsonObject ans = a.getAsJsonObject();
+                answers.add(new RawAnswer(Json.str(ans, "id"), Json.str(ans, "answer_text", ""), blankToNull(Json.str(ans, "action"))));
             }
+            pages.add(new RawPage(blankToNull(Json.str(p, "pre_action")), blankToNull(Json.str(p, "post_action")),
+                    Json.strings(p, "lines"), answers));
         }
-        return pages;
+        return new RawDialog(
+                Json.str(s, "character_name", ""),
+                Json.str(s, "character_name_color", "#4f4a3e"),
+                Json.str(s, "text_color", "#4f4a3e"),
+                Json.str(s, "background_image_color", "#f8ffe0"),
+                Json.str(s, "answer_background_image_color", "#f8ffe0"),
+                Json.str(s, "fog_color", "#000000"),
+                Json.str(s, "arrow_image_color", "#cdff29"),
+                Json.str(s, "answer_text_color", "#4f4a3e"),
+                pages);
     }
 
-    private List<String> loadRawLines(Connection conn, String dialogId, int pageId) throws SQLException {
-        List<String> lines = new ArrayList<>();
-        String sql = "SELECT line_text FROM page_lines WHERE dialog_id = ? AND page_id = ? ORDER BY line_id ASC";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, dialogId);
-            pstmt.setInt(2, pageId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) lines.add(rs.getString("line_text"));
-            }
-        }
-        return lines;
+    private static String blankToNull(String s) {
+        return s == null || s.isBlank() ? null : s;
     }
 
-    private List<RawAnswer> loadRawAnswers(Connection conn, String dialogId, int pageId) throws SQLException {
-        List<RawAnswer> answers = new ArrayList<>();
-        String sql = "SELECT * FROM dialog_answers WHERE dialog_id = ? AND page_id = ? ORDER BY answer_id ASC";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, dialogId);
-            pstmt.setInt(2, pageId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    answers.add(new RawAnswer(
-                            rs.getInt("answer_id"),
-                            rs.getString("answer_text"),
-                            rs.getString("answer_action")
-                    ));
-                }
-            }
-        }
-        return answers;
-    }
-
-    // -------------------------------------------------------------------------
-    // Public API — build with per-player placeholder resolution
-    // -------------------------------------------------------------------------
+    // ── build with per-player placeholder resolution ──────────────────────────
 
     /**
-     * Returns a fully-built {@link Dialogue} for {@code target}, resolving all
-     * placeholder templates from the cached raw data.  Falls back to a DB load
-     * if the dialog is not yet cached.
-     *
-     * @param dialogId the dialog ID to look up
-     * @param source   the command sender who triggered the dialog (used for feedback); may be {@code null}
-     * @param target   the player who will receive the dialog
-     * @return the assembled {@link Dialogue}, or {@code null} if the ID is unknown
+     * A fully built {@link Dialogue} for {@code target}, or {@code null} (with an
+     * error to {@code source}) if the dialog id is unknown.
      */
     @Nullable
     public Dialogue buildDialog(String dialogId, @Nullable CommandSender source, Player target) {
-        RawDialog raw = cache.computeIfAbsent(dialogId, this::loadRawFromDb);
+        RawDialog raw = store.get(dialogId);
         if (raw == null) {
             Utils.error(source, "dialogs", "error.notfound", "%id%", dialogId);
             return null;
         }
 
-        // Resolve player-specific placeholders at render time — not stored back into the cache
         String charName = plugin.getPlaceholderResolver().resolvePlaceholders(raw.charNameTemplate(), target);
 
         Dialogue.Builder dialogBuilder = new Dialogue.Builder()
@@ -281,9 +121,9 @@ public class DialogDAO implements IDAO {
                 pageBuilder.addLine(plugin.getPlaceholderResolver().resolvePlaceholders(lineTemplate, target));
             }
             for (RawAnswer a : rawPage.answers()) {
-                List<String> actionList = List.of(a.action());
+                List<String> actionList = a.action() == null ? List.of() : List.of(a.action());
                 pageBuilder.addAnswer(new Answer.Builder()
-                        .setAnswerID(String.valueOf(a.id()))
+                        .setAnswerID(a.id())
                         .setAnswerText(a.text())
                         .addCallback(p -> plugin.getActionHandler().executeActions(
                                 p, actionList, ActionHandler.SourceType.DIALOG, dialogId, null))
@@ -296,40 +136,5 @@ public class DialogDAO implements IDAO {
         else if (source instanceof ConsoleCommandSender) source.sendMessage("Dialog " + dialogId + " triggered for player " + target.getName());
 
         return dialogBuilder.build();
-    }
-
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
-
-    private static boolean hasColumn(ResultSet rs, String col) {
-        try {
-            rs.findColumn(col);
-            return true;
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE,
-                    WoSSystems.getPlugin(WoSSystems.class),
-                    "DID:a1d73b8e",
-                    "Column " + col + " does not exist in ResultSet",
-                    e
-            ));
-            return false;
-        }
-    }
-
-    private static String getOrDefault(ResultSet rs, String col, String def) {
-        try {
-            return hasColumn(rs, col) && rs.getString(col) != null ? rs.getString(col) : def;
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE,
-                    WoSSystems.getPlugin(WoSSystems.class),
-                    "cfb1f3e2",
-                    "Failed to get column " + col + " from ResultSet, returning default value: " + def,
-                    e
-            ));
-            return def;
-        }
     }
 }

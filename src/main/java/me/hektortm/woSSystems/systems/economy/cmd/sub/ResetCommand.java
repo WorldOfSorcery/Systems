@@ -63,7 +63,7 @@ public class ResetCommand extends SubCommand {
             log.writeLog(p, "-> "+ target.getName() +": Reset "+name);
         }
 
-        ecoManager.modifyCurrency(target.getUniqueId(), currencyID, 0, Operations.RESET);
+        ecoManager.modifyCurrency(target.getUniqueId(), currencyID, 0, Operations.RESET, "command", sender.getName());
         WoSSystems.ecoMsg2Values(sender, "economy", "currency.reset",  "%currency%", color+name, "%player%", playerName);
 
     }

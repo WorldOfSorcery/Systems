@@ -77,8 +77,8 @@ public class PayCommand implements CommandExecutor {
             }
 
             if(ecoManager.hasEnoughCurrency(p.getUniqueId(), currencyName, amount)) {
-                ecoManager.modifyCurrency(target.getUniqueId(), currencyName, amount, Operations.GIVE);
-                ecoManager.modifyCurrency(p.getUniqueId(), currencyName, amount, Operations.TAKE);
+                ecoManager.modifyCurrency(target.getUniqueId(), currencyName, amount, Operations.GIVE, "pay", p.getName() + " -> " + target.getName());
+                ecoManager.modifyCurrency(p.getUniqueId(), currencyName, amount, Operations.TAKE, "pay", p.getName() + " -> " + target.getName());
                 WoSSystems.ecoMsg3Values(target, "economy", "pay.target", "%amount%", color + amount, "%currency%", icon+ " " + currencyName, "%player%", p.getName());
                 WoSSystems.ecoMsg3Values(sender, "economy", "pay.player", "%amount%", color + amount, "%currency%", icon+ " " + currencyName, "%target%", targetName);
                 String actionbar = lang.getMessage("economy", "actionbar.given")

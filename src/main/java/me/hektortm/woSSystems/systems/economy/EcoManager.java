@@ -39,44 +39,29 @@ public class EcoManager {
      * @param operation the arithmetic operation to apply
      */
     public void modifyCurrency(UUID uuid, String currency, long amount, Operations operation) {
-        Player player = plugin.getServer().getPlayer(uuid);
-        if (player == null) return; // Ensure player is online
-
-
-        long currentAmount = getCurrencyBalance(uuid, currency);
-        long newAmount = currentAmount;
-
-        switch (operation) {
-            case GIVE:
-                newAmount += amount;
-                break;
-            case TAKE:
-                newAmount = Math.max(0, currentAmount - amount);
-                break;
-            case SET:
-                newAmount = amount;
-                break;
-            case RESET:
-                newAmount = 0;
-                break;
-        }
-        hub.getEconomyDAO().updatePlayerCurrency(player.getUniqueId(), currency, newAmount);
+        modifyCurrency(uuid, currency, amount, operation, "plugin", null);
     }
 
     /**
-     * Records an economy audit log entry for the given currency change.
-     * The previous balance is fetched automatically; the new balance is
-     * {@code previousAmount + changeAmount}.
+     * Modifies a currency balance for an online player and records where the
+     * change came from in the economy log (one atomic wos-api transaction).
+     * {@link Operations#TAKE} floors the balance at zero.
      *
-     * @param uuid         the player's UUID
-     * @param currency     the affected currency ID
-     * @param changeAmount the delta applied (positive for gains, negative for losses)
-     * @param sourceType   category of the source (e.g. {@code "interaction"})
-     * @param source       specific source identifier (e.g. interaction ID)
+     * @param sourceType category of the source (e.g. {@code "command"}, {@code "interaction"})
+     * @param source     specific source (e.g. the command sender or interaction id); may be null
      */
-    public void ecoLog(UUID uuid, String currency, long changeAmount, String sourceType, String source) {
-        long previousAmount = getCurrencyBalance(uuid, currency);
-        hub.getEconomyDAO().ecoLog(uuid, currency, previousAmount, previousAmount+changeAmount, changeAmount, sourceType, source);
+    public void modifyCurrency(UUID uuid, String currency, long amount, Operations operation, String sourceType, String source) {
+        Player player = plugin.getServer().getPlayer(uuid);
+        if (player == null) return; // online players only
+
+        long current = getCurrencyBalance(uuid, currency);
+        long newAmount = switch (operation) {
+            case GIVE -> current + amount;
+            case TAKE -> Math.max(0, current - amount);
+            case SET -> amount;
+            case RESET -> 0;
+        };
+        hub.getEconomyDAO().updatePlayerCurrency(uuid, currency, newAmount, sourceType, source);
     }
 
     /**

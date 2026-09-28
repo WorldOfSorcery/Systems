@@ -290,6 +290,18 @@ public class GUIManager implements Listener {
     /** Parses the raw comma-separated lore string stored in the DB into a mutable list. */
     private List<String> parseLore(String raw) {
         if (raw == null || raw.isBlank()) return new java.util.ArrayList<>();
+        // wos-api delivers lore as a JSON array — parse it properly so lines keep
+        // their commas and lose the quotes. Fall back to the legacy "[a, b]" split.
+        try {
+            com.google.gson.JsonElement json = com.google.gson.JsonParser.parseString(raw);
+            if (json.isJsonArray()) {
+                java.util.ArrayList<String> lines = new java.util.ArrayList<>();
+                for (com.google.gson.JsonElement line : json.getAsJsonArray()) lines.add(line.getAsString());
+                return lines;
+            }
+        } catch (Exception ignored) {
+            // not JSON — legacy format below
+        }
         return Arrays.stream(raw.replace("[", "").replace("]", "").split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())

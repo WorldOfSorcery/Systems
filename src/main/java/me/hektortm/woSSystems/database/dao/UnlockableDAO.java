@@ -1,293 +1,100 @@
 package me.hektortm.woSSystems.database.dao;
 
-import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.SchemaManager;
+import me.hektortm.woSSystems.content.ApiSource;
+import me.hektortm.woSSystems.content.ContentStore;
+import me.hektortm.woSSystems.content.Json;
+import me.hektortm.woSSystems.player.ApiServices;
+import me.hektortm.woSSystems.player.ApiWriter;
+import me.hektortm.woSSystems.player.PlayerSession;
+import me.hektortm.woSSystems.player.PlayerSessions;
 import me.hektortm.woSSystems.utils.Operations;
-import me.hektortm.woSSystems.utils.model.Cooldown;
-import me.hektortm.woSSystems.utils.model.Interaction;
 import me.hektortm.woSSystems.utils.model.Unlockable;
-import me.hektortm.wosCore.database.DatabaseManager;
-import me.hektortm.wosCore.database.IDAO;
-import me.hektortm.wosCore.discord.DiscordLog;
-import me.hektortm.wosCore.discord.DiscordLogger;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
-import java.sql.*;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
+
+import static me.hektortm.woSSystems.player.ApiWriter.body;
+import static me.hektortm.woSSystems.player.ApiWriter.seg;
 
 /**
- * DAO for unlockable content definitions and per-player unlock state.
- *
- * <p>Unlockables can be permanent or temporary ({@code temp = 1}).  Temporary
- * unlockables are automatically removed on server startup via
- * {@link #resetDailyUnlockables()}, and also on player quit via
- * {@link #removeAllTemps(UUID)}.</p>
- *
- * <p>Tables managed: {@code unlockables} (definitions, via
- * {@link me.hektortm.woSSystems.database.SchemaManager}),
- * {@code playerdata_unlockables} (per-player state, manual).</p>
+ * Unlockables: definitions ({@code /v1/content/unlockables}) and each player's
+ * unlocks (in their {@link PlayerSession}). Unlocks are permanent or temporary;
+ * temporary ones are cleared when the player quits and {@code daily_*} ones at
+ * the daily reset.
  */
-public class UnlockableDAO implements IDAO {
-    private final DatabaseManager db;
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final String logName = "UnlockableDAO";
+public class UnlockableDAO {
+    private final ContentStore<Unlockable> definitions;
+    private final PlayerSessions sessions;
+    private final ApiWriter writer;
 
-    private final Map<String, Unlockable> cache = new ConcurrentHashMap<>();
-
-    public UnlockableDAO(DatabaseManager db) { this.db = db; }
-
-    @Override
-    public void initializeTable() {
-        SchemaManager.syncTable(db, Unlockable.class);
-
-        // Player unlockables table is relational — keep manual
-        try (Connection conn = db.getConnection(); Statement statement = conn.createStatement()) {
-            statement.execute("CREATE TABLE IF NOT EXISTS playerdata_unlockables (" +
-                    "uuid CHAR(36), " +
-                    "id VARCHAR(255), " +
-                    "temp BOOLEAN," +
-                    "PRIMARY KEY (uuid, id))");
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "608ad2f4", "Failed to initialize Unlockable Tables: ", e
-            ));
-        }
-
-        WoSSystems.getInstance().getServer().getScheduler()
-                .runTaskAsynchronously(plugin, this::preloadAll);
-
+    public UnlockableDAO(ApiServices s) {
+        this.sessions = s.sessions();
+        this.writer = s.writer();
+        this.definitions = s.content().register(new ContentStore<>("unlockables", "Unlockable",
+                ApiSource.flat(s.api(), "/v1/content/unlockables", "id",
+                        j -> new Unlockable(Json.str(j, "id"), Json.bool(j, "temp", false)), s.log())));
     }
 
-    public void preloadAll() {
-        String sql = "SELECT * FROM unlockables";
-        try (Connection conn = db.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            int count = 0;
-            while (rs.next()) {
-                String id = rs.getString("id");
-                boolean temp = rs.getBoolean("temp");
-                cache.put(id, new Unlockable(id, temp));
-                count++;
-
-            }
-            plugin.getLogger().info("DialogDAO: preloaded " + count + " dialog(s) into cache.");
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, "DialogDAO:preload", "Failed to preload dialogs: ", e);
-        }
-    }
-
-    public void reloadFromDB(String id, Player p) {
-        String sql = "SELECT id, temp FROM unlockables WHERE id = ?";
-        try (Connection conn = db.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                boolean temp = rs.getBoolean("temp");
-                Unlockable built = new Unlockable(id, temp);
-                cache.put(id, built);
-                p.sendTitle("§aUpdated Unlockable", "§e" + id);
-            } else {
-                cache.remove(id);
-                p.sendTitle("§cDeleted Unlockable", "§e" + id);
-            }
-        } catch (SQLException e) {
-            WoSSystems.discordLog(Level.SEVERE, logName + ":reload", "Failed to reload interaction from DB: ", e);
-        }
-    }
-
-    /**
-     * Deletes all player unlockable rows whose ID starts with {@code "daily_"}.
-     * Intended to be called at server startup or midnight reset.
-     */
-    public void resetDailyUnlockables() {
-        String sql = "DELETE FROM playerdata_unlockables WHERE id LIKE 'daily_%'";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "UnlockableDAO:reset", "Failed to reset daily unlockables: ", e
-            ));
-        }
-    }
-
-    /**
-     * Checks whether an unlockable definition with the given ID exists.
-     *
-     * @param id the unlockable ID
-     * @return {@code true} if the definition exists
-     */
     public boolean unlockableExists(String id) {
-        try (Connection conn = db.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT 1 FROM unlockables WHERE id = ?")) {
-            stmt.setString(1, id);
-            ResultSet resultSet = stmt.executeQuery();
-            return resultSet.next();
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "b1f4958c", "Failed to check if Unlockable exists: "
-                    + "\n ID: "+id, e
-            ));
-            return false;
-        }
+        return definitions.exists(id);
     }
 
-    /**
-     * Returns whether the given unlockable is marked as temporary in its
-     * definition.  Temporary unlockables are cleaned up automatically.
-     *
-     * @param id the unlockable ID
-     * @return {@code true} if the unlockable is temporary
-     */
+    /** Whether the unlockable is temporary; {@code false} if unknown. */
     public boolean isTemp(String id) {
-        try (Connection conn = db.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT temp FROM unlockables WHERE id = ?")) {
-            stmt.setString(1, id);
-            ResultSet resultSet = stmt.executeQuery();
-            if (resultSet.next()) {
-                return resultSet.getBoolean("temp");
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "0188787c", "Failed to get Unlockable state: "
-                    + "\n ID: "+id, e
-            ));
-        }
-        return false;
+        Unlockable def = definitions.get(id);
+        return def != null && def.isTemp();
     }
 
-    /**
-     * Grants or revokes an unlockable for a player based on the given operation.
-     * <ul>
-     *   <li>{@link Operations#GIVE} — inserts the unlockable with the correct
-     *       temp flag; does nothing on duplicate.</li>
-     *   <li>{@link Operations#TAKE} — deletes the player's unlockable row.</li>
-     * </ul>
-     *
-     * @param uuid   the player's UUID
-     * @param id     the unlockable ID
-     * @param action {@code GIVE} or {@code TAKE}
-     */
+    /** {@code GIVE} grants the unlockable (temp per its definition); {@code TAKE} revokes it. */
     public void modifyUnlockable(UUID uuid, String id, Operations action) {
+        PlayerSession s = sessions.getOrFetch(uuid);
+        String path = "/v1/players/" + uuid + "/unlockables/" + seg(id);
         switch (action) {
-            case GIVE:
-                try (Connection conn = db.getConnection();
-
-
-                    // Nothing on duplicate
-                     PreparedStatement stmt = conn.prepareStatement("INSERT INTO playerdata_unlockables (uuid, id, temp) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE temp = ?")) {
-
-                    boolean temp = isTemp(id);
-                    stmt.setString(1, uuid.toString());
-                    stmt.setString(2, id);
-                    stmt.setBoolean(3, temp);
-                    stmt.setBoolean(4, temp);
-                    stmt.executeUpdate();
-                } catch (SQLException e) {
-                    plugin.writeLog(logName, Level.SEVERE, "Failed to give unlockable: " + e);
-                    DiscordLogger.log(new DiscordLog(
-                            Level.SEVERE, plugin, "97e418ac", "Failed to give Unlockable: "
-                            + "\n UUID: "+uuid
-                            + "\n ID: "+id
-                            + "\n Operation: "+action, e
-                    ));
+            case GIVE -> {
+                boolean temp = isTemp(id);
+                if (s != null) (temp ? s.tempUnlocks : s.permanentUnlocks).add(id);
+                writer.put(path, body("temp", temp));
+            }
+            case TAKE -> {
+                if (s != null) {
+                    s.permanentUnlocks.remove(id);
+                    s.tempUnlocks.remove(id);
                 }
-                break;
-            case TAKE:
-                try (Connection conn = db.getConnection();
-                     PreparedStatement stmt = conn.prepareStatement("DELETE FROM playerdata_unlockables WHERE uuid = ? AND id = ?")) {
-
-                    stmt.setString(1, uuid.toString());
-                    stmt.setString(2, id);
-                    stmt.executeUpdate();
-                } catch (SQLException e) {
-                    DiscordLogger.log(new DiscordLog(
-                            Level.SEVERE, plugin, "5f14b691", "Failed to take Unlockable: "
-                            + "\n UUID: "+uuid
-                            + "\n ID: "+id
-                            + "\n Operation: "+action, e
-                    ));
-                }
-                break;
+                writer.delete(path);
+            }
+            default -> { /* SET/RESET do not apply to unlockables */ }
         }
     }
 
-    /**
-     * Removes all temporary unlockables for the given player.
-     * Typically called on player quit.
-     *
-     * @param uuid the player's UUID
-     */
+    /** Removes all temporary unlockables of the player (on quit). */
     public void removeAllTemps(UUID uuid) {
-        try (Connection conn = db.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("DELETE FROM playerdata_unlockables WHERE uuid = ? AND temp = 1")) {
-            stmt.setString(1, uuid.toString());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to remove all temp unlockables: " + e);
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "ddc0a9ef", "Failed to remove all temp Unlockable: "
-                    + "\n UUID: "+uuid, e
-            ));
-        }
+        PlayerSession s = sessions.get(uuid);
+        if (s != null) s.tempUnlocks.clear();
+        writer.delete("/v1/players/" + uuid + "/unlockables?temp=true");
     }
 
-    /**
-     * Returns {@code true} if the player has a <em>permanent</em> ({@code temp = 0})
-     * copy of the given unlockable.
-     *
-     * @param p  the player to check
-     * @param id the unlockable ID
-     * @return {@code true} if the permanent unlockable is held
-     */
+    /** Clears every player's {@code daily_*} unlockables (and stats — one server-wide reset). */
+    public void resetDailyUnlockables() {
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            PlayerSession s = sessions.get(p.getUniqueId());
+            if (s == null) continue;
+            s.permanentUnlocks.removeIf(id -> id.startsWith("daily_"));
+            s.tempUnlocks.removeIf(id -> id.startsWith("daily_"));
+        }
+        writer.post("/v1/server/daily-reset", null);
+    }
+
+    /** Whether the player holds the unlockable permanently. */
     public boolean getPlayerUnlockable(OfflinePlayer p, String id) {
-        try (Connection conn = db.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT 1 FROM playerdata_unlockables WHERE uuid = ? AND id = ? AND temp = 0")) {
-            stmt.setString(1, p.getUniqueId().toString());
-            stmt.setString(2, id);
-            ResultSet resultSet = stmt.executeQuery();
-            return resultSet.next();
-        } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get Player unlockables: " + e);
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "34e85b61", "Failed to remove all temp Unlockable: "
-                    + "\n Offline Player: "+p
-                    + "\n UUID: "+p.getUniqueId()
-                    + "\n ID: "+id, e
-            ));
-            return false;
-        }
-    }
-    /**
-     * Returns {@code true} if the player has a <em>temporary</em> ({@code temp = 1})
-     * copy of the given unlockable.
-     *
-     * @param p  the player to check
-     * @param id the unlockable ID
-     * @return {@code true} if the temporary unlockable is held
-     */
-    public boolean getPlayerTempUnlockable(OfflinePlayer p, String id) {
-        try (Connection conn = db.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT 1 FROM playerdata_unlockables WHERE uuid = ? AND id = ? AND temp = 1")) {
-            stmt.setString(1, p.getUniqueId().toString());
-            stmt.setString(2, id);
-            ResultSet resultSet = stmt.executeQuery();
-            return resultSet.next();
-        } catch (SQLException e) {
-            plugin.writeLog(logName, Level.SEVERE, "Failed to get Player TempUnlockable: " + e);
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "d23abf7a", "Failed to get Player temp Unlockable: "
-                    + "\n Offline Player: "+p
-                    + "\n UUID: "+p.getUniqueId()
-                    + "\n ID: "+id, e
-            ));
-            return false;
-        }
+        PlayerSession s = sessions.getOrFetch(p.getUniqueId());
+        return s != null && s.permanentUnlocks.contains(id);
     }
 
+    /** Whether the player holds the unlockable temporarily. */
+    public boolean getPlayerTempUnlockable(OfflinePlayer p, String id) {
+        PlayerSession s = sessions.getOrFetch(p.getUniqueId());
+        return s != null && s.tempUnlocks.contains(id);
+    }
 }

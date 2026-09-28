@@ -1,7 +1,7 @@
 package me.hektortm.woSSystems.systems.guis;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.systems.channels.NicknameManager;
+import me.hektortm.woSSystems.systems.chat.NicknameManager;
 import me.hektortm.woSSystems.systems.cosmetic.CosmeticManager;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.economy.EcoManager;

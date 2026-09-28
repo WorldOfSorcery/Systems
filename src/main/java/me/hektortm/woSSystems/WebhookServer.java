@@ -25,7 +25,7 @@ public class WebhookServer {
         this.plugin = plugin;
         this.daoHub = daoHub;
         this.secret = plugin.getConfig().getString("webhook.secret");
-        int port    = plugin.getConfig().getInt("webhook.port", 8080);
+        int port    = plugin.getConfig().getInt("webhook.port", 8090);
 
         this.server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/api/invalidate", this::handleInvalidate);
@@ -35,7 +35,7 @@ public class WebhookServer {
     public void start() {
         server.start();
         plugin.getLogger().info("[Webhook] Listening on port " +
-                plugin.getConfig().getInt("webhook.port", 8080));
+                plugin.getConfig().getInt("webhook.port", 8090));
     }
 
     public void stop() {

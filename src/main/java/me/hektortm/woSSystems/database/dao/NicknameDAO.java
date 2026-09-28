@@ -1,330 +1,138 @@
 package me.hektortm.woSSystems.database.dao;
 
-import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.wosCore.database.DatabaseManager;
-import me.hektortm.wosCore.database.IDAO;
-import me.hektortm.wosCore.discord.DiscordLog;
-import me.hektortm.wosCore.discord.DiscordLogger;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import me.hektortm.woSSystems.content.Json;
+import me.hektortm.woSSystems.player.ApiServices;
+import me.hektortm.woSSystems.player.ApiWriter;
+import me.hektortm.woSSystems.player.PlayerSession;
+import me.hektortm.woSSystems.player.PlayerSessions;
+import me.hektortm.wosCore.api.ApiException;
+import me.hektortm.wosCore.api.WosApi;
 
-import java.sql.*;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static me.hektortm.woSSystems.player.ApiWriter.body;
 
 /**
- * DAO for managing player nicknames, nickname reservations, and the
- * staff-approval workflow for nickname change requests.
+ * Nicknames: each player's active nickname (in their {@link PlayerSession}; the
+ * API also keeps the history), pending change requests awaiting staff review,
+ * and nicknames reserved for a specific player.
  *
- * <p>Tables managed: {@code nicknames}, {@code reserved_nicks}, {@code nick_requests}.</p>
+ * <p>Request/reservation lookups are rare staff commands, so they read the API
+ * directly (blocking) instead of being cached.</p>
  */
-public class NicknameDAO implements IDAO {
-    private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final DatabaseManager db;
-    private final String logName = "NicknameDAO";
+public class NicknameDAO {
+    private final WosApi api;
+    private final PlayerSessions sessions;
+    private final ApiWriter writer;
+    private final Logger log;
 
-    public NicknameDAO(DatabaseManager db) { this.db = db; }
-
-    @Override
-    public void initializeTable() throws SQLException {
-        try (Connection conn = db.getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS nicknames (" +
-                    "uuid VARCHAR(36) PRIMARY KEY, " +
-                    "username VARCHAR(16) NOT NULL, " +
-                    "nickname VARCHAR(18), " +
-                    "previous_nicks TEXT" +
-                    ")");
-
-            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS reserved_nicks (" +
-                    "uuid VARCHAR(36) PRIMARY KEY, " +
-                    "nickname VARCHAR(18) NOT NULL" +
-                    ")");
-
-            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS nick_requests (" +
-                    "uuid VARCHAR(36) PRIMARY KEY, " +
-                    "nickname VARCHAR(18) NOT NULL" +
-                    ")");
-        }
+    public NicknameDAO(ApiServices s) {
+        this.api = s.api();
+        this.sessions = s.sessions();
+        this.writer = s.writer();
+        this.log = s.log();
     }
 
-    /**
-     * Saves or updates a player's nickname and appends it to their nick history.
-     * Uses INSERT IGNORE to create a new row, followed by UPDATE to keep the
-     * username current and append the new nick to {@code previous_nicks}.
-     *
-     * @param uuid     the player's UUID
-     * @param username the player's current Minecraft username
-     * @param nickname the new nickname to apply
-     */
+    /** Sets the player's nickname (and appends it to their history). */
     public void saveNickname(UUID uuid, String username, String nickname) {
-        // Insert if not exists
-        String query = "INSERT IGNORE INTO nicknames (uuid, username, nickname, previous_nicks) VALUES (?, ?, ?, ?)";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, uuid.toString());
-            stmt.setString(2, username);
-            stmt.setString(3, nickname);
-            stmt.setString(4, nickname + ",");
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "7e93a1b8", "Failed to save Nickname: \n User: "+username+" \n Nick: "+nickname, e
-            ));
-        }
-
-        // Always update
-        query = "UPDATE nicknames SET username = ?, nickname = ?, previous_nicks = CONCAT(previous_nicks, ?) WHERE uuid = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, username);
-            stmt.setString(2, nickname);
-            stmt.setString(3, nickname + ",");
-            stmt.setString(4, uuid.toString());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "234c2ba5", "Failed to update Nickname: \n User: "+username+" \n Nick: "+nickname, e
-            ));
-        }
+        PlayerSession s = sessions.get(uuid);
+        if (s != null) s.setNickname(nickname);
+        writer.put("/v1/players/" + uuid + "/nickname", body("nickname", nickname));
     }
 
-    /**
-     * Clears the active nickname for a player, setting the {@code nickname}
-     * column to {@code NULL}.  The username and history are preserved.
-     *
-     * @param uuid the player's UUID
-     */
+    /** Clears the active nickname; the history is kept. */
     public void resetNickname(UUID uuid) {
-        String query = "UPDATE nicknames SET nickname = NULL WHERE uuid = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, uuid.toString());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "cd77afd2", "Failed to reset Nickname: \n UUID: "+uuid, e
-            ));
-        }
+        PlayerSession s = sessions.get(uuid);
+        if (s != null) s.setNickname(null);
+        writer.delete("/v1/players/" + uuid + "/nickname");
     }
 
-    /**
-     * Returns the current nickname for the given UUID, or {@code null} if the
-     * player has no active nickname or is not in the table.
-     *
-     * @param uuid the player's UUID
-     * @return the nickname string, or {@code null}
-     */
+    /** The active nickname, or {@code null}. */
     public String getNickname(UUID uuid) {
-        String query = "SELECT nickname FROM nicknames WHERE uuid = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, uuid.toString());
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getString("nickname");
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "4a789df0", "Failed to get Nickname: \n UUID: "+uuid, e
-            ));
-        }
-        return null;
+        PlayerSession s = sessions.getOrFetch(uuid);
+        return s == null ? null : s.nickname();
     }
 
     /**
-     * Looks up {@code input} against both the {@code username} and {@code nickname}
-     * columns and returns the preferred display name (nickname if set, otherwise
-     * username).  Returns {@code null} if no match is found.
-     *
-     * @param input a username or nickname to search for
-     * @return the resolved display name, or {@code null}
+     * Resolves a username or nickname to the player's display name (nickname if
+     * set, else username); {@code null} if no player matches.
      */
     public String getRealNameOrNickname(String input) {
-        String query = "SELECT username, nickname FROM nicknames WHERE username = ? OR nickname = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, input);
-            stmt.setString(2, input);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                String username = rs.getString("username");
-                String nickname = rs.getString("nickname");
-                return nickname != null ? nickname : username;
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "5f9e4aea", "Failed to get real- or nickname: \n Query: "+input, e
-            ));
+        try {
+            JsonObject row = api.getJson("/v1/server/nicknames/lookup?name=" + URLEncoder.encode(input, StandardCharsets.UTF_8))
+                    .getAsJsonObject();
+            String nickname = Json.str(row, "nickname");
+            return nickname != null ? nickname : Json.str(row, "username");
+        } catch (ApiException e) {
+            if (!e.isNotFound()) log.warning("[Nicknames] lookup of '" + input + "' failed: " + e.getMessage());
+            return null;
         }
-        return null;
     }
 
-    /**
-     * Submits a nickname change request for staff review.  Uses upsert semantics
-     * so re-submitting with a different nickname replaces the previous request.
-     *
-     * @param uuid     the requesting player's UUID
-     * @param nickname the desired new nickname (or {@code "reset"} to clear)
-     */
+    // ─── Change requests ────────────────────────────────────────────────────────
+
+    /** Submits (or replaces) a change request; {@code "reset"} requests clearing the nickname. */
     public void requestNicknameChange(UUID uuid, String nickname) {
-        String query = "INSERT INTO nick_requests (uuid, nickname) VALUES (?, ?) " +
-                "ON DUPLICATE KEY UPDATE nickname = VALUES(nickname)";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, uuid.toString());
-            stmt.setString(2, nickname);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "a70497da", "Failed to request nickname change: \n UUID: "+uuid+" \n Nickname: "+nickname, e
-            ));
-        }
+        writer.put("/v1/server/nick-requests/" + uuid, body("nickname", nickname));
     }
 
-    /**
-     * Approves a pending nickname change request: applies the nickname (or resets
-     * it if the requested value is {@code "reset"}), then removes the request row.
-     *
-     * @param uuid the player whose request should be approved
-     */
+    /** Applies the pending request (or reset) and removes it. */
     public void approveNicknameChange(UUID uuid) {
-        String query = "SELECT nickname FROM nick_requests WHERE uuid = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, uuid.toString());
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                String nickname = rs.getString("nickname");
-                if ("reset".equalsIgnoreCase(nickname)) {
-                    resetNickname(uuid);
-                } else {
-                    OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-                    saveNickname(uuid, player.getName(), nickname);
-                }
-                removeNicknameRequest(uuid);
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "7aec601a", "Failed to approve nickname: \n UUID: "+uuid, e
-            ));
+        String requested = getNickRequests().get(uuid);
+        if (requested == null) return;
+        if ("reset".equalsIgnoreCase(requested)) {
+            resetNickname(uuid);
+        } else {
+            saveNickname(uuid, null, requested);
         }
+        writer.delete("/v1/server/nick-requests/" + uuid);
     }
 
-    /**
-     * Rejects a pending nickname change request by deleting the request row.
-     * The player's current nickname remains unchanged.
-     *
-     * @param uuid the player whose request should be denied
-     */
     public void denyNicknameChange(UUID uuid) {
-        removeNicknameRequest(uuid);
+        writer.delete("/v1/server/nick-requests/" + uuid);
     }
 
-    private void removeNicknameRequest(UUID uuid) {
-        String query = "DELETE FROM nick_requests WHERE uuid = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, uuid.toString());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "0936e8f4", "Failed to remove nickname request: \n UUID: "+uuid, e
-            ));
-        }
-    }
-
-    /**
-     * Returns all pending nickname change requests as a {@code UUID → nickname} map.
-     *
-     * @return map of player UUID to requested nickname
-     */
+    /** Pending requests, {@code uuid → requested nickname}. */
     public Map<UUID, String> getNickRequests() {
-        Map<UUID, String> requests = new HashMap<>();
-        String query = "SELECT uuid, nickname FROM nick_requests";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                requests.put(UUID.fromString(rs.getString("uuid")), rs.getString("nickname"));
-            }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "748598ef", "Failed to get nickname requests:", e
-            ));
-        }
-        return requests;
+        return uuidMap("/v1/server/nick-requests");
     }
 
-    /**
-     * Reserves a nickname for a specific player so no one else can claim it.
-     * Uses upsert semantics; re-calling replaces the existing reservation.
-     *
-     * @param uuid     the player the reservation is for
-     * @param nickname the nickname to reserve
-     */
+    // ─── Reservations ───────────────────────────────────────────────────────────
+
     public void reserveNickname(UUID uuid, String nickname) {
-        String query = "INSERT INTO reserved_nicks (uuid, nickname) VALUES (?, ?) " +
-                "ON DUPLICATE KEY UPDATE nickname = VALUES(nickname)";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, uuid.toString());
-            stmt.setString(2, nickname);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "94ffe050", "Failed to get reserve nickname: \n UUID: "+uuid+" \n Nickname: "+nickname, e
-            ));
-        }
+        writer.put("/v1/server/reserved-nicks/" + uuid, body("nickname", nickname));
     }
 
-    /**
-     * Removes the nickname reservation for the given player.
-     *
-     * @param uuid the player whose reservation should be released
-     */
     public void unreserveNickname(UUID uuid) {
-        String query = "DELETE FROM reserved_nicks WHERE uuid = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, uuid.toString());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "56847cd8", "Failed to unreserve nickname: \n UUID: "+uuid, e
-            ));
-        }
+        writer.delete("/v1/server/reserved-nicks/" + uuid);
     }
 
-    /**
-     * Checks whether the given nickname string is reserved by any player.
-     *
-     * @param nickname the nickname to check
-     * @return {@code true} if the nickname is reserved
-     */
     public boolean isNicknameReserved(String nickname) {
-        String query = "SELECT uuid FROM reserved_nicks WHERE nickname = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, nickname);
-            ResultSet rs = stmt.executeQuery();
-            return rs.next();
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "32cf0db6", "Failed to check if nickname is reserved: \n Nickname: "+nickname, e
-            ));
-        }
-        return false;
+        return getReservedNicknames().values().stream().anyMatch(n -> n.equalsIgnoreCase(nickname));
     }
 
-    /**
-     * Returns all reserved nicknames as a {@code UUID → nickname} map.
-     *
-     * @return map of player UUID to their reserved nickname
-     */
+    /** Reservations, {@code uuid → nickname}. */
     public Map<UUID, String> getReservedNicknames() {
-        Map<UUID, String> reservedNicks = new HashMap<>();
-        String query = "SELECT uuid, nickname FROM reserved_nicks";
-        try (Connection conn = db.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                reservedNicks.put(UUID.fromString(rs.getString("uuid")), rs.getString("nickname"));
+        return uuidMap("/v1/server/reserved-nicks");
+    }
+
+    private Map<UUID, String> uuidMap(String path) {
+        Map<UUID, String> out = new HashMap<>();
+        try {
+            for (JsonElement el : api.getJson(path).getAsJsonArray()) {
+                JsonObject row = el.getAsJsonObject();
+                out.put(UUID.fromString(Json.str(row, "uuid")), Json.str(row, "nickname"));
             }
-        } catch (SQLException e) {
-            DiscordLogger.log(new DiscordLog(
-                    Level.SEVERE, plugin, "32cf0db6", "Failed to get reserved nicknames: ", e
-            ));
+        } catch (ApiException e) {
+            log.warning("[Nicknames] " + path + " failed: " + e.getMessage());
         }
-        return reservedNicks;
+        return out;
     }
 }
