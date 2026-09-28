@@ -3,16 +3,18 @@ package me.hektortm.woSSystems.database.dao;
 import me.hektortm.woSSystems.player.ApiServices;
 import me.hektortm.woSSystems.player.ApiWriter;
 import me.hektortm.woSSystems.player.PlayerSession;
-import me.hektortm.woSSystems.player.PlayerSession.Profile;
 import me.hektortm.woSSystems.player.PlayerSessions;
 
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import static me.hektortm.woSSystems.player.ApiWriter.body;
 
 /**
- * Profile card customisation (background and profile picture), kept in the
- * player's {@link PlayerSession}; changes are partial {@code PUT profile} writes.
+ * Profile dialog data — the "about me" bio and the showcased custom items —
+ * kept in the player's {@link PlayerSession}.  Bio changes are partial
+ * {@code PUT profile} writes; each showcase slot is its own resource.
  */
 public class ProfileDAO {
     private final PlayerSessions sessions;
@@ -23,39 +25,44 @@ public class ProfileDAO {
         this.writer = s.writer();
     }
 
-    public String getBackground(UUID uuid) { return profile(uuid).background(); }
-
-    public String getBackgroundID(UUID uuid) { return profile(uuid).backgroundId(); }
-
-    public String getProfilePicture(UUID uuid) { return profile(uuid).picture(); }
-
-    public String getProfilePictureID(UUID uuid) { return profile(uuid).pictureId(); }
-
-    /** Sets the background (its item id is the legacy placeholder {@code "e"}). */
-    public void updateBackground(UUID uuid, String background) {
-        PlayerSession s = sessions.get(uuid);
-        if (s != null) {
-            Profile p = s.profile();
-            s.setProfile(new Profile(background, "e", p.picture(), p.pictureId()));
-        }
-        writer.put(path(uuid), body("background", background, "background_id", "e"));
-    }
-
-    public void updateProfilePicture(UUID uuid, String pictureItem, String id) {
-        PlayerSession s = sessions.get(uuid);
-        if (s != null) {
-            Profile p = s.profile();
-            s.setProfile(new Profile(p.background(), p.backgroundId(), pictureItem, id));
-        }
-        writer.put(path(uuid), body("picture", pictureItem, "picture_id", id));
-    }
-
-    private Profile profile(UUID uuid) {
+    /** The bio, or {@code null} if unset or blank. */
+    public String getBio(UUID uuid) {
         PlayerSession s = sessions.getOrFetch(uuid);
-        return s == null ? PlayerSession.Profile.EMPTY : s.profile();
+        String bio = s == null ? null : s.bio();
+        return bio == null || bio.isBlank() ? null : bio;
+    }
+
+    /** Sets the bio; blank clears it (stored as an empty string). */
+    public void setBio(UUID uuid, String bio) {
+        String value = bio == null ? "" : bio.strip();
+        PlayerSession s = sessions.get(uuid);
+        if (s != null) s.setBio(value);
+        writer.put(path(uuid), body("bio", value));
+    }
+
+    /** Showcased citem ids by slot, in slot order. */
+    public SortedMap<Integer, String> getShowcase(UUID uuid) {
+        PlayerSession s = sessions.getOrFetch(uuid);
+        return s == null ? new TreeMap<>() : new TreeMap<>(s.showcase);
+    }
+
+    public void setShowcaseSlot(UUID uuid, int slot, String citemId) {
+        PlayerSession s = sessions.get(uuid);
+        if (s != null) s.showcase.put(slot, citemId);
+        writer.put(showcasePath(uuid, slot), body("citem_id", citemId));
+    }
+
+    public void clearShowcaseSlot(UUID uuid, int slot) {
+        PlayerSession s = sessions.get(uuid);
+        if (s != null) s.showcase.remove(slot);
+        writer.delete(showcasePath(uuid, slot));
     }
 
     private static String path(UUID uuid) {
         return "/v1/players/" + uuid + "/profile";
+    }
+
+    private static String showcasePath(UUID uuid, int slot) {
+        return "/v1/players/" + uuid + "/showcase/" + slot;
     }
 }
