@@ -12,7 +12,10 @@ public class InteractionAction {
     @Column(name = "id", primaryKey = true, notNull = true)
     private final String interactionId;
 
-    @Column(notNull = true)
+    @Column(name = "description")
+    private final String description;
+
+    @Column(name = "behaviour", notNull = true)
     private final String behaviour; // "break" or "continue"
 
     @Column(name = "matchtype", notNull = true)
@@ -24,8 +27,9 @@ public class InteractionAction {
     @Column(type = "TEXT", notNull = true)
     private final List<String> actions;
 
-    public InteractionAction(String interactionId, String behaviour, String matchType, int actionId, List<String> actions) {
+    public InteractionAction(String interactionId, String description, String behaviour, String matchType, int actionId, List<String> actions) {
         this.interactionId = interactionId;
+        this.description = description;
         this.behaviour     = behaviour;
         this.matchType     = matchType;
         this.actionId      = actionId;

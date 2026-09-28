@@ -157,7 +157,7 @@
         <dependency>
             <groupId>org.aselstudios</groupId>
             <artifactId>LuxDialoguesAPI</artifactId>
-            <version>3.0.4</version>
+            <version>3.0.5</version>
         </dependency>
         <!-- Tests: JUnit 5 + AssertJ + Mockito (Mockito 5's default inline mock
              maker is what makes mockStatic work). -->

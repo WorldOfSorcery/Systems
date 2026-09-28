@@ -15,6 +15,9 @@ public class InteractionHologram {
     @Column(name = "hologram_id")
     private final int hologramID;
 
+    @Column(name = "description")
+    private final String description;
+
     @Column(notNull = true)
     private final String behaviour; // "break" or "continue"
 
@@ -27,9 +30,10 @@ public class InteractionHologram {
     @Column(type = "JSON", name="settings" )
     private final String settings;
 
-    public InteractionHologram(String interactionId, int hologramID, String behaviour, String matchType, List<String> hologram, String settings) {
+    public InteractionHologram(String interactionId, int hologramID, String description, String behaviour, String matchType, List<String> hologram, String settings) {
         this.interactionId = interactionId;
         this.hologramID    = hologramID;
+        this.description = description;
         this.behaviour     = behaviour;
         this.matchType     = matchType;
         this.hologram      = hologram;

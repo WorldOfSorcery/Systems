@@ -10,6 +10,9 @@ public class InteractionParticles {
     @Column(name = "id", primaryKey = true, notNull = true)
     private final String interactionId;
 
+    @Column(name = "description")
+    private final String description;
+
     @Column(notNull = true)
     private final String behaviour; // "break" or "continue"
 
@@ -25,8 +28,9 @@ public class InteractionParticles {
     @Column(name = "particle_color")
     private final String particleColor;
 
-    public InteractionParticles(String interactionId, String behaviour, String matchType, int particleId, String particle, String particleColor) {
+    public InteractionParticles(String interactionId, String description, String behaviour, String matchType, int particleId, String particle, String particleColor) {
         this.interactionId = interactionId;
+        this.description = description;
         this.behaviour     = behaviour;
         this.matchType     = matchType;
         this.particleId    = particleId;
