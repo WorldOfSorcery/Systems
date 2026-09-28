@@ -26,11 +26,6 @@ public final class PlayerSession {
     /** A cosmetic the player owns. */
     public record OwnedCosmetic(String id, CosmeticType type, String obtainedAt) {}
 
-    /** Profile card cosmetics; any field may be null. */
-    public record Profile(String background, String backgroundId, String picture, String pictureId) {
-        public static final Profile EMPTY = new Profile(null, null, null, null);
-    }
-
     private final UUID uuid;
     private final String username;
 
@@ -48,9 +43,11 @@ public final class PlayerSession {
     /** Quest id → the quest engine's saved state document. */
     public final Map<String, JsonObject> quests = new ConcurrentHashMap<>();
     public final Set<String> completedQuests = ConcurrentHashMap.newKeySet();
+    /** Profile showcase: slot index → citem id. */
+    public final Map<Integer, String> showcase = new ConcurrentHashMap<>();
 
     private volatile String nickname;
-    private volatile Profile profile = Profile.EMPTY;
+    private volatile String bio;
 
     public PlayerSession(UUID uuid, String username) {
         this.uuid = uuid;
@@ -66,9 +63,11 @@ public final class PlayerSession {
 
     public void setNickname(@Nullable String nickname) { this.nickname = nickname; }
 
-    public Profile profile() { return profile; }
+    /** The profile "about me" text; {@code null} if never set. */
+    @Nullable
+    public String bio() { return bio; }
 
-    public void setProfile(Profile profile) { this.profile = profile; }
+    public void setBio(@Nullable String bio) { this.bio = bio; }
 
     public static String cosmeticKey(CosmeticType type, String id) {
         return type.name() + ":" + id;
@@ -108,7 +107,8 @@ public final class PlayerSession {
                     Instant.parse(Json.str(c, "started_at")));
         }
         JsonObject p = Json.object(json, "profile");
-        s.profile = new Profile(Json.str(p, "background"), Json.str(p, "background_id"), Json.str(p, "picture"), Json.str(p, "picture_id"));
+        s.bio = Json.str(p, "bio");
+        for (JsonObject c : objects(json, "showcase")) s.showcase.put(Json.integer(c, "slot", 0), Json.str(c, "citem_id"));
         for (JsonObject q : objects(json, "quests")) s.quests.put(Json.str(q, "quest_id"), q);
         for (JsonElement q : Json.array(json, "completed_quests")) s.completedQuests.add(q.getAsString());
         return s;

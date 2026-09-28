@@ -6,10 +6,12 @@ import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.systems.profiles.ProfileDialogs;
 import me.hektortm.woSSystems.utils.types.CosmeticType;
 import me.hektortm.wosCore.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextReplacementConfig;
+import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -28,7 +30,7 @@ import java.util.regex.Pattern;
  * viewer of the chat event, rendered as {@code [badge] [prefix] name: message}.
  *
  * <ul>
- *   <li>Clicking the sender's name opens the {@link PlayerInfoDialog}.</li>
+ *   <li>Clicking the sender's name opens their profile ({@link ProfileDialogs}).</li>
  *   <li>{@code [item]} in a message is replaced by the sender's held item;
  *       clicking it opens a dialog showing a snapshot of that item.</li>
  * </ul>
@@ -39,12 +41,12 @@ public class ChatManager {
 
     private final DAOHub hub;
     private final NicknameManager nickManager;
-    private final PlayerInfoDialog playerInfoDialog;
+    private final ProfileDialogs profileDialogs;
 
-    public ChatManager(DAOHub hub, NicknameManager nickManager) {
+    public ChatManager(DAOHub hub, NicknameManager nickManager, ProfileDialogs profileDialogs) {
         this.hub = hub;
         this.nickManager = nickManager;
-        this.playerInfoDialog = new PlayerInfoDialog(hub, nickManager);
+        this.profileDialogs = profileDialogs;
     }
 
     /**
@@ -90,7 +92,7 @@ public class ChatManager {
         return shown
                 .hoverEvent(HoverEvent.showText(Component.text(sender.getName(), NamedTextColor.GRAY)
                         .append(Component.newline())
-                        .append(Component.text("Click to view player", NamedTextColor.AQUA))))
+                        .append(Component.text("Click to view profile", NamedTextColor.AQUA))))
                 .clickEvent(ClickEvent.callback(viewer -> {
                     if (!(viewer instanceof Player player)) return;
                     Player targetPlayer = Bukkit.getPlayer(target);
@@ -98,8 +100,8 @@ public class ChatManager {
                         player.sendMessage(Component.text(name + " is no longer online.", NamedTextColor.GRAY));
                         return;
                     }
-                    player.showDialog(playerInfoDialog.build(targetPlayer));
-                }));
+                    profileDialogs.open(player, targetPlayer);
+                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).build()));
     }
 
     /** Replaces every {@code [item]} in the message with the sender's held item. */

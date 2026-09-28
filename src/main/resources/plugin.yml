@@ -104,7 +104,7 @@ commands:
   # Profile Command
   profile:
     description: profile
-    usage: /<command> <player>
+    usage: /<command> [player]
 
   gui:
     description: open GUIs for players

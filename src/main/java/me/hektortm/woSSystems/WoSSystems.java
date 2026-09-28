@@ -31,8 +31,7 @@ import me.hektortm.woSSystems.systems.linking.LinkCommand;
 import me.hektortm.woSSystems.systems.professions.crafting.CraftingListener;
 import me.hektortm.woSSystems.systems.professions.crafting.CraftingManager;
 import me.hektortm.woSSystems.systems.profiles.ProfileCommand;
-import me.hektortm.woSSystems.systems.profiles.ProfileListener;
-import me.hektortm.woSSystems.systems.profiles.ProfileManager;
+import me.hektortm.woSSystems.systems.profiles.ProfileDialogs;
 import me.hektortm.woSSystems.systems.regions.RegionHandler;
 import me.hektortm.woSSystems.systems.regions.RegionBossBar;
 import me.hektortm.woSSystems.systems.citems.cmd.SignCommand;
@@ -138,7 +137,7 @@ public final class WoSSystems extends JavaPlugin {
     private RegionBossBar regionBossBarManager;
     private TablistManager tab;
     private CosmeticManager cosmeticManager;
-    private ProfileManager profileManager;
+    private ProfileDialogs profileDialogs;
     private LuxDialoguesAPI luxApi;
     private CitemDisplays citemDisplays;
     private DailyReset dailyReset;
@@ -222,12 +221,12 @@ public final class WoSSystems extends JavaPlugin {
         interactionManager = new InteractionManager(daoHub);
         cooldownManager = new CooldownManager(daoHub);
         nickManager = new NicknameManager(daoHub);
-        chatManager = new ChatManager(daoHub, nickManager);
+        profileDialogs = new ProfileDialogs(daoHub, nickManager);
+        chatManager = new ChatManager(daoHub, nickManager, profileDialogs);
 
         lootTableManager = new LoottableManager(daoHub);
         coinflipCommand = new Coinflip(ecoManager, this, lang);
         cosmeticManager = new CosmeticManager(daoHub);
-        profileManager = new ProfileManager(daoHub);
 
 // Initialize the remaining managers
         craftingManager = new CraftingManager(daoHub); // TODO: interactions
@@ -433,7 +432,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("prefixes", new QuickCommands.PrefixCommand());
         cmdReg("badges", new QuickCommands.BadgeCommand());
         cmdReg("titles", new QuickCommands.TitleCommand());
-        cmdReg("profile", new ProfileCommand());
+        cmdReg("profile", new ProfileCommand(profileDialogs));
         cmdReg("gui", new GUICommand(daoHub));
         cmdReg("debugcmd", new debug(daoHub));
         cmdReg("cooldown", new CooldownCommand(daoHub));
@@ -454,7 +453,6 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new JoinListener(this, daoHub));
         eventReg(new ChatListener(chatManager, unlockableManager));
         eventReg(new RegionHandler(regionBossBarManager));
-        eventReg(new ProfileListener());
         eventReg(new BackpackListener());
         //eventReg(new HologramHandler(daoHub));
         eventReg(new GUIManager(daoHub));
@@ -611,8 +609,8 @@ public final class WoSSystems extends JavaPlugin {
     public TimeManager getTimeManager() {
         return timeManager;
     }
-    public ProfileManager getProfileManager() {
-        return profileManager;
+    public ProfileDialogs getProfileDialogs() {
+        return profileDialogs;
     }
     public ConditionHandler getConditionHandler() {
         return conditionHandler;
