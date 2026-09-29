@@ -74,12 +74,15 @@ public class GUISlotConfig {
 
     private final List<Condition> conditions;
 
+    /** Cost, cooldown, trade, extra click types, post-use … (see {@link GUIItemBehaviour}). */
+    private final GUIItemBehaviour behaviour;
+
     public GUISlotConfig(String guiId, int pageId, int slotId, String configId, String matchtype, int amount,
                          boolean visible, String material, String displayName, String lore,
                          String model, String color, String tooltip, boolean enchanted, ItemStack guiItem,
                          List<String> globalActions, List<String> rightActions, List<String> leftActions,
                          boolean confirm, String sound, List<GUICheck> checks,
-                         List<Condition> conditions) {
+                         List<Condition> conditions, GUIItemBehaviour behaviour) {
         gui_id = guiId;
         page_id = pageId;
         slot_id = slotId;
@@ -102,6 +105,7 @@ public class GUISlotConfig {
         this.sound = sound;
         this.checks = checks;
         this.conditions = conditions;
+        this.behaviour = behaviour;
     }
 
     public String getGui_id()               { return gui_id;           }
@@ -126,4 +130,5 @@ public class GUISlotConfig {
     public String getSound()                { return sound;            }
     public List<GUICheck> getChecks()       { return checks;           }
     public List<Condition> getConditions()  { return conditions;       }
+    public GUIItemBehaviour getBehaviour()  { return behaviour;        }
 }

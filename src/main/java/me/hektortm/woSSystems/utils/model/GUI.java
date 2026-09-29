@@ -26,7 +26,15 @@ public class GUI extends BaseEntity {
     /** Loaded via join from gui_slots — not a direct DB column. */
     private final List<GUIPage> pages;
 
-    public GUI(String guiId, int size, String title, String type, List<GUIPage> pages, List<String> openActions, List<String> closeActions) {
+    /** Run when a clicked item is on cooldown and has no cooldown commands of its own. */
+    private final List<String> cooldown_actions;
+
+    /** The items' default post-use ("stay", "close", "next", "previous", "page", "gui") and its target. */
+    private final String post_use;
+    private final String post_use_target;
+
+    public GUI(String guiId, int size, String title, String type, List<GUIPage> pages, List<String> openActions, List<String> closeActions,
+               List<String> cooldownActions, String postUse, String postUseTarget) {
         super(guiId);
         this.size = size;
         this.title = title;
@@ -34,6 +42,9 @@ public class GUI extends BaseEntity {
         this.pages = pages;
         open_actions = openActions;
         close_actions = closeActions;
+        cooldown_actions = cooldownActions;
+        post_use = postUse;
+        post_use_target = postUseTarget;
     }
 
     public String getGuiId()              { return getId();       }
@@ -42,4 +53,10 @@ public class GUI extends BaseEntity {
     public List<GUIPage> getPages()       { return pages;         }
     public List<String> getOpenActions()  { return open_actions;  }
     public List<String> getCloseActions() { return close_actions; }
+    public String getType()               { return type;          }
+    /** Fluid: visible items fill the slots in order, without gaps. */
+    public boolean isFluid()              { return "fluid".equalsIgnoreCase(type); }
+    public List<String> getCooldownActions() { return cooldown_actions; }
+    public String getPostUse()            { return post_use;      }
+    public String getPostUseTarget()      { return post_use_target; }
 }

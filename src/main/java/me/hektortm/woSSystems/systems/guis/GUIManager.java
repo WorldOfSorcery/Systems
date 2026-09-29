@@ -8,9 +8,9 @@ import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.ActionHandler;
 import me.hektortm.woSSystems.utils.ConditionHandler;
-import me.hektortm.woSSystems.utils.PlaceholderResolver;
 import me.hektortm.woSSystems.utils.model.Condition;
 import me.hektortm.woSSystems.utils.model.GUI;
+import me.hektortm.woSSystems.utils.model.GUIItemBehaviour;
 import me.hektortm.woSSystems.utils.model.GUIPage;
 import me.hektortm.woSSystems.utils.model.GUISlot;
 import me.hektortm.woSSystems.utils.model.GUISlotConfig;
@@ -22,20 +22,24 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -44,62 +48,101 @@ import java.util.stream.Collectors;
 import static io.papermc.paper.datacomponent.item.DyedItemColor.dyedItemColor;
 import static me.hektortm.woSSystems.utils.Parsers.hexToBukkitColor;
 
+/**
+ * Opens GUIs and draws them: each page's items (static at their slots, or fluid
+ * in order without gaps), and keeps what each player has open so clicks map back
+ * to the right item. Clicks themselves are handled by {@link GUIClickHandler}.
+ */
 public class GUIManager implements Listener {
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
-    private final PlaceholderResolver placeholderResolver = plugin.getPlaceholderResolver();
     private final ConditionHandler conditions = plugin.getConditionHandler();
     private final DAOHub hub;
     private final ActionHandler actionHandler;
+    private final GUIClickHandler clicks;
 
-    /** Tracks which page index each player currently has open. */
-    private final Map<UUID, Integer> playerPages = new ConcurrentHashMap<>();
+    /**
+     * What a player has open: the GUI, the page, which configured slot each
+     * inventory slot shows, and the inventory itself (to tell it from a newer one).
+     */
+    record OpenView(String guiId, int page, Map<Integer, Integer> slots, Inventory inventory) {}
+
+    private final Map<UUID, OpenView> views = new ConcurrentHashMap<>();
+
+    /**
+     * Players whose GUI is being replaced by another screen of ours (redraw,
+     * another page, the confirm screen): that close isn't a real close.
+     */
+    private final Set<UUID> switching = ConcurrentHashMap.newKeySet();
 
     public GUIManager(DAOHub hub) {
         this.hub = hub;
         actionHandler = new ActionHandler(hub);
+        clicks = new GUIClickHandler(this, hub, actionHandler);
     }
+
+    // ── Opening ─────────────────────────────────────────────────────────────────
 
     public void openGUI(Player player, String guiId) {
         openGUI(player, guiId, 0);
     }
 
+    /** Opens a GUI (runs its open actions). */
     public void openGUI(Player player, String guiId, int pageIndex) {
         GUI gui = hub.getGuiDAO().getGUIbyId(guiId);
-        if (gui == null) return;
-
-        List<GUIPage> pages = gui.getPages();
-        if (pages.isEmpty()) return;
-
-        int clampedPage = Math.max(0, Math.min(pageIndex, pages.size() - 1));
-        GUIPage page = pages.get(clampedPage);
-        playerPages.put(player.getUniqueId(), clampedPage);
-
-        Inventory inventory = Bukkit.createInventory(
-                new GUIHolder(guiId),
-                gui.getSize() * 9,
-                Utils.parseColorCodeString(gui.getTitle())
-        );
-
-        for (GUISlot slot : page.getSlots()) {
-            if (!slot.isActive()) continue;
-            GUISlotConfig config = resolveConfig(player, slot);
-            if (config == null || !config.isVisible()) continue;
-
-            ItemStack item = buildItem(player, config);
-            if (item != null) {
-                inventory.setItem(slot.getSlot_id(), item);
-            }
-        }
-
+        if (gui == null || gui.getPages().isEmpty()) return;
+        Inventory inventory = draw(player, gui, pageIndex);
         if (gui.getOpenActions() != null && !gui.getOpenActions().isEmpty()) {
             actionHandler.executeActions(player, gui.getOpenActions(), ActionHandler.SourceType.GUI, guiId, null);
         }
         player.openInventory(inventory);
     }
 
-    /** Returns the first config whose conditions pass for this player, or null if none match. */
-    private GUISlotConfig resolveConfig(Player player, GUISlot slot) {
+    /** Shows another page of the GUI, or redraws it: no open / close actions. */
+    void showPage(Player player, GUI gui, int pageIndex) {
+        Inventory inventory = draw(player, gui, pageIndex);
+        switchTo(player, () -> player.openInventory(inventory));
+    }
+
+    /** Runs {@code open} (which replaces the player's GUI screen) without it counting as a close. */
+    void switchTo(Player player, Runnable open) {
+        switching.add(player.getUniqueId());
+        try {
+            open.run();
+        } finally {
+            switching.remove(player.getUniqueId());
+        }
+    }
+
+    /** Builds the page's inventory for the player and records it as their open view. */
+    private Inventory draw(Player player, GUI gui, int pageIndex) {
+        List<GUIPage> pages = gui.getPages();
+        int page = Math.max(0, Math.min(pageIndex, pages.size() - 1));
+        Inventory inventory = Bukkit.createInventory(new GUIHolder(gui.getGuiId()), gui.getSize() * 9,
+                Utils.parseColorCodeString(gui.getTitle()));
+
+        Map<Integer, ItemStack> items = new HashMap<>();
+        for (GUISlot slot : pages.get(page).getSlots()) {
+            if (!slot.isActive()) continue;
+            GUISlotConfig config = resolveConfig(player, slot);
+            if (config == null || !config.isVisible()) continue;
+            items.put(slot.getSlot_id(), buildItem(config));
+        }
+        Map<Integer, Integer> layout = GuiRules.layout(new ArrayList<>(items.keySet()), inventory.getSize(), gui.isFluid());
+        layout.forEach((at, slot) -> inventory.setItem(at, items.get(slot)));
+
+        views.put(player.getUniqueId(), new OpenView(gui.getGuiId(), page, layout, inventory));
+        return inventory;
+    }
+
+    @Nullable
+    OpenView viewOf(Player player) {
+        return views.get(player.getUniqueId());
+    }
+
+    /** The first config whose conditions pass for this player, or null if none match. */
+    @Nullable
+    GUISlotConfig resolveConfig(Player player, GUISlot slot) {
         for (GUISlotConfig config : slot.getConfigs()) {
             List<Condition> conds = config.getConditions();
             if (conds.isEmpty()) return config;
@@ -114,128 +157,126 @@ public class GUIManager implements Listener {
         return null;
     }
 
-    private ItemStack buildItem(Player player, GUISlotConfig config) {
-        String materialName = config.getMaterial();
-
-
-        Material material =  Material.getMaterial(materialName);
-
-        ItemStack item = new ItemStack(material);
-
-        DyedItemColor dyedColor = null;
-        if (config.getColor() != null && !config.getColor().isBlank())
-        {
-            dyedColor = dyedItemColor(hexToBukkitColor(config.getColor()));
-        }
-
-        if (material == Material.PLAYER_HEAD) {
-            SkullMeta meta = (SkullMeta) item.getItemMeta();
-            if (meta != null) item.setItemMeta(generateSkullMeta(meta, config, player));
-        } else {
-            ItemMeta meta = item.getItemMeta();
-            if (meta != null) item.setItemMeta(generateItemMeta(meta, config, player));
-        }
-
-        item.getItemMeta().setDisplayName(config.getDisplay_name());
-
-
-        if (dyedColor != null) item.setData(DataComponentTypes.DYED_COLOR, dyedColor);
-
-        item.setAmount(config.getAmount());
-
-        return item;
-    }
+    // ── Events ──────────────────────────────────────────────────────────────────
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
-        if (!(event.getInventory().getHolder() instanceof GUIHolder holder)) return;
-
-        event.setCancelled(true);
-
-        GUI gui = hub.getGuiDAO().getGUIbyId(holder.getGuiId());
-        if (gui == null) return;
-
-        int clickedSlot = event.getRawSlot();
-        if (clickedSlot < 0 || clickedSlot >= event.getInventory().getSize()) return;
-
-        int pageIndex = playerPages.getOrDefault(player.getUniqueId(), 0);
-        List<GUIPage> pages = gui.getPages();
-        if (pages.isEmpty() || pageIndex >= pages.size()) return;
-        GUIPage page = pages.get(pageIndex);
-
-        for (GUISlot slot : page.getSlots()) {
-            if (slot.getSlot_id() != clickedSlot) continue;
-            if (!slot.isActive()) break;
-            GUISlotConfig config = resolveConfig(player, slot);
-            if (config == null || !config.isVisible()) break;
-            handleClickActions(player, event.getClick(), config);
-            break;
+        InventoryHolder holder = event.getInventory().getHolder();
+        if (holder instanceof GUIClickHandler.ConfirmHolder confirm) {
+            event.setCancelled(true);
+            clicks.onConfirmClick(player, confirm, event.getRawSlot());
+        } else if (holder instanceof GUIHolder) {
+            event.setCancelled(true);
+            clicks.onClick(player, event.getInventory(), event.getRawSlot(), event.getClick());
         }
     }
 
-    private void handleClickActions(Player player, ClickType clickType, GUISlotConfig config) {
-        List<String> specific = switch (clickType) {
-            case LEFT -> config.getLeft_actions();
-            case RIGHT -> config.getRight_actions();
-            default -> null;
-        };
-
-        // Use specific (left/right) actions if present, otherwise fall back to global
-        List<String> actions;
-        if (specific != null && !specific.isEmpty()) {
-            actions = specific;
-        } else {
-            actions = config.getGlobal_actions();
-        }
-
-        if (actions == null || actions.isEmpty()) return;
-        actionHandler.executeActions(player, actions, ActionHandler.SourceType.GUI, config.getGui_id(), null);
+    /** Nothing can be dragged into a GUI or its confirm screen. */
+    @EventHandler
+    public void onInventoryDrag(InventoryDragEvent event) {
+        InventoryHolder holder = event.getInventory().getHolder();
+        if (holder instanceof GUIHolder || holder instanceof GUIClickHandler.ConfirmHolder) event.setCancelled(true);
     }
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
         if (!(event.getPlayer() instanceof Player player)) return;
-        if (!(event.getInventory().getHolder() instanceof GUIHolder holder)) return;
+        InventoryHolder holder = event.getInventory().getHolder();
+        String guiId;
+        if (holder instanceof GUIHolder h) guiId = h.getGuiId();
+        else if (holder instanceof GUIClickHandler.ConfirmHolder c) guiId = c.guiId();
+        else return;
+        if (switching.contains(player.getUniqueId())) return;
 
-        playerPages.remove(player.getUniqueId());
+        // Only forget the view this close is about (a newer GUI may already be open).
+        OpenView view = views.get(player.getUniqueId());
+        if (view != null && (view.inventory() == event.getInventory() || holder instanceof GUIClickHandler.ConfirmHolder)) {
+            views.remove(player.getUniqueId());
+        }
 
-        GUI gui = hub.getGuiDAO().getGUIbyId(holder.getGuiId());
+        GUI gui = hub.getGuiDAO().getGUIbyId(guiId);
         if (gui != null && gui.getCloseActions() != null && !gui.getCloseActions().isEmpty()) {
             actionHandler.executeActions(player, gui.getCloseActions(), ActionHandler.SourceType.GUI, gui.getGuiId(), null);
         }
     }
 
-    private ItemMeta generateItemMeta(ItemMeta meta, GUISlotConfig config, Player player) {
+    // ── Items ───────────────────────────────────────────────────────────────────
+
+    /** The item a config shows: a custom item or a material (head, colour, lore, cost line …). */
+    ItemStack buildItem(GUISlotConfig config) {
+        GUIItemBehaviour b = config.getBehaviour();
+        ItemStack citem = b.citemId() == null ? null : hub.getCitemDAO().getCitem(b.citemId());
+        ItemStack item = citem != null ? citemLook(citem, config) : materialLook(config);
+        item.setAmount(Math.max(1, config.getAmount()));
+        return item;
+    }
+
+    /** A custom item as the look: its model and data, with the config's name / lore when set. */
+    private ItemStack citemLook(ItemStack item, GUISlotConfig config) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return item;
+        if (config.getDisplay_name() != null && !config.getDisplay_name().isBlank()) {
+            meta.setDisplayName(Utils.parseColorCodeString(config.getDisplay_name()));
+        }
+        List<String> lore = parseLore(config.getLore());
+        if (lore.isEmpty() && meta.getLore() != null) lore = new ArrayList<>(meta.getLore());
+        else lore.replaceAll(Utils::parseColorCodeString);
+        setLore(meta, lore, config.getBehaviour());
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private ItemStack materialLook(GUISlotConfig config) {
+        Material material = config.getMaterial() == null ? null : Material.getMaterial(config.getMaterial().toUpperCase());
+        if (material == null) {
+            plugin.writeLog("GUIManager", Level.WARNING, "GUI " + config.getGui_id() + ": unknown material '" + config.getMaterial() + "', showing PAPER");
+            material = Material.PAPER;
+        }
+        ItemStack item = new ItemStack(material);
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            if (meta instanceof SkullMeta skull) applySkin(skull, config);
+            applyMeta(meta, config);
+            item.setItemMeta(meta);
+        }
+
+        if (config.getColor() != null && !config.getColor().isBlank()) {
+            DyedItemColor dyed = dyedItemColor(hexToBukkitColor(config.getColor()));
+            item.setData(DataComponentTypes.DYED_COLOR, dyed);
+        }
+        return item;
+    }
+
+    /** A player head's skin: the head texture (URL or base64), else the legacy base64 in model. */
+    private void applySkin(SkullMeta meta, GUISlotConfig config) {
+        String texture = config.getBehaviour().headTexture() != null
+                ? GuiRules.skinTexture(config.getBehaviour().headTexture())
+                : config.getModel();
+        if (texture == null || texture.isBlank()) return;
+        PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+        profile.setProperty(new ProfileProperty("textures", texture));
+        meta.setPlayerProfile(profile);
+    }
+
+    private void applyMeta(ItemMeta meta, GUISlotConfig config) {
         if (config.getDisplay_name() != null) {
             meta.setDisplayName(Utils.parseColorCodeString(config.getDisplay_name()));
         }
-
         List<String> lore = parseLore(config.getLore());
-        if (!lore.isEmpty()) {
-            lore.replaceAll(Utils::parseColorCodeString);
-            meta.setLore(lore);
-        }
+        lore.replaceAll(Utils::parseColorCodeString);
+        setLore(meta, lore, config.getBehaviour());
 
-        if (config.getModel() != null && !config.getModel().isBlank()) {
+        // A player head's model field held its skin before head textures; other items use it as the item model.
+        if (!(meta instanceof SkullMeta) && config.getModel() != null && !config.getModel().isBlank()) {
             meta.setItemModel(new NamespacedKey("wos", config.getModel()));
         }
-
         if (config.getTooltip() != null && !config.getTooltip().isEmpty()) {
-            if (Objects.equals(config.getTooltip(), "hidden")) {
-                meta.setHideTooltip(true);
-            }
-            else if (config.getTooltip() != null && !config.getTooltip().isEmpty()) {
-                NamespacedKey tooltip = new NamespacedKey("minecraft",config.getTooltip());
-                meta.setTooltipStyle(tooltip);
-            }
+            if (Objects.equals(config.getTooltip(), "hidden")) meta.setHideTooltip(true);
+            else meta.setTooltipStyle(new NamespacedKey("minecraft", config.getTooltip()));
         }
-
-        if (config.isEnchanted()) {
-            meta.addEnchant(Enchantment.UNBREAKING, 1, true);
-            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-        }
-
+        if (config.isEnchanted()) meta.addEnchant(Enchantment.UNBREAKING, 1, true);
         meta.addItemFlags(
                 ItemFlag.HIDE_ATTRIBUTES,
                 ItemFlag.HIDE_ENCHANTS,
@@ -246,56 +287,24 @@ public class GUIManager implements Listener {
                 ItemFlag.HIDE_PLACED_ON,
                 ItemFlag.HIDE_STORED_ENCHANTS,
                 ItemFlag.HIDE_DYE);
-
-        return meta;
     }
 
-    private SkullMeta generateSkullMeta(SkullMeta meta, GUISlotConfig config, Player player) {
-        if (config.getDisplay_name() != null) {
-            meta.setDisplayName(Utils.parseColorCodeString(config.getDisplay_name()));
-        }
-
-        List<String> lore = parseLore(config.getLore());
-        if (!lore.isEmpty()) {
-            lore.replaceAll(Utils::parseColorCodeString);
-            meta.setLore(lore);
-        }
-
-        // For player heads, model holds the Base64 skull texture
-        if (config.getModel() != null && !config.getModel().isBlank()) {
-            PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
-            profile.setProperty(new ProfileProperty("textures", config.getModel()));
-            meta.setPlayerProfile(profile);
-        }
-
-        if (config.isEnchanted()) {
-            meta.addEnchant(Enchantment.UNBREAKING, 1, true);
-            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-        }
-
-        meta.addItemFlags(
-                ItemFlag.HIDE_ATTRIBUTES,
-                ItemFlag.HIDE_ENCHANTS,
-                ItemFlag.HIDE_UNBREAKABLE,
-                ItemFlag.HIDE_ADDITIONAL_TOOLTIP,
-                ItemFlag.HIDE_DESTROYS,
-                ItemFlag.HIDE_ARMOR_TRIM,
-                ItemFlag.HIDE_PLACED_ON,
-                ItemFlag.HIDE_STORED_ENCHANTS,
-                ItemFlag.HIDE_DYE);
-
-        return meta;
+    /** Sets the lore, with the cost line when the item shows its cost. */
+    private void setLore(ItemMeta meta, List<String> lore, GUIItemBehaviour b) {
+        String costFormat = plugin.getLangManager().getMessage("guis", "cost");
+        List<String> withCost = GuiRules.loreWithCost(lore, b, Utils.parseColorCodeString(costFormat));
+        if (!withCost.isEmpty()) meta.setLore(withCost);
     }
 
-    /** Parses the raw comma-separated lore string stored in the DB into a mutable list. */
+    /** The lore as saved (a JSON array), as a mutable list. */
     private List<String> parseLore(String raw) {
-        if (raw == null || raw.isBlank()) return new java.util.ArrayList<>();
+        if (raw == null || raw.isBlank()) return new ArrayList<>();
         // wos-api delivers lore as a JSON array — parse it properly so lines keep
         // their commas and lose the quotes. Fall back to the legacy "[a, b]" split.
         try {
             com.google.gson.JsonElement json = com.google.gson.JsonParser.parseString(raw);
             if (json.isJsonArray()) {
-                java.util.ArrayList<String> lines = new java.util.ArrayList<>();
+                ArrayList<String> lines = new ArrayList<>();
                 for (com.google.gson.JsonElement line : json.getAsJsonArray()) lines.add(line.getAsString());
                 return lines;
             }
@@ -305,10 +314,10 @@ public class GUIManager implements Listener {
         return Arrays.stream(raw.replace("[", "").replace("]", "").split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
-                .collect(Collectors.toCollection(java.util.ArrayList::new));
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private static class GUIHolder implements InventoryHolder {
+    static class GUIHolder implements InventoryHolder {
         private final String guiId;
 
         public GUIHolder(String guiId) {

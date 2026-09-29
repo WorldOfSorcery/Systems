@@ -1,0 +1,13 @@
+error:
+  cooldown: "You can't use this yet: %time%s left."
+  inventory: "You need %amount% free inventory slots for this."
+  citem: "You need %amount%x %id% for this."
+  currency: "You need %amount% %id% for this."
+
+# Added to an item's lore when it shows its cost.
+cost: "§7Cost: §e%amount% %currency%"
+
+confirm:
+  title: "Are you sure?"
+  yes: "§aConfirm"
+  no: "§cCancel"

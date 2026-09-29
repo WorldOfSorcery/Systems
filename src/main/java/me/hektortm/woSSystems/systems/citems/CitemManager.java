@@ -108,6 +108,56 @@ public class CitemManager {
         return !Objects.equals(updateUUID1, updateUUID2);
     }
 
+    /** The citem id stored on an item, or {@code null} if it isn't a citem. */
+    private static String citemIdOf(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return null;
+        ItemMeta meta = item.getItemMeta();
+        return meta == null ? null : meta.getPersistentDataContainer().get(Keys.ID.get(), PersistentDataType.STRING);
+    }
+
+    /** How many of the custom item {@code id} the player carries (matched by its id tag). */
+    public int countCitem(Player p, String id) {
+        int found = 0;
+        for (ItemStack item : p.getInventory().getStorageContents()) {
+            if (id.equals(citemIdOf(item))) found += item.getAmount();
+        }
+        return found;
+    }
+
+    /**
+     * Takes {@code amount} of the custom item {@code id} (matched by its id tag).
+     * Takes nothing and returns false if the player has fewer.
+     */
+    public boolean takeCitem(Player p, String id, int amount) {
+        if (countCitem(p, id) < amount) return false;
+        ItemStack[] contents = p.getInventory().getStorageContents();
+        int left = amount;
+        for (int i = 0; i < contents.length && left > 0; i++) {
+            ItemStack item = contents[i];
+            if (!id.equals(citemIdOf(item))) continue;
+            int take = Math.min(left, item.getAmount());
+            item.setAmount(item.getAmount() - take);
+            if (item.getAmount() <= 0) contents[i] = null;
+            left -= take;
+        }
+        p.getInventory().setStorageContents(contents);
+        return true;
+    }
+
+    /**
+     * Gives {@code amount} of the custom item {@code id} without messages; what
+     * doesn't fit drops at the player's feet. False if the item doesn't exist.
+     */
+    public boolean addCitem(Player p, String id, int amount) {
+        ItemStack item = hub.getCitemDAO().getCitem(id);
+        if (item == null) return false;
+        item.setAmount(amount);
+        for (ItemStack rest : p.getInventory().addItem(item).values()) {
+            p.getWorld().dropItemNaturally(p.getLocation(), rest);
+        }
+        return true;
+    }
+
     public boolean hasCitemAmount(Player p, String id, int amount) {
         ItemStack citem = hub.getCitemDAO().getCitem(id);
 

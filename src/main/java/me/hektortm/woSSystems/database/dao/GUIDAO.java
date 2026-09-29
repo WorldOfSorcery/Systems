@@ -11,6 +11,7 @@ import me.hektortm.woSSystems.content.Json;
 import me.hektortm.woSSystems.utils.model.Condition;
 import me.hektortm.woSSystems.utils.model.GUI;
 import me.hektortm.woSSystems.utils.model.GUICheck;
+import me.hektortm.woSSystems.utils.model.GUIItemBehaviour;
 import me.hektortm.woSSystems.utils.model.GUIPage;
 import me.hektortm.woSSystems.utils.model.GUISlot;
 import me.hektortm.woSSystems.utils.model.GUISlotConfig;
@@ -96,7 +97,8 @@ public class GUIDAO {
                     Json.bool(c, "confirm", false),
                     Json.str(c, "sound"),
                     buildChecks(guiId, Json.array(c, "checks")),
-                    conds));
+                    conds,
+                    behaviour(c)));
         }
 
         Map<Integer, List<GUISlot>> slots = new HashMap<>();
@@ -121,7 +123,49 @@ public class GUIDAO {
                 Json.str(g, "type"),
                 pages,
                 Json.strings(g, "open_actions"),
-                Json.strings(g, "close_actions"));
+                Json.strings(g, "close_actions"),
+                Json.strings(g, "cooldown_actions"),
+                Json.str(g, "post_use", "stay"),
+                Json.str(g, "post_use_target"));
+    }
+
+    /** A config's cost, cooldown, trade, extra click types and post-use (defaults when absent). */
+    static GUIItemBehaviour behaviour(JsonObject c) {
+        return new GUIItemBehaviour(
+                blankToNull(Json.str(c, "head_texture")),
+                blankToNull(Json.str(c, "citem_id")),
+                blankToNull(Json.str(c, "cost_currency")),
+                Json.integer(c, "cost_amount", 0),
+                Json.bool(c, "show_cost", false),
+                blankToNull(Json.str(c, "cooldown_id")),
+                Json.strings(c, "cooldown_actions"),
+                Json.strings(c, "shift_right_actions"),
+                Json.strings(c, "drop_actions"),
+                trade(Json.object(c, "trade")),
+                Json.bool(c, "clickable", true),
+                Json.str(c, "post_use", "default"),
+                blankToNull(Json.str(c, "post_use_target")));
+    }
+
+    static GUIItemBehaviour.Trade trade(JsonObject t) {
+        return new GUIItemBehaviour.Trade(tradeEntries(Json.array(t, "take")), tradeEntries(Json.array(t, "give")));
+    }
+
+    private static List<GUIItemBehaviour.Entry> tradeEntries(JsonArray arr) {
+        List<GUIItemBehaviour.Entry> out = new ArrayList<>();
+        for (JsonElement el : arr) {
+            if (!el.isJsonObject()) continue;
+            JsonObject e = el.getAsJsonObject();
+            String type = Json.str(e, "type");
+            String id = Json.str(e, "id");
+            int amount = Json.integer(e, "amount", 0);
+            if (type != null && id != null && !id.isBlank() && amount > 0) out.add(new GUIItemBehaviour.Entry(type, id, amount));
+        }
+        return out;
+    }
+
+    private static String blankToNull(String s) {
+        return s == null || s.isBlank() ? null : s;
     }
 
     private List<GUICheck> buildChecks(String guiId, JsonArray arr) {

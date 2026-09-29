@@ -250,6 +250,7 @@ public final class WoSSystems extends JavaPlugin {
             lang.loadLangFileExternal(this, "cosmetics", core);
             lang.loadLangFileExternal(this, "cooldowns", core);
             lang.loadLangFileExternal(this, "interactions", core);
+            lang.loadLangFileExternal(this, "guis", core);
             lang.loadLangFileExternal(this, "dialogs", core);
             lang.loadLangFileExternal(this, "global_stats", core);
         } else {
@@ -455,7 +456,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new RegionHandler(regionBossBarManager));
         eventReg(new BackpackListener());
         //eventReg(new HologramHandler(daoHub));
-        eventReg(new GUIManager(daoHub));
+        eventReg(guiManager); // the same instance that opens GUIs, so clicks see what it opened
         eventReg(new QuestListener(this, questManager));
         getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager, daoHub), this);
     }
