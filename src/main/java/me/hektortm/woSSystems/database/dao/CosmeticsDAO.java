@@ -79,6 +79,15 @@ public class CosmeticsDAO {
         setCosmetic(type, id, p.getUniqueId());
     }
 
+    /** Unequips whatever cosmetic of {@code type} is equipped (the player keeps it). No-op if none is. */
+    public void unequipCosmetic(Player p, CosmeticType type) {
+        String id = getCurrentCosmeticId(p, type);
+        if (id == null) return;
+        PlayerSession s = sessions.get(p.getUniqueId());
+        if (s != null) s.equippedCosmetics.remove(type, id);
+        writer.delete(path(p.getUniqueId(), type, id) + "/equip");
+    }
+
     public boolean hasCosmetic(UUID uuid, CosmeticType type, String id) {
         PlayerSession s = sessions.getOrFetch(uuid);
         return s != null && s.cosmetics.containsKey(PlayerSession.cosmeticKey(type, id));

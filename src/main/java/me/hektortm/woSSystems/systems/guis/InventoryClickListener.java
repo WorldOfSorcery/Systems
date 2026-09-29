@@ -2,11 +2,9 @@ package me.hektortm.woSSystems.systems.guis;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.chat.NicknameManager;
-import me.hektortm.woSSystems.systems.cosmetic.CosmeticManager;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.economy.EcoManager;
 import me.hektortm.woSSystems.systems.economy.cmd.Coinflip;
-import me.hektortm.woSSystems.utils.types.CosmeticType;
 import me.hektortm.woSSystems.utils.model.Challenge;
 import me.hektortm.wosCore.LangManager;
 import me.hektortm.wosCore.Utils;
@@ -16,16 +14,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 public class InventoryClickListener implements Listener {
@@ -53,80 +46,6 @@ public class InventoryClickListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) return;
         Inventory inv = event.getClickedInventory();
         if (inv == null) return;
-        if (inv == plugin.getCosmeticManager().mainPage) {
-            int slot = event.getSlot();
-            switch (slot) {
-                case 2:
-                    plugin.getCosmeticManager().openTitlesPage(player);
-                    break;
-                case 4:
-                    plugin.getCosmeticManager().openPrefixPage(player);
-                    break;
-                case 6:
-                    plugin.getCosmeticManager().openBadgePage(player);
-                default:
-                    break;
-            }
-            event.setCancelled(true);
-
-        }
-        if (inv == CosmeticManager.titlesPage) {
-            ItemStack clickedItem = event.getCurrentItem();
-            if (clickedItem == null) return;
-            ItemMeta clickedItemMeta = clickedItem.getItemMeta();
-            PersistentDataContainer data = clickedItemMeta.getPersistentDataContainer();
-            String titleID = data.get(new NamespacedKey(plugin, "titleID"), PersistentDataType.STRING);
-
-            if (hub.getCosmeticsDAO().getCurrentCosmeticId(player, CosmeticType.TITLE) != null &&
-                    Objects.equals(hub.getCosmeticsDAO().getCurrentCosmeticId(player, CosmeticType.TITLE), titleID)) {
-                event.setCancelled(true);
-                return;
-            }
-
-            hub.getCosmeticsDAO().equipCosmetic(player,CosmeticType.TITLE, titleID);
-            player.sendMessage("Equipped Title: " + hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.TITLE, titleID));
-            Utils.success(player, "cosmetics", "equipped", "%type%", "Prefix", "%display%", Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.TITLE, titleID)));
-            event.setCancelled(true);
-            player.closeInventory();
-        }
-        if (inv == CosmeticManager.prefixPage) {
-            ItemStack clickedItem = event.getCurrentItem();
-            if (clickedItem == null) return;
-            ItemMeta clickedItemMeta = clickedItem.getItemMeta();
-            PersistentDataContainer data = clickedItemMeta.getPersistentDataContainer();
-            String prefixID = data.get(new NamespacedKey(plugin, "prefixID"), PersistentDataType.STRING);
-
-            if (hub.getCosmeticsDAO().getCurrentCosmeticId(player, CosmeticType.PREFIX) != null && hub.getCosmeticsDAO().getCurrentCosmeticId(player, CosmeticType.PREFIX).equals(prefixID)) {
-                event.setCancelled(true);
-                return;
-            }
-
-            hub.getCosmeticsDAO().equipCosmetic(player, CosmeticType.PREFIX, prefixID);
-            Utils.success(player, "cosmetics", "equipped", "%type%", "Prefix", "%display%", Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.PREFIX, prefixID)));
-            event.setCancelled(true);
-            player.closeInventory();
-        }
-        if (inv == CosmeticManager.badgesPage) {
-            ItemStack clickedItem = event.getCurrentItem();
-            if (clickedItem == null) return;
-            ItemMeta clickedItemMeta = clickedItem.getItemMeta();
-            PersistentDataContainer data = clickedItemMeta.getPersistentDataContainer();
-            String badgeID = data.get(new NamespacedKey(plugin, "badgeID"), PersistentDataType.STRING);
-
-            if (hub.getCosmeticsDAO().getCurrentCosmeticId(player, CosmeticType.BADGE) != null &&
-                    hub.getCosmeticsDAO().getCurrentCosmeticId(player, CosmeticType.BADGE).equals(badgeID)) {
-                event.setCancelled(true);
-                return;
-            }
-
-            hub.getCosmeticsDAO().equipCosmetic(player, CosmeticType.BADGE, badgeID);
-            Utils.success(player, "cosmetics", "equipped", "%type%", "Badge", "%display%", Utils.parseColorCodeString(hub.getCosmeticsDAO().getCosmeticDisplay(CosmeticType.BADGE, badgeID)));
-            event.setCancelled(true);
-            player.closeInventory();
-        }
-        if (inv.getType().equals(InventoryType.DISPENSER) && event.getView().getTitle().equals("Viewing Item")) {
-            event.setCancelled(true);
-        }
         if (event.getView().getTitle().equalsIgnoreCase(lang.getMessage("economy", "coinflip.gui.title"))) {
             event.setCancelled(true);
 

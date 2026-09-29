@@ -50,7 +50,7 @@ public class CosmeticCommand implements CommandExecutor {
         } else {
 
             if (args.length == 0) {
-                manager.openMainPage((Player) sender);
+                manager.open((Player) sender);
                 return true;
             }
             subCommandName = args[0].toLowerCase();
@@ -59,12 +59,12 @@ public class CosmeticCommand implements CommandExecutor {
             if (subCommand != null) {
 
                 if(subCommand.getName() != "help" && !(PermissionUtil.hasPermissionNoMsg(sender, subCommand.getPermission()))) {
-                    manager.openMainPage((Player) sender);
+                    manager.open((Player) sender);
                     return true;
                 }
                 subCommand.execute(sender, java.util.Arrays.copyOfRange(args, 1, args.length));
             } else {
-                manager.openMainPage((Player) sender);
+                manager.open((Player) sender);
             }
         }
 

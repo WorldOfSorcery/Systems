@@ -3,6 +3,7 @@ package me.hektortm.woSSystems.systems.cosmetic.cmd;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.systems.cosmetic.CosmeticManager;
 import me.hektortm.woSSystems.utils.PermissionUtil;
+import me.hektortm.woSSystems.utils.types.CosmeticType;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -22,7 +23,7 @@ public class QuickCommands {
 
             Player player = (Player) sender;
 
-            cosmeticManager.openBadgePage(player);
+            cosmeticManager.open(player, CosmeticType.BADGE);
 
             return true;
         }
@@ -36,7 +37,7 @@ public class QuickCommands {
 
             Player player = (Player) sender;
 
-            cosmeticManager.openPrefixPage(player);
+            cosmeticManager.open(player, CosmeticType.PREFIX);
 
             return true;
         }
@@ -50,7 +51,7 @@ public class QuickCommands {
 
             Player player = (Player) sender;
 
-            cosmeticManager.openTitlesPage(player);
+            cosmeticManager.open(player, CosmeticType.TITLE);
 
             return true;
         }

@@ -162,7 +162,7 @@ public class InteractionDAO {
         List<InteractionAction> actions = new ArrayList<>();
         for (JsonElement el : Json.array(tree, "actions")) {
             JsonObject a = el.getAsJsonObject();
-            actions.add(new InteractionAction(id, Json.str(a, "behaviour"), Json.str(a, "matchtype"),
+            actions.add(new InteractionAction(id, Json.str(a, "description"), Json.str(a, "behaviour"), Json.str(a, "matchtype"),
                     Json.integer(a, "action_id", 0), Json.strings(a, "actions")));
             childConditions.addAll(Json.array(a, "conditions"));
         }
@@ -170,7 +170,7 @@ public class InteractionDAO {
         List<InteractionParticles> particles = new ArrayList<>();
         for (JsonElement el : Json.array(tree, "particles")) {
             JsonObject p = el.getAsJsonObject();
-            particles.add(new InteractionParticles(id, Json.str(p, "behaviour"), Json.str(p, "matchtype"),
+            particles.add(new InteractionParticles(id, Json.str(p, "description"), Json.str(p, "behaviour"), Json.str(p, "matchtype"),
                     Json.integer(p, "particle_id", 0), Json.str(p, "particle"), Json.str(p, "particle_color")));
             childConditions.addAll(Json.array(p, "conditions"));
         }
@@ -178,7 +178,7 @@ public class InteractionDAO {
         List<InteractionHologram> holograms = new ArrayList<>();
         for (JsonElement el : Json.array(tree, "holograms")) {
             JsonObject h = el.getAsJsonObject();
-            holograms.add(new InteractionHologram(id, Json.integer(h, "hologram_id", 0), Json.str(h, "behaviour"),
+            holograms.add(new InteractionHologram(id, Json.integer(h, "hologram_id", 0), Json.str(h, "description"), Json.str(h, "behaviour"),
                     Json.str(h, "matchtype"), Json.strings(h, "hologram"), Json.str(h, "settings")));
             childConditions.addAll(Json.array(h, "conditions"));
         }

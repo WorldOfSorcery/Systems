@@ -131,12 +131,14 @@ public class ChatManager {
         return Dialog.create(factory -> factory.empty()
                 .base(DialogBase.builder(title)
                         .canCloseWithEscape(true)
+                        // No item description: that always sits to the right of the item.
+                        // A separate text body stacks the name centred underneath instead.
                         .body(List.of(
                                 DialogBody.item(item)
-                                        .description(DialogBody.plainMessage(itemName.decoration(TextDecoration.ITALIC, false)))
                                         .showTooltip(true)
                                         .showDecorations(true)
-                                        .build()))
+                                        .build(),
+                                DialogBody.plainMessage(itemName.decoration(TextDecoration.ITALIC, false))))
                         .build())
                 .type(DialogType.notice(ActionButton.builder(Component.text("Close")).build())));
     }
