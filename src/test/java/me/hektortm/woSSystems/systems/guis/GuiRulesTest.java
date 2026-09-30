@@ -187,4 +187,34 @@ class GuiRulesTest {
             assertThat(GuiRules.citemName("Bass", " ", false)).isEqualTo("Bass"); // no config name to use
         }
     }
+
+    @Nested
+    class Keys {
+        @Test
+        void hideOrHiddenHidesTheTooltip() {
+            assertThat(GuiRules.hidesTooltip("hide")).isTrue();
+            assertThat(GuiRules.hidesTooltip("Hidden")).isTrue();
+            assertThat(GuiRules.hidesTooltip("tooltip/gold")).isFalse();
+            assertThat(GuiRules.hidesTooltip(null)).isFalse();
+        }
+
+        @Test
+        void bareKeysUseTheDefaultNamespace() {
+            assertThat(GuiRules.resourceKey("gui/coin", "wos")).isEqualTo(new GuiRules.Key("wos", "gui/coin"));
+            assertThat(GuiRules.resourceKey("  Gold ", "minecraft")).isEqualTo(new GuiRules.Key("minecraft", "gold"));
+        }
+
+        @Test
+        void keepsAWrittenNamespace() {
+            assertThat(GuiRules.resourceKey("wos:tooltip/gold", "minecraft")).isEqualTo(new GuiRules.Key("wos", "tooltip/gold"));
+        }
+
+        @Test
+        void rejectsBlankAndInvalidKeys() {
+            assertThat(GuiRules.resourceKey(null, "wos")).isNull();
+            assertThat(GuiRules.resourceKey(" ", "wos")).isNull();
+            assertThat(GuiRules.resourceKey("{stats.amount:kills}", "wos")).isNull(); // an unfilled placeholder
+            assertThat(GuiRules.resourceKey("two words", "wos")).isNull();
+        }
+    }
 }

@@ -67,7 +67,7 @@ public class ActionHandler {
      *
      * <p>Supported action keywords (first token):
      * <ul>
-     *   <li>{@code send_message} — sends a colour-formatted, placeholder-resolved chat message</li>
+     *   <li>{@code send_message} — sends a colour-formatted chat message</li>
      *   <li>{@code sudo} — dispatches a command as the player, checked against the blacklist</li>
      *   <li>{@code empty_line} — sends a blank chat line</li>
      *   <li>{@code cooldown give @p &lt;id&gt; %local%} — grants a local cooldown scoped to {@code key}</li>
@@ -78,6 +78,7 @@ public class ActionHandler {
      *   <li>{@code close_gui} — closes the player's open inventory</li>
      *   <li>anything else — dispatched as a console command (async for {@link SourceType#DIALOG})</li>
      * </ul>
+     * Placeholders ({@link PlaceholderResolver}) are filled in first, in every action.
      *
      * @param player     the player for whom actions are executed
      * @param actions    the ordered list of action strings to process
@@ -93,14 +94,10 @@ public class ActionHandler {
             if (cmd.startsWith("\"") && cmd.endsWith("\"") && cmd.length() >= 2) {
                 cmd = cmd.substring(1, cmd.length() - 1);
             }
-            plugin.writeLog("Send message action", Level.INFO, cmd);
+            cmd = resolver.resolvePlaceholders(cmd, player);
             String parsedCommand = cmd.replace("@p", player.getName());
             if (cmd.startsWith("send_message")) {
-                String message = cmd.replace("send_message ", "").replace("&", "§");
-                plugin.writeLog("Send message action", Level.INFO, message);
-                plugin.writeLog("Send message action", Level.INFO, resolver.resolvePlaceholders(message, player));
-                String s = resolver.resolvePlaceholders(message, player);
-                player.sendMessage(Utils.parseColorCodeString(s != null ? s : message));
+                player.sendMessage(Utils.parseColorCodeString(argument(cmd, "send_message")));
                 continue;
             }
             if (cmd.startsWith("sudo")) {
@@ -143,20 +140,13 @@ public class ActionHandler {
                 continue;
             }
             if (cmd.startsWith("send_actionbar")) {
-                String message = cmd.replace("send_actionbar ", "").replace("&", "§");
-                player.sendActionBar(Utils.parseColorCodeString(resolver.resolvePlaceholders(message, player)));
+                player.sendActionBar(Utils.parseColorCodeString(argument(cmd, "send_actionbar")));
                 continue;
             }
             if (cmd.startsWith("send_title")) {
-                String[] parts = cmd.split(" -s ");
-                String title = parts[0].replace("&", "§").replace("send_title ", "");
-                String subtitle;
-                if (parts.length > 1) {
-                    subtitle = parts[1].replace("&", "§");
-                } else {
-                    subtitle = "";
-                }
-                player.sendTitle(title, subtitle, 10, 70, 20);
+                String[] parts = argument(cmd, "send_title").split(" -s ", 2);
+                String subtitle = parts.length > 1 ? parts[1] : "";
+                player.sendTitle(Utils.parseColorCodeString(parts[0]), Utils.parseColorCodeString(subtitle), 10, 70, 20);
                 continue;
             }
 //            if (cmd.startsWith("wait")) {
@@ -229,6 +219,11 @@ public class ActionHandler {
             if (sourceType == SourceType.DIALOG) Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand));
             else Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand);
         }
+    }
+
+    /** What follows the action's keyword ({@code "send_message &aHi"} → {@code "&aHi"}). */
+    static String argument(String cmd, String keyword) {
+        return cmd.length() > keyword.length() ? cmd.substring(keyword.length()).stripLeading() : "";
     }
 
 }

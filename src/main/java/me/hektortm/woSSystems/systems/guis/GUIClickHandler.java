@@ -169,7 +169,7 @@ final class GUIClickHandler {
         String title = Utils.parseColorCodeString(plugin.getLangManager().getMessage("guis", "confirm.title"));
         Inventory screen = Bukkit.createInventory(new ConfirmHolder(gui.getGuiId(), page, slotId, click), 27, title);
         screen.setItem(CONFIRM_YES, button(Material.LIME_WOOL, "confirm.true"));
-        screen.setItem(CONFIRM_ITEM, guis.buildItem(config));
+        screen.setItem(CONFIRM_ITEM, guis.buildItem(config, player));
         screen.setItem(CONFIRM_NO, button(Material.RED_WOOL, "confirm.false"));
         guis.switchTo(player, () -> player.openInventory(screen));
     }

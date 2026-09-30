@@ -2,45 +2,42 @@ package me.hektortm.woSSystems.utils;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
-import me.hektortm.woSSystems.systems.citems.CitemManager;
-import me.hektortm.woSSystems.systems.stats.StatsManager;
 import me.hektortm.woSSystems.utils.model.Constant;
 import me.hektortm.woSSystems.utils.types.CosmeticType;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.UUID;
-
-import static java.lang.Long.parseLong;
+import java.util.List;
+import java.util.Locale;
 
 /**
- * Resolves placeholder tokens embedded in strings to their live runtime values.
- *
- * <p>The primary entry point is {@link #resolvePlaceholders(String, Player)},
- * which accepts a raw placeholder string (without surrounding braces) and
- * returns the resolved text.  Tokens follow the syntax
- * {@code namespace.key:id}, where {@code namespace} selects the data source
- * and {@code key} / {@code id} narrow down the specific value:</p>
+ * Fills in {@code {placeholder}} tokens with live values, for one player. Used
+ * by every text the systems show: action commands ({@code send_message},
+ * titles, console commands …), GUI titles / names / lore / models / tooltips, dialogs, holograms
+ * and quest messages.
  *
  * <ul>
- *   <li>{@code player_name} / {@code player_nick} — player display name or nickname</li>
- *   <li>{@code player_cosmetic.&lt;type&gt;} — currently equipped cosmetic display string</li>
- *   <li>{@code stats.amount:&lt;id&gt;} / {@code stats.max:&lt;id&gt;} — player stat values</li>
- *   <li>{@code global_stats.amount:&lt;id&gt;} / {@code global_stats.max:&lt;id&gt;} — global stat values</li>
- *   <li>{@code cooldowns.duration:&lt;id&gt;} — remaining cooldown time formatted as {@code HH:MM:SS}</li>
- *   <li>{@code citems.name|lore|material|model|tooltip:&lt;id&gt;} — custom item metadata</li>
- *   <li>bare token without a dot — looked up as a {@link Constant} by ID</li>
+ *   <li>{@code {player_name}}, {@code {player_nick}} (the nickname, else the name), {@code {player_uuid}}</li>
+ *   <li>{@code {player_cosmetic.<type>}}: the equipped cosmetic (prefix, title, badge …)</li>
+ *   <li>{@code {stats.amount:<id>}}, {@code {stats.max:<id>}}: the player's stat, its max</li>
+ *   <li>{@code {global_stats.amount:<id>}}, {@code {global_stats.max:<id>}}</li>
+ *   <li>{@code {economy.balance:<currency>}}: the player's balance</li>
+ *   <li>{@code {cooldowns.duration:<id>}} ({@code HH:MM:SS} left), {@code {cooldowns.seconds:<id>}}</li>
+ *   <li>{@code {citems.name|lore|material|model|tooltip:<id>}}: a custom item's data</li>
+ *   <li>{@code {<constant id>}}: a constant's value (which may hold placeholders itself)</li>
  * </ul>
  *
- * <p>Unrecognised namespaces return the original token wrapped in braces.</p>
+ * <p>Unknown tokens, and player tokens without a player, are left as written.
+ * All lookups read loaded data (no API calls), so this is cheap on the main thread.</p>
  */
 public class PlaceholderResolver {
+    /** How deep constants may hold placeholders of other constants (stops loops). */
+    private static final int MAX_DEPTH = 3;
+
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final DAOHub hub;
-    private final StatsManager statsManager = plugin.getStatsManager();
-    private final CitemManager citemsManager = plugin.getCitemManager();
 
     /**
      * @param hub the DAO hub used to access all data sources
@@ -49,149 +46,106 @@ public class PlaceholderResolver {
         this.hub = hub;
     }
 
-    // TODO UPDATE WHEN INVENTORY IS OPENED AGAIN
-
     /**
-     * Scans {@code input} for {@code {placeholder}} tokens and replaces each
-     * with its resolved value.  Tokens follow the syntax
-     * {@code {namespace.key:id}} or {@code {constantID}}.
+     * {@code input} with its placeholders filled in for {@code player}.
      *
-     * @param input  the raw string potentially containing placeholder tokens
-     * @param player the player whose data is used for player-scoped placeholders
-     * @return the input string with all recognised placeholders replaced
+     * @param input  text with {@code {placeholder}} tokens (null stays null)
+     * @param player whose values player tokens show; null leaves them as written
      */
-    public String resolvePlaceholders(String input, Player player) {
-        if (input == null || !input.contains("{")) return input;
-
-        StringBuilder result = new StringBuilder();
-        int i = 0;
-        while (i < input.length()) {
-            int open = input.indexOf('{', i);
-            if (open == -1) {
-                result.append(input, i, input.length());
-                break;
-            }
-            int close = input.indexOf('}', open + 1);
-            if (close == -1) {
-                result.append(input, i, input.length());
-                break;
-            }
-            result.append(input, i, open);
-            String token = input.substring(open + 1, close);
-            result.append(resolveToken(token, player));
-            i = close + 1;
-        }
-        return result.toString();
+    public String resolvePlaceholders(String input, @Nullable Player player) {
+        return resolve(input, player, 0);
     }
 
-    /** Resolves a single token (without braces) to its value. */
-    private String resolveToken(String raw, Player player) {
-        UUID uuid = player.getUniqueId();
+    /** Lines with their placeholders filled in; a multi-line value (like lore) adds lines. */
+    public List<String> resolveLines(List<String> lines, @Nullable Player player) {
+        return Placeholders.replaceLines(lines, token -> value(token, player, 0));
+    }
 
-        // No dot → player shorthand or constant
-        if (!raw.contains(".")) {
-            return switch (raw) {
-                case "player_name" -> player.getName();
-                case "player_nick" -> hub.getNicknameDAO().getNickname(uuid);
-                default -> resolveConstant(raw);
-            };
-        }
+    private String resolve(String input, @Nullable Player player, int depth) {
+        return Placeholders.replace(input, token -> value(token, player, depth));
+    }
 
-        // namespace.key:ID
-        String[] dotSplit = raw.split("\\.", 2);
-        String namespace = dotSplit[0];
-        String rest = dotSplit[1];
-
-        String key;
-        String id = null;
-
-        if (rest.contains(":")) {
-            String[] colonSplit = rest.split(":", 2);
-            key = colonSplit[0];
-            id = colonSplit[1];
-        } else {
-            key = rest;
-        }
-
-        return switch (namespace) {
-            case "player_cosmetic" -> resolveCosmetic(key, player);
-            case "stats" -> resolveStats(key, id, uuid);
-            case "global_stats" -> resolveGlobalStats(key, id);
-            case "cooldowns" -> resolveCooldown(key, id, uuid);
-            case "citems" -> resolveCitem(key, id);
-            default -> "{" + raw + "}";
+    /** The token's value, or null if unknown. */
+    @Nullable
+    private String value(Placeholders.Token token, @Nullable Player player, int depth) {
+        if (token.isBare()) return bare(token.raw(), player, depth);
+        return switch (token.namespace()) {
+            case "player_cosmetic" -> player == null ? null : cosmetic(token.key(), player);
+            case "stats" -> player == null || token.id() == null ? null : stat(token.key(), token.id(), player);
+            case "global_stats" -> token.id() == null ? null : globalStat(token.key(), token.id());
+            case "economy" -> player == null || token.id() == null || !"balance".equals(token.key()) ? null
+                    : String.valueOf(plugin.getEcoManager().getCurrencyBalance(player.getUniqueId(), token.id()));
+            case "cooldowns" -> player == null || token.id() == null ? null : cooldown(token.key(), token.id(), player);
+            case "citems" -> token.id() == null ? null : citem(token.key(), token.id());
+            default -> null;
         };
     }
 
-    private String resolveConstant(String id) {
-        Constant constant = hub.getConstantDAO().getConstant(id);
-        return constant == null ? "" : constant.getValue();
+    private String bare(String name, @Nullable Player player, int depth) {
+        switch (name) {
+            case "player_name": return player == null ? null : player.getName();
+            case "player_uuid": return player == null ? null : player.getUniqueId().toString();
+            case "player_nick": {
+                if (player == null) return null;
+                String nick = hub.getNicknameDAO().getNickname(player.getUniqueId());
+                return nick == null || nick.isBlank() ? player.getName() : nick;
+            }
+            default: {
+                Constant constant = hub.getConstantDAO().getConstant(name);
+                if (constant == null || constant.getValue() == null) return null;
+                return depth < MAX_DEPTH ? resolve(constant.getValue(), player, depth + 1) : constant.getValue();
+            }
+        }
     }
 
-    private String resolveCitem(String key, String id) {
-        if (id == null) return "";
+    private String cosmetic(String key, Player player) {
+        try {
+            CosmeticType type = CosmeticType.valueOf(key.toUpperCase(Locale.ROOT));
+            String display = hub.getCosmeticsDAO().getCurrentCosmetic(player, type);
+            return display == null ? "" : display;
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
 
-        ItemStack item = hub.getCitemDAO().getCitem(id);
-        if (item == null) return "";
-
-        ItemMeta meta = item.getItemMeta();
-
+    private String stat(String key, String id, Player player) {
         return switch (key) {
-            case "name" -> meta.getDisplayName();
+            case "amount" -> String.valueOf(plugin.getStatsManager().getPlayerStat(player.getUniqueId(), id));
+            case "max" -> String.valueOf(plugin.getStatsManager().getStatMax(id));
+            default -> null;
+        };
+    }
+
+    private String globalStat(String key, String id) {
+        return switch (key) {
+            case "amount" -> String.valueOf(plugin.getStatsManager().getGlobalStatValue(id));
+            case "max" -> String.valueOf(plugin.getStatsManager().getGlobalStatMax(id));
+            default -> null;
+        };
+    }
+
+    private String cooldown(String key, String id, Player player) {
+        Long seconds = hub.getCooldownDAO().getRemainingSeconds(player, id);
+        long left = seconds == null ? 0 : seconds;
+        return switch (key) {
+            case "duration" -> Parsers.formatCooldownTime(left);
+            case "seconds" -> String.valueOf(left);
+            default -> null;
+        };
+    }
+
+    private String citem(String key, String id) {
+        ItemStack item = hub.getCitemDAO().getCitem(id);
+        if (item == null) return null;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return "material".equals(key) ? item.getType().toString() : "";
+        return switch (key) {
+            case "name" -> meta.hasDisplayName() ? meta.getDisplayName() : "";
             case "lore" -> meta.getLore() == null ? "" : String.join("\n", meta.getLore());
             case "material" -> item.getType().toString();
             case "model" -> meta.getItemModel() != null ? meta.getItemModel().getKey() : "";
             case "tooltip" -> meta.getTooltipStyle() != null ? meta.getTooltipStyle().getKey() : "";
-            default -> "";
+            default -> null;
         };
     }
-
-    private String resolveCooldown(String key, String id, UUID uuid) {
-        if (!"duration".equals(key) || id == null) return "";
-
-        Long seconds = hub.getCooldownDAO()
-                .getRemainingSeconds(Bukkit.getOfflinePlayer(uuid), id);
-
-        return seconds == null
-                ? "00:00:00"
-                : Parsers.formatCooldownTime(seconds);
-    }
-
-    private String resolveGlobalStats(String key, String id) {
-        if (id == null) return "";
-
-        return switch (key) {
-            case "amount" -> String.valueOf(
-                    statsManager.getGlobalStatValue(id)
-            );
-            case "max" -> String.valueOf(
-                    statsManager.getGlobalStatMax(id)
-            );
-            default -> "";
-        };
-    }
-
-    private String resolveCosmetic(String key, Player player) {
-        try {
-            CosmeticType type = CosmeticType.valueOf(key.toUpperCase());
-            return hub.getCosmeticsDAO().getCurrentCosmetic(player, type);
-        } catch (IllegalArgumentException e) {
-            return "";
-        }
-    }
-
-    private String resolveStats(String key, String id, UUID uuid) {
-        if (id == null) return "";
-
-        return switch (key) {
-            case "amount" -> String.valueOf(
-                    statsManager.getPlayerStat(uuid, id)
-            );
-            case "max" -> String.valueOf(
-                    statsManager.getStatMax(id)
-            );
-            default -> "";
-        };
-    }
-
 }

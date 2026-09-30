@@ -208,4 +208,30 @@ public final class GuiRules {
         }
         return out;
     }
+
+    /** A tooltip value that hides the item's tooltip instead of styling it. */
+    public static boolean hidesTooltip(@Nullable String tooltip) {
+        return tooltip != null && (tooltip.equalsIgnoreCase("hide") || tooltip.equalsIgnoreCase("hidden"));
+    }
+
+    private static final java.util.regex.Pattern KEY_NAMESPACE = java.util.regex.Pattern.compile("[a-z0-9_.-]+");
+    private static final java.util.regex.Pattern KEY_PATH = java.util.regex.Pattern.compile("[a-z0-9_./-]+");
+
+    /** A resource key: namespace and path. */
+    public record Key(String namespace, String path) {}
+
+    /**
+     * A model / tooltip value as a resource key: {@code "ns:path"} as written,
+     * a bare {@code "path"} in {@code defaultNamespace}; null if blank or not a
+     * valid key (e.g. a placeholder that was left unfilled).
+     */
+    public static @Nullable Key resourceKey(@Nullable String raw, String defaultNamespace) {
+        if (raw == null || raw.isBlank()) return null;
+        String value = raw.trim().toLowerCase(java.util.Locale.ROOT);
+        int colon = value.indexOf(':');
+        String namespace = colon < 0 ? defaultNamespace : value.substring(0, colon);
+        String path = colon < 0 ? value : value.substring(colon + 1);
+        if (!KEY_NAMESPACE.matcher(namespace).matches() || !KEY_PATH.matcher(path).matches()) return null;
+        return new Key(namespace, path);
+    }
 }

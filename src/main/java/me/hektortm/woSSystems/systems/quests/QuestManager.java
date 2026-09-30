@@ -378,7 +378,7 @@ public class QuestManager {
     private void sendMessage(Player player, QuestNode node) {
         JsonObject d = node.getData();
         String type = d.has("message_type") ? d.get("message_type").getAsString() : "chat";
-        String raw  = d.has("text") ? d.get("text").getAsString() : "";
+        String raw  = d.has("text") ? plugin.getPlaceholderResolver().resolvePlaceholders(d.get("text").getAsString(), player) : "";
         Component text = LegacyComponentSerializer.legacyAmpersand().deserialize(raw);
 
         switch (type) {
@@ -502,7 +502,8 @@ public class QuestManager {
         JsonArray commands = d.has("commands") ? d.getAsJsonArray("commands") : new JsonArray();
 
         for (JsonElement el : commands) {
-            String cmd = el.getAsString().replace("%player%", player.getName());
+            String cmd = plugin.getPlaceholderResolver().resolvePlaceholders(el.getAsString(), player)
+                    .replace("%player%", player.getName());
             Bukkit.getScheduler().runTask(plugin, () -> {
                 if ("player".equalsIgnoreCase(executor)) Bukkit.dispatchCommand(player, cmd);
                 else                                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
@@ -528,7 +529,8 @@ public class QuestManager {
                 case "loottable" ->
                         plugin.getLootTableManager().triggerLoottable(player, player, id);
                 case "command" -> {
-                    String cmd = id.replace("%player%", player.getName());
+                    String cmd = plugin.getPlaceholderResolver().resolvePlaceholders(id, player)
+                            .replace("%player%", player.getName());
                     Bukkit.getScheduler().runTask(plugin, () ->
                             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd));
                 }

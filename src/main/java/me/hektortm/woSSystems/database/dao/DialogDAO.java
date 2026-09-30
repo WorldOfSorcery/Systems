@@ -124,7 +124,7 @@ public class DialogDAO {
                 List<String> actionList = a.action() == null ? List.of() : List.of(a.action());
                 pageBuilder.addAnswer(new Answer.Builder()
                         .setAnswerID(a.id())
-                        .setAnswerText(a.text())
+                        .setAnswerText(plugin.getPlaceholderResolver().resolvePlaceholders(a.text(), target))
                         .addCallback(p -> plugin.getActionHandler().executeActions(
                                 p, actionList, ActionHandler.SourceType.DIALOG, dialogId, null))
                         .build());

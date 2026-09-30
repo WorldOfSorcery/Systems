@@ -38,7 +38,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -119,14 +118,14 @@ public class GUIManager implements Listener {
         List<GUIPage> pages = gui.getPages();
         int page = Math.max(0, Math.min(pageIndex, pages.size() - 1));
         Inventory inventory = Bukkit.createInventory(new GUIHolder(gui.getGuiId()), gui.getSize() * 9,
-                Utils.parseColorCodeString(gui.getTitle()));
+                Utils.parseColorCodeString(plugin.getPlaceholderResolver().resolvePlaceholders(gui.getTitle(), player)));
 
         Map<Integer, ItemStack> items = new HashMap<>();
         for (GUISlot slot : pages.get(page).getSlots()) {
             if (!slot.isActive()) continue;
             GUISlotConfig config = resolveConfig(player, slot);
             if (config == null || !config.isVisible()) continue;
-            items.put(slot.getSlot_id(), buildItem(config));
+            items.put(slot.getSlot_id(), buildItem(config, player));
         }
         Map<Integer, Integer> layout = GuiRules.layout(new ArrayList<>(items.keySet()), inventory.getSize(), gui.isFluid());
         layout.forEach((at, slot) -> inventory.setItem(at, items.get(slot)));
@@ -203,11 +202,15 @@ public class GUIManager implements Listener {
 
     // ── Items ───────────────────────────────────────────────────────────────────
 
-    /** The item a config shows: a custom item or a material (head, colour, lore, cost line …). */
-    ItemStack buildItem(GUISlotConfig config) {
+    /**
+     * The item a config shows to a player: a custom item or a material (head,
+     * colour, lore, cost line …), with the placeholders in its name and lore filled in.
+     */
+    ItemStack buildItem(GUISlotConfig config, Player player) {
         GUIItemBehaviour b = config.getBehaviour();
         ItemStack citem = b.citemId() == null ? null : hub.getCitemDAO().getCitem(b.citemId());
-        ItemStack item = citem != null ? citemLook(citem, config) : materialLook(config);
+        Text text = new Text(player);
+        ItemStack item = citem != null ? citemLook(citem, config, text) : materialLook(config, text);
         item.setAmount(Math.max(1, config.getAmount()));
         return item;
     }
@@ -216,23 +219,23 @@ public class GUIManager implements Listener {
      * A custom item as the look: its model and data. Its name, unless set to use
      * the config's display name; its lore, the config's, or both, as set.
      */
-    private ItemStack citemLook(ItemStack item, GUISlotConfig config) {
+    private ItemStack citemLook(ItemStack item, GUISlotConfig config, Text text) {
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return item;
         GUIItemBehaviour b = config.getBehaviour();
-        String configName = config.getDisplay_name() == null ? null : Utils.parseColorCodeString(config.getDisplay_name());
+        String configName = config.getDisplay_name() == null ? null : text.line(config.getDisplay_name());
         String name = GuiRules.citemName(meta.hasDisplayName() ? meta.getDisplayName() : null, configName, b.citemName());
         if (name != null) meta.setDisplayName(name);
 
-        List<String> configLore = parseLore(config.getLore());
-        configLore.replaceAll(Utils::parseColorCodeString);
+        List<String> configLore = text.lines(parseLore(config.getLore()));
         List<String> itemLore = meta.getLore() == null ? List.of() : meta.getLore();
         setLore(meta, GuiRules.citemLore(itemLore, configLore, b.citemLore()), b);
+        applyTooltip(meta, config, text); // set on the config: overrides the custom item's
         item.setItemMeta(meta);
         return item;
     }
 
-    private ItemStack materialLook(GUISlotConfig config) {
+    private ItemStack materialLook(GUISlotConfig config, Text text) {
         Material material = config.getMaterial() == null ? null : Material.getMaterial(config.getMaterial().toUpperCase());
         if (material == null) {
             plugin.writeLog("GUIManager", Level.WARNING, "GUI " + config.getGui_id() + ": unknown material '" + config.getMaterial() + "', showing PAPER");
@@ -243,7 +246,7 @@ public class GUIManager implements Listener {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             if (meta instanceof SkullMeta skull) applySkin(skull, config);
-            applyMeta(meta, config);
+            applyMeta(meta, config, text);
             item.setItemMeta(meta);
         }
 
@@ -265,22 +268,18 @@ public class GUIManager implements Listener {
         meta.setPlayerProfile(profile);
     }
 
-    private void applyMeta(ItemMeta meta, GUISlotConfig config) {
+    private void applyMeta(ItemMeta meta, GUISlotConfig config, Text text) {
         if (config.getDisplay_name() != null) {
-            meta.setDisplayName(Utils.parseColorCodeString(config.getDisplay_name()));
+            meta.setDisplayName(text.line(config.getDisplay_name()));
         }
-        List<String> lore = parseLore(config.getLore());
-        lore.replaceAll(Utils::parseColorCodeString);
-        setLore(meta, lore, config.getBehaviour());
+        setLore(meta, text.lines(parseLore(config.getLore())), config.getBehaviour());
 
         // A player head's model field held its skin before head textures; other items use it as the item model.
-        if (!(meta instanceof SkullMeta) && config.getModel() != null && !config.getModel().isBlank()) {
-            meta.setItemModel(new NamespacedKey("wos", config.getModel()));
+        if (!(meta instanceof SkullMeta)) {
+            NamespacedKey model = key(config, "model", text.plain(config.getModel()), "wos");
+            if (model != null) meta.setItemModel(model);
         }
-        if (config.getTooltip() != null && !config.getTooltip().isEmpty()) {
-            if (Objects.equals(config.getTooltip(), "hidden")) meta.setHideTooltip(true);
-            else meta.setTooltipStyle(new NamespacedKey("minecraft", config.getTooltip()));
-        }
+        applyTooltip(meta, config, text);
         if (config.isEnchanted()) meta.addEnchant(Enchantment.UNBREAKING, 1, true);
         meta.addItemFlags(
                 ItemFlag.HIDE_ATTRIBUTES,
@@ -292,6 +291,53 @@ public class GUIManager implements Listener {
                 ItemFlag.HIDE_PLACED_ON,
                 ItemFlag.HIDE_STORED_ENCHANTS,
                 ItemFlag.HIDE_DYE);
+    }
+
+    /** "hide" (or "hidden") hides the tooltip; anything else is a tooltip style ("ns:key", else minecraft:key). */
+    private void applyTooltip(ItemMeta meta, GUISlotConfig config, Text text) {
+        String tooltip = text.plain(config.getTooltip());
+        if (GuiRules.hidesTooltip(tooltip)) {
+            meta.setHideTooltip(true);
+            return;
+        }
+        NamespacedKey style = key(config, "tooltip", tooltip, "minecraft");
+        if (style != null) meta.setTooltipStyle(style);
+    }
+
+    /** The value as a resource key, or null (with a warning if it was set but isn't a valid key). */
+    @Nullable
+    private NamespacedKey key(GUISlotConfig config, String field, @Nullable String value, String defaultNamespace) {
+        GuiRules.Key key = GuiRules.resourceKey(value, defaultNamespace);
+        if (key == null) {
+            if (value != null && !value.isBlank()) {
+                plugin.writeLog("GUIManager", Level.WARNING, "GUI " + config.getGui_id() + ": invalid " + field + " '" + value + "', ignored");
+            }
+            return null;
+        }
+        return new NamespacedKey(key.namespace(), key.path());
+    }
+
+    /** Colours and fills in the placeholders of an item's text, for one player. */
+    private final class Text {
+        private final Player player;
+
+        Text(Player player) { this.player = player; }
+
+        /** Placeholders only, no colours (a model or tooltip key). */
+        String plain(@Nullable String raw) {
+            return plugin.getPlaceholderResolver().resolvePlaceholders(raw, player);
+        }
+
+        String line(String raw) {
+            return Utils.parseColorCodeString(plugin.getPlaceholderResolver().resolvePlaceholders(raw, player));
+        }
+
+        /** A lore value with line breaks (like {citems.lore:id}) becomes several lines. */
+        List<String> lines(List<String> raw) {
+            List<String> lines = new ArrayList<>(plugin.getPlaceholderResolver().resolveLines(raw, player));
+            lines.replaceAll(Utils::parseColorCodeString);
+            return lines;
+        }
     }
 
     /** Sets the lore, with the cost / trade price lines the item shows. */

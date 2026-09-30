@@ -258,24 +258,10 @@ public class HologramManager {
                 .put(hologramKey, new HologramState(structFP, contentFP, List.of(entityId)));
     }
 
-    /**
-     * Resolves all {placeholder} tokens in a text string for the given player.
-     * Unknown keys fall back to their raw form or an empty constant.
-     */
+    /** The text with its {placeholder} tokens filled in for the player (unknown ones stay as written). */
     private String replacePlaceholders(String text, Player player) {
         PlaceholderResolver resolver = WoSSystems.getInstance().getPlaceholderResolver();
-        StringBuilder result = new StringBuilder();
-        int i = 0;
-        while (i < text.length()) {
-            int open = text.indexOf('{', i);
-            if (open == -1) { result.append(text.substring(i)); break; }
-            int close = text.indexOf('}', open + 1);
-            if (close == -1) { result.append(text.substring(i)); break; }
-            result.append(text, i, open);
-            result.append(resolver.resolvePlaceholders(text.substring(open + 1, close), player));
-            i = close + 1;
-        }
-        return result.toString();
+        return resolver.resolvePlaceholders(text, player);
     }
 
     /**
