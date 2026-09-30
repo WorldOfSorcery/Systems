@@ -15,7 +15,7 @@ import java.util.Locale;
 /**
  * Fills in {@code {placeholder}} tokens with live values, for one player. Used
  * by every text the systems show: action commands ({@code send_message},
- * titles, console commands …), GUI titles / names / lore / models / tooltips, dialogs, holograms
+ * titles, console commands …), GUI titles / names / lore / models / tooltips / player heads, dialogs, holograms
  * and quest messages.
  *
  * <ul>
@@ -88,7 +88,7 @@ public class PlaceholderResolver {
             case "player_nick": {
                 if (player == null) return null;
                 String nick = hub.getNicknameDAO().getNickname(player.getUniqueId());
-                return nick == null || nick.isBlank() ? player.getName() : nick;
+                return nick == null || nick.isBlank() ? player.getName() : nick.replace("_", " ");
             }
             default: {
                 Constant constant = hub.getConstantDAO().getConstant(name);

@@ -119,6 +119,29 @@ public final class GuiRules {
         return java.util.Base64.getEncoder().encodeToString(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 
+    private static final java.util.regex.Pattern PLAYER_NAME = java.util.regex.Pattern.compile("[A-Za-z0-9_]{1,16}");
+
+    /** What a player head shows: a skin texture, or the skin of the player with that name. */
+    public sealed interface HeadSkin permits Texture, Owner {}
+
+    /** A "textures" value (see {@link #skinTexture}). */
+    public record Texture(String value) implements HeadSkin {}
+
+    /** A player's name: their current skin. */
+    public record Owner(String name) implements HeadSkin {}
+
+    /**
+     * A head value (placeholders already filled in) as a skin: a texture URL or
+     * base64 value, or a Minecraft name (1-16 letters, digits or _, e.g. from
+     * {player_name}); null if blank.
+     */
+    public static @Nullable HeadSkin headSkin(@Nullable String head) {
+        if (head == null || head.isBlank()) return null;
+        String t = head.trim();
+        if (PLAYER_NAME.matcher(t).matches()) return new Owner(t);
+        return new Texture(skinTexture(t));
+    }
+
     /**
      * The lore with the price lines the item shows: the cost ({@code costFormat}
      * with %amount% and %currency%) and the trade's price ({@code priceFormat}

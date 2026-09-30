@@ -151,6 +151,23 @@ class GuiRulesTest {
             assertThat(GuiRules.skinTexture("eyJ0ZXh0dXJlcyI6e319")).isEqualTo("eyJ0ZXh0dXJlcyI6e319");
         }
 
+        @Test
+        void aHeadIsAPlayerNameOrATexture() {
+            assertThat(GuiRules.headSkin(" HektorTM ")).isEqualTo(new GuiRules.Owner("HektorTM"));
+            assertThat(GuiRules.headSkin("Notch_2")).isEqualTo(new GuiRules.Owner("Notch_2"));
+            assertThat(GuiRules.headSkin("https://textures.minecraft.net/texture/abc"))
+                    .isEqualTo(new GuiRules.Texture(GuiRules.skinTexture("https://textures.minecraft.net/texture/abc")));
+            assertThat(GuiRules.headSkin("eyJ0ZXh0dXJlcyI6e319")).isEqualTo(new GuiRules.Texture("eyJ0ZXh0dXJlcyI6e319"));
+            assertThat(GuiRules.headSkin("  ")).isNull();
+            assertThat(GuiRules.headSkin(null)).isNull();
+        }
+
+        @Test
+        void anUnfilledPlaceholderIsNotAName() {
+            // {player_name} with no player stays as written: braces, so a texture value (shows no skin), not a lookup.
+            assertThat(GuiRules.headSkin("{player_name}")).isInstanceOf(GuiRules.Texture.class);
+        }
+
         private static final String COST = "Cost: %amount% %currency%", PRICE = "Price: %price%";
 
         @Test

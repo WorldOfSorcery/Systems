@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.systems.citems.cmd;
 
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.citems.cmd.sub.*;
+import me.hektortm.woSSystems.systems.cooldowns.cmd.sub.Remove;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
@@ -24,8 +25,9 @@ public class CitemCommand implements CommandExecutor {
     public CitemCommand(DAOHub hub) {
         this.hub = hub;
 
-        subCommands.put("reload", new Reload(hub));
-
+        subCommands.put("give", new Give());
+        subCommands.put("info", new Info());
+        subCommands.put("remove", new Remove(hub));
     }
 
     // /citem -> rename <-

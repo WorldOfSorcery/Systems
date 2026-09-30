@@ -8,7 +8,7 @@ import java.util.List;
  * click types, trade, whether it can be clicked, and what happens after a
  * successful click.
  *
- * @param headTexture      a player head's skin: a texture URL or the base64 value (null: none)
+ * @param headTexture      a player head's skin: a texture URL, the base64 value or a player name; may hold placeholders like {player_name} (null: none)
  * @param citemId          show this custom item instead of the material (null: none)
  * @param citemName        with a custom item: keep its name (else the config's display name)
  * @param citemLore        with a custom item: "citem" (its lore), "config" (the config's) or "both" (its, then the config's)

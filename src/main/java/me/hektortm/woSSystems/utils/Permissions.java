@@ -5,23 +5,9 @@ import java.util.List;
 
 public enum Permissions {
 
-    CITEM_SAVE("citem.save"),
-    CITEM_DELETE("citem.delete"),
-    CITEM_UPDATE("citem.update"),
-    CITEM_LORE("citem.modify.lore"),
-    CITEM_RENAME("citem.modify.rename"),
-    CITEM_FLAGS("citem.modify.flags"),
-    CITEM_ACTIONS("citem.modify.actions"),
     CITEM_GIVE("citem.give"),
     CITEM_REMOVE("citem.remove"),
-    CITEM_TAG("citem.tag"),
     CITEM_INFO("citem.info"),
-    CITEM_MODEL("citem.modify.model"),
-    CITEM_COLOR("citem.modify.color"),
-    CITEM_TOOLTIP("citem.modify.tooltip"),
-    CITEM_SIGN("citem.sign"),
-    CITEM_EQUIPPABLE("citem.modify.equippable"),
-    CITEM_ENCHANT("citem.modify.enchant"),
 
     CRECIPE_CREATE("crecipe.create"),
     CRECIPE_DELETE("crecipe.delete"),

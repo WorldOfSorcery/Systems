@@ -59,6 +59,7 @@ public class GUIManager implements Listener {
     private final DAOHub hub;
     private final ActionHandler actionHandler;
     private final GUIClickHandler clicks;
+    private final HeadProfiles heads = new HeadProfiles(plugin);
 
     /**
      * What a player has open: the GUI, the page, which configured slot each
@@ -245,7 +246,7 @@ public class GUIManager implements Listener {
 
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            if (meta instanceof SkullMeta skull) applySkin(skull, config);
+            if (meta instanceof SkullMeta skull) applySkin(skull, config, text);
             applyMeta(meta, config, text);
             item.setItemMeta(meta);
         }
@@ -257,15 +258,22 @@ public class GUIManager implements Listener {
         return item;
     }
 
-    /** A player head's skin: the head texture (URL or base64), else the legacy base64 in model. */
-    private void applySkin(SkullMeta meta, GUISlotConfig config) {
-        String texture = config.getBehaviour().headTexture() != null
-                ? GuiRules.skinTexture(config.getBehaviour().headTexture())
-                : config.getModel();
-        if (texture == null || texture.isBlank()) return;
-        PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
-        profile.setProperty(new ProfileProperty("textures", texture));
-        meta.setPlayerProfile(profile);
+    /**
+     * A player head's skin: the head value (placeholders filled in) is a texture
+     * URL / base64 value or a player name ({player_name}: the viewer's own head);
+     * without one, the legacy base64 in model.
+     */
+    private void applySkin(SkullMeta meta, GUISlotConfig config, Text text) {
+        String head = config.getBehaviour().headTexture();
+        GuiRules.HeadSkin skin = head != null ? GuiRules.headSkin(text.plain(head))
+                : config.getModel() == null || config.getModel().isBlank() ? null : new GuiRules.Texture(config.getModel().trim());
+        if (skin instanceof GuiRules.Owner owner) {
+            meta.setPlayerProfile(heads.profile(owner.name()));
+        } else if (skin instanceof GuiRules.Texture texture) {
+            PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+            profile.setProperty(new ProfileProperty("textures", texture.value()));
+            meta.setPlayerProfile(profile);
+        }
     }
 
     private void applyMeta(ItemMeta meta, GUISlotConfig config, Text text) {
