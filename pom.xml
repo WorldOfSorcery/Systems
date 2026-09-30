@@ -81,7 +81,7 @@
         </repository>
         <repository>
             <id>github</id>
-            <url>https://maven.pkg.github.com/worldofsorcery/core</url>
+            <url>https://maven.pkg.github.com/world-of-sorcery/core</url>
         </repository>
         <repository>
             <id>sk89q-repo</id>
