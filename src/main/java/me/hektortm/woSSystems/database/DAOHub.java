@@ -112,6 +112,11 @@ public class DAOHub {
      * switch). Blocking — called off the main thread by {@code WebhookServer}.
      */
     public void handleWebhookInvalidation(String type, String id, UUID editorUUID) {
+        // A message edited in the portal: every plugin's messages live in WoSCore.
+        if ("lang".equals(type)) {
+            me.hektortm.wosCore.LangManager.shared().reloadEdits();
+            return;
+        }
         content.reload(type, id, editorUUID);
     }
 
