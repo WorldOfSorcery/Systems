@@ -134,6 +134,8 @@ public class GUIDAO {
         return new GUIItemBehaviour(
                 blankToNull(Json.str(c, "head_texture")),
                 blankToNull(Json.str(c, "citem_id")),
+                Json.bool(c, "citem_name", true),
+                Json.str(c, "citem_lore", "citem"),
                 blankToNull(Json.str(c, "cost_currency")),
                 Json.integer(c, "cost_amount", 0),
                 Json.bool(c, "show_cost", false),
@@ -148,7 +150,7 @@ public class GUIDAO {
     }
 
     static GUIItemBehaviour.Trade trade(JsonObject t) {
-        return new GUIItemBehaviour.Trade(tradeEntries(Json.array(t, "take")), tradeEntries(Json.array(t, "give")));
+        return new GUIItemBehaviour.Trade(tradeEntries(Json.array(t, "take")), tradeEntries(Json.array(t, "give")), Json.bool(t, "show", false));
     }
 
     private static List<GUIItemBehaviour.Entry> tradeEntries(JsonArray arr) {

@@ -212,17 +212,22 @@ public class GUIManager implements Listener {
         return item;
     }
 
-    /** A custom item as the look: its model and data, with the config's name / lore when set. */
+    /**
+     * A custom item as the look: its model and data. Its name, unless set to use
+     * the config's display name; its lore, the config's, or both, as set.
+     */
     private ItemStack citemLook(ItemStack item, GUISlotConfig config) {
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return item;
-        if (config.getDisplay_name() != null && !config.getDisplay_name().isBlank()) {
-            meta.setDisplayName(Utils.parseColorCodeString(config.getDisplay_name()));
-        }
-        List<String> lore = parseLore(config.getLore());
-        if (lore.isEmpty() && meta.getLore() != null) lore = new ArrayList<>(meta.getLore());
-        else lore.replaceAll(Utils::parseColorCodeString);
-        setLore(meta, lore, config.getBehaviour());
+        GUIItemBehaviour b = config.getBehaviour();
+        String configName = config.getDisplay_name() == null ? null : Utils.parseColorCodeString(config.getDisplay_name());
+        String name = GuiRules.citemName(meta.hasDisplayName() ? meta.getDisplayName() : null, configName, b.citemName());
+        if (name != null) meta.setDisplayName(name);
+
+        List<String> configLore = parseLore(config.getLore());
+        configLore.replaceAll(Utils::parseColorCodeString);
+        List<String> itemLore = meta.getLore() == null ? List.of() : meta.getLore();
+        setLore(meta, GuiRules.citemLore(itemLore, configLore, b.citemLore()), b);
         item.setItemMeta(meta);
         return item;
     }
@@ -289,11 +294,12 @@ public class GUIManager implements Listener {
                 ItemFlag.HIDE_DYE);
     }
 
-    /** Sets the lore, with the cost line when the item shows its cost. */
+    /** Sets the lore, with the cost / trade price lines the item shows. */
     private void setLore(ItemMeta meta, List<String> lore, GUIItemBehaviour b) {
-        String costFormat = plugin.getLangManager().getMessage("guis", "cost");
-        List<String> withCost = GuiRules.loreWithCost(lore, b, Utils.parseColorCodeString(costFormat));
-        if (!withCost.isEmpty()) meta.setLore(withCost);
+        String costFormat = Utils.parseColorCodeString(plugin.getLangManager().getMessage("guis", "cost"));
+        String priceFormat = Utils.parseColorCodeString(plugin.getLangManager().getMessage("guis", "price"));
+        List<String> withPrice = GuiRules.loreWithPrice(lore, b, costFormat, priceFormat);
+        meta.setLore(withPrice.isEmpty() ? null : withPrice);
     }
 
     /** The lore as saved (a JSON array), as a mutable list. */

@@ -10,6 +10,8 @@ import java.util.List;
  *
  * @param headTexture      a player head's skin: a texture URL or the base64 value (null: none)
  * @param citemId          show this custom item instead of the material (null: none)
+ * @param citemName        with a custom item: keep its name (else the config's display name)
+ * @param citemLore        with a custom item: "citem" (its lore), "config" (the config's) or "both" (its, then the config's)
  * @param costCurrency     currency charged on a successful click (null: free)
  * @param costAmount       how much of it (0: free)
  * @param showCost         add the cost to the item's lore
@@ -21,6 +23,8 @@ import java.util.List;
 public record GUIItemBehaviour(
         String headTexture,
         String citemId,
+        boolean citemName,
+        String citemLore,
         String costCurrency,
         int costAmount,
         boolean showCost,
@@ -33,9 +37,12 @@ public record GUIItemBehaviour(
         String postUse,
         String postUseTarget) {
 
-    /** Taken from the player, then given: all at once, only if they have everything taken. */
-    public record Trade(List<Entry> take, List<Entry> give) {
-        public static final Trade NONE = new Trade(List.of(), List.of());
+    /**
+     * Taken from the player, then given: all at once, only if they have everything
+     * taken. {@code show}: the price (what's taken) is shown in the item's lore.
+     */
+    public record Trade(List<Entry> take, List<Entry> give, boolean show) {
+        public static final Trade NONE = new Trade(List.of(), List.of(), false);
 
         public boolean isEmpty() { return take.isEmpty() && give.isEmpty(); }
     }
@@ -46,7 +53,7 @@ public record GUIItemBehaviour(
     }
 
     /** An item with none of the features: the behaviour of configs saved before them. */
-    public static final GUIItemBehaviour PLAIN = new GUIItemBehaviour(null, null, null, 0, false, null,
+    public static final GUIItemBehaviour PLAIN = new GUIItemBehaviour(null, null, true, "citem", null, 0, false, null,
             List.of(), List.of(), List.of(), Trade.NONE, true, "default", null);
 
     public boolean hasCost() { return costAmount > 0 && costCurrency != null && !costCurrency.isBlank(); }

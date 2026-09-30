@@ -120,15 +120,45 @@ public final class GuiRules {
     }
 
     /**
-     * The lore with the cost appended when the item shows it: a blank line, then
-     * {@code costFormat} with %amount% and %currency% filled in.
+     * The lore with the price lines the item shows: the cost ({@code costFormat}
+     * with %amount% and %currency%) and the trade's price ({@code priceFormat}
+     * with %price%, e.g. "3× bass, 20 gold"), after a blank line.
      */
-    public static List<String> loreWithCost(List<String> lore, GUIItemBehaviour b, String costFormat) {
-        if (!b.showCost() || !b.hasCost()) return lore;
+    public static List<String> loreWithPrice(List<String> lore, GUIItemBehaviour b, String costFormat, String priceFormat) {
+        List<String> lines = new ArrayList<>();
+        if (b.showCost() && b.hasCost()) {
+            lines.add(costFormat.replace("%amount%", String.valueOf(b.costAmount())).replace("%currency%", b.costCurrency()));
+        }
+        if (b.trade().show() && !b.trade().take().isEmpty()) {
+            List<String> parts = new ArrayList<>();
+            for (GUIItemBehaviour.Entry e : b.trade().take()) {
+                parts.add(e.isCitem() ? e.amount() + "× " + e.id() : e.amount() + " " + e.id());
+            }
+            lines.add(priceFormat.replace("%price%", String.join(", ", parts)));
+        }
+        if (lines.isEmpty()) return lore;
         List<String> out = new ArrayList<>(lore);
         if (!out.isEmpty()) out.add("");
-        out.add(costFormat.replace("%amount%", String.valueOf(b.costAmount())).replace("%currency%", b.costCurrency()));
+        out.addAll(lines);
         return out;
+    }
+
+    /** A custom-item look's lore: the item's, the config's, or both (the item's first). */
+    public static List<String> citemLore(List<String> itemLore, List<String> configLore, String mode) {
+        return switch (mode == null ? "citem" : mode) {
+            case "config" -> new ArrayList<>(configLore);
+            case "both" -> {
+                List<String> out = new ArrayList<>(itemLore);
+                out.addAll(configLore);
+                yield out;
+            }
+            default -> new ArrayList<>(itemLore);
+        };
+    }
+
+    /** A custom-item look's name: the item's, unless it's set not to be and the config has one. */
+    public static @Nullable String citemName(@Nullable String itemName, @Nullable String configName, boolean useItemName) {
+        return useItemName || configName == null || configName.isBlank() ? itemName : configName;
     }
 
     // ── Requirements ────────────────────────────────────────────────────────────

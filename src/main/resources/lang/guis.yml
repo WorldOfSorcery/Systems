@@ -4,8 +4,9 @@ error:
   citem: "You need %amount%x %id% for this."
   currency: "You need %amount% %id% for this."
 
-# Added to an item's lore when it shows its cost.
+# Added to an item's lore when it shows its cost / its trade's price.
 cost: "§7Cost: §e%amount% %currency%"
+price: "§7Price: §e%price%"
 
 confirm:
   title: "Are you sure?"
