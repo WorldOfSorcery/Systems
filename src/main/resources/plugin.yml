@@ -77,6 +77,9 @@ commands:
     description: realname
     usage: /<command> <input>
   # Loottable Commands
+  bug:
+    description: Report a bug to the team
+    usage: /bug
   loottable:
     aliases: [lt]
     description: loottable

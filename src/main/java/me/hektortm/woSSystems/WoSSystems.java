@@ -10,6 +10,7 @@ import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import me.hektortm.woSSystems.core.JoinListener;
 import me.hektortm.woSSystems.core.QuitListener;
 import me.hektortm.woSSystems.systems.backpack.BackpackListener;
+import me.hektortm.woSSystems.systems.bugs.BugCommand;
 import me.hektortm.woSSystems.systems.chat.ChatListener;
 import me.hektortm.woSSystems.systems.chat.ChatManager;
 import me.hektortm.woSSystems.systems.chat.NicknameManager;
@@ -253,6 +254,7 @@ public final class WoSSystems extends JavaPlugin {
             lang.loadLangFileExternal(this, "guis", core);
             lang.loadLangFileExternal(this, "dialogs", core);
             lang.loadLangFileExternal(this, "global_stats", core);
+            lang.loadLangFileExternal(this, "bugs", core);
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }
@@ -441,6 +443,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("link", new LinkCommand());
         cmdReg("dialog", new me.hektortm.woSSystems.systems.dialogs.cmd.DialogCommand(daoHub));
         cmdReg("quest", new QuestCommand(questManager, daoHub));
+        cmdReg("bug", new BugCommand(this));
        // cmdReg("unlockrecipe", new RecipeCommand());
     }
 

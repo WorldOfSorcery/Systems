@@ -1,0 +1,19 @@
+cooldown: "&cPlease wait a minute before reporting another bug."
+sending: "&7Sending your bug report..."
+sent: "&aThanks! Your bug report &f#%id%&a was sent to the team."
+failed: "&cYour bug report could not be sent. Please try again in a moment."
+dialog:
+  title: "&e&lReport a bug"
+  intro: "&7Tell us in your own words what went wrong. The more exact, the faster it gets fixed. Your location is added automatically."
+  problems: "&cStill needed: %problems%"
+field:
+  title: "Short title"
+  what: "What happened? What did you do, what did you see?"
+  steps: "How to make it happen again (one step per line, optional)"
+  severity: "How bad is it?"
+  frequency: "How often does it happen?"
+option:
+  pick: "- pick one -"
+button:
+  send: "&aSend"
+  cancel: "&cCancel"
