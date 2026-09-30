@@ -38,24 +38,21 @@ public class Info extends SubCommand {
         PersistentDataContainer data = meta.getPersistentDataContainer();
         String itemId = data.get(Keys.ID.get(), PersistentDataType.STRING);
 
-        if (itemId == null) {
-            Utils.info(sender, "citems", "not-citem");
-            return;
-        }
-
         MiniMessage mm = MiniMessage.miniMessage();
 
         String url = "https://admin.worldofsorcery.com/dashboard/gamedesign/citems/" + itemId;
 
         p.sendMessage(mm.deserialize("<green>Item Information:"));
 
-        p.sendMessage(mm.deserialize(
-                "<gray>Identifier: <click:open_url:'<url>'>" +
-                        "<hover:show_text:'<green>Click to open CItem'><yellow><underlined><id></underlined></yellow></hover>" +
-                        "</click>",
-                Placeholder.parsed("url", url),
-                Placeholder.unparsed("id", itemId)
-        ));
+        if (itemId != null) {
+            p.sendMessage(mm.deserialize(
+                    "<gray>Identifier: <click:open_url:'<url>'>" +
+                            "<hover:show_text:'<green>Click to open CItem'><yellow><underlined><id></underlined></yellow></hover>" +
+                            "</click>",
+                    Placeholder.parsed("url", url),
+                    Placeholder.unparsed("id", itemId)
+            ));
+        }
 
         boolean undroppable = data.has(Keys.UNDROPPABLE.get(), PersistentDataType.BOOLEAN);
         boolean unusable = data.has(Keys.UNUSABLE.get(), PersistentDataType.BOOLEAN);

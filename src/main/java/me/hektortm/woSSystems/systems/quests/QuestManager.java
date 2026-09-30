@@ -207,7 +207,7 @@ public class QuestManager {
                 state.getActiveNodes().add(nodeId);
                 String dialogId = node.getDialogId();
                 if (dialogId != null) {
-                    hub.getDialogDAO().buildDialog(dialogId, null, player);
+                    hub.getDialogDAO().showDialog(dialogId, null, player);
                     // Quest waits here until onDialogComplete(player, dialogId) is called.
                     // If dialog system doesn't fire a completion event, call advanceFromNode manually.
                 } else {

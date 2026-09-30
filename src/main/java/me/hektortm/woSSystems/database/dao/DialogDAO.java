@@ -41,9 +41,10 @@ public class DialogDAO {
 
     // ── cached templates ──────────────────────────────────────────────────────
 
-    private record RawAnswer(String id, String text, @Nullable String action) {}
+    private record RawAnswer(String id, String text, @Nullable String action, @Nullable String goTo) {}
 
-    private record RawPage(@Nullable String preAction, @Nullable String postAction,
+    /** {@code id}: the page's id (answers' and pages' go_to point at it); {@code goTo}: the next page. */
+    private record RawPage(String id, @Nullable String goTo, @Nullable String preAction, @Nullable String postAction,
                            List<String> lineTemplates, List<RawAnswer> answers) {}
 
     private record RawDialog(String charNameTemplate, String charNameColor, String textColor,
@@ -58,9 +59,12 @@ public class DialogDAO {
             List<RawAnswer> answers = new ArrayList<>();
             for (JsonElement a : Json.array(p, "answers")) {
                 JsonObject ans = a.getAsJsonObject();
-                answers.add(new RawAnswer(Json.str(ans, "id"), Json.str(ans, "answer_text", ""), blankToNull(Json.str(ans, "action"))));
+                answers.add(new RawAnswer(Json.str(ans, "id"), Json.str(ans, "answer_text", ""),
+                        blankToNull(Json.str(ans, "action")), blankToNull(Json.str(ans, "go_to"))));
             }
-            pages.add(new RawPage(blankToNull(Json.str(p, "pre_action")), blankToNull(Json.str(p, "post_action")),
+            String pageId = blankToNull(Json.str(p, "id"));
+            pages.add(new RawPage(pageId != null ? pageId : String.valueOf(pages.size()), blankToNull(Json.str(p, "go_to")),
+                    blankToNull(Json.str(p, "pre_action")), blankToNull(Json.str(p, "post_action")),
                     Json.strings(p, "lines"), answers));
         }
         return new RawDialog(
@@ -111,7 +115,8 @@ public class DialogDAO {
                 .setAnswerText(raw.textColor(), 13, raw.selectedColor());
 
         for (RawPage rawPage : raw.pages()) {
-            Page.Builder pageBuilder = new Page.Builder();
+            Page.Builder pageBuilder = new Page.Builder().setID(rawPage.id());
+            if (rawPage.goTo() != null) pageBuilder.setGoTo(List.of(rawPage.goTo()));
             if (rawPage.preAction() != null)
                 pageBuilder.addPreCallback(p -> plugin.getInteractionManager().triggerInteraction(rawPage.preAction(), p, null));
             if (rawPage.postAction() != null)
@@ -122,12 +127,13 @@ public class DialogDAO {
             }
             for (RawAnswer a : rawPage.answers()) {
                 List<String> actionList = a.action() == null ? List.of() : List.of(a.action());
-                pageBuilder.addAnswer(new Answer.Builder()
+                Answer.Builder answer = new Answer.Builder()
                         .setAnswerID(a.id())
                         .setAnswerText(plugin.getPlaceholderResolver().resolvePlaceholders(a.text(), target))
                         .addCallback(p -> plugin.getActionHandler().executeActions(
-                                p, actionList, ActionHandler.SourceType.DIALOG, dialogId, null))
-                        .build());
+                                p, actionList, ActionHandler.SourceType.DIALOG, dialogId, null));
+                if (a.goTo() != null) answer.setGoTo(List.of(a.goTo()));
+                pageBuilder.addAnswer(answer.build());
             }
             dialogBuilder.addPage(pageBuilder.build());
         }
@@ -136,5 +142,22 @@ public class DialogDAO {
         else if (source instanceof ConsoleCommandSender) source.sendMessage("Dialog " + dialogId + " triggered for player " + target.getName());
 
         return dialogBuilder.build();
+    }
+
+    /** Whether a dialog with this id is loaded. */
+    public boolean exists(String dialogId) {
+        return store.get(dialogId) != null;
+    }
+
+    /**
+     * Builds the dialog for {@code target} and shows it, from its first page.
+     * False (nothing shown) if the id is unknown or the dialog has no pages.
+     */
+    public boolean showDialog(String dialogId, @Nullable CommandSender source, Player target) {
+        RawDialog raw = store.get(dialogId);
+        Dialogue dialogue = buildDialog(dialogId, source, target);
+        if (raw == null || dialogue == null || raw.pages().isEmpty()) return false;
+        plugin.getDialogueApi().sendDialogue(target, dialogue, raw.pages().get(0).id());
+        return true;
     }
 }

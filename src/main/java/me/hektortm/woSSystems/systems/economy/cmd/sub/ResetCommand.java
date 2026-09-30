@@ -37,7 +37,7 @@ public class ResetCommand extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
 
-        if(args.length < 3) {
+        if(args.length < 2) {
             error(sender, "economy", "error.reset-usage");
             return;
         }
