@@ -44,7 +44,7 @@ public class GlobalTakeCommand extends SubCommand {
         }
 
         try {
-            amount = Long.parseLong(args[2]);
+            amount = Long.parseLong(args[1]);
         } catch (NumberFormatException e) {
             Utils.error(sender, "global_stats", "error.invalid-amount");
             return;
