@@ -40,6 +40,7 @@ public class EcoCommand implements CommandExecutor {
         permCmds.put(Permissions.BALANCE_SELF, "balance");
         permCmds.put(Permissions.BALANCE_OTHERS, "balance.others");
         permCmds.put(Permissions.ECONOMY_PAY, "pay");
+        permCmds.put(Permissions.ECONOMY_BALTOP, "baltop");
         subCommands.put("help", new HelpCommand(this));
 
     }

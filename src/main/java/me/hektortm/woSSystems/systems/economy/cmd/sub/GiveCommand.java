@@ -1,20 +1,23 @@
 package me.hektortm.woSSystems.systems.economy.cmd.sub;
 
 import me.hektortm.woSSystems.WoSSystems;
-import me.hektortm.woSSystems.utils.Operations;
-import me.hektortm.woSSystems.utils.model.Currency;
+import me.hektortm.woSSystems.systems.economy.Amounts;
 import me.hektortm.woSSystems.systems.economy.EcoManager;
+import me.hektortm.woSSystems.systems.economy.cmd.Eco;
+import me.hektortm.woSSystems.utils.Operations;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
+import me.hektortm.woSSystems.utils.model.Currency;
 import me.hektortm.wosCore.LangManager;
-import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.logging.LogManager;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.OptionalLong;
+
 import static me.hektortm.wosCore.Utils.error;
 
+/** /economy give &lt;player&gt; &lt;currency&gt; &lt;amount&gt; */
 public class GiveCommand extends SubCommand {
 
     private final EcoManager ecoManager;
@@ -39,55 +42,31 @@ public class GiveCommand extends SubCommand {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-
-        if(args.length < 3) {
+        if (args.length < 3) {
             error(sender, "economy", "error.give-usage");
             return;
         }
+        Currency currency = Eco.currency(ecoManager, sender, args[1]);
+        if (currency == null) return;
+        OptionalLong typed = Eco.positiveAmount(sender, args[2], -1);
+        if (typed.isEmpty()) return;
+        long amount = typed.getAsLong();
+        Player target = Eco.online(sender, args[0]);
+        if (target == null) return;
 
-        String playerName = args[0];
-        String currencyID = args[1];
-        int amount;
-        if(!ecoManager.currencyExists(currencyID)) {
-            error(sender, "economy", "currency-exist");
+        if (sender instanceof Player p && target.getUniqueId().equals(p.getUniqueId())) {
+            log.sendWarning(p.getName() + "-> " + target.getName() + ": Gave " + amount + " " + currency.getId());
+            log.writeLog(p, "-> " + target.getName() + ": Gave " + amount + " " + currency.getId());
+        }
+
+        // What was really given: less than asked when the currency's maximum is reached.
+        long given = ecoManager.modifyCurrency(target.getUniqueId(), currency.getId(), amount, Operations.GIVE, "command", sender.getName());
+        if (given <= 0) {
+            error(sender, "economy", "error.limit");
             return;
         }
-        Currency currency = ecoManager.getCurrencies().get(currencyID.toLowerCase());
-        String name = currency.getName();
-        String color = currency.getColor();
-        String icon = currency.getIcon();
-
-        if (icon == null || icon.isBlank()) icon = "";
-
-
-
-        try {
-            amount = Integer.parseInt(args[2]);
-        } catch (NumberFormatException e) {
-            WoSSystems.ecoMsg(sender, "economy", "invalid-amount");
-            return;
-        }
-
-        Player target = Bukkit.getPlayer(playerName);
-        if (target == null) {
-            Utils.error(sender, "general", "error.online");
-            return;
-        }
-
-        if (sender instanceof Player p && target.getName().equals(p.getName())) {
-                log.sendWarning(p.getName()+ "-> "+ target.getName() +": Gave "+amount+" "+currencyID);
-                log.writeLog(p, "-> "+ target.getName() +": Gave "+amount+" "+currencyID);
-        }
-
-        ecoManager.modifyCurrency(target.getUniqueId(), currencyID, amount, Operations.GIVE, "command", sender.getName());
-        WoSSystems.ecoMsg3Values(sender, "economy", "currency.given", "%amount%", String.valueOf(amount), "%currency%", color+name, "%player%", playerName);
-
-        String actionbar = lang.getMessage("economy", "actionbar.given")
-                .replace("%icon%", icon)
-                .replace("%amount%", String.valueOf(amount))
-                .replace("%name%", name)
-                .replace("%color%", color);
-        target.sendActionBar(actionbar);
-
+        WoSSystems.ecoMsg3Values(sender, "economy", "currency.given",
+                "%amount%", Amounts.format(given), "%currency%", Eco.label(currency), "%player%", target.getName());
+        Eco.actionBar(target, lang, "actionbar.given", currency, given);
     }
 }

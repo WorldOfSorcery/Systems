@@ -56,6 +56,7 @@ public enum Permissions {
     ECONOMY_COINFLIP("economy.coinflip"),
 
     ECONOMY_PAY("economy.pay"),
+    ECONOMY_BALTOP("economy.baltop"),
 
     NICK_REQUEST_SEND("nick.request.send"),
     NICK_REQUEST_VIEW("nick.request.view"),

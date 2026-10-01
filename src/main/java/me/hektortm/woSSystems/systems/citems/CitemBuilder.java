@@ -66,7 +66,9 @@ public final class CitemBuilder {
             material = Material.PAPER;
         }
 
-        ItemStack item = new ItemStack(material);
+        // Components without ItemMeta code of their own (equippable, glider,
+        // use_cooldown, anything newer) are applied by the server's item parser.
+        ItemStack item = base(id, material, data);
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return item;
 
@@ -200,9 +202,49 @@ public final class CitemBuilder {
 
     // ── Components ────────────────────────────────────────────────────────────
 
+    /**
+     * The item with its parser-applied components (see {@link CitemComponents}).
+     * A component the server refuses (a typo, a field of another version) is
+     * skipped with a warning; the others still apply.
+     */
+    private static ItemStack base(String citemId, Material material, JsonObject data) {
+        if (!material.isItem() || !data.has("components") || !data.get("components").isJsonObject()) {
+            return new ItemStack(material);
+        }
+        Map<String, String> components = CitemComponents.vanilla(data.getAsJsonObject("components"));
+        if (components.isEmpty()) return new ItemStack(material);
+
+        String itemId = material.getKey().toString();
+        ItemStack all = parse(CitemComponents.itemString(itemId, components));
+        if (all != null) return all;
+
+        // Something in there is invalid: find out which, keep the rest.
+        Map<String, String> valid = new LinkedHashMap<>();
+        for (Map.Entry<String, String> c : components.entrySet()) {
+            if (parse(CitemComponents.itemString(itemId, Map.of(c.getKey(), c.getValue()))) != null) {
+                valid.put(c.getKey(), c.getValue());
+            } else {
+                Bukkit.getLogger().warning("[CitemBuilder] " + citemId + ": component " + c.getKey()
+                        + " is not valid on this server and was skipped: " + c.getValue());
+            }
+        }
+        ItemStack rest = valid.isEmpty() ? null : parse(CitemComponents.itemString(itemId, valid));
+        return rest != null ? rest : new ItemStack(material);
+    }
+
+    /** The item for a /give-style string, or null when the server can't parse it. */
+    private static ItemStack parse(String itemString) {
+        try {
+            return Bukkit.getItemFactory().createItemStack(itemString);
+        } catch (IllegalArgumentException invalid) {
+            return null;
+        }
+    }
+
+    /** The components applied through ItemMeta ({@link CitemComponents#TYPED}). */
     private static void applyComponents(ItemMeta meta, Material mat, JsonObject components) {
         for (Map.Entry<String, JsonElement> entry : components.entrySet()) {
-            String id = entry.getKey();
+            String id = CitemComponents.namespaced(entry.getKey().trim());
             JsonElement val = entry.getValue();
 
             switch (id) {
@@ -226,15 +268,6 @@ public final class CitemBuilder {
                     String nameStr = val.getAsString();
                     meta.itemName(parseText(nameStr));
                 }
-                case "minecraft:tooltip_style" -> {
-                    // Resource pack tooltip style key — store in PDC
-                    meta.getPersistentDataContainer().set(
-                            new NamespacedKey(NS, "mc_tooltip_style"),
-                            PersistentDataType.STRING,
-                            val.getAsString()
-                    );
-                }
-
                 // ── Durability ────────────────────────────────────────────────
                 case "minecraft:damage" -> {
                     if (meta instanceof Damageable d) d.setDamage(val.getAsInt());
@@ -257,24 +290,6 @@ public final class CitemBuilder {
                 // ── Stack & Use ───────────────────────────────────────────────
                 case "minecraft:max_stack_size" ->
                         meta.setMaxStackSize(val.getAsInt());
-                case "minecraft:use_cooldown" -> {
-                    // Paper 1.21.2+ — store in PDC as fallback
-                    if (val.isJsonObject()) {
-                        JsonObject cd = val.getAsJsonObject();
-                        meta.getPersistentDataContainer().set(
-                                new NamespacedKey(NS, "use_cooldown_seconds"),
-                                PersistentDataType.FLOAT,
-                                getFloat(cd, "seconds", 1f)
-                        );
-                        if (cd.has("cooldown_group")) {
-                            meta.getPersistentDataContainer().set(
-                                    new NamespacedKey(NS, "use_cooldown_group"),
-                                    PersistentDataType.STRING,
-                                    cd.get("cooldown_group").getAsString()
-                            );
-                        }
-                    }
-                }
 
                 // ── Enchantments ──────────────────────────────────────────────
                 case "minecraft:enchantments" -> {
@@ -311,15 +326,6 @@ public final class CitemBuilder {
                 }
 
                 // ── Banner / Shield ───────────────────────────────────────────
-                case "minecraft:base_color" -> {
-                    // setBaseColor removed in 1.20.5+; color is determined by material.
-                    // Store in PDC so plugin logic can reference it if needed.
-                    meta.getPersistentDataContainer().set(
-                            new NamespacedKey(NS, "base_color"),
-                            PersistentDataType.STRING,
-                            val.getAsString()
-                    );
-                }
                 case "minecraft:banner_patterns" -> {
                     if (val.isJsonArray() && meta instanceof BannerMeta bm) {
                         applyBannerPatterns(bm, val.getAsJsonArray());
@@ -346,24 +352,9 @@ public final class CitemBuilder {
                 // ── Misc ──────────────────────────────────────────────────────
                 case "minecraft:fire_resistant" ->
                         meta.setFireResistant(true);
-                case "minecraft:glider" -> {
-                    // Paper 1.21.2+ — no direct API yet in all versions; store in PDC
-                    meta.getPersistentDataContainer().set(
-                            new NamespacedKey(NS, "is_glider"),
-                            PersistentDataType.BOOLEAN,
-                            true
-                    );
-                }
 
-                // ── Unknown — store raw JSON in PDC ───────────────────────────
-                default -> {
-                    String safeKey = id.replace(":", "_").replace("/", "_");
-                    meta.getPersistentDataContainer().set(
-                            new NamespacedKey(NS, "component_" + safeKey),
-                            PersistentDataType.STRING,
-                            val.toString()
-                    );
-                }
+                // Every other component was applied by the item parser (see base()).
+                default -> { }
             }
         }
     }

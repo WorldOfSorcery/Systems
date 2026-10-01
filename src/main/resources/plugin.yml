@@ -60,9 +60,14 @@ commands:
     usage: /<command> [player]
     permission: economy.balance.self
   pay:
-    description: pay some1 money
-    usage: /pay <player>
+    description: Pay another player
+    usage: /pay <player> <currency> <amount>
     permission: economy.pay
+  baltop:
+    aliases: [ balancetop ]
+    description: The richest players of a currency
+    usage: /baltop [currency] [page]
+    permission: economy.baltop
   coinflip:
     description: GAMBLING
     usage: /coinflip <amount> <heads|tails>

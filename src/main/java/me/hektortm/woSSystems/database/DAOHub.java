@@ -117,6 +117,12 @@ public class DAOHub {
             me.hektortm.wosCore.LangManager.shared().reloadEdits();
             return;
         }
+        // A balance changed in the portal: apply the difference to the player's
+        // cached balance (on the main thread, like every other balance change).
+        if ("player_balance".equals(type)) {
+            org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> economyDAO.applyExternalChange(id));
+            return;
+        }
         content.reload(type, id, editorUUID);
     }
 

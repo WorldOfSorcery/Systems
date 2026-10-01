@@ -426,6 +426,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("economy", new EcoCommand(ecoManager, lang, log));
         cmdReg("balance", new BalanceCommand(ecoManager, core));
         cmdReg("pay", new PayCommand(ecoManager, lang));
+        cmdReg("baltop", new me.hektortm.woSSystems.systems.economy.cmd.BaltopCommand(ecoManager, lang, core.getApi()));
         cmdReg("coinflip", coinflipCommand);
         cmdReg("nickname", new NicknameCommand());
         cmdReg("loottable", new LoottableCommand(daoHub, lootTableManager));

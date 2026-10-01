@@ -11,7 +11,13 @@ error:
   reset-usage: "Usage: /economy reset <player> <currency>"
   random-usage: "Usage: /economy random <player> <currency> <min> <max>"
   pay-usage: "Usage: /pay <player> <currency> <amount>"
-  invalid-amount: "Invalid amount. Please provide a number."
+  pay-self: "You can't pay yourself."
+  not-payable: "This currency can't be paid to other players."
+  pay-limit: "That player can't hold that much of this currency."
+  limit: "That player already has the maximum of this currency."
+  baltop-empty: "Nobody has any of this currency yet."
+  baltop-page: "There is no such page."
+  invalid-amount: "Invalid amount. Use a whole number like 1500, 10k, 2.5m or all."
   invalid-amount-positive: "Invalid amount. Please provide a positive number."
   no-challenges: "There are no challengers available."
   challenge-not-found: "This Challenge was not found."
@@ -48,6 +54,11 @@ coinflip:
     bet: "§7Bet: §6%amount% Gold"
     choice: "§7Choice: §e%choice%"
 
+# %rank% %player% %color% %amount%
+baltop:
+  header: "§7Richest players: %currency% §7(page %page%)"
+  line: "§7#%rank% §f%player% §8- %color%%amount%"
+
 pay:
   target: "§a%player%§7 has paid you %amount%%currency%§7."
   player: "§7You have paid §a%target% %amount%%currency%§7."
@@ -62,4 +73,5 @@ help:
   balance: "§e/balance §7- Show your balance."
   balance.others: "§e/balance [player] §7- Show your or a players balance"
   pay: "§e/pay <player> <currency> <amount> §7- Pay a player."
+  baltop: "§e/baltop [currency] [page] §7- The richest players."
   help: "§e/economy help §7- Display this help message."
