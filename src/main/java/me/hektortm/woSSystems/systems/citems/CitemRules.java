@@ -22,7 +22,19 @@ public final class CitemRules {
     private static final int FONT_ZERO = 0x1D7D8;
     private static final String FORMAT_CODES = "0123456789abcdefklmnorx";
 
+    /** A placed item's rotation step, in degrees. */
+    private static final int TURN_STEP = 45;
+
     private CitemRules() {}
+
+    /**
+     * The yaw of an item placed by a player looking along {@code playerYaw}: turned
+     * to face them, at the nearest {@value #TURN_STEP}° step, as 0 up to (not including) 360.
+     */
+    public static float facingYaw(float playerYaw) {
+        int steps = Math.round((playerYaw + 180f) / TURN_STEP);
+        return Math.floorMod(steps * TURN_STEP, 360);
+    }
 
     /**
      * The portal's placeable flag as the number stored on the item: "small",

@@ -88,16 +88,6 @@ public class CitemDAO {
         return p == null ? null : p.owner();
     }
 
-    /** Moves the display entity of the placed item currently shown at {@code oldLocation}. */
-    public void changeDisplay(Location oldLocation, Location newLocation) {
-        String old = Parsers.locationToString(oldLocation);
-        for (Placed p : placed.all()) {
-            if (p.displayLocation().equals(old)) {
-                save(new Placed(p.blockLocation(), p.citemId(), p.owner(), Parsers.locationToString(newLocation), p.creative()));
-            }
-        }
-    }
-
     public boolean isCreativePlaced(Location location) {
         Placed p = at(location);
         return p != null && p.creative();

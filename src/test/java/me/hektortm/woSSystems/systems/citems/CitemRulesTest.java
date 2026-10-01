@@ -18,6 +18,16 @@ class CitemRulesTest {
     }
 
     @Test
+    void aPlacedItemFacesThePlayerInSteps() {
+        assertThat(CitemRules.facingYaw(180f)).isEqualTo(0f);    // looking north: the item faces south
+        assertThat(CitemRules.facingYaw(0f)).isEqualTo(180f);
+        assertThat(CitemRules.facingYaw(-90f)).isEqualTo(90f);   // looking east: the item faces west
+        assertThat(CitemRules.facingYaw(-170f)).isEqualTo(0f);   // nearest step
+        assertThat(CitemRules.facingYaw(30f)).isEqualTo(225f);
+        assertThat(CitemRules.facingYaw(179f)).isEqualTo(0f);    // never 360
+    }
+
+    @Test
     void lettersAndDigitsGetTheFont() {
         assertThat(CitemRules.stylize("Magic Wand 12!")).isEqualTo("ᴍᴀɢɪᴄ ᴡᴀɴᴅ 𝟙𝟚!");
         assertThat(CitemRules.stylize("")).isEmpty();

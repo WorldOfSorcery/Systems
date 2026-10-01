@@ -93,11 +93,6 @@ public class CitemListener implements Listener {
         if (isOnCooldown(p)) return;
         updateCooldown(p);
 
-        if (canEdit(p, loc)) {
-            citemDisplays.rotateItemDisplay(loc);
-            p.playSound(loc, Sound.ITEM_SPYGLASS_USE, 1L, 1L);
-        }
-
         triggerInteractionForDisplay(p, loc);
     }
 
@@ -226,15 +221,6 @@ public class CitemListener implements Listener {
 
     private void updateCooldown(Player p) {
         displayCooldowns.put(p.getUniqueId(), System.currentTimeMillis());
-    }
-
-    private boolean canEdit(Player player, Location loc) {
-        boolean isOwner = hub.getCitemDAO().isItemDisplayOwner(loc, player.getUniqueId());
-        boolean isCreativePlaced = hub.getCitemDAO().isCreativePlaced(loc);
-        boolean isCreative = player.getGameMode() == GameMode.CREATIVE;
-
-        return (isOwner && !isCreativePlaced) || (isCreative && isCreativePlaced);
-
     }
 
     public void leftClickAction(Player p) {

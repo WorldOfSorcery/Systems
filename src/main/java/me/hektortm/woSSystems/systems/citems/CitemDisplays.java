@@ -30,42 +30,6 @@ public class CitemDisplays {
         }
     }
 
-    private void removeEntityAtLocationSafely(Location location) {
-        World world = location.getWorld();
-        if (world == null) return;
-
-        world.getNearbyEntities(location, 0.5, 0.5, 0.5).stream()
-                .filter(entity -> entity instanceof ItemDisplay)
-                .forEach(Entity::remove);
-    }
-
-    public void rotateItemDisplay(Location blockLocation) {
-        Location displayLocation = hub.getCitemDAO().getDisplayLocation(blockLocation);
-        if (displayLocation == null) return; // Prevent null errors
-
-        // 🔹 Remove old display using a safer method
-        removeEntityAtLocationSafely(displayLocation);
-
-        // 🔹 Ensure yaw stays between 0-360 degrees
-        float oldYaw = displayLocation.getYaw();
-        float newYaw = (oldYaw + 45) % 360; // Keeps yaw in range
-
-        // 🔹 Create a new rotated location
-        Location newDisplayLocation = displayLocation.clone();
-        newDisplayLocation.setYaw(newYaw);
-
-        // 🔹 Get item & spawn the new display entity
-        ItemStack item = hub.getCitemDAO().getCitem(hub.getCitemDAO().getItemDisplayID(blockLocation));
-        ItemDisplay display = blockLocation.getWorld().spawn(newDisplayLocation, ItemDisplay.class, entity -> {
-            entity.setItemStack(item);
-            entity.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
-        });
-
-        // 🔹 Update database with the new location
-        hub.getCitemDAO().changeDisplay(displayLocation, newDisplayLocation);
-    }
-
-
     public void spawnItemDisplay(Location blockLocation, String id, Player p) {
         ItemStack item = hub.getCitemDAO().getCitem(id);
         if (blockLocation == null || item == null) {
@@ -79,6 +43,8 @@ public class CitemDisplays {
             return;
         }
         Location displayLocation = blockLocation.clone().add(0.5, 0.51, 0.5);
+        // Placed facing the player, in 45° steps
+        displayLocation.setYaw(CitemRules.facingYaw(p.getLocation().getYaw()));
         // Spawn the ItemDisplay entity
         ItemDisplay itemDisplay = blockLocation.getWorld().spawn(displayLocation, ItemDisplay.class, entity -> {
             entity.setItemStack(item);
