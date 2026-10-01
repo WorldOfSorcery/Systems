@@ -1,13 +1,11 @@
 package me.hektortm.woSSystems.systems.citems;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.Keys;
-import net.kyori.adventure.text.Component;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -27,9 +25,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -93,32 +89,32 @@ public class CitemListener implements Listener {
     }
 
     private void handleRightClickDisplay(PlayerInteractEvent e, Player p, Location loc) {
-        if (canEdit(p, loc) && !isOnCooldown(p)) {
-            updateCooldown(p);
+        // One cooldown for the whole click: the event fires once per hand
+        if (isOnCooldown(p)) return;
+        updateCooldown(p);
 
+        if (canEdit(p, loc)) {
             citemDisplays.rotateItemDisplay(loc);
             p.playSound(loc, Sound.ITEM_SPYGLASS_USE, 1L, 1L);
         }
 
-        triggerInteractionForDisplay(e,p,loc);
+        triggerInteractionForDisplay(p, loc);
     }
 
-    private void triggerInteractionForDisplay(PlayerInteractEvent e, Player p, Location loc) {
-        if (!isOnCooldown(p)) {
-            updateCooldown(p);
+    /** Runs the placed item's "placed" interaction, if it has one. */
+    private void triggerInteractionForDisplay(Player p, Location loc) {
+        String id = hub.getCitemDAO().getItemDisplayID(loc);
+        ItemStack citem = id == null ? null : hub.getCitemDAO().getCitem(id);
+        if (citem == null || !citem.hasItemMeta()) return;
 
-            String id = hub.getCitemDAO().getItemDisplayID(loc);
-            ItemStack citem = hub.getCitemDAO().getCitem(id);
+        PersistentDataContainer data = citem.getItemMeta().getPersistentDataContainer();
+        String interId = data.get(Keys.PLACED_ACTION.get(), PersistentDataType.STRING);
 
-            PersistentDataContainer data = citem.getItemMeta().getPersistentDataContainer();
-            String interId = data.get(Keys.PLACED_ACTION.get(), PersistentDataType.STRING);
-
-            if (interId == null) {
-                return;
-            }
-
-            plugin.getInteractionManager().triggerInteraction(interId, p, buildKey(loc));
+        if (interId == null) {
+            return;
         }
+
+        plugin.getInteractionManager().triggerInteraction(interId, p, buildKey(loc));
     }
 
     private void handleSneakRightClickDisplay(PlayerInteractEvent e, Player p, Location loc) {
@@ -151,7 +147,7 @@ public class CitemListener implements Listener {
         e.getClickedBlock().setType(Material.AIR);
         citemDisplays.spawnPickupParticle(loc);
         p.playSound(loc, Sound.BLOCK_CHISELED_BOOKSHELF_PICKUP, 1, 1);
-        p.getInventory().addItem(give);
+        p.getInventory().addItem(citemManager.personalize(give, p));
     }
 
     private void handleCitemPlacement(PlayerInteractEvent e, Player p, ItemStack item, Action action) {
@@ -177,6 +173,8 @@ public class CitemListener implements Listener {
         if (isOnCooldown(p)) return;
         updateCooldown(p);
 
+        // The item becomes a display: a block item (a head, a banner) must not also be placed as a block
+        e.setCancelled(true);
         placeCitemDisplay(p, spawnLoc, data, item);
 
         if (p.getGameMode() != GameMode.CREATIVE) {
@@ -192,8 +190,8 @@ public class CitemListener implements Listener {
 
         int type = data.get(Keys.PLACEABLE.get(), PersistentDataType.INTEGER);
 
-        Material mat = type == 1 ? Material.DEAD_TUBE_CORAL_FAN :
-                type == 2 ? Material.BARRIER : Material.AIR;
+        Material mat = type == CitemRules.PLACE_SMALL ? Material.DEAD_TUBE_CORAL_FAN :
+                type == CitemRules.PLACE_NORMAL ? Material.BARRIER : Material.AIR;
 
         Block block = loc.getBlock();
         block.setType(mat);
@@ -280,26 +278,26 @@ public class CitemListener implements Listener {
 
             PersistentDataContainer pdc = meta.getPersistentDataContainer();
             String pagesJson = pdc.get(CitemBuilder.KEY_LORE_PAGES, PersistentDataType.STRING);
-            if (pagesJson == null) {
+            if (pagesJson == null || !(e.getWhoClicked() instanceof Player p)) {
                 return;
+            }
+            JsonArray pages = JsonParser.parseString(pagesJson).getAsJsonArray();
+            if (pages.size() < 2) {
+                return; // one page: nothing to switch, F swaps hands as usual
             }
 
             e.setCancelled(true);
-            JsonArray pages = JsonParser.parseString(pagesJson).getAsJsonArray();
 
             Integer currentRaw = pdc.get(CitemBuilder.KEY_LORE_PAGE, PersistentDataType.INTEGER);
             int current = currentRaw != null ? currentRaw : 0;
             int next = (current + 1) % pages.size();
+            boolean font = Boolean.TRUE.equals(pdc.get(CitemBuilder.KEY_CUSTOM_FONT, PersistentDataType.BOOLEAN));
 
-            List<Component> lore = new ArrayList<>();
-            for (JsonElement line : pages.get(next).getAsJsonArray()) {
-                lore.add(CitemBuilder.parseText(line.getAsString()));
-            }
-
-            meta.lore(lore);
+            meta.lore(citemManager.lorePage(pagesJson, next, font, p));
             pdc.set(CitemBuilder.KEY_LORE_PAGE, PersistentDataType.INTEGER, next);
+            // Back into the slot it was clicked in (never the main hand: that overwrote the held item)
             item.setItemMeta(meta);
-            e.getWhoClicked().getInventory().setItemInMainHand(item);
+            e.setCurrentItem(item);
         }
     }
 

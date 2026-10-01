@@ -8,6 +8,7 @@ public enum Keys {
     ID("id"),
     UNUSABLE("unusable"),
     UNDROPPABLE("undroppable"),
+    UNWEARABLE("unwearable"),
     LEFT_ACTION("action-left"),
     PLACED_ACTION("action-placed"),
     RIGHT_ACTION("action-right"),

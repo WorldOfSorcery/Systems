@@ -1,6 +1,10 @@
 package me.hektortm.woSSystems.systems.citems;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.WoSSystems;
+import net.kyori.adventure.text.Component;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.interactions.InteractionManager;
 import me.hektortm.woSSystems.utils.Keys;
@@ -22,6 +26,8 @@ import org.joml.Vector3f;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -45,7 +51,7 @@ public class CitemManager {
 
 
         itemToGive.setAmount(amount);
-        t.getInventory().addItem(itemToGive);
+        t.getInventory().addItem(personalize(itemToGive, t));
         t.playSound(t.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1 ,1);
         Utils.success(s, "citems", "given", "%amount%", String.valueOf(amount), "%id%", id, "%player%", t.getName());
     }
@@ -94,10 +100,61 @@ public class CitemManager {
 
             // Update the item in hand with the new data
             dbItem.setAmount(amount);
-            p.getInventory().setItemInMainHand(dbItem);
+            p.getInventory().setItemInMainHand(personalize(dbItem, p));
+        } else if (hasPlaceholders(item)) {
+            // Fresh values each time the item is held
+            p.getInventory().setItemInMainHand(personalize(item, p));
         }
 
 
+    }
+
+    /** Whether the item's name or lore has placeholders to fill in. */
+    private static boolean hasPlaceholders(ItemStack item) {
+        PersistentDataContainer data = item.getItemMeta().getPersistentDataContainer();
+        String pages = data.get(CitemBuilder.KEY_LORE_PAGES, PersistentDataType.STRING);
+        return data.has(CitemBuilder.KEY_NAME_TEMPLATE, PersistentDataType.STRING)
+                || (pages != null && pages.indexOf('{') >= 0);
+    }
+
+    /**
+     * The item with the placeholders of its name and lore filled in for
+     * {@code p} (changed in place). An item without placeholders is left as it is.
+     */
+    public ItemStack personalize(ItemStack item, Player p) {
+        if (item == null || !item.hasItemMeta() || !hasPlaceholders(item)) return item;
+        ItemMeta meta = item.getItemMeta();
+        PersistentDataContainer data = meta.getPersistentDataContainer();
+        boolean font = Boolean.TRUE.equals(data.get(CitemBuilder.KEY_CUSTOM_FONT, PersistentDataType.BOOLEAN));
+
+        String name = data.get(CitemBuilder.KEY_NAME_TEMPLATE, PersistentDataType.STRING);
+        if (name != null) {
+            String resolved = WoSSystems.getInstance().getPlaceholderResolver().resolvePlaceholders(name, p);
+            meta.displayName(CitemBuilder.text(resolved, font));
+        }
+        String pages = data.get(CitemBuilder.KEY_LORE_PAGES, PersistentDataType.STRING);
+        if (pages != null) {
+            Integer page = data.get(CitemBuilder.KEY_LORE_PAGE, PersistentDataType.INTEGER);
+            meta.lore(lorePage(pages, page == null ? 0 : page, font, p));
+        }
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    /** One lore page of an item (its pages as stored on it), with placeholders filled in for {@code p}. */
+    public List<Component> lorePage(String pagesJson, int page, boolean font, Player p) {
+        JsonArray pages = JsonParser.parseString(pagesJson).getAsJsonArray();
+        List<String> lines = new ArrayList<>();
+        if (page >= 0 && page < pages.size() && pages.get(page).isJsonArray()) {
+            for (JsonElement line : pages.get(page).getAsJsonArray()) {
+                lines.add(line.getAsString());
+            }
+        }
+        List<Component> lore = new ArrayList<>();
+        for (String line : WoSSystems.getInstance().getPlaceholderResolver().resolveLines(lines, p)) {
+            lore.add(CitemBuilder.text(line, font));
+        }
+        return lore;
     }
 
 
@@ -152,23 +209,22 @@ public class CitemManager {
         ItemStack item = hub.getCitemDAO().getCitem(id);
         if (item == null) return false;
         item.setAmount(amount);
-        for (ItemStack rest : p.getInventory().addItem(item).values()) {
+        for (ItemStack rest : p.getInventory().addItem(personalize(item, p)).values()) {
             p.getWorld().dropItemNaturally(p.getLocation(), rest);
         }
         return true;
     }
 
     public boolean hasCitemAmount(Player p, String id, int amount) {
-        ItemStack citem = hub.getCitemDAO().getCitem(id);
-
-        if (citem == null) return false;
+        if (!hub.getCitemDAO().citemExists(id)) return false;
 
         int found = 0;
 
         for (ItemStack item : p.getInventory().getContents()) {
             if (item == null) continue;
 
-            if (item.isSimilar(citem)) {
+            // By id: an item on another lore page, or with its placeholders filled in, still counts
+            if (id.equals(citemIdOf(item))) {
                 found += item.getAmount();
                 if (found >= amount) {
                     return true;

@@ -453,6 +453,7 @@ public final class WoSSystems extends JavaPlugin {
         eventReg(new DropListener());
         eventReg(new HoverListener(citemManager));
         eventReg(new CitemListener(daoHub));
+        eventReg(new WearListener());
         eventReg(new QuitListener(core, unlockableManager, daoHub, coinflipCommand, this));
         eventReg(new FishingListener(daoHub));
         eventReg(new JoinListener(this, daoHub));

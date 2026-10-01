@@ -73,6 +73,26 @@ class CitemComponentsTest {
     }
 
     @Test
+    void potionContentsKeepEveryOption_withTheColorAsANumber() {
+        assertThat(vanilla("""
+                {"minecraft:potion_contents": {"potion": "minecraft:healing", "custom_color": "#ff0000", "custom_name": "tea",
+                 "custom_effects": [{"id": "minecraft:speed", "amplifier": 1, "duration": 200}]}}"""))
+                .containsEntry("minecraft:potion_contents", "{\"potion\":\"minecraft:healing\",\"custom_color\":16711680,"
+                        + "\"custom_name\":\"tea\",\"custom_effects\":[{\"id\":\"minecraft:speed\",\"amplifier\":1,\"duration\":200}]}");
+        assertThat(vanilla("{\"minecraft:potion_contents\": {\"potion\": \"minecraft:water\", \"custom_color\": \"red\"}}"))
+                .containsEntry("minecraft:potion_contents", "{\"potion\":\"minecraft:water\"}");
+    }
+
+    @Test
+    void aToolKeepsEveryOption_andDropsRulesWithoutBlocks() {
+        assertThat(vanilla("""
+                {"minecraft:tool": {"default_mining_speed": 2, "can_destroy_blocks_in_creative": false,
+                 "rules": [{"blocks": "#minecraft:mineable/pickaxe", "speed": 8, "correct_for_drops": true}, {"blocks": " "}]}}"""))
+                .containsEntry("minecraft:tool", "{\"default_mining_speed\":2,\"can_destroy_blocks_in_creative\":false,"
+                        + "\"rules\":[{\"blocks\":\"#minecraft:mineable/pickaxe\",\"speed\":8,\"correct_for_drops\":true}]}");
+    }
+
+    @Test
     void numbersStringsAndNullsAreWrittenSafely() {
         JsonObject o = JsonParser.parseString("""
                 {"a": 3.0, "b": 0.0001, "c": 9999999999, "d": "say \\"hi\\" \\\\ bye", "e": null, "f": [1, null, 2]}""").getAsJsonObject();

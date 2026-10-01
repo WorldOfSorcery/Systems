@@ -1,0 +1,53 @@
+package me.hektortm.woSSystems.systems.citems;
+
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/** The portal's flag values and the custom font. */
+class CitemRulesTest {
+
+    @Test
+    void placeableReadsWhatThePortalSaves() {
+        assertThat(CitemRules.placeable("small")).isEqualTo(CitemRules.PLACE_SMALL);
+        assertThat(CitemRules.placeable("normal")).isEqualTo(CitemRules.PLACE_NORMAL);
+        assertThat(CitemRules.placeable(" Normal ")).isEqualTo(CitemRules.PLACE_NORMAL);
+        assertThat(CitemRules.placeable("large")).isEqualTo(CitemRules.PLACE_NORMAL); // older items
+        assertThat(CitemRules.placeable("none")).isEqualTo(CitemRules.PLACE_NONE);
+        assertThat(CitemRules.placeable(null)).isEqualTo(CitemRules.PLACE_NONE);
+    }
+
+    @Test
+    void lettersAndDigitsGetTheFont() {
+        assertThat(CitemRules.stylize("Magic Wand 12!")).isEqualTo("ᴍᴀɢɪᴄ ᴡᴀɴᴅ 𝟙𝟚!");
+        assertThat(CitemRules.stylize("")).isEmpty();
+        assertThat(CitemRules.stylize(null)).isNull();
+    }
+
+    @Test
+    void textAlreadyInTheFontStaysAsItIs() {
+        assertThat(CitemRules.stylize("ᴍᴀɢɪᴄ 𝟙")).isEqualTo("ᴍᴀɢɪᴄ 𝟙");
+    }
+
+    @Test
+    void colourCodesAndTagsAreKept() {
+        assertThat(CitemRules.stylize("&aGo §lnow")).isEqualTo("&aɢᴏ §lɴᴏᴡ");
+        assertThat(CitemRules.stylize("<#FF00aa>red")).isEqualTo("<#FF00aa>ʀᴇᴅ");
+        assertThat(CitemRules.stylize("<gradient:#fff:#000>ab</gradient>c"))
+                .isEqualTo("<gradient:#fff:#000>ᴀʙ</gradient>ᴄ");
+    }
+
+    @Test
+    void placeholdersAreKept() {
+        assertThat(CitemRules.stylize("Owner: {player_name}")).isEqualTo("ᴏᴡɴᴇʀ: {player_name}");
+        assertThat(CitemRules.stylize("{economy.balance:gold} coins")).isEqualTo("{economy.balance:gold} ᴄᴏɪɴꜱ");
+    }
+
+    @Test
+    void bracketsThatAreNoTagOrPlaceholderAreText() {
+        assertThat(CitemRules.stylize("a < b > c")).isEqualTo("ᴀ < ʙ > ᴄ");
+        assertThat(CitemRules.stylize("{not a token}")).isEqualTo("{ɴᴏᴛ ᴀ ᴛᴏᴋᴇɴ}");
+        assertThat(CitemRules.stylize("open { only")).isEqualTo("ᴏᴘᴇɴ { ᴏɴʟʏ");
+        assertThat(CitemRules.stylize("R & D")).isEqualTo("ʀ & ᴅ");
+    }
+}

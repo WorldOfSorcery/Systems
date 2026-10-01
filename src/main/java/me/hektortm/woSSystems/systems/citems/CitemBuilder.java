@@ -31,6 +31,10 @@ public final class CitemBuilder {
 
     public static final NamespacedKey KEY_LORE_PAGES = new NamespacedKey(NS, "lore_pages");
     public static final NamespacedKey KEY_LORE_PAGE  = new NamespacedKey(NS, "lore_page");
+    /** The display name as typed, on items whose name has placeholders. */
+    public static final NamespacedKey KEY_NAME_TEMPLATE = new NamespacedKey(NS, "name_template");
+    /** Set on items whose name and lore use the custom font. */
+    public static final NamespacedKey KEY_CUSTOM_FONT = new NamespacedKey(NS, "custom_font");
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
 
@@ -66,37 +70,54 @@ public final class CitemBuilder {
             material = Material.PAPER;
         }
 
+        legacyDyeColor(data);
+
         // Components without ItemMeta code of their own (equippable, glider,
         // use_cooldown, anything newer) are applied by the server's item parser.
         ItemStack item = base(id, material, data);
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return item;
 
+        // ── Font ─────────────────────────────────────────────────────────────
+        // The name and lore are stored as typed; the custom font is applied here.
+        boolean font = getBoolean(data, "custom_font", false);
+        if (font) {
+            meta.getPersistentDataContainer().set(KEY_CUSTOM_FONT, PersistentDataType.BOOLEAN, true);
+        }
+
         // ── Display name ─────────────────────────────────────────────────────
         if (data.has("display_name") && !data.get("display_name").isJsonNull()) {
-            meta.displayName(parseText(data.get("display_name").getAsString()));
+            String name = data.get("display_name").getAsString();
+            meta.displayName(text(name, font));
+            // Kept as typed so its placeholders can be filled in per player
+            if (name.indexOf('{') >= 0) {
+                meta.getPersistentDataContainer().set(KEY_NAME_TEMPLATE, PersistentDataType.STRING, name);
+            }
         }
 
         // ── Lore ─────────────────────────────────────────────────────────────
         // Prefer lore_pages; fall back to lore array
         List<String> loreLines = new ArrayList<>();
+        JsonArray pages = new JsonArray();
         if (data.has("lore_pages") && data.get("lore_pages").isJsonArray()) {
-            JsonArray pages = data.getAsJsonArray("lore_pages");
+            pages = data.getAsJsonArray("lore_pages");
             // Show only page 0 initially
             if (pages.size() > 0 && pages.get(0).isJsonArray()) {
                 for (JsonElement line : pages.get(0).getAsJsonArray()) {
                     loreLines.add(line.getAsString());
                 }
             }
-            // Store all pages in PDC for F-key cycling
-            if (pages.size() > 1) {
-                meta.getPersistentDataContainer().set(KEY_LORE_PAGES, PersistentDataType.STRING, pages.toString());
-                meta.getPersistentDataContainer().set(KEY_LORE_PAGE, PersistentDataType.INTEGER, 0);
-            }
         } else if (data.has("lore") && data.get("lore").isJsonArray()) {
-            for (JsonElement line : data.getAsJsonArray("lore")) {
+            JsonArray page = data.getAsJsonArray("lore");
+            for (JsonElement line : page) {
                 loreLines.add(line.getAsString());
             }
+            pages.add(page);
+        }
+        // Store all pages in PDC: for F-key cycling, and for lore with placeholders
+        if (pages.size() > 1 || pages.toString().indexOf('{') >= 0) {
+            meta.getPersistentDataContainer().set(KEY_LORE_PAGES, PersistentDataType.STRING, pages.toString());
+            meta.getPersistentDataContainer().set(KEY_LORE_PAGE, PersistentDataType.INTEGER, 0);
         }
 
         meta.getPersistentDataContainer().set(Keys.ID.get(), PersistentDataType.STRING, id);
@@ -105,14 +126,14 @@ public final class CitemBuilder {
 
         if (data.has("flags") && data.get("flags").isJsonObject()) {
             JsonObject flags = data.getAsJsonObject("flags");
-            // placeable: "small" → 1, "large" → 2, absent/other → 0
-            int placeableVal = 0;
-            if (flags.has("placeable") && !flags.get("placeable").isJsonNull()) {
-                String p = flags.get("placeable").getAsString().trim().toLowerCase();
-                if (p.equals("small")) placeableVal = 1;
-                else if (p.equals("large")) placeableVal = 2;
-            }
+            int placeableVal = flags.has("placeable") && !flags.get("placeable").isJsonNull()
+                    ? CitemRules.placeable(flags.get("placeable").getAsString())
+                    : CitemRules.PLACE_NONE;
             meta.getPersistentDataContainer().set(Keys.PLACEABLE.get(), PersistentDataType.INTEGER, placeableVal);
+
+            if (getBoolean(flags, "unwearable", false)) {
+                meta.getPersistentDataContainer().set(Keys.UNWEARABLE.get(), PersistentDataType.BOOLEAN, true);
+            }
 
             if (flags.has("undroppable") && !flags.get("undroppable").isJsonNull()) {
                 boolean undroppable = flags.get("undroppable").getAsBoolean();
@@ -128,7 +149,7 @@ public final class CitemBuilder {
         if (!loreLines.isEmpty()) {
             List<Component> loreComponents = new ArrayList<>();
             for (String line : loreLines) {
-                loreComponents.add(parseText(line));
+                loreComponents.add(text(line, font));
             }
             meta.lore(loreComponents);
         }
@@ -147,12 +168,6 @@ public final class CitemBuilder {
                 String ns = modelStr.contains(":") ? modelStr : NS + ":" + modelStr;
                 meta.setItemModel(NamespacedKey.fromString(ns));
             }
-        }
-
-        // ── Dye color (leather armor, etc.) ─────────────────────────────────
-        if (data.has("dye_color") && !data.get("dye_color").isJsonNull()
-                && meta instanceof LeatherArmorMeta leatherMeta) {
-            leatherMeta.setColor(parseColor(data.get("dye_color").getAsString()));
         }
 
         // ── Skull texture ─────────────────────────────────────────────────────
@@ -201,6 +216,19 @@ public final class CitemBuilder {
     }
 
     // ── Components ────────────────────────────────────────────────────────────
+
+    /**
+     * Items saved before the dye color became the dyed_color component hold it
+     * as "dye_color": it is applied as that component (unless the item has one).
+     */
+    private static void legacyDyeColor(JsonObject data) {
+        if (!data.has("dye_color") || !data.get("dye_color").isJsonPrimitive()) return;
+        if (!data.has("components") || !data.get("components").isJsonObject()) data.add("components", new JsonObject());
+        JsonObject components = data.getAsJsonObject("components");
+        if (!components.has("minecraft:dyed_color") && !components.has("dyed_color")) {
+            components.add("minecraft:dyed_color", data.get("dye_color"));
+        }
+    }
 
     /**
      * The item with its parser-applied components (see {@link CitemComponents}).
@@ -262,7 +290,8 @@ public final class CitemBuilder {
                 case "minecraft:hide_tooltip" ->
                         meta.setHideTooltip(true);
                 case "minecraft:hide_additional_tooltip" ->
-                        meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+                        // The dye line ("Dyed" / "Color: #000000") is not part of the additional tooltip
+                        meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP, ItemFlag.HIDE_DYE);
                 case "minecraft:item_name" -> {
                     // item_name stores a raw text component JSON string
                     String nameStr = val.getAsString();
@@ -304,18 +333,6 @@ public final class CitemBuilder {
                 // ── Food ──────────────────────────────────────────────────────
                 case "minecraft:food" -> {
                     if (val.isJsonObject()) applyFood(meta, val.getAsJsonObject());
-                }
-
-                // ── Tool ──────────────────────────────────────────────────────
-                case "minecraft:tool" -> {
-                    if (val.isJsonObject()) applyTool(meta, val.getAsJsonObject());
-                }
-
-                // ── Potion ────────────────────────────────────────────────────
-                case "minecraft:potion_contents" -> {
-                    if (val.isJsonObject() && meta instanceof PotionMeta pm) {
-                        applyPotion(pm, val.getAsJsonObject());
-                    }
                 }
 
                 // ── Trim ──────────────────────────────────────────────────────
@@ -420,50 +437,6 @@ public final class CitemBuilder {
         meta.setFood(f);
     }
 
-    private static void applyTool(ItemMeta meta, JsonObject tool) {
-        ToolComponent t = meta.getTool();
-        t.setDefaultMiningSpeed(getFloat(tool, "default_mining_speed", 1f));
-        t.setDamagePerBlock(getInt(tool, "damage_per_block", 1));
-
-        if (tool.has("rules") && tool.get("rules").isJsonArray()) {
-            for (JsonElement ruleEl : tool.getAsJsonArray("rules")) {
-                if (!ruleEl.isJsonObject()) continue;
-                JsonObject rule = ruleEl.getAsJsonObject();
-                String blocks = getString(rule, "blocks", "");
-                float speed   = getFloat(rule, "speed", 1f);
-                boolean drops = getBoolean(rule, "correct_for_drops", false);
-                if (blocks.startsWith("#")) {
-                    // Tag — e.g. #minecraft:mineable/pickaxe
-                    String tagStr = blocks.substring(1);
-                    NamespacedKey tagKey = NamespacedKey.fromString(tagStr);
-                    if (tagKey != null) {
-                        Tag<Material> tag = Bukkit.getTag(Tag.REGISTRY_BLOCKS, tagKey, Material.class);
-                        if (tag != null) {
-                            t.addRule(tag, speed, drops);
-                        }
-                    }
-                } else if (!blocks.isEmpty()) {
-                    // Single block
-                    Material mat = Material.matchMaterial(blocks);
-                    if (mat != null) {
-                        t.addRule(List.of(mat), speed, drops);
-                    }
-                }
-            }
-        }
-        meta.setTool(t);
-    }
-
-    private static void applyPotion(PotionMeta pm, JsonObject pc) {
-        if (pc.has("potion") && !pc.get("potion").isJsonNull()) {
-            PotionType pt = Registry.POTION.get(NamespacedKey.fromString(pc.get("potion").getAsString()));
-            if (pt != null) pm.setBasePotionType(pt);
-        }
-        if (pc.has("custom_color") && !pc.get("custom_color").isJsonNull()) {
-            pm.setColor(parseColor(pc.get("custom_color").getAsString()));
-        }
-    }
-
     private static void applyTrim(ArmorMeta am, JsonObject trim) {
         TrimMaterial mat = Registry.TRIM_MATERIAL.get(
                 NamespacedKey.fromString(getString(trim, "material", "minecraft:iron")));
@@ -495,7 +468,11 @@ public final class CitemBuilder {
             }
             bm.pages(pages);
         }
-        bm.setGeneration(BookMeta.Generation.ORIGINAL);
+        // generation: 0 original, 1 copy of original, 2 copy of copy, 3 tattered
+        BookMeta.Generation[] generations = BookMeta.Generation.values();
+        int generation = getInt(book, "generation", 0);
+        bm.setGeneration(generation >= 0 && generation < generations.length
+                ? generations[generation] : BookMeta.Generation.ORIGINAL);
     }
 
     private static void applySkullTexture(SkullMeta meta, String textureUrl) {
@@ -522,6 +499,11 @@ public final class CitemBuilder {
     public static Component parseText(String raw) {
         if (raw == null || raw.isEmpty()) return Component.empty();
         return MM.deserialize("<!italic>" + preprocessLegacy(raw));
+    }
+
+    /** A name or lore line: {@link #parseText}, in the custom font when the item uses it. */
+    public static Component text(String raw, boolean font) {
+        return parseText(font ? CitemRules.stylize(raw) : raw);
     }
 
     /**

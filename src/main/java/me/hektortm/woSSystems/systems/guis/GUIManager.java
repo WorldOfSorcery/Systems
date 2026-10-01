@@ -209,7 +209,8 @@ public class GUIManager implements Listener {
      */
     ItemStack buildItem(GUISlotConfig config, Player player) {
         GUIItemBehaviour b = config.getBehaviour();
-        ItemStack citem = b.citemId() == null ? null : hub.getCitemDAO().getCitem(b.citemId());
+        ItemStack citem = b.citemId() == null ? null
+                : plugin.getCitemManager().personalize(hub.getCitemDAO().getCitem(b.citemId()), player);
         Text text = new Text(player);
         ItemStack item = citem != null ? citemLook(citem, config, text) : materialLook(config, text);
         item.setAmount(Math.max(1, config.getAmount()));

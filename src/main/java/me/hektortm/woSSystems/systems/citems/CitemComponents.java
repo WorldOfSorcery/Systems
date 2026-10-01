@@ -32,7 +32,7 @@ public final class CitemComponents {
             "minecraft:hide_additional_tooltip", "minecraft:item_name", "minecraft:damage",
             "minecraft:max_damage", "minecraft:unbreakable", "minecraft:repair_cost",
             "minecraft:max_stack_size", "minecraft:enchantments", "minecraft:stored_enchantments",
-            "minecraft:food", "minecraft:tool", "minecraft:potion_contents", "minecraft:trim",
+            "minecraft:food", "minecraft:trim",
             "minecraft:banner_patterns", "minecraft:map_color", "minecraft:map_id",
             "minecraft:written_book_content", "minecraft:fire_resistant");
 
@@ -86,8 +86,42 @@ public final class CitemComponents {
             case "minecraft:death_protection" -> deathProtection(value);
             case "minecraft:dyed_color" -> color(value);
             case "minecraft:custom_model_data" -> customModelData(value);
+            case "minecraft:potion_contents" -> potionContents(value);
+            case "minecraft:tool" -> tool(value);
             default -> snbt(value);
         };
+    }
+
+    /** The potion's custom_color may be a "#RRGGBB" string. */
+    private static String potionContents(JsonElement value) {
+        if (!value.isJsonObject()) return snbt(value);
+        JsonObject copy = value.getAsJsonObject().deepCopy();
+        JsonElement color = copy.get("custom_color");
+        if (color != null && color.isJsonPrimitive() && color.getAsJsonPrimitive().isString()) {
+            Integer rgb = hex(color.getAsString());
+            if (rgb != null) copy.addProperty("custom_color", rgb);
+            else copy.remove("custom_color");
+        }
+        return snbt(copy);
+    }
+
+    /** A rule the editor added but left without blocks is dropped (it would make the whole tool invalid). */
+    private static String tool(JsonElement value) {
+        if (!value.isJsonObject()) return snbt(value);
+        JsonObject copy = value.getAsJsonObject().deepCopy();
+        JsonElement rules = copy.get("rules");
+        if (rules != null && rules.isJsonArray()) {
+            JsonArray kept = new JsonArray();
+            for (JsonElement rule : rules.getAsJsonArray()) {
+                if (!rule.isJsonObject()) continue;
+                JsonElement blocks = rule.getAsJsonObject().get("blocks");
+                boolean empty = blocks == null || blocks.isJsonNull()
+                        || (blocks.isJsonPrimitive() && blocks.getAsString().isBlank());
+                if (!empty) kept.add(rule);
+            }
+            copy.add("rules", kept);
+        }
+        return snbt(copy);
     }
 
     // ── portal shapes that differ from vanilla's ──────────────────────────────
