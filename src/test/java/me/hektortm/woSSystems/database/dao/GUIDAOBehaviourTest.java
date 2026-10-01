@@ -21,7 +21,7 @@ class GUIDAOBehaviourTest {
         GUIItemBehaviour b = GUIDAO.behaviour(json("""
                 {"head_texture":"https://t/abc","citem_id":"bass","cost_currency":"gold","cost_amount":25,"show_cost":true,
                  "cooldown_id":"shop_buy","cooldown_actions":["send_message wait"],
-                 "shift_right_actions":["a"],"drop_actions":["b"],
+                 "shift_left_actions":["c"],"shift_right_actions":["a"],"drop_actions":["b"],
                  "trade":{"take":[{"type":"citem","id":"bass","amount":3}],"give":[{"type":"currency","id":"gold","amount":20}],"show":true},
                  "clickable":false,"post_use":"gui","post_use_target":"bank","citem_name":false,"citem_lore":"both"}"""));
         assertThat(b.headTexture()).isEqualTo("https://t/abc");
@@ -31,6 +31,7 @@ class GUIDAOBehaviourTest {
         assertThat(b.showCost()).isTrue();
         assertThat(b.cooldownId()).isEqualTo("shop_buy");
         assertThat(b.cooldownActions()).containsExactly("send_message wait");
+        assertThat(b.shiftLeftActions()).containsExactly("c");
         assertThat(b.shiftRightActions()).containsExactly("a");
         assertThat(b.dropActions()).containsExactly("b");
         assertThat(b.trade().take()).containsExactly(new GUIItemBehaviour.Entry("citem", "bass", 3));

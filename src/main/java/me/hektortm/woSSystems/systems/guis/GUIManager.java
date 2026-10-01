@@ -3,7 +3,6 @@ package me.hektortm.woSSystems.systems.guis;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
 import io.papermc.paper.datacomponent.DataComponentTypes;
-import io.papermc.paper.datacomponent.item.DyedItemColor;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.utils.ActionHandler;
@@ -16,6 +15,8 @@ import me.hektortm.woSSystems.utils.model.GUISlot;
 import me.hektortm.woSSystems.utils.model.GUISlotConfig;
 import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -231,7 +232,7 @@ public class GUIManager implements Listener {
 
         List<String> configLore = text.lines(parseLore(config.getLore()));
         List<String> itemLore = meta.getLore() == null ? List.of() : meta.getLore();
-        setLore(meta, GuiRules.citemLore(itemLore, configLore, b.citemLore()), b);
+        setLore(meta, GuiRules.citemLore(itemLore, configLore, b.citemLore()), b, text.player);
         applyTooltip(meta, config, text); // set on the config: overrides the custom item's
         item.setItemMeta(meta);
         return item;
@@ -253,8 +254,13 @@ public class GUIManager implements Listener {
         }
 
         if (config.getColor() != null && !config.getColor().isBlank()) {
-            DyedItemColor dyed = dyedItemColor(hexToBukkitColor(config.getColor()));
-            item.setData(DataComponentTypes.DYED_COLOR, dyed);
+            // A colour that isn't #RRGGBB is left out: the GUI must still open.
+            Color color = hexToBukkitColor(config.getColor().trim());
+            if (color == null) {
+                plugin.writeLog("GUIManager", Level.WARNING, "GUI " + config.getGui_id() + ": invalid color '" + config.getColor() + "', ignored");
+            } else {
+                item.setData(DataComponentTypes.DYED_COLOR, dyedItemColor(color));
+            }
         }
         return item;
     }
@@ -281,7 +287,7 @@ public class GUIManager implements Listener {
         if (config.getDisplay_name() != null) {
             meta.setDisplayName(text.line(config.getDisplay_name()));
         }
-        setLore(meta, text.lines(parseLore(config.getLore())), config.getBehaviour());
+        setLore(meta, text.lines(parseLore(config.getLore())), config.getBehaviour(), text.player);
 
         // A player head's model field held its skin before head textures; other items use it as the item model.
         if (!(meta instanceof SkullMeta)) {
@@ -350,11 +356,29 @@ public class GUIManager implements Listener {
     }
 
     /** Sets the lore, with the cost / trade price lines the item shows. */
-    private void setLore(ItemMeta meta, List<String> lore, GUIItemBehaviour b) {
-        String costFormat = Utils.parseColorCodeString(plugin.getLangManager().getMessage("guis", "cost"));
-        String priceFormat = Utils.parseColorCodeString(plugin.getLangManager().getMessage("guis", "price"));
-        List<String> withPrice = GuiRules.loreWithPrice(lore, b, costFormat, priceFormat);
+    private void setLore(ItemMeta meta, List<String> lore, GUIItemBehaviour b, Player player) {
+        GuiRules.PriceFormats formats = new GuiRules.PriceFormats(message("cost"), message("cost-unmet"),
+                message("price-header"), message("price-entry"), message("price-entry-unmet"),
+                message("reward-header"), message("reward-entry"));
+        List<String> withPrice = GuiRules.loreWithPrice(lore, b, formats, clicks.playerState(player), id -> citemName(id, player));
         meta.setLore(withPrice.isEmpty() ? null : withPrice);
+    }
+
+    /**
+     * The name a custom item is listed by in a price line: its display name
+     * (placeholders filled in) without its colours, so the line keeps its own
+     * colour. Its id if the item doesn't exist or has no name.
+     */
+    private String citemName(String citemId, Player player) {
+        ItemStack item = plugin.getCitemManager().personalize(hub.getCitemDAO().getCitem(citemId), player);
+        ItemMeta meta = item == null ? null : item.getItemMeta();
+        if (meta == null || !meta.hasDisplayName()) return citemId;
+        String name = ChatColor.stripColor(meta.getDisplayName());
+        return name == null || name.isBlank() ? citemId : name.trim();
+    }
+
+    private String message(String key) {
+        return Utils.parseColorCodeString(plugin.getLangManager().getMessage("guis", key));
     }
 
     /** The lore as saved (a JSON array), as a mutable list. */

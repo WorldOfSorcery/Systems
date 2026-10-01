@@ -141,6 +141,7 @@ public class GUIDAO {
                 Json.bool(c, "show_cost", false),
                 blankToNull(Json.str(c, "cooldown_id")),
                 Json.strings(c, "cooldown_actions"),
+                Json.strings(c, "shift_left_actions"),
                 Json.strings(c, "shift_right_actions"),
                 Json.strings(c, "drop_actions"),
                 trade(Json.object(c, "trade")),
@@ -150,7 +151,8 @@ public class GUIDAO {
     }
 
     static GUIItemBehaviour.Trade trade(JsonObject t) {
-        return new GUIItemBehaviour.Trade(tradeEntries(Json.array(t, "take")), tradeEntries(Json.array(t, "give")), Json.bool(t, "show", false));
+        return new GUIItemBehaviour.Trade(tradeEntries(Json.array(t, "take")), tradeEntries(Json.array(t, "give")),
+                Json.bool(t, "show", false), Json.bool(t, "show_give", false));
     }
 
     private static List<GUIItemBehaviour.Entry> tradeEntries(JsonArray arr) {

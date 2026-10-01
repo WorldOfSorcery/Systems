@@ -140,7 +140,7 @@ final class GUIClickHandler {
         Utils.error(player, "guis", "error.cooldown", "%time%", left == null ? "0" : String.valueOf(left));
     }
 
-    private GuiRules.PlayerState playerState(Player player) {
+    GuiRules.PlayerState playerState(Player player) {
         return new GuiRules.PlayerState() {
             @Override
             public int freeSlots() {

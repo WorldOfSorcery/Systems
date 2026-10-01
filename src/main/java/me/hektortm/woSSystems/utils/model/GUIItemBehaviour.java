@@ -30,6 +30,7 @@ public record GUIItemBehaviour(
         boolean showCost,
         String cooldownId,
         List<String> cooldownActions,
+        List<String> shiftLeftActions,
         List<String> shiftRightActions,
         List<String> dropActions,
         Trade trade,
@@ -39,10 +40,16 @@ public record GUIItemBehaviour(
 
     /**
      * Taken from the player, then given: all at once, only if they have everything
-     * taken. {@code show}: the price (what's taken) is shown in the item's lore.
+     * taken. {@code show}: the price (what's taken) is shown in the item's lore;
+     * {@code showGive}: what the player gets is shown there too.
      */
-    public record Trade(List<Entry> take, List<Entry> give, boolean show) {
+    public record Trade(List<Entry> take, List<Entry> give, boolean show, boolean showGive) {
         public static final Trade NONE = new Trade(List.of(), List.of(), false);
+
+        /** A trade that doesn't show what it gives. */
+        public Trade(List<Entry> take, List<Entry> give, boolean show) {
+            this(take, give, show, false);
+        }
 
         public boolean isEmpty() { return take.isEmpty() && give.isEmpty(); }
     }
@@ -54,7 +61,7 @@ public record GUIItemBehaviour(
 
     /** An item with none of the features: the behaviour of configs saved before them. */
     public static final GUIItemBehaviour PLAIN = new GUIItemBehaviour(null, null, true, "citem", null, 0, false, null,
-            List.of(), List.of(), List.of(), Trade.NONE, true, "default", null);
+            List.of(), List.of(), List.of(), List.of(), Trade.NONE, true, "default", null);
 
     public boolean hasCost() { return costAmount > 0 && costCurrency != null && !costCurrency.isBlank(); }
 }

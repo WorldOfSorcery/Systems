@@ -14,12 +14,16 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Waterlogged;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -63,8 +67,32 @@ public class CitemListener implements Listener {
 
         if (citemManager.isCitem(item)) {
             handleCitemPlacement(e, p, item, action);
-            handleCitemActions(p, action, item);
+            handleCitemActions(e, p, action, item);
         }
+    }
+
+    /** Whether the item has the unusable flag: its actions run, but it can't be placed, eaten, thrown … */
+    private static boolean isUnusable(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        return Boolean.TRUE.equals(item.getItemMeta().getPersistentDataContainer()
+                .get(Keys.UNUSABLE.get(), PersistentDataType.BOOLEAN));
+    }
+
+    /** An unusable item is not used on a mob or another entity either (name tag, shears, lead …). */
+    @EventHandler
+    public void onUseOnEntity(PlayerInteractEntityEvent e) {
+        if (isUnusable(e.getPlayer().getInventory().getItem(e.getHand()))) e.setCancelled(true);
+    }
+
+    // Whatever gets past the click (a client that places or eats anyway) is stopped here.
+    @EventHandler
+    public void onPlaceUnusable(BlockPlaceEvent e) {
+        if (isUnusable(e.getItemInHand())) e.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onConsumeUnusable(PlayerItemConsumeEvent e) {
+        if (isUnusable(e.getItem())) e.setCancelled(true);
     }
 
     private Location getClickedLocation(PlayerInteractEvent e) {
@@ -199,17 +227,17 @@ public class CitemListener implements Listener {
         p.playSound(loc, Sound.BLOCK_CANDLE_PLACE, 1, 1);
     }
 
-    private void handleCitemActions(Player p, Action action, ItemStack item) {
+    private void handleCitemActions(PlayerInteractEvent e, Player p, Action action, ItemStack item) {
 
         switch (action) {
             case RIGHT_CLICK_AIR, RIGHT_CLICK_BLOCK -> rightClickAction(p);
             case LEFT_CLICK_AIR, LEFT_CLICK_BLOCK -> leftClickAction(p);
         }
 
-        PersistentDataContainer data = item.getItemMeta().getPersistentDataContainer();
-        if (Boolean.TRUE.equals(data.get(Keys.UNUSABLE.get(), PersistentDataType.BOOLEAN))) {
-            p.getInventory().getItemInMainHand().setAmount(
-                    p.getInventory().getItemInMainHand().getAmount()); // Prevent drop
+        // Unusable: the item itself does nothing (no placing, eating, throwing, equipping).
+        // The clicked block still reacts (a door opens), and the actions above have run.
+        if (action.isRightClick() && isUnusable(item)) {
+            e.setUseItemInHand(Event.Result.DENY);
         }
     }
 

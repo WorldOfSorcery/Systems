@@ -131,6 +131,10 @@ public final class CitemBuilder {
                     : CitemRules.PLACE_NONE;
             meta.getPersistentDataContainer().set(Keys.PLACEABLE.get(), PersistentDataType.INTEGER, placeableVal);
 
+            if (getBoolean(flags, "unstashable", false)) {
+                meta.getPersistentDataContainer().set(Keys.UNSTASHABLE.get(), PersistentDataType.BOOLEAN, true);
+            }
+
             if (getBoolean(flags, "unwearable", false)) {
                 meta.getPersistentDataContainer().set(Keys.UNWEARABLE.get(), PersistentDataType.BOOLEAN, true);
             }

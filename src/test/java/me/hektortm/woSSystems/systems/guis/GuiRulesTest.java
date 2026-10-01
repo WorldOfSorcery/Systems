@@ -20,7 +20,15 @@ class GuiRulesTest {
 
     private static GUIItemBehaviour behaviour(String costCurrency, int cost, GUIItemBehaviour.Trade trade,
                                               List<String> shiftRight, List<String> drop) {
-        return new GUIItemBehaviour(null, null, true, "citem", costCurrency, cost, true, null, List.of(), shiftRight, drop, trade, true, "default", null);
+        return new GUIItemBehaviour(null, null, true, "citem", costCurrency, cost, true, null, List.of(), List.of("shift-left"), shiftRight, drop, trade, true, "default", null);
+    }
+
+    private static GuiRules.PlayerState player(int freeSlots, Map<String, Integer> citems, Map<String, Long> balances) {
+        return new GuiRules.PlayerState() {
+            @Override public int freeSlots() { return freeSlots; }
+            @Override public int citemCount(String id) { return citems.getOrDefault(id, 0); }
+            @Override public long balance(String currency) { return balances.getOrDefault(currency, 0L); }
+        };
     }
 
     private static GUISlotConfig config(List<String> global, List<String> left, List<String> right, GUIItemBehaviour b) {
@@ -36,6 +44,7 @@ class GuiRulesTest {
         @Test
         void eachClickTypeRunsItsOwnList() {
             assertThat(GuiRules.actionsFor(ClickType.LEFT, item)).containsExactly("left");
+            assertThat(GuiRules.actionsFor(ClickType.SHIFT_LEFT, item)).containsExactly("shift-left");
             assertThat(GuiRules.actionsFor(ClickType.SHIFT_RIGHT, item)).containsExactly("shift");
             assertThat(GuiRules.actionsFor(ClickType.DROP, item)).containsExactly("drop");
             assertThat(GuiRules.actionsFor(ClickType.CONTROL_DROP, item)).containsExactly("drop");
@@ -100,14 +109,6 @@ class GuiRulesTest {
 
     @Nested
     class Requirements {
-        private GuiRules.PlayerState player(int freeSlots, Map<String, Integer> citems, Map<String, Long> balances) {
-            return new GuiRules.PlayerState() {
-                @Override public int freeSlots() { return freeSlots; }
-                @Override public int citemCount(String id) { return citems.getOrDefault(id, 0); }
-                @Override public long balance(String currency) { return balances.getOrDefault(currency, 0L); }
-            };
-        }
-
         private final GUIItemBehaviour.Trade trade = new GUIItemBehaviour.Trade(
                 List.of(new GUIItemBehaviour.Entry("citem", "bass", 3), new GUIItemBehaviour.Entry("currency", "gold", 20)),
                 List.of(new GUIItemBehaviour.Entry("citem", "stew", 1)), false);
@@ -168,25 +169,65 @@ class GuiRulesTest {
             assertThat(GuiRules.headSkin("{player_name}")).isInstanceOf(GuiRules.Texture.class);
         }
 
-        private static final String COST = "Cost: %amount% %currency%", PRICE = "Price: %price%";
+        private static final GuiRules.PriceFormats FORMATS = new GuiRules.PriceFormats(
+                "Cost: %amount% %currency%", "Cost (short): %amount% %currency%", "Price:", "+ %entry%", "- %entry%", "You get:", "> %entry%");
+
+        @Test
+        void whatTheTradeGivesIsAddedWhenShown() {
+            List<GUIItemBehaviour.Entry> give = List.of(new GUIItemBehaviour.Entry("citem", "stew", 1), new GUIItemBehaviour.Entry("currency", "gems", 5));
+            GUIItemBehaviour shown = behaviour(null, 0, new GUIItemBehaviour.Trade(shownTrade.take(), give, true, true), List.of(), List.of());
+            assertThat(GuiRules.loreWithPrice(List.of("Stew"), shown, FORMATS, rich, NAMES))
+                    .containsExactly("Stew", "", "Price:", "+ 3× Fresh Bass", "+ 20 gold", "You get:", "> 1× stew", "> 5 gems");
+            // Shown on its own, without the price.
+            GUIItemBehaviour only = behaviour(null, 0, new GUIItemBehaviour.Trade(shownTrade.take(), give, false, true), List.of(), List.of());
+            assertThat(GuiRules.loreWithPrice(List.of(), only, FORMATS, rich, NAMES)).containsExactly("You get:", "> 1× stew", "> 5 gems");
+            GUIItemBehaviour hidden = behaviour(null, 0, new GUIItemBehaviour.Trade(shownTrade.take(), give, false, false), List.of(), List.of());
+            assertThat(GuiRules.loreWithPrice(List.of("Stew"), hidden, FORMATS, rich, NAMES)).containsExactly("Stew");
+        }
+        /** Custom items are listed by name; one without a name by its id. */
+        private static final java.util.function.UnaryOperator<String> NAMES = id -> id.equals("bass") ? "Fresh Bass" : id;
+        private final GuiRules.PlayerState rich = player(0, Map.of("bass", 3), Map.of("gold", 100L));
 
         @Test
         void theCostLineIsAddedOnlyWhenShown() {
             GUIItemBehaviour shown = behaviour("gold", 25, GUIItemBehaviour.Trade.NONE, List.of(), List.of());
-            assertThat(GuiRules.loreWithPrice(List.of("Fresh fish"), shown, COST, PRICE)).containsExactly("Fresh fish", "", "Cost: 25 gold");
-            assertThat(GuiRules.loreWithPrice(List.of(), shown, COST, PRICE)).containsExactly("Cost: 25 gold");
-            assertThat(GuiRules.loreWithPrice(List.of("x"), GUIItemBehaviour.PLAIN, COST, PRICE)).containsExactly("x");
+            assertThat(GuiRules.loreWithPrice(List.of("Fresh fish"), shown, FORMATS, rich, NAMES)).containsExactly("Fresh fish", "", "Cost: 25 gold");
+            assertThat(GuiRules.loreWithPrice(List.of(), shown, FORMATS, rich, NAMES)).containsExactly("Cost: 25 gold");
+            assertThat(GuiRules.loreWithPrice(List.of("x"), GUIItemBehaviour.PLAIN, FORMATS, rich, NAMES)).containsExactly("x");
         }
 
         @Test
+        void theCostLineSaysWhenThePlayerCantPay() {
+            GUIItemBehaviour shown = behaviour("gold", 25, GUIItemBehaviour.Trade.NONE, List.of(), List.of());
+            assertThat(GuiRules.loreWithPrice(List.of(), shown, FORMATS, player(0, Map.of(), Map.of("gold", 24L)), NAMES))
+                    .containsExactly("Cost (short): 25 gold");
+        }
+
+        private final GUIItemBehaviour.Trade shownTrade = new GUIItemBehaviour.Trade(
+                List.of(new GUIItemBehaviour.Entry("citem", "bass", 3), new GUIItemBehaviour.Entry("currency", "gold", 20)), List.of(), true);
+
+        @Test
         void theTradePriceIsAddedWhenShown() {
-            GUIItemBehaviour.Trade trade = new GUIItemBehaviour.Trade(
-                    List.of(new GUIItemBehaviour.Entry("citem", "bass", 3), new GUIItemBehaviour.Entry("currency", "gold", 20)), List.of(), true);
-            GUIItemBehaviour both = behaviour("gold", 25, trade, List.of(), List.of());
-            assertThat(GuiRules.loreWithPrice(List.of("Stew"), both, COST, PRICE))
-                    .containsExactly("Stew", "", "Cost: 25 gold", "Price: 3× bass, 20 gold");
-            GUIItemBehaviour hidden = behaviour(null, 0, new GUIItemBehaviour.Trade(trade.take(), List.of(), false), List.of(), List.of());
-            assertThat(GuiRules.loreWithPrice(List.of("Stew"), hidden, COST, PRICE)).containsExactly("Stew");
+            GUIItemBehaviour both = behaviour("gold", 25, shownTrade, List.of(), List.of());
+            assertThat(GuiRules.loreWithPrice(List.of("Stew"), both, FORMATS, rich, NAMES))
+                    .containsExactly("Stew", "", "Cost: 25 gold", "Price:", "+ 3× Fresh Bass", "+ 20 gold");
+            GUIItemBehaviour hidden = behaviour(null, 0, new GUIItemBehaviour.Trade(shownTrade.take(), List.of(), false), List.of(), List.of());
+            assertThat(GuiRules.loreWithPrice(List.of("Stew"), hidden, FORMATS, rich, NAMES)).containsExactly("Stew");
+        }
+
+        @Test
+        void eachPriceEntrySaysWhetherThePlayerHasIt() {
+            GUIItemBehaviour trade = behaviour(null, 0, shownTrade, List.of(), List.of());
+            assertThat(GuiRules.loreWithPrice(List.of(), trade, FORMATS, player(0, Map.of("bass", 2), Map.of("gold", 20L)), NAMES))
+                    .containsExactly("Price:", "- 3× Fresh Bass", "+ 20 gold");
+        }
+
+        @Test
+        void aCurrencyChargedTwiceNeedsTheTotal() {
+            // Cost 25 + trade 20: with 30 gold neither line is payable, as the click would be refused.
+            GUIItemBehaviour both = behaviour("gold", 25, shownTrade, List.of(), List.of());
+            assertThat(GuiRules.loreWithPrice(List.of(), both, FORMATS, player(0, Map.of("bass", 3), Map.of("gold", 30L)), NAMES))
+                    .containsExactly("Cost (short): 25 gold", "Price:", "+ 3× Fresh Bass", "- 20 gold");
         }
 
         @Test
