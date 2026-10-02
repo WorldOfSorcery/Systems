@@ -91,7 +91,7 @@ public final class DisplayRules {
     // ── touch ──────────────────────────────────────────────────────────────────
 
     /**
-     * The box a player must walk into, for a display whose entity is at x, y, z.
+     * The box a player must walk into or click, for a display whose entity is at x, y, z.
      * It is centred on the resting model: the entity position plus the
      * translation, and for a block (drawn from its corner) plus half its size.
      */

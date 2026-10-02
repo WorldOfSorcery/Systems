@@ -1,6 +1,12 @@
 package me.hektortm.woSSystems.systems.interactions;
 
 import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.event.PacketListener;
+import com.github.retrooper.packetevents.event.PacketListenerPriority;
+import com.github.retrooper.packetevents.event.PacketReceiveEvent;
+import com.github.retrooper.packetevents.protocol.packettype.PacketType;
+import com.github.retrooper.packetevents.protocol.player.InteractionHand;
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityDataTypes;
 import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes;
@@ -55,6 +61,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 /**
  * The display entities of interactions: block, item and custom item displays
@@ -63,7 +70,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * <p>{@link #handleDisplays} runs once a second from the interaction task and
  * decides what a player sees; {@link #tick} runs every second tick and sends
- * animation keyframes and checks who walked into a display. Everything runs on
+ * animation keyframes and checks who walked into a display. A display that can
+ * be clicked gets an invisible "interaction" entity as its hitbox (a display
+ * entity has none); the click arrives as a packet. Everything else runs on
  * the main thread. The maths is in {@link DisplayRules}.</p>
  */
 public class DisplayManager implements Listener {
@@ -95,9 +104,16 @@ public class DisplayManager implements Listener {
     private static final int META_CONTENT = 23;
     private static final int META_ITEM_DISPLAY = 24;
     private static final byte FLAG_GLOWING = 0x40;
+    // Metadata indexes of the interaction entity (the click hitbox).
+    private static final int META_HITBOX_WIDTH = 8;
+    private static final int META_HITBOX_HEIGHT = 9;
+    private static final int META_HITBOX_RESPONSIVE = 10;
+    /** Two clicks of one player closer together than this count as one (a right-click arrives several times). */
+    private static final long CLICK_COOLDOWN_MS = 250;
+    private static final int FIRST_ENTITY_ID = 2_000_000;
 
-    /** One display entity a player currently sees. */
-    private record Shown(int entityId, DisplaySettings settings, int interval, String touchKey) {}
+    /** One display entity a player currently sees; {@code hitboxId} is its click hitbox, 0 without one. */
+    private record Shown(int entityId, int hitboxId, DisplaySettings settings, int interval, String touchKey) {}
 
     /** What a player sees at one binding (a block or an NPC) of one interaction. */
     private static final class Binding {
@@ -132,7 +148,9 @@ public class DisplayManager implements Listener {
     /** Displays already reported as unreadable, so the log gets one line and not one per second. */
     private final Set<String> warned = new HashSet<>();
     // Holograms count up from 1,000,000; displays stay clear of them.
-    private final AtomicInteger entityIdCounter = new AtomicInteger(2_000_000);
+    private final AtomicInteger entityIdCounter = new AtomicInteger(FIRST_ENTITY_ID);
+    /** player → when they last clicked a display. */
+    private final Map<UUID, Long> lastClick = new HashMap<>();
     /** The animation clock, shared by all players so everyone sees the same phase. */
     private long clock;
 
@@ -250,10 +268,30 @@ public class DisplayManager implements Listener {
                 warnOnce(name, "could not be sent: " + e);
                 continue;
             }
-            shown.add(new Shown(entityId, s, DisplayRules.keyframeInterval(s), bindingKey + "|" + display.getDisplayID()));
+            int hitboxId = s.touch().click() ? spawnHitbox(user, s, anchor.getX() + o.x(), anchor.getY() + o.y(), anchor.getZ() + o.z()) : 0;
+            shown.add(new Shown(entityId, hitboxId, s, DisplayRules.keyframeInterval(s), bindingKey + "|" + display.getDisplayID()));
         }
         active.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>())
                 .put(bindingKey, new Binding(interactionId, key, fingerprint, shown, anchor));
+    }
+
+    /** The invisible entity a player clicks: as big as the touch box, standing where it is. Returns its id. */
+    private int spawnHitbox(User user, DisplaySettings s, double x, double y, double z) {
+        int id = entityIdCounter.incrementAndGet();
+        send(user, new WrapperPlayServerSpawnEntity(id, Optional.of(UUID.randomUUID()), EntityTypes.INTERACTION,
+                hitboxPosition(s, x, y, z), 0f, 0f, 0f, 0, Optional.empty()));
+        List<EntityData<?>> data = new ArrayList<>();
+        data.add(new EntityData<>(META_HITBOX_WIDTH, EntityDataTypes.FLOAT, (float) s.touch().width()));
+        data.add(new EntityData<>(META_HITBOX_HEIGHT, EntityDataTypes.FLOAT, (float) s.touch().height()));
+        data.add(new EntityData<>(META_HITBOX_RESPONSIVE, EntityDataTypes.BOOLEAN, true));
+        send(user, new WrapperPlayServerEntityMetadata(id, data));
+        return id;
+    }
+
+    /** An interaction entity stands on the middle of its box's floor. */
+    private static Vector3d hitboxPosition(DisplaySettings s, double x, double y, double z) {
+        Box box = DisplayRules.touchBox(s, x, y, z);
+        return new Vector3d((box.minX() + box.maxX()) / 2, box.minY(), (box.minZ() + box.maxZ()) / 2);
     }
 
     /** The NPC walked: slide its displays after it. */
@@ -268,6 +306,10 @@ public class DisplayManager implements Listener {
             send(user, new WrapperPlayServerEntityTeleport(shown.entityId(),
                     new Vector3d(binding.x + o.x(), binding.y + o.y(), binding.z + o.z()),
                     shown.settings().yaw(), shown.settings().pitch(), false));
+            if (shown.hitboxId() != 0) {
+                send(user, new WrapperPlayServerEntityTeleport(shown.hitboxId(),
+                        hitboxPosition(shown.settings(), binding.x + o.x(), binding.y + o.y(), binding.z + o.z()), 0f, 0f, false));
+            }
         }
     }
 
@@ -379,7 +421,7 @@ public class DisplayManager implements Listener {
             for (Binding binding : new ArrayList<>(perPlayer.getValue().values())) {
                 for (Shown shown : binding.shown) {
                     if (user != null && shown.interval() > 0 && clock % shown.interval() == 0) keyframe(user, shown);
-                    if (shown.settings().touch().enabled()) touch(player, in, binding, shown, playerBox);
+                    if (shown.settings().touch().walk()) touch(player, in, binding, shown, playerBox);
                 }
             }
         }
@@ -404,6 +446,49 @@ public class DisplayManager implements Listener {
         }
     }
 
+    // ── clicking ───────────────────────────────────────────────────────────────
+
+    /** Starts listening for clicks on display hitboxes. */
+    public void listenForClicks() {
+        var api = PacketEvents.getAPI();
+        if (api == null) return;
+        api.getEventManager().registerListener(new PacketListener() {
+            @Override
+            public void onPacketReceive(PacketReceiveEvent event) {
+                if (event.getPacketType() != PacketType.Play.Client.INTERACT_ENTITY) return;
+                WrapperPlayClientInteractEntity packet = new WrapperPlayClientInteractEntity(event);
+                int entityId = packet.getEntityId();
+                if (entityId <= FIRST_ENTITY_ID) return;
+                // A right-click arrives as "interact at" and "interact", once per hand: count one of them.
+                boolean counts = packet.getAction() == WrapperPlayClientInteractEntity.InteractAction.ATTACK
+                        || (packet.getAction() == WrapperPlayClientInteractEntity.InteractAction.INTERACT
+                        && packet.getHand() == InteractionHand.MAIN_HAND);
+                UUID uuid = event.getUser().getUUID();
+                if (!counts || uuid == null) return;
+                // Packets arrive off the main thread; everything here is main-thread state.
+                Bukkit.getScheduler().runTask(WoSSystems.getInstance(), () -> clicked(uuid, entityId));
+            }
+        }, PacketListenerPriority.NORMAL);
+    }
+
+    /** A player clicked the entity with this id: if it is the hitbox of a display they see, run its interaction. */
+    private void clicked(UUID uuid, int entityId) {
+        Player player = Bukkit.getPlayer(uuid);
+        Map<String, Binding> bindings = active.get(uuid);
+        if (player == null || bindings == null) return;
+        for (Binding binding : bindings.values()) {
+            for (Shown shown : binding.shown) {
+                if (shown.hitboxId() != entityId) continue;
+                long now = System.currentTimeMillis();
+                Long last = lastClick.put(uuid, now);
+                if (last == null || now - last >= CLICK_COOLDOWN_MS) {
+                    interactions.triggerInteraction(binding.interactionId, player, binding.key);
+                }
+                return;
+            }
+        }
+    }
+
     // ── removing ───────────────────────────────────────────────────────────────
 
     // The client forgets every entity when it respawns or changes world; forget
@@ -422,6 +507,7 @@ public class DisplayManager implements Listener {
     public void removeAllDisplays(Player player) {
         Map<String, Binding> bindings = active.remove(player.getUniqueId());
         inside.remove(player.getUniqueId());
+        lastClick.remove(player.getUniqueId());
         if (bindings == null) return;
         for (Binding binding : bindings.values()) destroy(player, binding);
     }
@@ -443,7 +529,10 @@ public class DisplayManager implements Listener {
     private void destroy(Player player, Binding binding) {
         User user = user(player);
         if (user == null || binding.shown.isEmpty()) return;
-        send(user, new WrapperPlayServerDestroyEntities(binding.shown.stream().mapToInt(Shown::entityId).toArray()));
+        int[] ids = binding.shown.stream()
+                .flatMapToInt(s -> s.hitboxId() == 0 ? IntStream.of(s.entityId()) : IntStream.of(s.entityId(), s.hitboxId()))
+                .toArray();
+        send(user, new WrapperPlayServerDestroyEntities(ids));
     }
 
     // ── helpers ────────────────────────────────────────────────────────────────

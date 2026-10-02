@@ -38,4 +38,13 @@ public class Interaction extends BaseEntity {
     public List<InteractionParticles> getParticles(){ return particles;    }
     public List<Location> getBlockLocations()    { return blockLocations;  }
     public List<Integer> getNpcIDs()             { return npcIDs;          }
+
+    /**
+     * True when one of the displays runs the interaction itself (by being
+     * walked into or clicked): then clicking the bound block or NPC does
+     * nothing. It counts whether or not that display is currently shown.
+     */
+    public boolean isTouchOnly() {
+        return displays.stream().anyMatch(d -> d.getSettings().touch().enabled());
+    }
 }

@@ -55,8 +55,12 @@ public record DisplaySettings(
     /** Turning around an axis ('x', 'y' or 'z'): one full turn per {@code periodTicks}. */
     public record Spin(boolean enabled, int periodTicks, char axis, boolean reverse) {}
 
-    /** Walking into the box runs the interaction. */
-    public record Touch(boolean enabled, double width, double height) {}
+    /** The box that runs the interaction: by walking into it, by clicking it, or both. */
+    public record Touch(boolean walk, boolean click, double width, double height) {
+        public boolean enabled() {
+            return walk || click;
+        }
+    }
 
     /** The fastest animation: half a second per cycle or turn. */
     static final int MIN_PERIOD_TICKS = 10;
@@ -100,7 +104,8 @@ public record DisplaySettings(
                 (float) number(o, "height", 0),
                 new Bob(flag(bob, "enabled"), number(bob, "height", 0.25), periodTicks(bob, 3.0)),
                 new Spin(flag(spin, "enabled"), periodTicks(spin, 4.0), axis(text(spin, "axis", "y")), flag(spin, "reverse")),
-                new Touch(flag(touch, "enabled"), Math.max(0, number(touch, "width", 1)), Math.max(0, number(touch, "height", 1)))
+                // "enabled" is how the first version stored "walk".
+                new Touch(flag(touch, "walk") || flag(touch, "enabled"), flag(touch, "click"), Math.max(0, number(touch, "width", 1)), Math.max(0, number(touch, "height", 1)))
         );
     }
 

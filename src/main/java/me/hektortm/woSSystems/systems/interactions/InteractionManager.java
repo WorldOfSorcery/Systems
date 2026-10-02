@@ -127,6 +127,7 @@ public class InteractionManager {
         }.runTaskTimer(plugin, 0L, 20L);
 
         Bukkit.getPluginManager().registerEvents(displayManager, plugin);
+        displayManager.listenForClicks();
         Bukkit.getScheduler().runTaskTimer(plugin, displayManager::tick, DisplayManager.TICK_STEP, DisplayManager.TICK_STEP);
     }
 

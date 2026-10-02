@@ -4,6 +4,7 @@ package me.hektortm.woSSystems.systems.interactions;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.citems.CitemManager;
+import me.hektortm.woSSystems.utils.model.Interaction;
 import me.hektortm.woSSystems.utils.model.InteractionKey;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
 import org.bukkit.*;
@@ -62,6 +63,7 @@ public class InterListener implements Listener {
             // Process interactions
             if (hub.getInteractionDAO().getBound(blockLocation) != null) {
                 e.setCancelled(true);
+                if (touchOnly(hub.getInteractionDAO().getBound(blockLocation))) return;
                 InteractionKey key = buildKey(blockLocation);
 
                 switch (e.getAction()) {
@@ -79,8 +81,16 @@ public class InterListener implements Listener {
     public void NPCClick(NPCRightClickEvent e) {
         int npcid = e.getNPC().getId();
         String id = hub.getInteractionDAO().getNpcBound(npcid);
+        if (touchOnly(id)) return;
         InteractionKey key = new InteractionKey("npc:"+npcid);
         interactionManager.triggerInteraction(id, e.getClicker(), key);
+    }
+
+    /** An interaction with a touch display is run through that display, not by clicking the block or NPC. */
+    private boolean touchOnly(String interactionId) {
+        if (interactionId == null) return false;
+        Interaction inter = hub.getInteractionDAO().getInteractionByID(interactionId);
+        return inter != null && inter.isTouchOnly();
     }
 
     public static InteractionKey buildKey (Location loc) {

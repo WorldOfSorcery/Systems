@@ -5,10 +5,13 @@ import me.hektortm.woSSystems.systems.interactions.DisplayRules.Pose;
 import me.hektortm.woSSystems.systems.interactions.DisplayRules.Quat;
 import me.hektortm.woSSystems.systems.interactions.DisplaySettings.Kind;
 import me.hektortm.woSSystems.systems.interactions.DisplaySettings.Vec3;
+import me.hektortm.woSSystems.utils.model.Interaction;
+import me.hektortm.woSSystems.utils.model.InteractionDisplay;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -67,7 +70,7 @@ class DisplayRulesTest {
                      "billboard":"vertical","brightness":{"block":3,"sky":99},"glowing":true,"glow_color_override":16711680,
                      "view_range":2,"shadow_radius":0.5,"shadow_strength":0.8,"width":3,"height":4,
                      "animation":{"bob":{"enabled":true,"height":0.5,"period":2},"spin":{"enabled":true,"period":1.5,"axis":"Z","reverse":true}},
-                     "touch":{"enabled":true,"width":1.5,"height":2}}
+                     "touch":{"walk":true,"click":true,"width":1.5,"height":2}}
                     """);
             assertThat(s.kind()).isEqualTo(Kind.CITEM);
             assertThat(s.citem()).isEqualTo("wand");
@@ -85,7 +88,7 @@ class DisplayRulesTest {
             assertThat(s.glowColor()).isEqualTo(0xFF0000);
             assertThat(s.bob()).isEqualTo(new DisplaySettings.Bob(true, 0.5, 40));
             assertThat(s.spin()).isEqualTo(new DisplaySettings.Spin(true, 30, 'z', true));
-            assertThat(s.touch()).isEqualTo(new DisplaySettings.Touch(true, 1.5, 2));
+            assertThat(s.touch()).isEqualTo(new DisplaySettings.Touch(true, true, 1.5, 2));
             assertThat(s.animated()).isTrue();
         }
 
@@ -97,6 +100,20 @@ class DisplayRulesTest {
 
             DisplaySettings head = DisplaySettings.parse("{\"kind\":\"item\",\"item\":\"PLAYER_HEAD\",\"head\":\" {player_name} \"}");
             assertThat(head.head()).isEqualTo("{player_name}");
+        }
+
+        @Test
+        void touchCanBeWalkingClickingOrBoth() {
+            DisplaySettings.Touch walk = DisplaySettings.parse("{\"touch\":{\"walk\":true}}").touch();
+            DisplaySettings.Touch click = DisplaySettings.parse("{\"touch\":{\"click\":true}}").touch();
+            DisplaySettings.Touch old = DisplaySettings.parse("{\"touch\":{\"enabled\":true}}").touch();
+            DisplaySettings.Touch none = DisplaySettings.parse("{\"touch\":{\"width\":2}}").touch();
+            assertThat(walk).isEqualTo(new DisplaySettings.Touch(true, false, 1, 1));
+            assertThat(click).isEqualTo(new DisplaySettings.Touch(false, true, 1, 1));
+            assertThat(old).isEqualTo(walk); // how the first version stored "walk"
+            assertThat(walk.enabled()).isTrue();
+            assertThat(click.enabled()).isTrue();
+            assertThat(none.enabled()).isFalse();
         }
 
         @Test
@@ -238,6 +255,21 @@ class DisplayRulesTest {
             assertThat(box.overlaps(new Box(0.9, 0.9, 0.9, 2, 2, 2))).isTrue();
             assertThat(box.overlaps(new Box(1, 0, 0, 2, 1, 1))).isFalse(); // only touching
             assertThat(box.overlaps(new Box(0.2, 1.5, 0.2, 0.8, 3, 0.8))).isFalse(); // above
+        }
+
+        @Test
+        void aTouchDisplaySwitchesClickingTheBlockOff() {
+            InteractionDisplay plain = new InteractionDisplay("orb", 1, "continue", "all", "{\"kind\":\"item\"}");
+            InteractionDisplay walk = new InteractionDisplay("orb", 2, "continue", "all", "{\"touch\":{\"walk\":true}}");
+            InteractionDisplay click = new InteractionDisplay("orb", 3, "continue", "all", "{\"touch\":{\"click\":true}}");
+            assertThat(interaction().isTouchOnly()).isFalse();
+            assertThat(interaction(plain).isTouchOnly()).isFalse();
+            assertThat(interaction(plain, walk).isTouchOnly()).isTrue();
+            assertThat(interaction(plain, click).isTouchOnly()).isTrue();
+        }
+
+        private Interaction interaction(InteractionDisplay... displays) {
+            return new Interaction("orb", List.of(), List.of(), List.of(displays), List.of(), List.of(), List.of());
         }
 
         @Test
