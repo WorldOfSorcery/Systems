@@ -504,9 +504,12 @@ public class QuestManager {
         for (JsonElement el : commands) {
             String cmd = plugin.getPlaceholderResolver().resolvePlaceholders(el.getAsString(), player)
                     .replace("%player%", player.getName());
+            boolean asPlayer = "player".equalsIgnoreCase(executor);
+            // The same blacklist as the commands of GUIs and interactions.
+            if (!plugin.getActionHandler().mayRun(player, cmd, asPlayer, "a quest's command node (" + node.getLabel() + ")")) continue;
             Bukkit.getScheduler().runTask(plugin, () -> {
-                if ("player".equalsIgnoreCase(executor)) Bukkit.dispatchCommand(player, cmd);
-                else                                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
+                if (asPlayer) Bukkit.dispatchCommand(player, cmd);
+                else          Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
             });
         }
     }
@@ -531,6 +534,7 @@ public class QuestManager {
                 case "command" -> {
                     String cmd = plugin.getPlaceholderResolver().resolvePlaceholders(id, player)
                             .replace("%player%", player.getName());
+                    if (!plugin.getActionHandler().mayRun(player, cmd, false, "quest " + questId + " (reward)")) continue;
                     Bukkit.getScheduler().runTask(plugin, () ->
                             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd));
                 }

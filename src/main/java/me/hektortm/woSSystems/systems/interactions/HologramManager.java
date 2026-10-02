@@ -111,11 +111,35 @@ public class HologramManager {
 
     // player UUID -> (hologramKey -> state)
     private final Map<UUID, Map<String, HologramState>> activeHolograms = new HashMap<>();
+    /** player UUID -> the hologram keys the running pass has drawn (or kept away as out of range). */
+    private final Map<UUID, Set<String>> visited = new HashMap<>();
     private final AtomicInteger entityIdCounter = new AtomicInteger(1_000_000);
 
     public HologramManager(DAOHub hub) {
         this.hub = hub;
         this.conditionHandler = WoSSystems.getInstance().getConditionHandler();
+    }
+
+    /** Starts a pass of the interaction task over every binding (see {@link #endPass()}). */
+    public void beginPass() {
+        visited.clear();
+    }
+
+    /**
+     * Removes the holograms the pass no longer asked for: the interaction lost
+     * its last hologram, was unbound or deleted, its NPC despawned, or the
+     * player is in another world. Without this they stayed until a relog.
+     */
+    public void endPass() {
+        for (Map.Entry<UUID, Map<String, HologramState>> entry : activeHolograms.entrySet()) {
+            Player player = org.bukkit.Bukkit.getPlayer(entry.getKey());
+            Set<String> keep = visited.getOrDefault(entry.getKey(), Set.of());
+            entry.getValue().entrySet().removeIf(hologram -> {
+                if (keep.contains(hologram.getKey())) return false;
+                if (player != null) destroyEntities(player, hologram.getValue().entityIds());
+                return true;
+            });
+        }
     }
 
     /** Overload for block holograms — entity height is not applicable. */
@@ -134,26 +158,27 @@ public class HologramManager {
         if (!player.getWorld().equals(location.getWorld())) return;
 
         String hologramKey = buildHologramKey(inter.getInteractionId(), location);
+        visited.computeIfAbsent(player.getUniqueId(), k -> new HashSet<>()).add(hologramKey);
         boolean inRange = player.getLocation().distanceSquared(location) <= RENDER_DISTANCE_SQUARED;
 
         if (inRange) {
             List<InteractionHologram> visible = resolveVisibleHolograms(player, inter, holograms, key);
             String structFP   = buildStructFingerprint(visible);
-            String contentFP  = buildContentFingerprint(player, visible);
+            String contentFP  = buildContentFingerprint(player, visible, key);
 
             HologramState current = getState(player, hologramKey);
 
             if (current == null) {
-                spawnHolograms(player, inter.getInteractionId(), visible, location, npc, entityHeight, hologramKey, structFP, contentFP);
+                spawnHolograms(player, visible, location, npc, entityHeight, hologramKey, structFP, contentFP, key);
             } else if (!current.structFingerprint().equals(structFP)) {
                 // Visible hologram set changed — full respawn needed (different settings/structure)
                 destroyEntities(player, current.entityIds());
                 removeState(player, hologramKey);
-                spawnHolograms(player, inter.getInteractionId(), visible, location, npc, entityHeight, hologramKey, structFP, contentFP);
+                spawnHolograms(player, visible, location, npc, entityHeight, hologramKey, structFP, contentFP, key);
             } else {
                 // Always refresh the text metadata so the entity stays visible on the client
                 // (acts as a heartbeat — no destroy/spawn means no flicker)
-                sendMetadataUpdate(player, current.entityIds().get(0), visible);
+                sendMetadataUpdate(player, current.entityIds().get(0), visible, key);
                 if (!current.contentFingerprint().equals(contentFP)) {
                     setState(player, hologramKey, new HologramState(structFP, contentFP, current.entityIds()));
                 }
@@ -208,18 +233,18 @@ public class HologramManager {
     }
 
     /** Resolved text content of all visible lines per player. A change here only needs a metadata update. */
-    private String buildContentFingerprint(Player player, List<InteractionHologram> holograms) {
+    private String buildContentFingerprint(Player player, List<InteractionHologram> holograms, InteractionKey key) {
         StringBuilder sb = new StringBuilder();
         for (InteractionHologram h : holograms) {
             for (String line : h.getHologram()) {
-                sb.append(replacePlaceholders(line, player)).append('\n');
+                sb.append(replacePlaceholders(line, player, key)).append('\n');
             }
         }
         return sb.toString();
     }
 
-    private void spawnHolograms(Player player, String interactionId, List<InteractionHologram> holograms,
-                                 Location location, boolean npc, double entityHeight, String hologramKey, String structFP, String contentFP) {
+    private void spawnHolograms(Player player, List<InteractionHologram> holograms, Location location, boolean npc,
+                                 double entityHeight, String hologramKey, String structFP, String contentFP, InteractionKey key) {
         if (holograms.isEmpty()) return;
 
         // NPCs: Citizens reports a larger bounding box than the visible model, so we use a
@@ -233,7 +258,7 @@ public class HologramManager {
         List<Component> lineComponents = new ArrayList<>();
         for (InteractionHologram hologram : holograms) {
             for (String line : hologram.getHologram()) {
-                lineComponents.add(buildLineComponent(line, player));
+                lineComponents.add(buildLineComponent(line, player, key));
             }
         }
         if (lineComponents.isEmpty()) return;
@@ -258,10 +283,13 @@ public class HologramManager {
                 .put(hologramKey, new HologramState(structFP, contentFP, List.of(entityId)));
     }
 
-    /** The text with its {placeholder} tokens filled in for the player (unknown ones stay as written). */
-    private String replacePlaceholders(String text, Player player) {
+    /**
+     * The text with its {placeholder} tokens filled in for the player at this
+     * binding (so local cooldowns show); unknown ones stay as written.
+     */
+    private String replacePlaceholders(String text, Player player, InteractionKey key) {
         PlaceholderResolver resolver = WoSSystems.getInstance().getPlaceholderResolver();
-        return resolver.resolvePlaceholders(text, player);
+        return resolver.resolvePlaceholders(text, player, key);
     }
 
     /**
@@ -282,9 +310,9 @@ public class HologramManager {
         return sb.toString().replace('&', '§');
     }
 
-    private Component buildLineComponent(String text, Player player) {
+    private Component buildLineComponent(String text, Player player, InteractionKey key) {
         return LegacyComponentSerializer.legacySection()
-                .deserialize(parseColors(replacePlaceholders(text, player)));
+                .deserialize(parseColors(replacePlaceholders(text, player, key)));
     }
 
     /** Parses a settings JSON string into a JsonObject, or returns null if absent/invalid. */
@@ -422,11 +450,11 @@ public class HologramManager {
      * Sends a full metadata update (text + all settings) to an existing TextDisplay entity.
      * The entity is not removed or re-spawned, so there is no flicker.
      */
-    private void sendMetadataUpdate(Player player, int entityId, List<InteractionHologram> holograms) {
+    private void sendMetadataUpdate(Player player, int entityId, List<InteractionHologram> holograms, InteractionKey key) {
         List<Component> lineComponents = new ArrayList<>();
         for (InteractionHologram hologram : holograms) {
             for (String line : hologram.getHologram()) {
-                lineComponents.add(buildLineComponent(line, player));
+                lineComponents.add(buildLineComponent(line, player, key));
             }
         }
         if (lineComponents.isEmpty()) return;

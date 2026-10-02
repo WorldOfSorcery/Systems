@@ -39,6 +39,9 @@ import me.hektortm.woSSystems.systems.citems.cmd.SignCommand;
 import me.hektortm.woSSystems.systems.commands.BasicCommandExecutor;
 import me.hektortm.woSSystems.systems.cooldowns.CooldownManager;
 import me.hektortm.woSSystems.systems.cooldowns.cmd.CooldownCommand;
+import me.hektortm.woSSystems.systems.debug.DebugCommand;
+import me.hektortm.woSSystems.systems.debug.DebugLabels;
+import me.hektortm.woSSystems.systems.debug.DebugMode;
 import me.hektortm.woSSystems.systems.guis.GUIManager;
 import me.hektortm.woSSystems.systems.guis.cmd.GUICommand;
 //import me.hektortm.woSSystems.systems.interactions.HologramHandler;
@@ -143,6 +146,8 @@ public final class WoSSystems extends JavaPlugin {
     private CitemDisplays citemDisplays;
     private DailyReset dailyReset;
     private QuestManager questManager;
+    private final DebugMode debugMode = new DebugMode();
+    private final DebugLabels debugLabels = new DebugLabels(debugMode);
 
 
     public static StringFlag DISPLAY_NAME;
@@ -255,6 +260,7 @@ public final class WoSSystems extends JavaPlugin {
             lang.loadLangFileExternal(this, "dialogs", core);
             lang.loadLangFileExternal(this, "global_stats", core);
             lang.loadLangFileExternal(this, "bugs", core);
+            lang.loadLangFileExternal(this, "debug", core);
         } else {
             getLogger().severe("WoSCore not found. Disabling WoSSystems");
         }
@@ -279,6 +285,7 @@ public final class WoSSystems extends JavaPlugin {
         registerEvents();
         //interactionManager.loadInteraction();
         interactionManager.interactionTask();
+        guiManager.startRefresh();
         tab.runTablist();
         cooldownManager.start();
         craftingManager.loadAll();
@@ -440,6 +447,7 @@ public final class WoSSystems extends JavaPlugin {
         cmdReg("profile", new ProfileCommand(profileDialogs));
         cmdReg("gui", new GUICommand(daoHub));
         cmdReg("debugcmd", new debug(daoHub));
+        cmdReg("wosdebug", new DebugCommand(debugMode));
         cmdReg("cooldown", new CooldownCommand(daoHub));
         cmdReg("calendar", new Calender());
         cmdReg("link", new LinkCommand());
@@ -465,6 +473,8 @@ public final class WoSSystems extends JavaPlugin {
         //eventReg(new HologramHandler(daoHub));
         eventReg(guiManager); // the same instance that opens GUIs, so clicks see what it opened
         eventReg(new QuestListener(this, questManager));
+        eventReg(debugMode);
+        eventReg(debugLabels);
         getServer().getPluginManager().registerEvents(new InventoryClickListener(ecoManager, coinflipCommand, lang, nickManager.getNickRequests() ,nickManager, daoHub), this);
     }
 
@@ -631,6 +641,12 @@ public final class WoSSystems extends JavaPlugin {
     }
     public GUIManager getGuiManager() {
         return guiManager;
+    }
+    public DebugMode getDebugMode() {
+        return debugMode;
+    }
+    public DebugLabels getDebugLabels() {
+        return debugLabels;
     }
     public NicknameManager getNickManager() {
         return nickManager;

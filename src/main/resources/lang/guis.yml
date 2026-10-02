@@ -15,6 +15,14 @@ price-entry-unmet: "§c %entry%"
 reward-header: "§7You get:"
 reward-entry: "§e %entry%"
 
+# /gui playerview: a GUI as another player sees it.
+view:
+  usage: "Usage: /gui playerview <player> <id>"
+  offline: "%player% is not online."
+  unknown: "There is no GUI '%id%'."
+  opened: "Showing %id% as %player% sees it. Clicks only move around."
+  left: "%player% left, so the view was closed."
+
 confirm:
   title: "Are you sure?"
   yes: "§aConfirm"

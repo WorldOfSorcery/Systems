@@ -1,0 +1,3 @@
+# /wosdebug: debug mode for staff.
+enabled: "Debug mode is on: interaction labels, raw GUI placeholders, and what your actions run."
+disabled: "Debug mode is off."

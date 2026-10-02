@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +85,78 @@ class GuiRulesTest {
             assertThat(GuiRules.afterClick("page", "two", "stay", null, 0, 3)).isInstanceOf(GuiRules.Redraw.class);
             assertThat(GuiRules.afterClick("page", "7", "stay", null, 0, 3)).isInstanceOf(GuiRules.Redraw.class);
             assertThat(GuiRules.afterClick("gui", " ", "stay", null, 0, 3)).isInstanceOf(GuiRules.Redraw.class);
+        }
+    }
+
+    @Nested
+    class PageSound {
+        private static final String FLIP = GuiRules.PAGE_TURN_SOUND;
+
+        @Test
+        void goingToAnotherPagePlaysTheGuisSound() {
+            assertThat(GuiRules.pageSound(new GuiRules.OpenPage(1), FLIP, null)).isEqualTo(FLIP);
+            assertThat(GuiRules.pageSound(new GuiRules.OpenPage(1), " wos:custom.flip ", " ")).isEqualTo("wos:custom.flip");
+        }
+
+        @Test
+        void notWithoutASoundOrWhenTheItemHasItsOwn() {
+            assertThat(GuiRules.pageSound(new GuiRules.OpenPage(1), "", null)).isNull();
+            assertThat(GuiRules.pageSound(new GuiRules.OpenPage(1), null, null)).isNull();
+            assertThat(GuiRules.pageSound(new GuiRules.OpenPage(1), FLIP, "minecraft:ui.button.click")).isNull();
+        }
+
+        @Test
+        void notWhenTheClickStaysClosesOrOpensAnotherGui() {
+            assertThat(GuiRules.pageSound(new GuiRules.Redraw(), FLIP, null)).isNull(); // also "next" on the last page
+            assertThat(GuiRules.pageSound(new GuiRules.Close(), FLIP, null)).isNull();
+            assertThat(GuiRules.pageSound(new GuiRules.OpenGui("bank"), FLIP, null)).isNull();
+        }
+    }
+
+    @Nested
+    class LiveRefresh {
+        @Test
+        void aPageWithACooldownPlaceholderIsRefreshed() {
+            assertThat(GuiRules.showsCooldown(Arrays.asList(null, "§7Ready in {cooldowns.duration:daily}"))).isTrue();
+            assertThat(GuiRules.showsCooldown(List.of("[\"{cooldowns.seconds:chest}\"]"))).isTrue();
+        }
+
+        @Test
+        void otherPlaceholdersAreNot() {
+            assertThat(GuiRules.showsCooldown(List.of("{stats.amount:kills}", "{cooldowns.duration}", "plain"))).isFalse();
+            assertThat(GuiRules.showsCooldown(List.of())).isFalse();
+        }
+    }
+
+    @Nested
+    class PlayerView {
+        private final GuiRules.After stay = new GuiRules.Redraw();
+
+        @Test
+        void aCommandThatOpensAGuiIsAMove() {
+            assertThat(GuiRules.viewMove(List.of("send_message hi", "gui open @p bank"), "Xyz", stay))
+                    .isEqualTo(new GuiRules.OpenGui("bank", 0));
+            assertThat(GuiRules.viewMove(List.of("\"gui open xyz bank:2\""), "Xyz", stay)).isEqualTo(new GuiRules.OpenGui("bank", 2));
+            assertThat(GuiRules.viewMove(List.of("gui open @p bank:two"), "Xyz", stay)).isEqualTo(new GuiRules.OpenGui("bank", 0));
+        }
+
+        @Test
+        void closingIsAMove() {
+            assertThat(GuiRules.viewMove(List.of("close_gui"), "Xyz", stay)).isInstanceOf(GuiRules.Close.class);
+        }
+
+        @Test
+        void aCommandWinsOverThePostUse() {
+            assertThat(GuiRules.viewMove(List.of("gui open @p bank"), "Xyz", new GuiRules.OpenPage(1)))
+                    .isEqualTo(new GuiRules.OpenGui("bank", 0));
+        }
+
+        @Test
+        void otherCommandsLeadWhereThePostUseDoes() {
+            List<String> actions = List.of("eco give @p gold 5", "gui open Someone bank", "gui open @p", "cgive @p gui 1");
+            assertThat(GuiRules.viewMove(actions, "Xyz", stay)).isSameAs(stay);
+            assertThat(GuiRules.viewMove(actions, "Xyz", new GuiRules.OpenPage(1))).isEqualTo(new GuiRules.OpenPage(1));
+            assertThat(GuiRules.viewMove(List.of(), "Xyz", stay)).isSameAs(stay);
         }
     }
 

@@ -3,12 +3,21 @@ package me.hektortm.woSSystems.utils;
 import me.hektortm.woSSystems.utils.Operations;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.systems.debug.DebugFormat;
 import me.hektortm.woSSystems.utils.model.InteractionKey;
 import me.hektortm.wosCore.Utils;
+import me.hektortm.wosCore.discord.DiscordLog;
+import me.hektortm.wosCore.discord.DiscordLogger;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickCallback;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -29,7 +38,24 @@ import java.util.logging.Level;
  */
 public class ActionHandler {
     // TODO: move to config.yml under 'blocked-commands' key for runtime configurability
-    private static final List<String> COMMAND_BLACKLIST = Arrays.asList("op", "gmc", "gamemode");
+    // Commands sudo never runs: a player with rights (an op, an admin) clicking the
+    // item would otherwise hand them out without knowing.
+    private static final List<String> COMMAND_BLACKLIST = Arrays.asList(
+            // operator and permissions (as PERMISSION_COMMANDS)
+            "op", "deop", "lp", "luckperms", "lpb", "lpv", "perm", "perms", "permission", "permissions", "pex",
+            // the server itself
+            "stop", "restart", "reload", "rl", "whitelist", "save-off", "function",
+            // bans and kicks
+            "ban", "ban-ip", "pardon", "pardon-ip", "kick",
+            // game modes
+            "gamemode", "defaultgamemode", "gmc", "gms", "gma", "gmsp");
+
+    // Commands the console never runs for content: whoever may edit a GUI or an
+    // interaction would otherwise hold the server. Content may still grant
+    // permissions (PERMISSION_COMMANDS), which is logged.
+    private static final List<String> CONSOLE_BLACKLIST = Arrays.asList("op", "deop", "stop", "restart", "reload", "rl", "whitelist");
+    private static final List<String> PERMISSION_COMMANDS = Arrays.asList(
+            "lp", "luckperms", "lpb", "lpv", "perm", "perms", "permission", "permissions", "pex");
 
     private final WoSSystems plugin = WoSSystems.getPlugin(WoSSystems.class);
     private final PlaceholderResolver resolver = plugin.getPlaceholderResolver();
@@ -67,8 +93,10 @@ public class ActionHandler {
      *
      * <p>Supported action keywords (first token):
      * <ul>
-     *   <li>{@code send_message} — sends a colour-formatted chat message</li>
+     *   <li>{@code send_message} — sends a colour-formatted chat message; {@code [text](interaction:id)},
+     *       {@code [text](action:command)} and {@code [text](url:link)} make a part of it clickable</li>
      *   <li>{@code sudo} — dispatches a command as the player, checked against the blacklist</li>
+     *   <li>{@code wait &lt;time&gt;} — runs the rest of the list later ({@code 500ms}, {@code 2s}, {@code 40t}; a bare number is ms)</li>
      *   <li>{@code empty_line} — sends a blank chat line</li>
      *   <li>{@code cooldown give @p &lt;id&gt; %local%} — grants a local cooldown scoped to {@code key}</li>
      *   <li>{@code send_actionbar} — sends an action-bar message</li>
@@ -88,32 +116,67 @@ public class ActionHandler {
      *                   may be {@code null} when not applicable
      */
     public void executeActions(Player player, List<String> actions, SourceType sourceType, String sourceID, @Nullable InteractionKey key) {
-        for (String rawCmd : actions) {
+        executeActions(player, actions, sourceType, sourceID, key, null);
+    }
+
+    /**
+     * As {@link #executeActions(Player, List, SourceType, String, InteractionKey)}.
+     *
+     * @param detail what in the source the actions belong to (an interaction's
+     *               row, a GUI's slot and click), shown to a player in debug mode
+     */
+    public void executeActions(Player player, List<String> actions, SourceType sourceType, String sourceID, @Nullable InteractionKey key,
+                               @Nullable String detail) {
+        boolean debugging = plugin.getDebugMode().isOn(player);
+        if (debugging) player.sendMessage(DebugFormat.header(sourceType.getType(), sourceID, detail, key == null ? null : key.getKey()));
+        run(player, actions, 0, sourceType, sourceID, key, debugging);
+    }
+
+    /**
+     * Runs the actions from {@code from} on. A {@code wait} stops here and
+     * schedules the rest for later (never by sleeping: this is the server thread).
+     */
+    private void run(Player player, List<String> actions, int from, SourceType sourceType, String sourceID, @Nullable InteractionKey key,
+                     boolean debugging) {
+        for (int i = from; i < actions.size(); i++) {
             // Strip surrounding quotes that may be stored in the DB
-            String cmd = rawCmd.trim();
+            String cmd = actions.get(i).trim();
             if (cmd.startsWith("\"") && cmd.endsWith("\"") && cmd.length() >= 2) {
                 cmd = cmd.substring(1, cmd.length() - 1);
             }
-            cmd = resolver.resolvePlaceholders(cmd, player);
+            String written = cmd;
+            cmd = resolver.resolvePlaceholders(cmd, player, key);
             String parsedCommand = cmd.replace("@p", player.getName());
+            if (debugging) player.sendMessage(DebugFormat.command(written, parsedCommand));
             if (cmd.startsWith("send_message")) {
-                player.sendMessage(Utils.parseColorCodeString(argument(cmd, "send_message")));
+                String message = argument(cmd, "send_message");
+                if (ClickableMessage.hasLinks(message)) player.sendMessage(clickable(player, message, sourceType, sourceID, key));
+                else player.sendMessage(Utils.parseColorCodeString(message));
                 continue;
             }
-            if (cmd.startsWith("sudo")) {
-                String[] parts = cmd.split("\\s+", 2);
-                if (parts.length < 2) {
+            long wait = waitTicks(cmd);
+            if (wait >= 0) {
+                if (wait == 0) {
+                    plugin.writeLog("ActionHandler", Level.WARNING, "wait action without a readable time (e.g. 'wait 2s'): " + cmd);
+                    continue;
+                }
+                int next = i + 1;
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    if (player.isOnline()) run(player, actions, next, sourceType, sourceID, key, debugging);
+                }, wait);
+                return;
+            }
+            if (cmd.equals("sudo") || cmd.startsWith("sudo ")) {
+                // The command as the player types it, without the slash (and with @p as their name).
+                String command = argument(parsedCommand, "sudo");
+                if (command.startsWith("/")) command = command.substring(1);
+                if (command.isBlank()) {
                     plugin.writeLog("ActionHandler", java.util.logging.Level.WARNING, "sudo action missing argument: " + cmd);
                     continue;
                 }
-                for (String term : COMMAND_BLACKLIST) {
-                    if (parts[1].contains(term)) {
-                        plugin.getLogManager().sendWarning(player.getName() + " Tried to execute: " + parts[1] + " | Source: "+sourceType.getType()+"("+sourceID+")");
-                        plugin.getLogManager().writeLog(player, "Tried to execute: " + parts[1] + " | Source: "+sourceType.getType()+"("+sourceID+")");
-                        return;
-                    }
-                }
-                Bukkit.getScheduler().runTask(plugin, () -> {Bukkit.dispatchCommand(player, parts[1]);});
+                if (!mayRun(player, command, true, sourceType.getType() + " " + sourceID)) return;
+                String asPlayer = command;
+                Bukkit.getScheduler().runTask(plugin, () -> {Bukkit.dispatchCommand(player, asPlayer);});
                 continue;
             }
             if (cmd.startsWith("empty_line")) {
@@ -149,18 +212,6 @@ public class ActionHandler {
                 player.sendTitle(Utils.parseColorCodeString(parts[0]), Utils.parseColorCodeString(subtitle), 10, 70, 20);
                 continue;
             }
-//            if (cmd.startsWith("wait")) {
-//                String[] parts = cmd.split(" ");
-//                int duration = Integer.parseInt(parts[1]);
-//                try  {
-//                    Thread.sleep(duration);
-//                } catch(InterruptedException e) {
-//                    plugin.writeLog("ActionHandler | wait", Level.SEVERE, "InterruptedException:" + e);
-//                    Thread.currentThread().interrupt();
-//                }
-//                continue;
-//
-//            }
             if (cmd.startsWith("play_sound")) {
                 String[] parts = cmd.split("\\s+");
                 if (parts.length < 4) {
@@ -216,8 +267,135 @@ public class ActionHandler {
                 continue;
             }
 
+            if (!mayRun(player, parsedCommand, false, sourceType.getType() + " " + sourceID)) return;
             if (sourceType == SourceType.DIALOG) Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand));
             else Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand);
+        }
+    }
+
+    /** How long a clickable part of a message can be clicked. */
+    private static final Duration CLICK_LIFETIME = Duration.ofMinutes(10);
+
+    /**
+     * A message with clickable parts ({@link ClickableMessage}). A part keeps
+     * the colours active before it. The click is handled here on the server (no
+     * command the player would need a permission for, and none they can forge);
+     * it works once unless set to repeat, for {@link #CLICK_LIFETIME}, and not
+     * after the player logged out.
+     */
+    private Component clickable(Player player, String message, SourceType sourceType, String sourceID, @Nullable InteractionKey key) {
+        Component out = Component.empty();
+        String colours = "";
+        for (ClickableMessage.Part part : ClickableMessage.parse(message)) {
+            String text = colours + Utils.parseColorCodeString(part.text());
+            Component piece = LegacyComponentSerializer.legacySection().deserialize(text);
+            ClickEvent click = part.link() == null ? null : clickEvent(player, part.link(), sourceType, sourceID, key);
+            out = out.append(click == null ? piece : piece.clickEvent(click));
+            colours = ChatColor.getLastColors(text);
+        }
+        return out;
+    }
+
+    /** What clicking the link does; null if it can't do anything (a link that isn't a web address). */
+    @Nullable
+    private ClickEvent clickEvent(Player player, ClickableMessage.Link link, SourceType sourceType, String sourceID, @Nullable InteractionKey key) {
+        if (link.kind() == ClickableMessage.Kind.URL) {
+            String url = link.target();
+            return url.startsWith("https://") || url.startsWith("http://") ? ClickEvent.openUrl(url) : null;
+        }
+        ClickCallback.Options options = ClickCallback.Options.builder()
+                .uses(link.repeat() ? ClickCallback.UNLIMITED_USES : 1)
+                .lifetime(CLICK_LIFETIME)
+                .build();
+        return ClickEvent.callback(clicker -> {
+            if (Bukkit.getPlayer(player.getUniqueId()) != player) return; // logged out since
+            if (link.kind() == ClickableMessage.Kind.INTERACTION) {
+                plugin.getInteractionManager().triggerInteraction(link.target(), player, key);
+            } else {
+                executeActions(player, List.of(link.target()), sourceType, sourceID, key, "chat click");
+            }
+        }, options);
+    }
+
+    private static final java.util.regex.Pattern WAIT_TIME = java.util.regex.Pattern.compile("(\\d+(?:\\.\\d+)?)(ms|s|t)?");
+
+    /**
+     * How long a {@code wait} action waits, in ticks (20 a second): {@code wait
+     * 500ms}, {@code wait 2s}, {@code wait 40t}; a bare number is milliseconds.
+     * At least one tick. 0 if the time can't be read, -1 if the action isn't a wait.
+     */
+    static long waitTicks(String cmd) {
+        if (!cmd.equals("wait") && !cmd.startsWith("wait ")) return -1;
+        java.util.regex.Matcher time = WAIT_TIME.matcher(argument(cmd, "wait").trim().toLowerCase(java.util.Locale.ROOT));
+        if (!time.matches()) return 0;
+        double amount = Double.parseDouble(time.group(1));
+        String unit = time.group(2) == null ? "ms" : time.group(2);
+        double ticks = switch (unit) {
+            case "s" -> amount * 20;
+            case "t" -> amount;
+            default -> amount / 50;
+        };
+        return amount <= 0 ? 0 : Math.max(1, Math.round(ticks));
+    }
+
+    /**
+     * Whether a command that content (a GUI, an interaction, a quest …) holds
+     * may run for this player. A blacklisted command is refused and recorded
+     * where it is still found later: the server log and Discord's warning
+     * channel, and staff online who get warnings see it. A permission command
+     * run by the console is allowed (content may grant permissions) but logged.
+     *
+     * @param asPlayer true if the player runs it (sudo), false for the console
+     * @param source   where the command is set up, e.g. {@code "gui bank"}
+     */
+    public boolean mayRun(Player player, String command, boolean asPlayer, String source) {
+        String runner = asPlayer ? "sudo" : "console";
+        String who = player.getName() + " (" + player.getUniqueId() + ")" + (player.isOp() ? ", an operator" : "");
+        if (asPlayer ? isBlockedCommand(command) : isBlockedConsoleCommand(command)) {
+            String message = "Blocked " + runner + " command '" + command + "' for " + who + ". It is set up in " + source + ": remove it there.";
+            plugin.writeLog("ActionHandler", Level.WARNING, message);
+            DiscordLogger.log(new DiscordLog(Level.WARNING, plugin, "AH:command-blocked", message, null));
+            plugin.getLogManager().sendWarning(player.getName() + " Tried to execute: " + command + " | Source: " + source);
+            return false;
+        }
+        if (!asPlayer && isPermissionCommand(command)) {
+            String message = "Console permission command '" + command + "' run for " + who + ", set up in " + source + ".";
+            plugin.writeLog("ActionHandler", Level.INFO, message);
+            DiscordLogger.log(new DiscordLog(Level.INFO, plugin, "AH:permission-command", message, null));
+        }
+        return true;
+    }
+
+    /**
+     * Whether {@code sudo} refuses a command: its name (without {@code /} or a
+     * {@code namespace:}) is on the blacklist. Only the name counts, so
+     * {@code shop} or {@code gui open} aren't caught by {@code op}. The command
+     * behind an {@code execute … run} is checked too.
+     */
+    static boolean isBlockedCommand(String command) {
+        return isOneOf(command, COMMAND_BLACKLIST);
+    }
+
+    /** Whether a command run by the console is refused: operator rights and the server itself. */
+    static boolean isBlockedConsoleCommand(String command) {
+        return isOneOf(command, CONSOLE_BLACKLIST);
+    }
+
+    /** Whether the command changes permissions (LuckPerms and the like). */
+    static boolean isPermissionCommand(String command) {
+        return isOneOf(command, PERMISSION_COMMANDS);
+    }
+
+    private static boolean isOneOf(String command, List<String> names) {
+        String rest = command.trim();
+        while (true) {
+            String name = rest.split("\\s+", 2)[0].toLowerCase(java.util.Locale.ROOT);
+            if (name.startsWith("/")) name = name.substring(1);
+            name = name.substring(name.lastIndexOf(':') + 1);
+            if (names.contains(name)) return true;
+            int run = rest.indexOf(" run ");
+            if (!name.equals("execute") || run < 0) return false;
+            rest = rest.substring(run + " run ".length()).trim();
         }
     }
 

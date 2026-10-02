@@ -5,6 +5,7 @@ import com.destroystokyo.paper.profile.ProfileProperty;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.systems.debug.DebugFormat;
 import me.hektortm.woSSystems.utils.ActionHandler;
 import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.utils.model.Condition;
@@ -26,6 +27,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemFlag;
@@ -39,6 +41,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -65,8 +68,15 @@ public class GUIManager implements Listener {
     /**
      * What a player has open: the GUI, the page, which configured slot each
      * inventory slot shows, and the inventory itself (to tell it from a newer one).
+     * {@code subject} is whose values it shows: the player themself, or in a
+     * player view ({@code /gui playerview}) the player being looked at.
      */
-    record OpenView(String guiId, int page, Map<Integer, Integer> slots, Inventory inventory) {}
+    record OpenView(String guiId, int page, Map<Integer, Integer> slots, Inventory inventory, UUID subject) {
+        /** True if {@code viewer} is looking at this GUI as another player sees it. */
+        boolean isPlayerView(Player viewer) {
+            return !subject.equals(viewer.getUniqueId());
+        }
+    }
 
     private final Map<UUID, OpenView> views = new ConcurrentHashMap<>();
 
@@ -92,17 +102,32 @@ public class GUIManager implements Listener {
     public void openGUI(Player player, String guiId, int pageIndex) {
         GUI gui = hub.getGuiDAO().getGUIbyId(guiId);
         if (gui == null || gui.getPages().isEmpty()) return;
-        Inventory inventory = draw(player, gui, pageIndex);
+        Inventory inventory = draw(player, player, gui, pageIndex);
         if (gui.getOpenActions() != null && !gui.getOpenActions().isEmpty()) {
-            actionHandler.executeActions(player, gui.getOpenActions(), ActionHandler.SourceType.GUI, guiId, null);
+            actionHandler.executeActions(player, gui.getOpenActions(), ActionHandler.SourceType.GUI, guiId, null, "on open");
         }
         player.openInventory(inventory);
     }
 
+    /**
+     * Opens a GUI for {@code viewer} as {@code subject} sees it (their
+     * placeholders, conditions, prices). Its open and close actions don't run,
+     * and clicks only move around (see {@link GUIClickHandler}).
+     */
+    public void openView(Player viewer, Player subject, String guiId, int pageIndex) {
+        GUI gui = hub.getGuiDAO().getGUIbyId(guiId);
+        if (gui == null || gui.getPages().isEmpty()) return;
+        showPage(viewer, subject, gui, pageIndex);
+    }
+
     /** Shows another page of the GUI, or redraws it: no open / close actions. */
     void showPage(Player player, GUI gui, int pageIndex) {
-        Inventory inventory = draw(player, gui, pageIndex);
-        switchTo(player, () -> player.openInventory(inventory));
+        showPage(player, player, gui, pageIndex);
+    }
+
+    void showPage(Player viewer, Player subject, GUI gui, int pageIndex) {
+        Inventory inventory = draw(viewer, subject, gui, pageIndex);
+        switchTo(viewer, () -> viewer.openInventory(inventory));
     }
 
     /** Runs {@code open} (which replaces the player's GUI screen) without it counting as a close. */
@@ -115,25 +140,87 @@ public class GUIManager implements Listener {
         }
     }
 
-    /** Builds the page's inventory for the player and records it as their open view. */
-    private Inventory draw(Player player, GUI gui, int pageIndex) {
+    /** Builds the page's inventory with {@code player}'s values and records it as the viewer's open view. */
+    private Inventory draw(Player viewer, Player player, GUI gui, int pageIndex) {
         List<GUIPage> pages = gui.getPages();
         int page = Math.max(0, Math.min(pageIndex, pages.size() - 1));
-        Inventory inventory = Bukkit.createInventory(new GUIHolder(gui.getGuiId()), gui.getSize() * 9,
-                Utils.parseColorCodeString(plugin.getPlaceholderResolver().resolvePlaceholders(gui.getTitle(), player)));
+        boolean raw = plugin.getDebugMode().isOn(viewer); // debug mode: texts as written
+        Inventory inventory = Bukkit.createInventory(new GUIHolder(gui.getGuiId()), gui.getSize() * 9, new Text(player, raw).line(gui.getTitle()));
 
-        Map<Integer, ItemStack> items = new HashMap<>();
-        for (GUISlot slot : pages.get(page).getSlots()) {
-            if (!slot.isActive()) continue;
-            GUISlotConfig config = resolveConfig(player, slot);
-            if (config == null || !config.isVisible()) continue;
-            items.put(slot.getSlot_id(), buildItem(config, player));
-        }
+        Map<Integer, ItemStack> items = pageItems(player, pages.get(page), raw);
         Map<Integer, Integer> layout = GuiRules.layout(new ArrayList<>(items.keySet()), inventory.getSize(), gui.isFluid());
         layout.forEach((at, slot) -> inventory.setItem(at, items.get(slot)));
 
-        views.put(player.getUniqueId(), new OpenView(gui.getGuiId(), page, layout, inventory));
+        views.put(viewer.getUniqueId(), new OpenView(gui.getGuiId(), page, layout, inventory, player.getUniqueId()));
         return inventory;
+    }
+
+    /** The items a page shows to {@code player}, by the slot they're configured at. */
+    private Map<Integer, ItemStack> pageItems(Player player, GUIPage page, boolean raw) {
+        Map<Integer, ItemStack> items = new HashMap<>();
+        for (GUISlot slot : page.getSlots()) {
+            if (!slot.isActive()) continue;
+            GUISlotConfig config = resolveConfig(player, slot);
+            if (config == null || !config.isVisible()) continue;
+            items.put(slot.getSlot_id(), buildItem(config, player, raw));
+        }
+        return items;
+    }
+
+    // ── Live refresh ────────────────────────────────────────────────────────────
+
+    /**
+     * Starts the once-a-second refresh of open GUI pages that show a cooldown
+     * placeholder, so the countdown runs without reopening.
+     */
+    public void startRefresh() {
+        Bukkit.getScheduler().runTaskTimer(plugin, this::refreshCooldownPages, 20L, 20L);
+    }
+
+    private void refreshCooldownPages() {
+        views.forEach((viewerId, view) -> {
+            Player viewer = Bukkit.getPlayer(viewerId);
+            // Not while another screen (the confirm screen) is in front of it.
+            if (viewer == null || viewer.getOpenInventory().getTopInventory() != view.inventory()) return;
+            Player subject = Bukkit.getPlayer(view.subject());
+            GUI gui = hub.getGuiDAO().getGUIbyId(view.guiId());
+            if (subject == null || gui == null || view.page() >= gui.getPages().size()) return;
+            GUIPage page = gui.getPages().get(view.page());
+            if (GuiRules.showsCooldown(pageTexts(page))) redrawInPlace(viewer, subject, gui, page, view);
+        });
+    }
+
+    /**
+     * Every text of a page that is drawn with placeholders: each config's name
+     * and lore, and the name and lore of a custom item used as the look.
+     */
+    private List<String> pageTexts(GUIPage page) {
+        List<String> texts = new ArrayList<>();
+        for (GUISlot slot : page.getSlots()) {
+            for (GUISlotConfig config : slot.getConfigs()) {
+                texts.add(config.getDisplay_name());
+                texts.add(config.getLore());
+                String citemId = config.getBehaviour().citemId();
+                if (citemId != null) texts.addAll(plugin.getCitemManager().templates(hub.getCitemDAO().getCitem(citemId)));
+            }
+        }
+        return texts;
+    }
+
+    /**
+     * Draws the page again into the inventory the viewer has open (no reopen,
+     * no open / close actions); only items that changed are set.
+     */
+    private void redrawInPlace(Player viewer, Player subject, GUI gui, GUIPage page, OpenView view) {
+        Inventory inventory = view.inventory();
+        Map<Integer, ItemStack> items = pageItems(subject, page, plugin.getDebugMode().isOn(viewer));
+        Map<Integer, Integer> layout = GuiRules.layout(new ArrayList<>(items.keySet()), inventory.getSize(), gui.isFluid());
+        for (int at = 0; at < inventory.getSize(); at++) {
+            Integer slot = layout.get(at);
+            ItemStack item = slot == null ? null : items.get(slot);
+            if (!Objects.equals(inventory.getItem(at), item)) inventory.setItem(at, item);
+        }
+        views.put(viewer.getUniqueId(), new OpenView(view.guiId(), view.page(), layout, inventory, view.subject()));
     }
 
     @Nullable
@@ -194,12 +281,25 @@ public class GUIManager implements Listener {
         OpenView view = views.get(player.getUniqueId());
         if (view != null && (view.inventory() == event.getInventory() || holder instanceof GUIClickHandler.ConfirmHolder)) {
             views.remove(player.getUniqueId());
+            if (view.isPlayerView(player)) return; // only looked at: no close actions
         }
 
         GUI gui = hub.getGuiDAO().getGUIbyId(guiId);
         if (gui != null && gui.getCloseActions() != null && !gui.getCloseActions().isEmpty()) {
-            actionHandler.executeActions(player, gui.getCloseActions(), ActionHandler.SourceType.GUI, gui.getGuiId(), null);
+            actionHandler.executeActions(player, gui.getCloseActions(), ActionHandler.SourceType.GUI, gui.getGuiId(), null, "on close");
         }
+    }
+
+    /** A player view closes when the player being looked at leaves: their values are gone. */
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        Player gone = event.getPlayer();
+        views.forEach((viewerId, view) -> {
+            Player viewer = Bukkit.getPlayer(viewerId);
+            if (viewer == null || viewer.equals(gone) || !view.subject().equals(gone.getUniqueId())) return;
+            viewer.closeInventory();
+            Utils.info(viewer, "guis", "view.left", "%player%", gone.getName());
+        });
     }
 
     // ── Items ───────────────────────────────────────────────────────────────────
@@ -209,13 +309,31 @@ public class GUIManager implements Listener {
      * colour, lore, cost line …), with the placeholders in its name and lore filled in.
      */
     ItemStack buildItem(GUISlotConfig config, Player player) {
+        return buildItem(config, player, plugin.getDebugMode().isOn(player));
+    }
+
+    /**
+     * @param raw debug mode: the placeholders in names and lore stay as written,
+     *            and a last lore line says which slot and config the item is
+     */
+    private ItemStack buildItem(GUISlotConfig config, Player player, boolean raw) {
         GUIItemBehaviour b = config.getBehaviour();
-        ItemStack citem = b.citemId() == null ? null
-                : plugin.getCitemManager().personalize(hub.getCitemDAO().getCitem(b.citemId()), player);
-        Text text = new Text(player);
+        ItemStack citem = b.citemId() == null ? null : hub.getCitemDAO().getCitem(b.citemId());
+        if (!raw) citem = plugin.getCitemManager().personalize(citem, player);
+        Text text = new Text(player, raw);
         ItemStack item = citem != null ? citemLook(citem, config, text) : materialLook(config, text);
         item.setAmount(Math.max(1, config.getAmount()));
+        if (raw) addDebugLine(item, config);
         return item;
+    }
+
+    private void addDebugLine(ItemStack item, GUISlotConfig config) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+        List<String> lore = meta.getLore() == null ? new ArrayList<>() : new ArrayList<>(meta.getLore());
+        lore.add(DebugFormat.guiItem(config.getSlot_id(), config.getConfig_id()));
+        meta.setLore(lore);
+        item.setItemMeta(meta);
     }
 
     /**
@@ -277,7 +395,8 @@ public class GUIManager implements Listener {
         if (skin instanceof GuiRules.Owner owner) {
             meta.setPlayerProfile(heads.profile(owner.name()));
         } else if (skin instanceof GuiRules.Texture texture) {
-            PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+            // The same texture gives the same profile, so a redrawn head counts as unchanged.
+            PlayerProfile profile = Bukkit.createProfile(UUID.nameUUIDFromBytes(texture.value().getBytes(java.nio.charset.StandardCharsets.UTF_8)));
             profile.setProperty(new ProfileProperty("textures", texture.value()));
             meta.setPlayerProfile(profile);
         }
@@ -332,24 +451,32 @@ public class GUIManager implements Listener {
         return new NamespacedKey(key.namespace(), key.path());
     }
 
-    /** Colours and fills in the placeholders of an item's text, for one player. */
+    /**
+     * Colours and fills in the placeholders of an item's text, for one player.
+     * In debug mode ({@code asWritten}) the texts a player reads keep their
+     * placeholders; what decides the item's look is still filled in.
+     */
     private final class Text {
         private final Player player;
+        private final boolean asWritten;
 
-        Text(Player player) { this.player = player; }
+        Text(Player player, boolean asWritten) {
+            this.player = player;
+            this.asWritten = asWritten;
+        }
 
-        /** Placeholders only, no colours (a model or tooltip key). */
+        /** Placeholders only, no colours (a model or tooltip key, a head). */
         String plain(@Nullable String raw) {
             return plugin.getPlaceholderResolver().resolvePlaceholders(raw, player);
         }
 
         String line(String raw) {
-            return Utils.parseColorCodeString(plugin.getPlaceholderResolver().resolvePlaceholders(raw, player));
+            return Utils.parseColorCodeString(asWritten ? raw : plugin.getPlaceholderResolver().resolvePlaceholders(raw, player));
         }
 
         /** A lore value with line breaks (like {citems.lore:id}) becomes several lines. */
         List<String> lines(List<String> raw) {
-            List<String> lines = new ArrayList<>(plugin.getPlaceholderResolver().resolveLines(raw, player));
+            List<String> lines = new ArrayList<>(asWritten ? raw : plugin.getPlaceholderResolver().resolveLines(raw, player));
             lines.replaceAll(Utils::parseColorCodeString);
             return lines;
         }
@@ -369,7 +496,7 @@ public class GUIManager implements Listener {
      * (placeholders filled in) without its colours, so the line keeps its own
      * colour. Its id if the item doesn't exist or has no name.
      */
-    private String citemName(String citemId, Player player) {
+    String citemName(String citemId, Player player) {
         ItemStack item = plugin.getCitemManager().personalize(hub.getCitemDAO().getCitem(citemId), player);
         ItemMeta meta = item == null ? null : item.getItemMeta();
         if (meta == null || !meta.hasDisplayName()) return citemId;

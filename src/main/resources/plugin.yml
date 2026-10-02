@@ -8,6 +8,9 @@ commands:
   debugcmd:
     description: Debug command
     usage: /<command> <player>
+  wosdebug:
+    description: debug mode for staff (interaction labels, raw GUI placeholders, action output)
+    usage: /<command>
   # Interaction Commands
   interaction:
     description: interaction command
@@ -116,7 +119,7 @@ commands:
 
   gui:
     description: open GUIs for players
-    usage: /<command> <open> <player> <id>
+    usage: /<command> <open|playerview|pv> <player> <id>
 
   cooldown:
     description: cooldown management

@@ -2,6 +2,9 @@ package me.hektortm.woSSystems.systems.interactions;
 
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
+import me.hektortm.woSSystems.systems.debug.DebugFormat;
+import me.hektortm.woSSystems.systems.debug.DebugLabels;
+import me.hektortm.woSSystems.systems.debug.DebugMode;
 import me.hektortm.woSSystems.utils.ActionHandler;
 import me.hektortm.woSSystems.utils.ConditionHandler;
 import me.hektortm.woSSystems.utils.types.ConditionType;
@@ -13,6 +16,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static me.hektortm.woSSystems.systems.interactions.InterListener.buildKey;
@@ -94,6 +98,9 @@ public class InteractionManager {
                     List<Interaction> interactions = hub.getInteractionDAO().cache();
                     plugin.getLogger().fine("[InteractionManager] Tick — loaded " + interactions.size() + " interaction(s).");
                     Bukkit.getScheduler().runTask(plugin, () -> {
+                        DebugLabels labels = plugin.getDebugLabels();
+                        labels.beginPass();
+                        hologramManager.beginPass();
                         displayManager.beginPass();
                         for (Interaction inter : interactions) {
                             for (Location location : inter.getBlockLocations()) {
@@ -103,6 +110,7 @@ public class InteractionManager {
                                         particleHandler.spawnParticlesForPlayer(player, inter, location, false, key);
                                         hologramManager.handleHolograms(player, inter, location, false, key);
                                         displayManager.handleDisplays(player, inter, location, false, key);
+                                        labels.show(player, inter.getInteractionId(), key, location, false, 0);
                                     }
                                 }
                             }
@@ -117,10 +125,13 @@ public class InteractionManager {
                                     particleHandler.spawnParticlesForPlayer(player, inter, location, true, key);
                                     hologramManager.handleHolograms(player, inter, location, true, key, npc1.getEntity().getHeight());
                                     displayManager.handleDisplays(player, inter, location, true, key);
+                                    labels.show(player, inter.getInteractionId(), key, location, true, npc1.getEntity().getHeight());
                                 }
                             }
                         }
+                        hologramManager.endPass();
                         displayManager.endPass();
+                        labels.endPass();
                     });
                 });
             }
@@ -129,6 +140,20 @@ public class InteractionManager {
         Bukkit.getPluginManager().registerEvents(displayManager, plugin);
         displayManager.listenForClicks();
         Bukkit.getScheduler().runTaskTimer(plugin, displayManager::tick, DisplayManager.TICK_STEP, DisplayManager.TICK_STEP);
+    }
+
+    /** Debug mode's lines about a row that didn't run: which rule it has and each condition, met or not. */
+    private List<String> skippedLines(Player player, String interactionId, InteractionAction action, List<Condition> conditionList,
+                                      InteractionKey key) {
+        boolean one = "one".equalsIgnoreCase(action.getMatchType());
+        List<String> lines = new ArrayList<>();
+        lines.add(DebugFormat.header("interaction", interactionId, "row " + action.getActionId(),
+                one ? "skipped: needs one of these, none is met" : "skipped: needs all of these"));
+        for (Condition condition : conditionList) {
+            lines.add(DebugFormat.condition(condition.getName(), condition.getValue(), condition.getParameter(),
+                    conditions.evaluate(player, condition, key), conditions.actual(player, condition, key)));
+        }
+        return lines;
     }
 
     /**
@@ -156,6 +181,7 @@ public class InteractionManager {
         }
 
         List<InteractionAction> actions = inter.getActions();
+        DebugMode debug = plugin.getDebugMode();
 
         for (InteractionAction action : actions) {
             List<Condition> conditionList = hub.getConditionDAO().getConditions(
@@ -170,10 +196,18 @@ public class InteractionManager {
                     shouldRun = conditions.checkConditions(player, conditionList, key);
                 }
 
-                if (!shouldRun) continue;
+                if (!shouldRun) {
+                    // Scheduled like the rows that run, so the debug lines keep the rows' order.
+                    if (debug.isOn(player)) {
+                        List<String> lines = skippedLines(player, interactionId, action, conditionList, key);
+                        Bukkit.getScheduler().runTask(plugin, () -> lines.forEach(line -> debug.tell(player, line)));
+                    }
+                    continue;
+                }
             }
 
-            Bukkit.getScheduler().runTask(WoSSystems.getPlugin(WoSSystems.class), () -> {actionHandler.executeActions(player, action.getActions(), ActionHandler.SourceType.INTERACTION, interactionId, key);});
+            String detail = "row " + action.getActionId() + " (" + action.getBehaviour() + ")";
+            Bukkit.getScheduler().runTask(WoSSystems.getPlugin(WoSSystems.class), () -> {actionHandler.executeActions(player, action.getActions(), ActionHandler.SourceType.INTERACTION, interactionId, key, detail);});
 
             if (action.getBehaviour().equalsIgnoreCase("continue")) {
                 continue;

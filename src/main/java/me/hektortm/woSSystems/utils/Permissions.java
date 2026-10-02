@@ -21,6 +21,9 @@ public enum Permissions {
     INTER_INFO("interaction.info"),
 
     GUI_OPEN("gui.open"),
+    GUI_PLAYERVIEW("gui.playerview"),
+
+    DEBUG_USE("debug.use"),
 
     STATS_GIVE("stats.modify.give"),
     STATS_TAKE("stats.modify.take"),

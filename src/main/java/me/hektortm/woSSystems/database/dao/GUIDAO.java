@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.hektortm.woSSystems.content.ApiSource;
 import me.hektortm.woSSystems.content.ContentRegistry;
+import me.hektortm.woSSystems.systems.guis.GuiRules;
 import me.hektortm.woSSystems.content.ContentStore;
 import me.hektortm.woSSystems.content.Json;
 import me.hektortm.woSSystems.utils.model.Condition;
@@ -126,7 +127,9 @@ public class GUIDAO {
                 Json.strings(g, "close_actions"),
                 Json.strings(g, "cooldown_actions"),
                 Json.str(g, "post_use", "stay"),
-                Json.str(g, "post_use_target"));
+                Json.str(g, "post_use_target"),
+                // Absent (an API that doesn't know it yet): the page turn. Empty: none.
+                Json.str(g, "page_sound", GuiRules.PAGE_TURN_SOUND));
     }
 
     /** A config's cost, cooldown, trade, extra click types and post-use (defaults when absent). */

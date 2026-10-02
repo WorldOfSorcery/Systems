@@ -57,7 +57,11 @@ public final class GuiRules {
 
     public record OpenPage(int page) implements After {}
 
-    public record OpenGui(String guiId) implements After {}
+    public record OpenGui(String guiId, int page) implements After {
+        public OpenGui(String guiId) {
+            this(guiId, 0);
+        }
+    }
 
     /**
      * The item's post-use, or the GUI's when the item says "default". Next /
@@ -80,6 +84,20 @@ public final class GuiRules {
         };
     }
 
+    /** A page being turned: a GUI's page sound unless staff chose another. */
+    public static final String PAGE_TURN_SOUND = "minecraft:item.book.page_turn";
+
+    /**
+     * The sound a click plays for going to another page of the same GUI: the
+     * GUI's page sound. Null if the click leads elsewhere, the GUI has none,
+     * or the item has a click sound of its own (that one plays instead).
+     */
+    public static @Nullable String pageSound(After after, @Nullable String guiPageSound, @Nullable String itemSound) {
+        boolean ownSound = itemSound != null && !itemSound.isBlank();
+        if (!(after instanceof OpenPage) || ownSound || guiPageSound == null || guiPageSound.isBlank()) return null;
+        return guiPageSound.trim();
+    }
+
     private static After pageNumber(@Nullable String target, int pageCount) {
         try {
             int page = Integer.parseInt(target == null ? "" : target.trim());
@@ -87,6 +105,68 @@ public final class GuiRules {
         } catch (NumberFormatException e) {
             return new Redraw();
         }
+    }
+
+    // ── Player view ─────────────────────────────────────────────────────────────
+
+    /**
+     * Where a click leads in a player view (staff looking at a GUI as another
+     * player sees it), where a click only moves around: the first command of
+     * the click that opens a GUI for the clicking player ({@code gui open @p
+     * <id>[:page]}, or the viewed player's name instead of {@code @p}) or closes
+     * it ({@code close_gui}); without one, the post-use. {@link Redraw} means
+     * the click leads nowhere.
+     *
+     * @param actions    the commands the click would run, placeholders filled in
+     * @param playerName the viewed player's name
+     * @param postUse    where the click would lead by its post-use
+     */
+    public static After viewMove(List<String> actions, String playerName, After postUse) {
+        for (String action : actions) {
+            After move = moveOf(action, playerName);
+            if (move != null) return move;
+        }
+        return postUse;
+    }
+
+    /** The command as a move, or null if it isn't one. */
+    private static @Nullable After moveOf(@Nullable String action, String playerName) {
+        if (action == null) return null;
+        String cmd = action.trim();
+        if (cmd.length() > 1 && cmd.startsWith("\"") && cmd.endsWith("\"")) cmd = cmd.substring(1, cmd.length() - 1).trim();
+        if (cmd.startsWith("/")) cmd = cmd.substring(1);
+        if (cmd.startsWith("close_gui")) return new Close();
+
+        String[] parts = cmd.split("\\s+");
+        if (parts.length < 4 || !parts[0].equalsIgnoreCase("gui") || !parts[1].equalsIgnoreCase("open")) return null;
+        if (!parts[2].equals("@p") && !parts[2].equalsIgnoreCase(playerName)) return null;
+        String[] target = parts[3].split(":", 2);
+        if (target[0].isBlank()) return null;
+        return new OpenGui(target[0], target.length > 1 ? pageOrFirst(target[1]) : 0);
+    }
+
+    private static int pageOrFirst(String page) {
+        try {
+            return Math.max(0, Integer.parseInt(page.trim()));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    // ── Live refresh ────────────────────────────────────────────────────────────
+
+    private static final java.util.regex.Pattern COOLDOWN_TOKEN = java.util.regex.Pattern.compile("\\{cooldowns\\.[A-Za-z0-9_]+:[^}]+}");
+
+    /**
+     * Whether any of a page's texts shows a cooldown ({@code {cooldowns.duration:id}}
+     * and the like), so the page is redrawn every second while open. Null texts
+     * are skipped.
+     */
+    public static boolean showsCooldown(List<String> texts) {
+        for (String text : texts) {
+            if (text != null && COOLDOWN_TOKEN.matcher(text).find()) return true;
+        }
+        return false;
     }
 
     // ── Fluid layout ────────────────────────────────────────────────────────────

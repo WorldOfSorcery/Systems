@@ -2,6 +2,7 @@ package me.hektortm.woSSystems.systems.guis.cmd;
 
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.guis.cmd.sub.Open;
+import me.hektortm.woSSystems.systems.guis.cmd.sub.PlayerView;
 import me.hektortm.woSSystems.utils.PermissionUtil;
 import me.hektortm.woSSystems.utils.SubCommand;
 import me.hektortm.wosCore.Utils;
@@ -22,6 +23,9 @@ public class GUICommand implements CommandExecutor {
         this.hub = hub;
 
         subCommands.put("open", new Open(hub));
+        SubCommand playerView = new PlayerView(hub);
+        subCommands.put("playerview", playerView);
+        subCommands.put("pv", playerView);
     }
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {

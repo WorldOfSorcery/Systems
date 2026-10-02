@@ -117,6 +117,18 @@ public class CitemManager {
                 || (pages != null && pages.indexOf('{') >= 0);
     }
 
+    /** The item's name and lore as typed (with their placeholders), if it has any; empty otherwise. */
+    public List<String> templates(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return List.of();
+        PersistentDataContainer data = item.getItemMeta().getPersistentDataContainer();
+        List<String> out = new ArrayList<>();
+        String name = data.get(CitemBuilder.KEY_NAME_TEMPLATE, PersistentDataType.STRING);
+        String pages = data.get(CitemBuilder.KEY_LORE_PAGES, PersistentDataType.STRING);
+        if (name != null) out.add(name);
+        if (pages != null) out.add(pages);
+        return out;
+    }
+
     /**
      * The item with the placeholders of its name and lore filled in for
      * {@code p} (changed in place). An item without placeholders is left as it is.

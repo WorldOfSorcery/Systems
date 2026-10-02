@@ -108,6 +108,15 @@ public class CooldownDAO {
         return start != null && remainingSeconds(start, id) > 0;
     }
 
+    /** Seconds left on the player's cooldown at one location / NPC, or {@code null} if it is not running. */
+    public Long getRemainingLocalSeconds(OfflinePlayer p, String id, InteractionKey key) {
+        PlayerSession s = sessions.getOrFetch(p.getUniqueId());
+        Instant start = s == null ? null : s.localCooldowns.get(PlayerSession.localCooldownKey(id, key.getKey()));
+        if (start == null) return null;
+        long remaining = remainingSeconds(start, id);
+        return remaining > 0 ? remaining : null;
+    }
+
     /** Seconds left on the player's global cooldown, or {@code null} if it is not running. */
     public Long getRemainingSeconds(OfflinePlayer p, String id) {
         PlayerSession s = sessions.getOrFetch(p.getUniqueId());

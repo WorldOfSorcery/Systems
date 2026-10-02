@@ -152,6 +152,38 @@ public class ConditionHandler {
     }
 
     /**
+     * What a condition looks at, as it is for the player right now (their stat,
+     * balance, region …), for debug mode: it says why a condition passed or
+     * failed. Null for conditions that are a plain yes / no, or on an error.
+     */
+    @Nullable
+    public String actual(Player player, Condition condition, @Nullable InteractionKey key) {
+        try {
+            String id = condition.getValue();
+            return switch (condition.getName().toLowerCase()) {
+                case "has_citem", "has_not_citem" -> "has " + citems.countCitem(player, id);
+                case "has_stats_greater_than", "has_stats_less_than", "has_stats_equal_to" ->
+                        "is " + stats.getPlayerStat(player.getUniqueId(), id);
+                case "global_stats_greater_than", "global_stats_less_than", "global_stats_equal_to" ->
+                        "is " + stats.getGlobalStatValue(id);
+                case "is_in_region", "is_not_in_region" -> {
+                    String region = plugin.getPlayerRegions().get(player.getUniqueId());
+                    yield region == null ? "in no region" : "in " + region;
+                }
+                case "has_active_cooldown", "has_not_active_cooldown" -> {
+                    Long left = hub.getCooldownDAO().getRemainingSeconds(player, id);
+                    yield left == null ? "not running" : left + "s left";
+                }
+                case "has_currency", "has_not_currency" -> "has " + hub.getEconomyDAO().getPlayerCurrency(player.getUniqueId(), id);
+                case "in_world" -> "in " + player.getWorld().getName();
+                default -> null;
+            };
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
      * Returns {@code true} if the player has a currently active (non-expired)
      * global cooldown with the given ID.
      *

@@ -33,8 +33,11 @@ public class GUI extends BaseEntity {
     private final String post_use;
     private final String post_use_target;
 
+    /** The sound when a click leads to another page of this GUI; empty for none. */
+    private final String page_sound;
+
     public GUI(String guiId, int size, String title, String type, List<GUIPage> pages, List<String> openActions, List<String> closeActions,
-               List<String> cooldownActions, String postUse, String postUseTarget) {
+               List<String> cooldownActions, String postUse, String postUseTarget, String pageSound) {
         super(guiId);
         this.size = size;
         this.title = title;
@@ -45,6 +48,7 @@ public class GUI extends BaseEntity {
         cooldown_actions = cooldownActions;
         post_use = postUse;
         post_use_target = postUseTarget;
+        page_sound = pageSound;
     }
 
     public String getGuiId()              { return getId();       }
@@ -59,4 +63,5 @@ public class GUI extends BaseEntity {
     public List<String> getCooldownActions() { return cooldown_actions; }
     public String getPostUse()            { return post_use;      }
     public String getPostUseTarget()      { return post_use_target; }
+    public String getPageSound()          { return page_sound;    }
 }
