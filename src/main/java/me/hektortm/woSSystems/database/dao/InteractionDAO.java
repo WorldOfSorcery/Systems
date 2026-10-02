@@ -11,6 +11,7 @@ import me.hektortm.woSSystems.player.ApiWriter;
 import me.hektortm.woSSystems.utils.Parsers;
 import me.hektortm.woSSystems.utils.model.Interaction;
 import me.hektortm.woSSystems.utils.model.InteractionAction;
+import me.hektortm.woSSystems.utils.model.InteractionDisplay;
 import me.hektortm.woSSystems.utils.model.InteractionHologram;
 import me.hektortm.woSSystems.utils.model.InteractionParticles;
 import me.hektortm.wosCore.api.WosApi;
@@ -29,14 +30,14 @@ import java.util.stream.Collectors;
 import static me.hektortm.woSSystems.player.ApiWriter.body;
 
 /**
- * Interactions: the definition (actions, particles, holograms and their
+ * Interactions: the definition (actions, particles, holograms, displays and their
  * conditions) comes from wos-api ({@code /v1/content/interactions/{id}}); the
  * in-world bindings (NPCs and blocks an interaction is attached to) come from
  * {@code /v1/server/interaction-bindings}, are indexed in memory and written
  * through when changed in-game.
  */
 public class InteractionDAO {
-    private static final Set<String> CONDITION_TYPES = Set.of("interaction", "particle", "hologram");
+    private static final Set<String> CONDITION_TYPES = Set.of("interaction", "particle", "hologram", "display");
 
     private final ConditionDAO conditions;
     private final ApiWriter writer;
@@ -183,6 +184,14 @@ public class InteractionDAO {
             childConditions.addAll(Json.array(h, "conditions"));
         }
 
+        List<InteractionDisplay> displays = new ArrayList<>();
+        for (JsonElement el : Json.array(tree, "displays")) {
+            JsonObject d = el.getAsJsonObject();
+            displays.add(new InteractionDisplay(id, Json.integer(d, "display_id", 0), Json.str(d, "behaviour", "continue"),
+                    Json.str(d, "matchtype", "all"), Json.str(d, "settings")));
+            childConditions.addAll(Json.array(d, "conditions"));
+        }
+
         conditions.replaceChildren(CONDITION_TYPES, id, childConditions);
 
         List<Location> blocks = blockIndex.entrySet().stream()
@@ -194,6 +203,6 @@ public class InteractionDAO {
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        return new Interaction(id, actions, holograms, particles, blocks, npcs);
+        return new Interaction(id, actions, holograms, displays, particles, blocks, npcs);
     }
 }

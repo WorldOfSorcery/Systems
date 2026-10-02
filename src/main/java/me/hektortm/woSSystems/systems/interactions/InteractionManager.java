@@ -24,7 +24,7 @@ import static me.hektortm.woSSystems.systems.interactions.InterListener.buildKey
  * <ol>
  *   <li><b>Visual tick</b> ({@link #interactionTask()}) — a repeating
  *       {@link BukkitRunnable} that loads all interactions from the cache each
- *       second and spawns the configured particles and holograms around every
+ *       second and spawns the configured particles, holograms and displays around every
  *       block location and Citizens NPC that has an interaction bound to it.</li>
  *   <li><b>Interaction execution</b> ({@link #triggerInteraction}) — evaluates
  *       each {@link InteractionAction}'s conditions using {@link ConditionHandler}
@@ -39,6 +39,7 @@ public class InteractionManager {
     private final ConditionHandler conditions = plugin.getConditionHandler();
     private final ActionHandler actionHandler = plugin.getActionHandler();
     private final HologramManager hologramManager;
+    private final DisplayManager displayManager;
 
     /**
      * @param hub the DAO hub used to access interaction and condition data
@@ -46,6 +47,16 @@ public class InteractionManager {
     public InteractionManager(DAOHub hub) {
         this.hub = hub;
         this.hologramManager = new HologramManager(hub);
+        this.displayManager = new DisplayManager(hub, this);
+    }
+
+    /**
+     * Returns the {@link DisplayManager} used by this interaction manager.
+     *
+     * @return the display manager
+     */
+    public DisplayManager getDisplayManager() {
+        return displayManager;
     }
 
     /**
@@ -67,8 +78,9 @@ public class InteractionManager {
      *
      * <p>Every 20 ticks (once per second) the task loads the full interaction
      * cache asynchronously and then, back on the main thread, spawns particles
-     * and manages holograms for each interaction's block locations and bound
-     * NPCs for every online player.</p>
+     * and manages holograms and displays for each interaction's block locations
+     * and bound NPCs for every online player. A second, faster task animates the
+     * displays and checks which players walked into one.</p>
      */
     public void interactionTask() {
         ParticleHandler particleHandler = new ParticleHandler(hub);
@@ -82,6 +94,7 @@ public class InteractionManager {
                     List<Interaction> interactions = hub.getInteractionDAO().cache();
                     plugin.getLogger().fine("[InteractionManager] Tick — loaded " + interactions.size() + " interaction(s).");
                     Bukkit.getScheduler().runTask(plugin, () -> {
+                        displayManager.beginPass();
                         for (Interaction inter : interactions) {
                             for (Location location : inter.getBlockLocations()) {
                                 if (location != null) {
@@ -89,6 +102,7 @@ public class InteractionManager {
                                         InteractionKey key = buildKey(location);
                                         particleHandler.spawnParticlesForPlayer(player, inter, location, false, key);
                                         hologramManager.handleHolograms(player, inter, location, false, key);
+                                        displayManager.handleDisplays(player, inter, location, false, key);
                                     }
                                 }
                             }
@@ -102,13 +116,18 @@ public class InteractionManager {
                                     InteractionKey key = new InteractionKey("npc:" + id);
                                     particleHandler.spawnParticlesForPlayer(player, inter, location, true, key);
                                     hologramManager.handleHolograms(player, inter, location, true, key, npc1.getEntity().getHeight());
+                                    displayManager.handleDisplays(player, inter, location, true, key);
                                 }
                             }
                         }
+                        displayManager.endPass();
                     });
                 });
             }
         }.runTaskTimer(plugin, 0L, 20L);
+
+        Bukkit.getPluginManager().registerEvents(displayManager, plugin);
+        Bukkit.getScheduler().runTaskTimer(plugin, displayManager::tick, DisplayManager.TICK_STEP, DisplayManager.TICK_STEP);
     }
 
     /**

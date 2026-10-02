@@ -6,6 +6,7 @@ public enum ConditionType {
     GUISLOT("guislot"),
     PARTICLE("particle"),
     HOLOGRAM("hologram"),
+    DISPLAY("display"),
     RECIPE("recipe");
 
 

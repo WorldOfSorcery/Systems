@@ -43,6 +43,7 @@ public class QuitListener implements Listener {
         plugin.getBossBarManager().removeBossBar(p);
         hub.getUnlockableDAO().removeAllTemps(uuid); // queued write, non-blocking
         plugin.getInteractionManager().getHologramManager().removeAllHolograms(p);
+        plugin.getInteractionManager().getDisplayManager().removeAllDisplays(p);
         plugin.getPlayerRegions().remove(uuid);
 
 

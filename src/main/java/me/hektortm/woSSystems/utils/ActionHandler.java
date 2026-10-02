@@ -124,7 +124,7 @@ public class ActionHandler {
             if (cmd.startsWith("cooldown")) {
                 String[] parts = cmd.split("\\s+");
                 if (parts.length < 5) {
-                    plugin.writeLog("ActionHandler", java.util.logging.Level.WARNING, "cooldown action missing arguments: " + cmd);
+                    hub.getCooldownDAO().giveCooldown(player, parts[3]);
                     continue;
                 }
                 if (parts[1].contains("give") && parts[4].contains("%local%")) {

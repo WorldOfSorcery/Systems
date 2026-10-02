@@ -304,6 +304,7 @@ public final class WoSSystems extends JavaPlugin {
             if (bossBarManager != null) bossBarManager.removeBossBar(p);
             if (regionBossBarManager != null) regionBossBarManager.removeBossBar(p);
             if (interactionManager != null) interactionManager.getHologramManager().removeAllHolograms(p);
+            if (interactionManager != null) interactionManager.getDisplayManager().removeAllDisplays(p);
         }
         if (timeManager != null) timeManager.saveGameState();
 //        PacketEvents.getAPI().terminate();

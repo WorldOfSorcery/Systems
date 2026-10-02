@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * main thread, and cached; until that lookup is done (and for names that don't
  * exist) the head gets a name-only profile, and the next draw shows the skin.
  */
-final class HeadProfiles {
+public final class HeadProfiles {
 
     private static final long TTL_MS = 6 * 60 * 60 * 1000L; // skins rarely change
 
@@ -26,11 +26,11 @@ final class HeadProfiles {
     private final Map<String, Entry> cache = new ConcurrentHashMap<>();
     private final Set<String> looking = ConcurrentHashMap.newKeySet();
 
-    HeadProfiles(Plugin plugin) {
+    public HeadProfiles(Plugin plugin) {
         this.plugin = plugin;
     }
 
-    PlayerProfile profile(String name) {
+    public PlayerProfile profile(String name) {
         Player online = Bukkit.getPlayerExact(name);
         if (online != null) return online.getPlayerProfile();
 
