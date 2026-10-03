@@ -4,6 +4,7 @@ import me.hektortm.woSSystems.utils.Operations;
 import me.hektortm.woSSystems.WoSSystems;
 import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.debug.DebugFormat;
+import me.hektortm.woSSystems.utils.model.Cooldown;
 import me.hektortm.woSSystems.utils.model.InteractionKey;
 import me.hektortm.wosCore.Utils;
 import me.hektortm.wosCore.discord.DiscordLog;
@@ -98,7 +99,8 @@ public class ActionHandler {
      *   <li>{@code sudo} — dispatches a command as the player, checked against the blacklist</li>
      *   <li>{@code wait &lt;time&gt;} — runs the rest of the list later ({@code 500ms}, {@code 2s}, {@code 40t}; a bare number is ms)</li>
      *   <li>{@code empty_line} — sends a blank chat line</li>
-     *   <li>{@code cooldown give @p &lt;id&gt; %local%} — grants a local cooldown scoped to {@code key}</li>
+     *   <li>{@code cooldown give|remove @p &lt;id&gt; [%local%]} — starts / removes a cooldown; {@code %local%}: only at
+     *       the bound block / NPC ({@code key})</li>
      *   <li>{@code send_actionbar} — sends an action-bar message</li>
      *   <li>{@code send_title} — sends a title/subtitle pair (delimiter {@code -s})</li>
      *   <li>{@code play_sound &lt;sound&gt; &lt;volume&gt; &lt;pitch&gt;} — plays a sound at the player's location</li>
@@ -183,22 +185,13 @@ public class ActionHandler {
                 player.sendMessage("");
                 continue;
             }
-            // cooldown[0] give[1] @p[2] id[3] local[4]
-            if (cmd.startsWith("cooldown")) {
-                String[] parts = cmd.split("\\s+");
-                if (parts.length < 5) {
-                    hub.getCooldownDAO().giveCooldown(player, parts[3]);
-                    continue;
-                }
-                if (parts[1].contains("give") && parts[4].contains("%local%")) {
-                    plugin.writeLog("InteractionManager", Level.WARNING, "giving local cooldown...");
-                    if (key != null) {
-                        hub.getCooldownDAO().giveLocalCooldown(player, parts[3], key);
-                        String interId = hub.getCooldownDAO().getCooldown(parts[3]).getStart_interaction();
-                        if (interId != null) {
-                            plugin.getInteractionManager().triggerInteraction(interId, player, null);
-                        }
-                    }
+            // cooldown give|remove @p <id> [%local%]
+            if (cmd.equals("cooldown") || cmd.startsWith("cooldown ")) {
+                CooldownAction cooldown = cooldownAction(cmd);
+                if (cooldown == null) {
+                    plugin.writeLog("ActionHandler", Level.WARNING, "cooldown action must be 'cooldown give|remove @p <id> [%local%]': " + cmd);
+                } else {
+                    runCooldown(player, cooldown, key);
                 }
                 continue;
             }
@@ -271,6 +264,46 @@ public class ActionHandler {
             if (sourceType == SourceType.DIALOG) Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand));
             else Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand);
         }
+    }
+
+    /** A {@code cooldown} action: start (give) or remove the cooldown, everywhere or only at this binding (local). */
+    record CooldownAction(boolean give, String id, boolean local) {}
+
+    /**
+     * {@code cooldown give|remove @p <id> [%local%]} as an action, or null if
+     * it isn't one. The player word is ignored: it is always the acting player.
+     */
+    static @Nullable CooldownAction cooldownAction(String cmd) {
+        String[] parts = cmd.trim().split("\\s+");
+        if (parts.length < 4 || !parts[0].equals("cooldown")) return null;
+        boolean give = parts[1].equalsIgnoreCase("give");
+        if (!give && !parts[1].equalsIgnoreCase("remove")) return null;
+        boolean local = parts.length > 4 && parts[4].equalsIgnoreCase("%local%");
+        return new CooldownAction(give, parts[3], local);
+    }
+
+    /**
+     * Starts or removes a cooldown. A local one belongs to the bound block or
+     * NPC the actions run at, so it needs one (an interaction's actions; not a
+     * GUI's). Starting runs the cooldown's start interaction, as the GUI's
+     * cooldown field and {@code /cooldown give} do.
+     */
+    private void runCooldown(Player player, CooldownAction c, @Nullable InteractionKey key) {
+        if (c.local() && key == null) {
+            plugin.writeLog("ActionHandler", Level.WARNING, "local cooldown " + c.id() + " skipped: only an interaction's actions have a block / NPC to scope it to");
+            plugin.getDebugMode().tell(player, DebugFormat.note("local cooldown skipped: no bound block / NPC here"));
+            return;
+        }
+        if (!c.give()) {
+            if (c.local()) hub.getCooldownDAO().removeLocalCooldown(player, c.id(), key);
+            else hub.getCooldownDAO().removeCooldown(player, c.id());
+            return;
+        }
+        if (c.local()) hub.getCooldownDAO().giveLocalCooldown(player, c.id(), key);
+        else hub.getCooldownDAO().giveCooldown(player, c.id());
+        Cooldown definition = hub.getCooldownDAO().getCooldown(c.id());
+        String start = definition == null ? null : definition.getStart_interaction();
+        if (start != null && !start.isBlank()) plugin.getInteractionManager().triggerInteraction(start, player, c.local() ? key : null);
     }
 
     /** How long a clickable part of a message can be clicked. */

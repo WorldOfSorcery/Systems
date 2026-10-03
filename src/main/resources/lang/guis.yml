@@ -3,7 +3,9 @@ error:
   inventory: "You need %amount% free inventory slots for this."
   citem: "You need %amount%x %id% for this."
   currency: "You need %amount% %id% for this."
-
+  usage:
+    general: "Usage: /gui <open|playerview>"
+    open: "Usage: /gui open <player> <id>[:page]"
 # Added to an item's lore when it shows its cost / its trade's price.
 # The "unmet" texts are shown when the player doesn't have enough.
 cost: "§7Cost: §e%amount% %currency%"

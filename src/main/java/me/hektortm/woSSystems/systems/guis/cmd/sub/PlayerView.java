@@ -39,7 +39,7 @@ public class PlayerView extends SubCommand {
         if (!PermissionUtil.isPlayer(sender)) return;
         Player viewer = (Player) sender;
         if (args.length < 2) {
-            Utils.error(sender, "guis", "view.usage");
+            Utils.info(sender, "guis", "view.usage");
             return;
         }
 

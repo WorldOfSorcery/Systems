@@ -30,7 +30,7 @@ public class GUICommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if (args.length == 0) {
-            Utils.info(sender, "stats", "error.usage.general", "%type%", "globalstats");
+            Utils.info(sender, "guis", "error.usage.general");
             return true;
         }
 

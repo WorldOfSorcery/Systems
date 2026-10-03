@@ -5,6 +5,7 @@ import me.hektortm.woSSystems.database.DAOHub;
 import me.hektortm.woSSystems.systems.guis.GUIManager;
 import me.hektortm.woSSystems.utils.Permissions;
 import me.hektortm.woSSystems.utils.SubCommand;
+import me.hektortm.wosCore.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -32,6 +33,10 @@ public class Open extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
 
+        if (args.length < 2) {
+            Utils.info(sender, "guis", "error.usage.open");
+            return;
+        }
 
         Player p = Bukkit.getPlayer(args[0]);
         String[] t = args[1].split(":");

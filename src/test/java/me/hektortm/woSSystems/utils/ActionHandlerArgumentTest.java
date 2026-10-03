@@ -90,6 +90,24 @@ class ActionHandlerArgumentTest {
     }
 
     @Test
+    void aCooldownActionStartsOrRemovesEverywhereOrLocally() {
+        assertThat(ActionHandler.cooldownAction("cooldown give @p daily")).isEqualTo(new ActionHandler.CooldownAction(true, "daily", false));
+        assertThat(ActionHandler.cooldownAction("cooldown give @p chest %local%")).isEqualTo(new ActionHandler.CooldownAction(true, "chest", true));
+        // remove used to start the cooldown instead
+        assertThat(ActionHandler.cooldownAction("cooldown remove Xyz daily")).isEqualTo(new ActionHandler.CooldownAction(false, "daily", false));
+        assertThat(ActionHandler.cooldownAction("cooldown REMOVE @p chest %LOCAL%")).isEqualTo(new ActionHandler.CooldownAction(false, "chest", true));
+    }
+
+    @Test
+    void aBrokenCooldownActionIsNotOne() {
+        // fewer than four words used to crash the action list
+        assertThat(ActionHandler.cooldownAction("cooldown give @p")).isNull();
+        assertThat(ActionHandler.cooldownAction("cooldown")).isNull();
+        assertThat(ActionHandler.cooldownAction("cooldown reset @p daily")).isNull();
+        assertThat(ActionHandler.cooldownAction("cooldowns give @p daily")).isNull();
+    }
+
+    @Test
     void isEmptyWithoutText() {
         assertThat(ActionHandler.argument("send_message", "send_message")).isEmpty();
         assertThat(ActionHandler.argument("empty_line", "empty_line")).isEmpty();
